@@ -1,0 +1,46 @@
+project(
+  'libresense',
+  'c',
+  default_options: [
+    'prefix=/usr',
+    'c_std=c17',
+    'warning_level=3',
+    'default_library=both'
+  ],
+  license: 'MPL-2',
+  meson_version: '>=1.2.0',
+  version: '0.0.1'
+)
+
+configure_file(
+  output: 'config.h',
+  configuration: configuration_data({
+    'LIBRESENSE_MAX_CONTROLLERS': get_option('max_controllers'),
+    'LIBRESENSE_PROJECT_NAME': '"' + meson.project_name() + '"',
+    'LIBRESENSE_PROJECT_VERSION': '"' + meson.project_version() + '"'
+  })
+)
+
+hidapi = dependency('hidapi', version: '>=0.13.0')
+
+libresense_inc = include_directories('include/')
+
+libresense_lib = library(meson.project_name(), [
+    'src/libresense.c'
+  ],
+  dependencies: [hidapi],
+  install: true,
+  include_directories: libresense_inc
+)
+
+libresense_dep = declare_dependency(link_with: libresense_lib, include_directories: libresense_inc)
+
+if get_option('build_test_executable')
+  executable('libresense-log', [
+      'src/libresense_cli.c'
+    ],
+    dependencies: [libresense_dep],
+    install: true)
+endif
+
+install_subdir('include/', install_dir: 'include/', strip_directory: true)
