@@ -37,7 +37,9 @@ if get_option('debug_logic')
 endif
 
 libresense_lib = library(meson.project_name(), [
-    'src/libresense.c'
+    'src/libresense.c',
+    'src/libresense_edge.c',
+    'src/trans.c'
   ],
   dependencies: [hidapi],
   install: true,
@@ -48,7 +50,7 @@ libresense_dep = declare_dependency(link_with: libresense_lib, include_directori
 
 if get_option('build_test_executable')
   executable('libresense-log', [
-      'src/libresense_cli.c'
+      'src/cli.c'
     ],
     dependencies: [libresense_dep, hidapi],
     install: true)
