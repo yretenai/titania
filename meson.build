@@ -36,10 +36,6 @@ if get_option('debug_logic')
   add_project_arguments('-DLIBRESENSE_DEBUG', language: 'c')
 endif
 
-if get_option('dualsense_edge')
-  add_project_arguments('-DLIBRESENSE_EDGE', language: 'c')
-endif
-
 libresense_lib = library(meson.project_name(), [
     'src/libresense.c'
   ],
