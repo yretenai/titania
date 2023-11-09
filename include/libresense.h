@@ -3,15 +3,12 @@
 #ifndef LIBRESENSE_H
 #define LIBRESENSE_H
 
-#include <stdint.h>
+#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <assert.h>
+#include <stdint.h>
 
 #define LIBRESENSE_INVALID_HANDLE (-1)
-
-#define LIBRESENSE_BUFFER_SIZE_USB 0x40
-#define LIBRESENSE_BUFFER_SIZE_BT 0
 
 typedef enum {
 	ELIBRESENSE_OK = 0,
@@ -26,19 +23,28 @@ typedef enum {
 
 typedef enum {
 	ELIBRESENSE_BATTERY_UNKNOWN = 0,
-	ELIBRESENSE_BATTERY_DISCHARGING = 1,
-	ELIBRESENSE_BATTERY_CHARGING = 2,
-	ELIBRESENSE_BATTERY_FULL = 3,
+	ELIBRESENSE_BATTERY_DISCHARGING,
+	ELIBRESENSE_BATTERY_CHARGING,
+	ELIBRESENSE_BATTERY_FULL,
 	ELIBRESENSE_BATTERY_MAX
 } libresense_battery_state;
 
-extern const char* libresense_error_msg[ELIBRESENSE_ERROR_MAX + 1];
-extern const char* libresense_battery_state_msg[ELIBRESENSE_BATTERY_MAX + 1];
+typedef enum {
+	ELIBRESENSE_PROFILE_TRIANGLE,
+	ELIBRESENSE_PROFILE_SQUARE,
+	ELIBRESENSE_PROFILE_CROSS,
+	ELIBRESENSE_PROFILE_CIRCLE,
+	ELIBRESENSE_PROFILE_MAX
+} libresense_edge_profile_id;
+
+extern const char *libresense_error_msg[ELIBRESENSE_ERROR_MAX + 1];
+extern const char *libresense_battery_state_msg[ELIBRESENSE_BATTERY_MAX + 1];
+extern const char *libresense_edge_profile_id_msg[ELIBRESENSE_PROFILE_MAX + 1];
 extern const int libresense_max_controllers;
 
 typedef signed int libresense_handle;
-typedef wchar_t libresense_serial[0x100]; // Max HID Parameter length is 256 on USB, 512 on BT. 
-									      // HID serials are wide-chars, which are 2 bytes.
+typedef wchar_t libresense_serial[0x100]; // Max HID Parameter length is 256 on USB, 512 on BT.
+										  // HID serials are wide-chars, which are 2 bytes.
 
 typedef struct {
 	float x;
@@ -142,12 +148,10 @@ typedef struct {
 	uint8_t todo;
 } libresense_calibration_info;
 
-#ifdef LIBRESENSE_EDGE
 typedef struct {
 	wchar_t name[0x64];
 	uint8_t todo;
 } libresense_edge_profile;
-#endif
 
 #ifdef LIBRESENSE_DEBUG
 typedef struct {
@@ -165,9 +169,7 @@ typedef struct {
 	char mac[18];
 	libresense_firmware_info firmware;
 	libresense_calibration_info calibration;
-#ifdef LIBRESENSE_EDGE
 	libresense_edge_profile edge_profiles[4];
-#endif
 #ifdef LIBRESENSE_DEBUG
 	libresense_hid_report_id report_ids[0xFF];
 #endif
@@ -177,6 +179,7 @@ typedef union {
 	libresense_handle handle;
 	libresense_hid hid;
 } libresense_hid_handle;
+
 static_assert(offsetof(libresense_hid_handle, hid.handle) == 0, "hid.handle is not at zero");
 static_assert(offsetof(libresense_hid_handle, handle) == 0, "hid handle is not at zero");
 
@@ -191,17 +194,25 @@ typedef struct {
 	libresense_internal internal;
 } libresense_data;
 
-void libresense_init(void);
-libresense_result libresense_get_hids(libresense_hid* hids, size_t hids_length);
-libresense_result libresense_open(libresense_hid* handle);
-libresense_result libresense_poll(libresense_handle* handle, int handle_count, libresense_data* data);
-libresense_result libresense_close(const libresense_handle handle);
-void libresense_exit(void);
+void
+libresense_init(void);
+libresense_result
+libresense_get_hids(libresense_hid *hids, size_t hids_length);
+libresense_result
+libresense_open(libresense_hid *handle);
+libresense_result
+libresense_poll(libresense_handle *handle, int handle_count, libresense_data *data);
+libresense_result
+libresense_update_profile(const libresense_handle handle, const libresense_edge_profile_id id, const libresense_edge_profile profile);
+libresense_result
+libresense_delete_profile(const libresense_handle handle, const libresense_edge_profile_id id);
+libresense_result
+libresense_close(const libresense_handle handle);
+void
+libresense_exit(void);
+
 #ifdef LIBRESENSE_DEBUG
-size_t libresense_debug_get_feature_report(const libresense_handle handle, int report_id, uint8_t* buffer, size_t size);
-#endif
-#ifdef LIBRESENSE_EDGE
-libresense_result libresense_update_profile(const libresense_edge_profile_id id, const libresense_edge_profile profile);
-libresense_result libresense_delete_profile(const libresense_edge_profile_id id);
+size_t
+libresense_debug_get_feature_report(const libresense_handle handle, int report_id, uint8_t *buffer, size_t size);
 #endif
 #endif

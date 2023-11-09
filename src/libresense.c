@@ -1,7 +1,7 @@
 #include <assert.h>
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 #include <wchar.h>
 
@@ -10,74 +10,59 @@
 #include "../include/libresense.h"
 #include "config.h"
 
-#ifdef MSVC
-	#define PACKED
-	#define enum_u8 enum : uint8_t
-	#define enum_u16 enum : uint16_t
-	#define dense_struct struct
+#ifdef _MSC_VER
+#define PACKED
+#define ENUM_FORCE_8
+#define ENUM_FORCE_16
 #else
-	#define PACKED __attribute__((__packed__))
-	#define enum_u8 enum PACKED
-	#define enum_u16 enum PACKED
-	#define dense_struct struct PACKED
-	#define static_assert _Static_assert
+#define PACKED __attribute__((__packed__))
+#define ENUM_FORCE_8 PACKED
+#define ENUM_FORCE_16 PACKED
+#define static_assert _Static_assert
 #endif
 
-const char* libresense_error_msg[ELIBRESENSE_ERROR_MAX + 1] = {
-	"ok",
-	"not initialized",
-	"invalid handle",
-	"invalid data",
-	"out of range",
-	"not implemented",
-	"no available slots",
-	NULL
-};
-
-const char* libresense_battery_state_msg[ELIBRESENSE_BATTERY_MAX + 1] = {
-	"unknown",
-	"discharging",
-	"charging",
-	"full",
-	NULL
-};
-
+const char *libresense_error_msg[ELIBRESENSE_ERROR_MAX + 1] = { "ok", "not initialized", "invalid handle", "invalid data", "out of range", "not implemented", "no available slots", NULL };
+const char *libresense_battery_state_msg[ELIBRESENSE_BATTERY_MAX + 1] = { "unknown", "discharging", "charging", "full", NULL };
+const char *libresense_edge_profile_id_msg[ELIBRESENSE_PROFILE_MAX + 1] = { "triangle", "cross", "square", "circle", NULL };
 const int libresense_max_controllers = LIBRESENSE_MAX_CONTROLLERS;
 
-#define MAKE_EDGE_PROFILE_REPORT(id, name) \
-	DUALSENSE_EDGE_REPORT_ ## name ## _P1 = id, \
-	DUALSENSE_EDGE_REPORT_ ## name ## _P2 = id + 1, \
-	DUALSENSE_EDGE_REPORT_ ## name ## _P3 = id + 2
+#define MAKE_EDGE_PROFILE_REPORT(id, name) DUALSENSE_EDGE_REPORT_##name##_P1 = id, DUALSENSE_EDGE_REPORT_##name##_P2 = id + 1, DUALSENSE_EDGE_REPORT_##name##_P3 = id + 2
 
-typedef enum_u8 {
+#ifdef _MSC_VER
+#pragma pack(push, 1)
+#endif
+
+typedef enum ENUM_FORCE_8 {
 	DUALSENSE_REPORT_INPUT = 0x1,
 	DUALSENSE_REPORT_OUTPUT = 0x2,
 	DUALSENSE_REPORT_CALIBRATION = 0x5,
 	DUALSENSE_REPORT_SERIAL = 0x9,
 	DUALSENSE_REPORT_FIRMWARE = 0x20,
 	DUALSENSE_REPORT_BLUETOOTH = 0x31,
-	DUALSENSE_REPORT_129 = 0x81, // zeroes?
-	DUALSENSE_REPORT_131 = 0X83, // -1 and then zeroes
-	DUALSENSE_REPORT_133 = 0x85, // 3 values
-	DUALSENSE_REPORT_224 = 0xe0, // zeroes
-	DUALSENSE_REPORT_241 = 0xf1, // zeroes
-	DUALSENSE_REPORT_242 = 0xf2, // 5 values then zeroes?
-	DUALSENSE_REPORT_245 = 0xf5, // 3 values
+	DUALSENSE_REPORT_129 = 0x81,				// zeroes?
+	DUALSENSE_REPORT_131 = 0X83,				// -1 and then zeroes
+	DUALSENSE_REPORT_133 = 0x85,				// 3 values
+	DUALSENSE_REPORT_224 = 0xe0,				// zeroes
+	DUALSENSE_REPORT_241 = 0xf1,				// zeroes
+	DUALSENSE_REPORT_242 = 0xf2,				// 5 values then zeroes?
+	DUALSENSE_REPORT_245 = 0xf5,				// 3 values
 	MAKE_EDGE_PROFILE_REPORT(0x63, PROFILE_99), // base profile, maybe? empty
 	MAKE_EDGE_PROFILE_REPORT(0x70, PROFILE_TRIANGLE),
 	MAKE_EDGE_PROFILE_REPORT(0x73, PROFILE_SQUARE),
 	MAKE_EDGE_PROFILE_REPORT(0x76, PROFILE_CROSS),
 	MAKE_EDGE_PROFILE_REPORT(0x79, PROFILE_CIRCLE)
 } dualsense_report_id;
+
 static_assert(sizeof(dualsense_report_id) == 1, "Dualsense Report ID is not 1 byte");
 
-typedef struct {
+typedef struct PACKED {
 	uint8_t x;
 	uint8_t y;
 } dualsense_stick;
+
 static_assert(sizeof(dualsense_stick) == 2, "size mismatch");
 
-typedef enum {
+typedef enum PACKED {
 	DUALSENSE_DPAD_U = 0,
 	DUALSENSE_DPAD_UR = 1,
 	DUALSENSE_DPAD_R = 2,
@@ -86,10 +71,10 @@ typedef enum {
 	DUALSENSE_DPAD_DL = 5,
 	DUALSENSE_DPAD_L = 6,
 	DUALSENSE_DPAD_UL = 7,
-	DUALSENSE_DPAD_RESET = 8 
+	DUALSENSE_DPAD_RESET = 8
 } dualsense_dpad;
 
-typedef struct {
+typedef struct PACKED {
 	dualsense_dpad dpad : 7;
 	bool square : 1;
 	bool cross : 1;
@@ -112,31 +97,36 @@ typedef struct {
 	bool edge_lb : 1;
 	bool edge_rb : 1;
 } dualsense_button;
+
 static_assert(sizeof(dualsense_button) == 4, "size mismatch");
 
-typedef struct {
+typedef struct PACKED {
 	int16_t x;
 	int16_t y;
 	int16_t z;
 } dualsense_vector3;
+
 static_assert(sizeof(dualsense_vector3) == 6, "size mismatch");
 
-typedef dense_struct {
+typedef struct PACKED {
 	uint16_t x : 12;
 	uint16_t y : 12;
 } dualsense_vector2;
+
 static_assert(sizeof(dualsense_vector2) == 3, "size mismatch");
 
-typedef struct {
+typedef struct PACKED {
 	struct {
 		uint8_t value : 7;
 		bool idle : 1;
 	} id;
+
 	dualsense_vector2 coord;
 } dualsense_touch;
+
 static_assert(sizeof(dualsense_touch) == 4, "size mismatch");
 
-typedef enum_u8 {
+typedef enum ENUM_FORCE_8 {
 	DUALSENSE_BATTERY_STATE_DISCHARGING = 0x0,
 	DUALSENSE_BATTERY_STATE_CHARGING = 0x1,
 	DUALSENSE_BATTERY_STATE_FULL = 0x2,
@@ -148,20 +138,21 @@ typedef enum_u8 {
 	DUALSENSE_BATTERY_STATE_SAFETY_ERROR = 0xf
 } dualsense_battery_state_v;
 
-typedef dense_struct {
+typedef struct PACKED {
 	uint8_t level : 4;
 	dualsense_battery_state_v state : 4;
 } dualsense_battery_state;
+
 static_assert(sizeof(dualsense_battery_state) == 1, "size mismatch");
 
-typedef enum_u8 {
+typedef enum ENUM_FORCE_8 {
 	DUALSENSE_STATE_AUDIO_HEADPHONES = 0x1,
 	DUALSENSE_STATE_AUDIO_HEADSET = 0x2,
 	DUALSENSE_STATE_AUDIO_MUTED = 0x4,
 	DUALSENSE_STATE_CABLE_CONNECTED = 0x8
 } dualsense_device_state;
 
-typedef dense_struct {
+typedef struct PACKED {
 	dualsense_report_id id;
 	dualsense_stick sticks[2];
 	uint8_t triggers[2];
@@ -175,31 +166,35 @@ typedef dense_struct {
 	dualsense_touch touch[2];
 	uint8_t adaptive_trigger_state; // random values? seems to go up every time the trigger info chages (including rumble)
 	uint8_t adaptive_triggers[2];
-	uint8_t adaptive_trigger_reserved; // likely padding 
-	uint8_t speaker_volume; // assumption
-	uint8_t jack_volume; // assumption
-	uint8_t mic_volume; // assumption
-	uint8_t audio_reserved; // likely padding
-	uint32_t audio_time; // assumption
+	uint8_t adaptive_trigger_reserved; // likely padding
+	uint8_t speaker_volume;			   // assumption
+	uint8_t jack_volume;			   // assumption
+	uint8_t mic_volume;				   // assumption
+	uint8_t audio_reserved;			   // likely padding
+	uint32_t audio_time;			   // assumption
 	dualsense_battery_state battery;
 	dualsense_device_state state;
 	uint8_t state_reserved; // likely padding
 	uint64_t checksum;
 } dualsense_input_msg;
+
 static_assert(sizeof(dualsense_input_msg) == 0x40, "size mismatch");
 
-typedef dense_struct {
+typedef struct PACKED {
 	dualsense_report_id id;
+
 	union {
 		dualsense_input_msg data;
 		uint8_t buffer[sizeof(dualsense_input_msg)];
 	} msg;
+
 	uint8_t reserved[9];
 	uint32_t bt_checksum;
 } dualsense_input_msg_ex;
+
 static_assert(sizeof(dualsense_input_msg_ex) == 0x4e, "size mismatch");
 
-typedef dense_struct {
+typedef struct PACKED {
 	bool rumble : 1;
 	bool vibration_mode_compatible : 1;
 	bool rt_rumble : 1;
@@ -215,26 +210,33 @@ typedef dense_struct {
 	bool player_led : 1;
 	bool vibration_mode_advanced : 1;
 	bool vibration_mode : 1; // modifying rumble at all sets this
-	bool reserved : 1; // unused
+	bool reserved : 1;		 // unused
 } dualsense_mutator_flags;
+
 static_assert(sizeof(dualsense_mutator_flags) == 2, "size mismatch");
 
-typedef struct {
+typedef struct PACKED {
 	uint8_t vol;
 } dualsense_audio_output;
 
-typedef struct {
+typedef struct PACKED {
 	dualsense_mutator_flags flags;
 } dualsense_output_msg;
 
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
+
 typedef struct {
-	hid_device* hid;
+	hid_device *hid;
 	libresense_hid hid_info;
 	bool bt_initialized;
+
 	union {
 		dualsense_input_msg_ex data;
 		uint8_t buffer[sizeof(dualsense_input_msg_ex)];
 	} input;
+
 	union {
 		dualsense_output_msg data;
 		uint8_t buffer[sizeof(dualsense_output_msg)];
@@ -247,25 +249,32 @@ typedef struct {
 } libresense_device_info;
 
 static libresense_device_info device_infos[] = {
-	{ 0x054C, 0x0CE6 },  // DualSense
-	{ 0x054C, 0x0DF2 },  // DualSense Edge
+	{0x054C,  0x0CE6}, // DualSense
+	{ 0x054C, 0x0DF2}, // DualSense Edge
 };
 
 static dualsense_state state[LIBRESENSE_MAX_CONTROLLERS];
 bool is_initialized = false;
 
-#define CHECK_INIT if(!is_initialized) return ELIBRESENSE_NOT_INITIALIZED
-#define CHECK_HANDLE(h) if(h == LIBRESENSE_INVALID_HANDLE || h < 0 || h > LIBRESENSE_MAX_CONTROLLERS) return ELIBRESENSE_INVALID_HANDLE
+#define CHECK_INIT       \
+	if (!is_initialized) \
+	return ELIBRESENSE_NOT_INITIALIZED
+#define CHECK_HANDLE(h)                                                            \
+	if (h == LIBRESENSE_INVALID_HANDLE || h < 0 || h > LIBRESENSE_MAX_CONTROLLERS) \
+	return ELIBRESENSE_INVALID_HANDLE
 #define CHECK_HANDLE_VALID(h) \
-	CHECK_HANDLE(h); \
-	if(state[h].hid == NULL) return ELIBRESENSE_INVALID_HANDLE
+	CHECK_HANDLE(h);          \
+	if (state[h].hid == NULL) \
+	return ELIBRESENSE_INVALID_HANDLE
 
-void ascii_serial(const wchar_t* wserial, libresense_serial* serial) {
-	mbstate_t state = {0};
-	wcsrtombs((char*) serial, &wserial, sizeof(libresense_serial), &state);
+void
+ascii_serial(const wchar_t *wserial, libresense_serial *serial) {
+	mbstate_t state = { 0 };
+	wcsrtombs((char *) serial, &wserial, sizeof(libresense_serial), &state);
 }
 
-void libresense_init(void) {
+void
+libresense_init(void) {
 	if (is_initialized) {
 		return;
 	}
@@ -277,26 +286,27 @@ void libresense_init(void) {
 	is_initialized = true;
 }
 
-libresense_result libresense_get_hids(libresense_hid* hids, size_t hids_length) {
+libresense_result
+libresense_get_hids(libresense_hid *hids, size_t hids_length) {
 	CHECK_INIT;
 	size_t index = 0;
 
 	for (size_t i = 0; i < sizeof(device_infos) / sizeof(libresense_device_info); i++) {
- 		if (index >= hids_length) {
+		if (index >= hids_length) {
 			break;
 		}
 
 		libresense_device_info info = device_infos[i];
 
-		struct hid_device_info* root = hid_enumerate(info.vendor_id, info.product_id);
-		struct hid_device_info* dev = root;
-		while(dev) {
+		struct hid_device_info *root = hid_enumerate(info.vendor_id, info.product_id);
+		struct hid_device_info *dev = root;
+		while (dev) {
 			if (wcslen(dev->serial_number) >= 0x100) {
 				hid_free_enumeration(root);
 				return ELIBRESENSE_NOT_IMPLEMENTED;
 			}
 
-			if(dev->bus_type != HID_API_BUS_USB && dev->bus_type != HID_API_BUS_BLUETOOTH) {
+			if (dev->bus_type != HID_API_BUS_USB && dev->bus_type != HID_API_BUS_BLUETOOTH) {
 				hids[index].handle = 0;
 				hids[index].product_id = dev->product_id;
 				hids[index].vendor_id = dev->vendor_id;
@@ -314,7 +324,7 @@ libresense_result libresense_get_hids(libresense_hid* hids, size_t hids_length) 
 			dev = dev->next;
 		}
 		hid_free_enumeration(root);
- 	}
+	}
 
 	for (size_t i = index; i < hids_length; i++) {
 		hids[i].handle = LIBRESENSE_INVALID_HANDLE;
@@ -323,8 +333,9 @@ libresense_result libresense_get_hids(libresense_hid* hids, size_t hids_length) 
 	return ELIBRESENSE_OK;
 }
 
-size_t libresense_get_feature_report(hid_device* handle, int report_id, uint8_t* buffer, size_t size, bool preserve) {
-	if(handle == NULL || buffer == NULL || size < 2) {
+size_t
+libresense_get_feature_report(hid_device *handle, int report_id, uint8_t *buffer, size_t size, bool preserve) {
+	if (handle == NULL || buffer == NULL || size < 2) {
 		return 0;
 	}
 	uint8_t old_byte = buffer[0];
@@ -336,8 +347,9 @@ size_t libresense_get_feature_report(hid_device* handle, int report_id, uint8_t*
 	return ret;
 }
 
-size_t libresense_send_feature_report(hid_device* handle, int report_id, uint8_t* buffer, size_t size, bool preserve) {
-	if(handle == NULL || buffer == NULL || size < 2) {
+size_t
+libresense_send_feature_report(hid_device *handle, int report_id, uint8_t *buffer, size_t size, bool preserve) {
+	if (handle == NULL || buffer == NULL || size < 2) {
 		return 0;
 	}
 	uint8_t old_byte = buffer[0];
@@ -349,19 +361,20 @@ size_t libresense_send_feature_report(hid_device* handle, int report_id, uint8_t
 	return ret;
 }
 
-
-size_t libresense_debug_get_feature_report(const libresense_handle handle, int report_id, uint8_t* buffer, size_t size) {
+size_t
+libresense_debug_get_feature_report(const libresense_handle handle, int report_id, uint8_t *buffer, size_t size) {
 	CHECK_INIT;
 	CHECK_HANDLE_VALID(handle);
 
 	return libresense_get_feature_report(state[handle].hid, report_id, buffer, size, false);
 }
 
-libresense_result libresense_open(libresense_hid* handle) {
+libresense_result
+libresense_open(libresense_hid *handle) {
 	CHECK_INIT;
 
 	for (int i = 0; i < LIBRESENSE_MAX_CONTROLLERS; i++) {
-		if(state[i].hid == NULL) {
+		if (state[i].hid == NULL) {
 			handle->handle = i;
 			state[i].hid = hid_open(handle->vendor_id, handle->product_id, handle->serial);
 
@@ -372,19 +385,17 @@ libresense_result libresense_open(libresense_hid* handle) {
 			memset(handle->report_ids, 0, sizeof(libresense_hid_report_id) * 0xFF);
 
 			int report_id = 0;
-			if(report_size > 7 && report_size < HID_API_MAX_REPORT_DESCRIPTOR_SIZE &&
-			   report[0] == 0x05 && report[1] == 0x01 && // USAGE PAGE Generic Desktop
-			   report[2] == 0x09 && report[3] == 0x05 && // USAGE Game Pad
-			   report[4] == 0xA1 && report[5] == 0x01) { // COLLECTION Application
-				for(int j = 6; j < report_size;) {
+			if (report_size > 7 && report_size < HID_API_MAX_REPORT_DESCRIPTOR_SIZE && report[0] == 0x05 && report[1] == 0x01 && // USAGE PAGE Generic Desktop
+				report[2] == 0x09 && report[3] == 0x05 &&																		 // USAGE Game Pad
+				report[4] == 0xA1 && report[5] == 0x01) {																		 // COLLECTION Application
+				for (int j = 6; j < report_size;) {
 					uint8_t op = report[j++];
 					uint32_t value = 0;
 					uint8_t size = op & 0x3;
-					switch(size) {
-						case 0:
-							continue;
+					switch (size) {
+						case 0: continue;
 						case 1:
-							if(j > report_size) {
+							if (j > report_size) {
 								j += 1;
 								break;
 							}
@@ -392,84 +403,84 @@ libresense_result libresense_open(libresense_hid* handle) {
 							j += 1;
 							break;
 						case 2:
-							if(j + 2 > report_size) {
+							if (j + 2 > report_size) {
 								j += 2;
 								break;
 							}
-							value = *(uint16_t*)(report + j);
+							value = *(uint16_t *) (report + j);
 							j += 2;
 							break;
 						case 3:
-							if(j + 4 > report_size) {
+							if (j + 4 > report_size) {
 								j += 4;
 								break;
 							}
-							value = *(uint32_t*)(report + j);
+							value = *(uint32_t *) (report + j);
 							j += 4;
 							break;
 					}
 
 					uint8_t op_value = op >> 2;
-					if(op_value == 48) { // END COLLECTION
+					if (op_value == 48) { // END COLLECTION
 						break;
 					}
 
-					if(op_value == 33) { // REPORT ID
-						if(report_id == 0xFF) {
+					if (op_value == 33) { // REPORT ID
+						if (report_id == 0xFF) {
 							break;
 						}
-						if(value == 0xf7) {
+						if (value == 0xf7) {
 							//
 						}
 						handle->report_ids[report_id++].id = (uint8_t) value;
 						handle->report_ids[report_id - 1].size = 1;
 					}
 
-					if(op_value == 37 && report_id > 0) { // REPORT COUNT
+					if (op_value == 37 && report_id > 0) {				 // REPORT COUNT
 						handle->report_ids[report_id - 1].size += value; // report_id_size * value;
-					}				
+					}
 				}
 			}
 #endif
 			return ELIBRESENSE_OK;
 		}
- 	}
+	}
 
 	return ELIBRESENSE_NO_SLOTS;
 }
 
-void convert_input(const dualsense_input_msg input, libresense_data* data) {
-	
-}
+void
+convert_input(const dualsense_input_msg input, libresense_data *data) { }
 
-libresense_result libresense_poll(libresense_handle* handle, int handle_count, libresense_data *data) {
+libresense_result
+libresense_poll(libresense_handle *handle, int handle_count, libresense_data *data) {
 	CHECK_INIT;
-	if(handle == NULL || data == NULL) {
+	if (handle == NULL || data == NULL) {
 		return ELIBRESENSE_INVALID_DATA;
 	}
 
-	if(handle_count <= 0) {
+	if (handle_count <= 0) {
 		return ELIBRESENSE_OK;
 	}
 
-	libresense_data invalid = {0};
+	libresense_data invalid = { 0 };
 	invalid.hid.handle = LIBRESENSE_INVALID_HANDLE;
 
 	for (int i = 0; i < handle_count; i++) {
 		CHECK_HANDLE_VALID(handle[i]);
 		dualsense_state *hid_state = &state[handle[i]];
 		data[i].hid = hid_state->hid_info;
-		uint8_t* buffer = hid_state->input.buffer;
+		uint8_t *buffer = hid_state->input.buffer;
 		size_t size = sizeof(dualsense_input_msg_ex);
-		if(!hid_state->hid_info.is_bluetooth) {
+		if (!hid_state->hid_info.is_bluetooth) {
 			buffer = hid_state->input.data.msg.buffer;
 			size = sizeof(dualsense_input_msg);
 		}
 		memset(buffer + 1, (char) 0, size - 1);
 
 		int count = hid_read_timeout(hid_state->hid, buffer, size, 16);
-		
-		if(count < 0) {
+
+		if (count < 0) {
 			handle[i] = LIBRESENSE_INVALID_HANDLE;
 			data[i] = invalid;
 
@@ -477,7 +488,7 @@ libresense_result libresense_poll(libresense_handle* handle, int handle_count, l
 			continue; // invalid!
 		}
 
-		if(count != (int) size) {
+		if (count != (int) size) {
 			continue; // truncated?
 		}
 
@@ -487,7 +498,8 @@ libresense_result libresense_poll(libresense_handle* handle, int handle_count, l
 	return ELIBRESENSE_OK;
 }
 
-libresense_result libresense_close(const libresense_handle handle) {
+libresense_result
+libresense_close(const libresense_handle handle) {
 	CHECK_INIT;
 	CHECK_HANDLE(handle);
 
@@ -497,7 +509,8 @@ libresense_result libresense_close(const libresense_handle handle) {
 	return ELIBRESENSE_OK;
 }
 
-void libresense_exit(void) {
+void
+libresense_exit(void) {
 	if (!is_initialized) {
 		return;
 	}
