@@ -12,18 +12,33 @@ project(
   version: '0.0.1'
 )
 
+res_path = get_option('datadir') + '/libresense'
+
+if host_machine.system() == 'windows'
+  res_path = './res'
+endif
+
 configure_file(
   output: 'config.h',
   configuration: configuration_data({
     'LIBRESENSE_MAX_CONTROLLERS': get_option('max_controllers'),
     'LIBRESENSE_PROJECT_NAME': '"' + meson.project_name() + '"',
-    'LIBRESENSE_PROJECT_VERSION': '"' + meson.project_version() + '"'
+    'LIBRESENSE_PROJECT_VERSION': '"' + meson.project_version() + '"',
+    'LIBRESENSE_DATA_DIR': '"' + res_path + '"'  
   })
 )
 
 hidapi = dependency('hidapi', version: '>=0.13.0')
 
 libresense_inc = include_directories('include/')
+
+if get_option('debug_logic')
+  add_project_arguments('-DLIBRESENSE_DEBUG', language: 'c')
+endif
+
+if get_option('dualsense_edge')
+  add_project_arguments('-DLIBRESENSE_EDGE', language: 'c')
+endif
 
 libresense_lib = library(meson.project_name(), [
     'src/libresense.c'
@@ -39,8 +54,8 @@ if get_option('build_test_executable')
   executable('libresense-log', [
       'src/libresense_cli.c'
     ],
-    dependencies: [libresense_dep],
+    dependencies: [libresense_dep, hidapi],
     install: true)
 endif
 
-install_subdir('include/', install_dir: 'include/', strip_directory: true)
+install_headers('include/libresense.h', preserve_path: false)

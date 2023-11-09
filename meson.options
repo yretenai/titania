@@ -1,2 +1,4 @@
 option('build_test_executable', type: 'boolean', value: true)
 option('max_controllers', type: 'integer', value: 8)
+option('debug_logic', type: 'boolean', value: false)
+option('dualsense_edge', type: 'boolean', value: false)
