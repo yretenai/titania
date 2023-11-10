@@ -177,25 +177,78 @@ typedef struct {
 	libresense_internal internal;
 } libresense_data;
 
+/**
+ * Initialize the library, this is mandatory.
+ */
 void
 libresense_init(void);
+
+/**
+ * scan and return all HIDs that this library supports.
+ * @param libresense_hid *hids: pointer to where HID data should be stored
+ * @param size_t hids_length: array size of hids
+ */
 libresense_result
-libresense_get_hids(libresense_hid *hids, size_t hids_length);
+libresense_get_hids(libresense_hid *hids, const size_t hids_length);
+
+/**
+ * open a HID handle for processing
+ * @param libresense_hid *handle: pointer to the libresense HID handle, this value will hold the libresense_handle value when the function returns
+ */
 libresense_result
 libresense_open(libresense_hid *handle);
+
+/**
+ * poll controllers for input data
+ * @param libresense_handle *handle: pointer to an array of handles, values will be set to LIBRESENSE_INVALID_HANDLE if they are invalid.
+ * @param int handle_count: number of handles to process
+ * @param libresense_data *data: pointer to an array of data storage
+ */
 libresense_result
-libresense_poll(libresense_handle *handle, int handle_count, libresense_data *data);
+libresense_poll(libresense_handle *handle, const size_t handle_count, libresense_data *data);
+
+// todo: libresense_update_led, libresense_update_effect, libresense_update_audio
+
+/*
+ * update a dualsense edge profile 
+ * @param const libresense_handle handle: the controller to update
+ * @param const libresense_edge_profile_id id: the profile id to store the profile into
+ * @param const libresense_edge_profile profile: the profile data to store
+ */
 libresense_result
 libresense_update_profile(const libresense_handle handle, const libresense_edge_profile_id id, const libresense_edge_profile profile);
+
+/*
+ * delete a dualsense edge profile
+ * @param const libresense_handle handle: the controller to update
+ * @param const libresense_edge_profile_id id: the profile id to store the profile into
+ * @param const libresense_edge_profile profile: the profile data to store
+ */
 libresense_result
 libresense_delete_profile(const libresense_handle handle, const libresense_edge_profile_id id);
+
+/*
+ * close a controller device handle
+ * @param const libresense_handle handle: the controller to close
+ */
 libresense_result
 libresense_close(const libresense_handle handle);
+
+/*
+ * cleans up library internals for exit
+ */
 void
 libresense_exit(void);
 
 #ifdef LIBRESENSE_DEBUG
+/*
+ * debug: get a feature report
+ * @param const libresense_handle handle: the device to query
+ * @param int report_id: the report to fetch
+ * @param uint8_t *buffer: where to store the buffer
+ * @param size_t size: the size of the buffer
+ */
 size_t
-libresense_debug_get_feature_report(const libresense_handle handle, int report_id, uint8_t *buffer, size_t size);
+libresense_debug_get_feature_report(const libresense_handle handle, const int report_id, uint8_t *buffer, const size_t size);
 #endif
 #endif

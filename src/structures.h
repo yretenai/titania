@@ -244,28 +244,64 @@ typedef struct {
 	uint16_t product_id;
 } libresense_device_info;
 
+// Check if the library is initialized
 #define CHECK_INIT       \
 	if (!is_initialized) \
 	return ELIBRESENSE_NOT_INITIALIZED
+
+// Check if a handle is a valid number.
 #define CHECK_HANDLE(h)                                                            \
 	if (h == LIBRESENSE_INVALID_HANDLE || h < 0 || h > LIBRESENSE_MAX_CONTROLLERS) \
 	return ELIBRESENSE_INVALID_HANDLE
+
+// Check if a handle is a valid number, and that it has been initialized.
 #define CHECK_HANDLE_VALID(h) \
 	CHECK_HANDLE(h);          \
 	if (state[h].hid == NULL) \
 	return ELIBRESENSE_INVALID_HANDLE
 
+/*
+ * convert dualsense input report to libresense's representation
+ * @param const dualsense_input_msg input: the input to convert
+ * @param libresense_data *data: the data to convert into
+ */
 void
 libresense_convert_input(const dualsense_input_msg input, libresense_data *data);
 
+/*
+ * convert a dualsense edge profile to libresense's representation
+ * @param const todo input: the input to convert
+ * @param libresense_edge_profile *profile: the profile to convert into
+ */
 libresense_result
-libresense_convert_edge_profile_input(void); // todo
+libresense_convert_edge_profile_input(const void *input, libresense_edge_profile *profile); // todo
 
+/*
+ * convert a libresense profile to dualsense edge's representation
+ * @param const libresense_edge_profile input: the input to convert
+ * @param todo profile: the profile to convert into
+ */
 libresense_result
-libresense_convert_edge_profile_output(void); // todo
+libresense_convert_edge_profile_output(const libresense_edge_profile input, void *profile); // todo
 
+/*
+ * get a HID feature report
+ * @param hid_device *handle: the device to query
+ * @param int report_id: the report to fetch
+ * @param uint8_t *buffer: where to store the buffer
+ * @param size_t size: the size of the buffer
+ * @param bool preserve: preserve byte 0
+ */
 size_t
-libresense_get_feature_report(hid_device *handle, int report_id, uint8_t *buffer, size_t size, bool preserve);
+libresense_get_feature_report(hid_device *handle, const int report_id, uint8_t *buffer, const size_t size, const bool preserve);
 
+/*
+ * send a HID feature report
+ * @param hid_device *handle: the device to update
+ * @param int report_id: the report to send
+ * @param uint8_t *buffer: where the buffer is
+ * @param size_t size: the size of the buffer
+ * @param bool preserve: preserve byte 0
+ */
 size_t
-libresense_send_feature_report(hid_device *handle, int report_id, uint8_t *buffer, size_t size, bool preserve);
+libresense_send_feature_report(hid_device *handle, const int report_id, uint8_t *buffer, const size_t size, const bool preserve);

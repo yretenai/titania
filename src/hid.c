@@ -71,7 +71,7 @@ libresense_get_hids(libresense_hid *hids, size_t hids_length) {
 }
 
 size_t
-libresense_get_feature_report(hid_device *handle, int report_id, uint8_t *buffer, size_t size, bool preserve) {
+libresense_get_feature_report(hid_device *handle, const int report_id, uint8_t *buffer, const size_t size, const bool preserve) {
 	if (handle == NULL || buffer == NULL || size < 2) {
 		return 0;
 	}
@@ -85,7 +85,7 @@ libresense_get_feature_report(hid_device *handle, int report_id, uint8_t *buffer
 }
 
 size_t
-libresense_send_feature_report(hid_device *handle, int report_id, uint8_t *buffer, size_t size, bool preserve) {
+libresense_send_feature_report(hid_device *handle, const int report_id, uint8_t *buffer, const size_t size, const bool preserve) {
 	if (handle == NULL || buffer == NULL || size < 2) {
 		return 0;
 	}
@@ -187,7 +187,7 @@ libresense_open(libresense_hid *handle) {
 }
 
 libresense_result
-libresense_poll(libresense_handle *handle, int handle_count, libresense_data *data) {
+libresense_poll(libresense_handle *handle, const size_t handle_count, libresense_data *data) {
 	CHECK_INIT;
 	if (handle == NULL || data == NULL) {
 		return ELIBRESENSE_INVALID_DATA;
@@ -200,7 +200,7 @@ libresense_poll(libresense_handle *handle, int handle_count, libresense_data *da
 	libresense_data invalid = { 0 };
 	invalid.hid.handle = LIBRESENSE_INVALID_HANDLE;
 
-	for (int i = 0; i < handle_count; i++) {
+	for (size_t i = 0; i < handle_count; i++) {
 		CHECK_HANDLE_VALID(handle[i]);
 		dualsense_state *hid_state = &state[handle[i]];
 		data[i].hid = hid_state->hid_info;
@@ -237,7 +237,7 @@ libresense_close(const libresense_handle handle) {
 	CHECK_INIT;
 	CHECK_HANDLE(handle);
 
-	state[handle].hid = (hid_close(state[handle].hid), NULL);
+	hid_close(state[handle].hid);
 	state[handle] = (dualsense_state) { 0 };
 
 	return ELIBRESENSE_OK;
