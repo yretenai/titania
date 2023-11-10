@@ -140,11 +140,11 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_battery_state) == 1, "size mismatch");
 
-typedef enum ENUM_FORCE_8 {
-	DUALSENSE_STATE_AUDIO_HEADPHONES = 0x1,
-	DUALSENSE_STATE_AUDIO_HEADSET = 0x2,
-	DUALSENSE_STATE_AUDIO_MUTED = 0x4,
-	DUALSENSE_STATE_CABLE_CONNECTED = 0x8
+typedef struct PACKED {
+	bool headphones : 1;
+	bool headset : 1;
+	bool muted : 1;
+	bool cable_connected : 1;
 } dualsense_device_state;
 
 typedef struct PACKED {
@@ -157,19 +157,19 @@ typedef struct PACKED {
 	dualsense_vector3 accelerometer;
 	dualsense_vector3 gyro;
 	uint32_t sensor_time;
-	uint8_t sensor_reserved; // likely padding
+	uint8_t sensor_reserved; // likely padding, but non-zero
 	dualsense_touch touch[2];
 	uint8_t adaptive_trigger_state; // random values? seems to go up every time the trigger info chages (including rumble)
 	uint8_t adaptive_triggers[2];
-	uint8_t adaptive_trigger_reserved; // likely padding
-	uint8_t speaker_volume;			   // assumption
-	uint8_t jack_volume;			   // assumption
-	uint8_t mic_volume;				   // assumption
-	uint8_t audio_reserved;			   // likely padding
-	uint32_t audio_time;			   // assumption
+	uint8_t adaptive_trigger_reserved; // likely padding, zero
+	uint8_t speaker_volume;			   // assumption, zero
+	uint8_t jack_volume;			   // assumption, zero
+	uint8_t mic_volume;				   // assumption, zero
+	uint8_t audio_reserved;			   // likely padding, zero
+	uint32_t audio_time;			   // assumption, but definitely time
 	dualsense_battery_state battery;
 	dualsense_device_state state;
-	uint8_t state_reserved; // likely padding
+	uint8_t state_reserved; // likely padding, usually non-zero
 	uint64_t checksum;
 } dualsense_input_msg;
 
@@ -195,7 +195,7 @@ typedef struct PACKED {
 	bool rt_rumble : 1;
 	bool lt_rumble : 1;
 	bool jack : 1;
-	bool jack2 : 1; // set with jack
+	bool jack2 : 1; // always set when jack is set. maybe related to headset vs headphones?
 	bool mic : 1;
 	bool speaker : 1;
 	bool mic_led : 1;
@@ -211,11 +211,12 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_mutator_flags) == 2, "size mismatch");
 
 typedef struct PACKED {
-	uint8_t vol;
+	uint8_t vol; // todo
 } dualsense_audio_output;
 
 typedef struct PACKED {
 	dualsense_mutator_flags flags;
+	// todo
 } dualsense_output_msg;
 
 #ifdef _MSC_VER

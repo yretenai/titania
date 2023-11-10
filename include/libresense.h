@@ -132,15 +132,6 @@ typedef struct {
 } libresense_internal;
 
 typedef struct {
-	bool rumble : 1;
-	bool trigger_rumble : 1;
-	bool led : 1;
-	bool adaptive_trigger : 1;
-	bool audio : 1;
-	bool touch : 1;
-} libresense_capabilities;
-
-typedef struct {
 	uint8_t todo;
 } libresense_firmware_info;
 
@@ -174,14 +165,6 @@ typedef struct {
 	libresense_hid_report_id report_ids[0xFF];
 #endif
 } libresense_hid;
-
-typedef union {
-	libresense_handle handle;
-	libresense_hid hid;
-} libresense_hid_handle;
-
-static_assert(offsetof(libresense_hid_handle, hid.handle) == 0, "hid.handle is not at zero");
-static_assert(offsetof(libresense_hid_handle, handle) == 0, "hid handle is not at zero");
 
 typedef struct {
 	libresense_hid hid;
