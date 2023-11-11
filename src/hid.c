@@ -43,7 +43,7 @@ libresense_get_hids(libresense_hid *hids, size_t hids_length) {
 				return ELIBRESENSE_NOT_IMPLEMENTED;
 			}
 
-			if (dev->bus_type != HID_API_BUS_USB && dev->bus_type != HID_API_BUS_BLUETOOTH) {
+			if (dev->bus_type == HID_API_BUS_USB || dev->bus_type == HID_API_BUS_BLUETOOTH) {
 				hids[index].handle = 0;
 				hids[index].product_id = dev->product_id;
 				hids[index].vendor_id = dev->vendor_id;
@@ -179,6 +179,7 @@ libresense_open(libresense_hid *handle) {
 				}
 			}
 #endif
+			state[i].hid_info = *handle;
 			return ELIBRESENSE_OK;
 		}
 	}
@@ -203,7 +204,6 @@ libresense_poll(libresense_handle *handle, const size_t handle_count, libresense
 	for (size_t i = 0; i < handle_count; i++) {
 		CHECK_HANDLE_VALID(handle[i]);
 		dualsense_state *hid_state = &state[handle[i]];
-		data[i].hid = hid_state->hid_info;
 		uint8_t *buffer = hid_state->input.buffer;
 		size_t size = sizeof(dualsense_input_msg_ex);
 		if (!hid_state->hid_info.is_bluetooth) {
@@ -227,6 +227,7 @@ libresense_poll(libresense_handle *handle, const size_t handle_count, libresense
 		}
 
 		libresense_convert_input(hid_state->input.data.msg.data, &data[i]);
+		data[i].hid = hid_state->hid_info;
 	}
 
 	return ELIBRESENSE_OK;

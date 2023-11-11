@@ -70,7 +70,7 @@ typedef enum PACKED {
 } dualsense_dpad;
 
 typedef struct PACKED {
-	dualsense_dpad dpad : 7;
+	dualsense_dpad dpad : 4;
 	bool square : 1;
 	bool cross : 1;
 	bool circle : 1;
@@ -91,6 +91,7 @@ typedef struct PACKED {
 	bool edge_f2 : 1;
 	bool edge_lb : 1;
 	bool edge_rb : 1;
+	uint8_t padding : 8;
 } dualsense_button;
 
 static_assert(sizeof(dualsense_button) == 4, "size mismatch");
@@ -140,12 +141,7 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_battery_state) == 1, "size mismatch");
 
-typedef struct PACKED {
-	bool headphones : 1;
-	bool headset : 1;
-	bool muted : 1;
-	bool cable_connected : 1;
-} dualsense_device_state;
+static_assert(sizeof(libresense_device_state) == 1, "size mismatch");
 
 typedef struct PACKED {
 	dualsense_report_id id;
@@ -168,7 +164,7 @@ typedef struct PACKED {
 	uint8_t audio_reserved;			   // likely padding, zero
 	uint32_t audio_time;			   // assumption, but definitely time
 	dualsense_battery_state battery;
-	dualsense_device_state state;
+	libresense_device_state state;
 	uint8_t state_reserved; // likely padding, usually non-zero
 	uint64_t checksum;
 } dualsense_input_msg;

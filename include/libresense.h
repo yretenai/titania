@@ -43,13 +43,17 @@ extern const char *libresense_edge_profile_id_msg[ELIBRESENSE_PROFILE_MAX + 1];
 extern const int libresense_max_controllers;
 
 typedef signed int libresense_handle;
-typedef wchar_t libresense_serial[0x100]; // Max HID Parameter length is 256 on USB, 512 on BT.
-										  // HID serials are wide-chars, which are 2 bytes.
+typedef wchar_t libresense_serial[0x100]; // Max HID Parameter length is 256 on USB, 512 on BT. HID serials are wide-chars, which are 2 bytes.
 
 typedef struct {
 	float x;
 	float y;
 } libresense_vector2;
+
+typedef struct {
+	int x;
+	int y;
+} libresense_vector2i;
 
 typedef struct {
 	float x;
@@ -67,39 +71,32 @@ typedef struct {
 	bool circle : 1;
 	bool triangle : 1;
 	bool l1 : 1;
-	bool l2 : 1;
-	bool l3 : 1;
 	bool r1 : 1;
+	bool l2 : 1;
 	bool r2 : 1;
-	bool r3 : 1;
 	bool share : 1;
 	bool option : 1;
+	bool l3 : 1;
+	bool r3 : 1;
 	bool ps : 1;
+	bool touch : 1;
 	bool mute : 1;
-	bool touchpad : 1;
-	bool touchpad_left : 1;
-	bool touchpad_right : 1;
-	bool fn1 : 1;
-	bool fn2 : 1;
-	bool left_paddle : 1;
-	bool right_paddle : 1;
-	bool mystery_button : 1;
+	bool edge_unknown : 1;
+	bool edge_f1 : 1;
+	bool edge_f2 : 1;
+	bool edge_lb : 1;
+	bool edge_rb : 1;
 } libresense_buttons;
 
 typedef struct {
 	float level;
 	uint8_t adaptive_point;
-} libresense_triggers;
-
-typedef struct {
-	libresense_vector2 left;
-	libresense_vector2 right;
-} libresense_sticks;
+} libresense_trigger;
 
 typedef struct {
 	uint32_t id;
 	bool active;
-	libresense_vector2 coords;
+	libresense_vector2i coords;
 } libresense_touchpad;
 
 typedef struct {
@@ -127,9 +124,20 @@ typedef struct {
 	libresense_audio audio;
 	uint8_t audio_reserved;
 	uint8_t state_reserved;
-	uint8_t state;
-	uint8_t battery;
+	uint8_t battery_error;
 } libresense_internal;
+
+typedef struct {
+	bool headphones : 1;
+	bool headset : 1;
+	bool muted : 1;
+	bool cable_connected : 1;
+} libresense_device_state;
+
+typedef struct {
+	float level;
+	libresense_battery_state state;
+} libresense_battery;
 
 typedef struct {
 	uint8_t todo;
@@ -170,10 +178,12 @@ typedef struct {
 	libresense_hid hid;
 	libresense_time time;
 	libresense_buttons buttons;
-	libresense_triggers triggers[2];
-	libresense_sticks sticks[2];
+	libresense_trigger triggers[2];
+	libresense_vector2 sticks[2];
 	libresense_touchpad touch[2];
 	libresense_sensors sensors;
+	libresense_battery battery;
+	libresense_device_state state;
 	libresense_internal internal;
 } libresense_data;
 
