@@ -144,28 +144,43 @@ static_assert(sizeof(dualsense_battery_state) == 1, "size mismatch");
 static_assert(sizeof(libresense_device_state) == 1, "size mismatch");
 
 typedef struct PACKED {
+	uint64_t value : 40;
+} dualsense_uint40;
+static_assert(sizeof(dualsense_uint40) == 0x5, "uint40 is not 5 bytes");
+
+typedef struct PACKED {
+	dualsense_uint40 internal;
+	dualsense_battery_state battery;
+	libresense_device_state device;
+	uint8_t reserved;
+} dualsense_device_state;
+static_assert(sizeof(dualsense_device_state) == 0x8, "size mismatch");
+
+typedef struct PACKED {
+	dualsense_vector3 accelerometer;
+	dualsense_vector3 gyro;
+	dualsense_uint40 time;
+} dualsense_sensors;
+static_assert(sizeof(dualsense_sensors) == 0x11, "size mismatch");
+
+typedef struct PACKED {
+	uint8_t id : 4;
+	uint8_t level : 4;
+} dualsense_adaptive_trigger;
+
+typedef struct PACKED {
 	dualsense_report_id id;
 	dualsense_stick sticks[2];
 	uint8_t triggers[2];
 	uint8_t sequence;
 	dualsense_button buttons;
 	uint32_t firmware_time;
-	dualsense_vector3 accelerometer;
-	dualsense_vector3 gyro;
-	uint32_t sensor_time;
-	uint8_t sensor_reserved; // likely padding, but non-zero
+	dualsense_sensors sensors;
 	dualsense_touch touch[2];
-	uint8_t adaptive_trigger_state; // random values? seems to go up every time the trigger info chages (including rumble)
-	uint8_t adaptive_triggers[2];
-	uint8_t adaptive_trigger_reserved; // likely padding, zero
-	uint8_t speaker_volume;			   // assumption, zero
-	uint8_t jack_volume;			   // assumption, zero
-	uint8_t mic_volume;				   // assumption, zero
-	uint8_t audio_reserved;			   // likely padding, zero
-	uint32_t audio_time;			   // assumption, but definitely time
-	dualsense_battery_state battery;
-	libresense_device_state state;
-	uint8_t state_reserved; // likely padding, usually non-zero
+	uint8_t touch_sequence;
+	dualsense_adaptive_trigger adaptive_triggers[2];
+	uint32_t reserved;
+	dualsense_device_state state;
 	uint64_t checksum;
 } dualsense_input_msg;
 
@@ -223,6 +238,8 @@ typedef struct {
 	hid_device *hid;
 	libresense_hid hid_info;
 	bool bt_initialized;
+	uint16_t in_sequence;
+	uint16_t out_sequence;
 
 	union {
 		dualsense_input_msg_ex data;

@@ -228,6 +228,7 @@ libresense_poll(libresense_handle *handle, const size_t handle_count, libresense
 
 		libresense_convert_input(hid_state->input.data.msg.data, &data[i]);
 		data[i].hid = hid_state->hid_info;
+		data[i].time.driver_sequence = ++hid_state->in_sequence;
 	}
 
 	return ELIBRESENSE_OK;

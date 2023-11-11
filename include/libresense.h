@@ -90,7 +90,8 @@ typedef struct {
 
 typedef struct {
 	float level;
-	uint8_t adaptive_point;
+	uint8_t id;
+	uint8_t effect;
 } libresense_trigger;
 
 typedef struct {
@@ -100,32 +101,18 @@ typedef struct {
 } libresense_touchpad;
 
 typedef struct {
+	uint8_t sequence;
+	uint8_t touch_sequence;
+	uint16_t driver_sequence;
 	uint32_t system;
-	uint32_t sensor;
-	uint32_t audio;
+	uint64_t sensor;
 	uint64_t checksum;
 } libresense_time;
-
-typedef struct {
-	float speaker_volume;
-	float mic_volume;
-	float jack_volume;
-} libresense_audio;
 
 typedef struct {
 	libresense_vector3 accelerometer;
 	libresense_vector3 gyro;
 } libresense_sensors;
-
-typedef struct {
-	uint8_t sensor_reserved;
-	uint8_t adaptive_trigger_reserved;
-	uint8_t adaptive_trigger_state;
-	libresense_audio audio;
-	uint8_t audio_reserved;
-	uint8_t state_reserved;
-	uint8_t battery_error;
-} libresense_internal;
 
 typedef struct {
 	bool headphones : 1;
@@ -137,6 +124,7 @@ typedef struct {
 typedef struct {
 	float level;
 	libresense_battery_state state;
+	uint8_t battery_error;
 } libresense_battery;
 
 typedef struct {
@@ -183,8 +171,9 @@ typedef struct {
 	libresense_touchpad touch[2];
 	libresense_sensors sensors;
 	libresense_battery battery;
-	libresense_device_state state;
-	libresense_internal internal;
+	libresense_device_state device;
+	uint64_t state;
+	uint64_t reserved;
 } libresense_data;
 
 /**
