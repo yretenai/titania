@@ -1,0 +1,11 @@
+# Disable PS5 DualSense Touchpad over USB
+ACTION=="add|change", ATTRS{name}=="Sony Interactive Entertainment DualSense Wireless Controller Touchpad", ENV{LIBINPUT_IGNORE_DEVICE}="1"
+
+# Disable PS5 DualSense Touchpad over Bluetooth
+ACTION=="add|change", ATTRS{name}=="DualSense Wireless Controller Touchpad", ENV{LIBINPUT_IGNORE_DEVICE}="1"
+
+# Disable PS5 DualSense Edge Touchpad over USB
+ACTION=="add|change", ATTRS{name}=="Sony Interactive Entertainment DualSense Edge Wireless Controller Touchpad", ENV{LIBINPUT_IGNORE_DEVICE}="1"
+
+# Disable PS5 DualSense Edge Touchpad over Bluetooth
+ACTION=="add|change", ATTRS{name}=="DualSense Edge Wireless Controller Touchpad", ENV{LIBINPUT_IGNORE_DEVICE}="1"
