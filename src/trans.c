@@ -5,17 +5,18 @@
 	input.buttons.dpad == DUALSENSE_DPAD_ ## B || \
 	input.buttons.dpad == DUALSENSE_DPAD_ ## C
 
-#define SNORM(value, max) \
-	(value < 0 ? value / ((float) (max + 1)) : value / (float) max)
+#define CALIBRATE(value, slot) \
+	(value < 0 ? value * calibration[slot].min : value * calibration[slot].max) 
 
 void
-libresense_convert_input(const dualsense_input_msg input, libresense_data *data) {
+libresense_convert_input(const dualsense_input_msg input, libresense_data *data, libresense_calibration_bit calibration[6]) {
 	*data = (libresense_data) { 0 };
 
 	data->time.sequence = input.sequence;
 	data->time.touch_sequence = input.touch_sequence;
 	data->time.system = input.firmware_time;
 	data->time.sensor = input.sensors.time.value;
+	data->time.battery = input.state.time.value;
 	data->time.checksum = input.checksum;
 
 	data->buttons = *((libresense_buttons*) (uint32_t*) &input.buttons);
@@ -45,13 +46,12 @@ libresense_convert_input(const dualsense_input_msg input, libresense_data *data)
 	data->touch[1].coords.x = input.touch[1].coord.x;
 	data->touch[1].coords.y = input.touch[1].coord.y;
 
-	data->sensors.accelerometer.x = SNORM(input.sensors.accelerometer.x, INT16_MAX);
-	data->sensors.accelerometer.y = SNORM(input.sensors.accelerometer.y, INT16_MAX);
-	data->sensors.accelerometer.z = SNORM(input.sensors.accelerometer.z, INT16_MAX);
-	data->sensors.gyro.x = SNORM(input.sensors.gyro.x, INT16_MAX);
-	data->sensors.gyro.y = SNORM(input.sensors.gyro.y, INT16_MAX);
-	data->sensors.gyro.z = SNORM(input.sensors.gyro.z, INT16_MAX);
-	// todo: calibration, sixaxis.
+	data->sensors.accelerometer.x = CALIBRATE(input.sensors.accelerometer.x, CALIBRATION_ACCELEROMETER_X); 
+	data->sensors.accelerometer.y = CALIBRATE(input.sensors.accelerometer.y, CALIBRATION_ACCELEROMETER_Y);
+	data->sensors.accelerometer.z = CALIBRATE(input.sensors.accelerometer.z, CALIBRATION_ACCELEROMETER_Z);
+	data->sensors.gyro.x = CALIBRATE(input.sensors.gyro.x, CALIBRATION_GYRO_X) / DUALSENSE_GYRO_RESOLUTION * 10.0f;
+	data->sensors.gyro.y = CALIBRATE(input.sensors.gyro.y, CALIBRATION_GYRO_Y) / DUALSENSE_GYRO_RESOLUTION * 10.0f;
+	data->sensors.gyro.z = CALIBRATE(input.sensors.gyro.z, CALIBRATION_GYRO_Z) / DUALSENSE_GYRO_RESOLUTION * 10.0f;
 
 	if(input.state.battery.state < 0x2) {
 		data->battery.level = input.state.battery.level < 10 ? input.state.battery.level * 10 + 5 : 100;

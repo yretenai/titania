@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "structures.h"
 
 const int libresense_max_controllers = LIBRESENSE_MAX_CONTROLLERS;
@@ -106,14 +108,61 @@ libresense_debug_get_feature_report(const libresense_handle handle, int report_i
 	return libresense_get_feature_report(state[handle].hid, report_id, buffer, size, false);
 }
 
+#define CALIBRATION_GYRO(slot, type) \
+	(calibration.gyro[slot].type * calibration.gyro_speed.type / (float) DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX)
+
+#define CALIBRATION_ACCELEROMETER(slot, type) \
+	(calibration.accelerometer[slot].type / 8192.0f * (float) DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX)
+
+#define CALIBRATION_ACCELEROMETER_BIAS(slot) \
+	calibration.accelerometer[slot].max - (calibration.accelerometer[slot].max - calibration.accelerometer[slot].min) / 2
+
+static bool use_calibration = true;
+
 libresense_result
 libresense_open(libresense_hid *handle) {
 	CHECK_INIT;
-
+	
 	for (int i = 0; i < LIBRESENSE_MAX_CONTROLLERS; i++) {
 		if (state[i].hid == NULL) {
 			handle->handle = i;
 			state[i].hid = hid_open(handle->vendor_id, handle->product_id, handle->serial);
+
+			dualsense_calibration_info calibration;
+			size_t report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_CALIBRATION, (uint8_t*)&calibration, 41, false);
+			if(use_calibration && report_sz > 1 && report_sz <= 41) {
+				state[i].calibration[CALIBRATION_GYRO_X].max = CALIBRATION_GYRO(CALIBRATION_RAW_X, max);
+				state[i].calibration[CALIBRATION_GYRO_Y].max = CALIBRATION_GYRO(CALIBRATION_RAW_Y, max);
+				state[i].calibration[CALIBRATION_GYRO_Z].max = CALIBRATION_GYRO(CALIBRATION_RAW_Z, max);
+				
+				state[i].calibration[CALIBRATION_GYRO_X].min = CALIBRATION_GYRO(CALIBRATION_RAW_X, min);
+				state[i].calibration[CALIBRATION_GYRO_Y].min = CALIBRATION_GYRO(CALIBRATION_RAW_Y, min);
+				state[i].calibration[CALIBRATION_GYRO_Z].min = CALIBRATION_GYRO(CALIBRATION_RAW_Z, min);
+
+				state[i].calibration[CALIBRATION_GYRO_X].bias = calibration.gyro_bias.x;
+				state[i].calibration[CALIBRATION_GYRO_Y].bias = calibration.gyro_bias.y;
+				state[i].calibration[CALIBRATION_GYRO_Z].bias = calibration.gyro_bias.z;
+
+				state[i].calibration[CALIBRATION_ACCELEROMETER_X].max = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_X, max);
+				state[i].calibration[CALIBRATION_ACCELEROMETER_Y].max = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Y, max);
+				state[i].calibration[CALIBRATION_ACCELEROMETER_Z].max = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Z, max);
+				
+				state[i].calibration[CALIBRATION_ACCELEROMETER_X].min = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_X, min);
+				state[i].calibration[CALIBRATION_ACCELEROMETER_Y].min = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Y, min);
+				state[i].calibration[CALIBRATION_ACCELEROMETER_Z].min = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Z, min);
+
+				state[i].calibration[CALIBRATION_ACCELEROMETER_X].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_X);
+				state[i].calibration[CALIBRATION_ACCELEROMETER_Y].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_Y);
+				state[i].calibration[CALIBRATION_ACCELEROMETER_Z].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_Z);
+			} else {
+				// gyro range must be [-2000, 2000], accelerometer range must be [-16, 16]
+				state[i].calibration[CALIBRATION_GYRO_X] = (libresense_calibration_bit) { DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, 0 };
+				state[i].calibration[CALIBRATION_GYRO_Y] = (libresense_calibration_bit) { DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, 0 };
+				state[i].calibration[CALIBRATION_GYRO_Z] = (libresense_calibration_bit) { DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, 0 };
+				state[i].calibration[CALIBRATION_ACCELEROMETER_X] = (libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0 };
+				state[i].calibration[CALIBRATION_ACCELEROMETER_Y] = (libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0 };
+				state[i].calibration[CALIBRATION_ACCELEROMETER_Z] = (libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0 };
+			}
 
 #ifdef LIBRESENSE_DEBUG
 			uint8_t report[HID_API_MAX_REPORT_DESCRIPTOR_SIZE];
@@ -226,7 +275,7 @@ libresense_poll(libresense_handle *handle, const size_t handle_count, libresense
 			continue; // truncated?
 		}
 
-		libresense_convert_input(hid_state->input.data.msg.data, &data[i]);
+		libresense_convert_input(hid_state->input.data.msg.data, &data[i], hid_state->calibration);
 		data[i].hid = hid_state->hid_info;
 		data[i].time.driver_sequence = ++hid_state->in_sequence;
 	}

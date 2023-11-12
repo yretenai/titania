@@ -62,6 +62,18 @@ typedef struct {
 } libresense_vector3;
 
 typedef struct {
+	int16_t x;
+	int16_t y;
+	int16_t z;
+} libresense_vector3s;
+static_assert(sizeof(libresense_vector3s) == 6, "size mismatch");
+
+typedef struct {
+	int16_t max;
+	int16_t min;
+} libresense_minmax;
+
+typedef struct {
 	bool dpad_up : 1;
 	bool dpad_right : 1;
 	bool dpad_down : 1;
@@ -106,6 +118,7 @@ typedef struct {
 	uint16_t driver_sequence;
 	uint32_t system;
 	uint64_t sensor;
+	uint64_t battery;
 	uint64_t checksum;
 } libresense_time;
 
@@ -128,12 +141,38 @@ typedef struct {
 } libresense_battery;
 
 typedef struct {
-	uint8_t todo;
-} libresense_firmware_info;
+	uint8_t major;
+	uint8_t minor;
+	uint8_t patch;
+	uint8_t revision;
+} libresense_firmware_version;
 
 typedef struct {
-	uint8_t todo;
-} libresense_calibration_info;
+	uint8_t major;
+	uint8_t minor;
+} libresense_version;
+
+#ifdef _MSC_VER
+#pragma pack(push, 1)
+typedef struct {
+#else
+typedef struct __attribute__((__packed__)) {
+#endif
+	char datetime[0x15];
+	libresense_firmware_version device;
+	libresense_firmware_version hardware;
+	libresense_firmware_version software;
+	uint16_t device_code;
+	uint64_t unknown3;
+	libresense_version update;
+	uint8_t unknown4;
+	libresense_firmware_version unknownVersion1;
+	libresense_firmware_version unknownVersion2;
+	uint16_t unknown5;
+} libresense_firmware_info;
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
 
 typedef struct {
 	wchar_t name[0x64];
@@ -155,7 +194,6 @@ typedef struct {
 	libresense_serial serial;
 	char mac[18];
 	libresense_firmware_info firmware;
-	libresense_calibration_info calibration;
 	libresense_edge_profile edge_profiles[4];
 #ifdef LIBRESENSE_DEBUG
 	libresense_hid_report_id report_ids[0xFF];

@@ -149,7 +149,7 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_uint40) == 0x5, "uint40 is not 5 bytes");
 
 typedef struct PACKED {
-	dualsense_uint40 internal;
+	dualsense_uint40 time;
 	dualsense_battery_state battery;
 	libresense_device_state device;
 	uint8_t reserved;
@@ -230,13 +230,45 @@ typedef struct PACKED {
 	// todo
 } dualsense_output_msg;
 
+#define CALIBRATION_RAW_X 0
+#define CALIBRATION_RAW_Y 1
+#define CALIBRATION_RAW_Z 2
+
+#define CALIBRATION_GYRO_X 0
+#define CALIBRATION_GYRO_Y 1
+#define CALIBRATION_GYRO_Z 2
+#define CALIBRATION_ACCELEROMETER_X 3
+#define CALIBRATION_ACCELEROMETER_Y 4
+#define CALIBRATION_ACCELEROMETER_Z 5
+
+#define DUALSENSE_GYRO_RESOLUTION 2000
+#define DUALSENSE_ACCELEROMETER_RESOLUTION 16
+
+typedef struct PACKED {
+	uint8_t op;
+	libresense_vector3s gyro_bias;
+	libresense_minmax gyro[3];
+	libresense_minmax gyro_speed;
+	libresense_minmax accelerometer[3];
+	uint32_t crc;
+	uint8_t padding[2];
+} dualsense_calibration_info;
+static_assert(sizeof(dualsense_calibration_info) == 41, "size mismatch");
+
 #ifdef _MSC_VER
 #pragma pack(pop)
 #endif
 
 typedef struct {
+	float max;
+	float min;
+	int bias;
+} libresense_calibration_bit;
+
+typedef struct {
 	hid_device *hid;
 	libresense_hid hid_info;
+	libresense_calibration_bit calibration[6];
 	bool bt_initialized;
 	uint16_t in_sequence;
 	uint16_t out_sequence;
@@ -279,7 +311,7 @@ typedef struct {
  * @param libresense_data *data: the data to convert into
  */
 void
-libresense_convert_input(const dualsense_input_msg input, libresense_data *data);
+libresense_convert_input(const dualsense_input_msg input, libresense_data *data, libresense_calibration_bit calibration[6]);
 
 /*
  * convert a dualsense edge profile to libresense's representation
