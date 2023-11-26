@@ -1,12 +1,18 @@
 #include "structures.h"
 
+#define PI_CONST 3.14159265358979323846f
+#define G_CONST 9.80665f
+
 #define CHECK_DPAD(A, B, C) \
 	input.buttons.dpad == DUALSENSE_DPAD_ ## A || \
 	input.buttons.dpad == DUALSENSE_DPAD_ ## B || \
 	input.buttons.dpad == DUALSENSE_DPAD_ ## C
 
 #define CALIBRATE(value, slot) \
-	(value < 0 ? value * calibration[slot].min : value * calibration[slot].max) 
+	(value < 0 ? value / calibration[slot].min : value / calibration[slot].max)
+
+#define CALIBRATE_BIAS(value, slot) \
+	CALIBRATE(value - calibration[slot].bias, slot)
 
 void
 libresense_convert_input(const dualsense_input_msg input, libresense_data *data, libresense_calibration_bit calibration[6]) {
@@ -16,7 +22,6 @@ libresense_convert_input(const dualsense_input_msg input, libresense_data *data,
 	data->time.touch_sequence = input.touch_sequence;
 	data->time.system = input.firmware_time;
 	data->time.sensor = input.sensors.time.value;
-	data->time.battery = input.state.time.value;
 	data->time.checksum = input.checksum;
 
 	data->buttons = *((libresense_buttons*) (uint32_t*) &input.buttons);
@@ -46,12 +51,12 @@ libresense_convert_input(const dualsense_input_msg input, libresense_data *data,
 	data->touch[1].coords.x = input.touch[1].coord.x;
 	data->touch[1].coords.y = input.touch[1].coord.y;
 
-	data->sensors.accelerometer.x = CALIBRATE(input.sensors.accelerometer.x, CALIBRATION_ACCELEROMETER_X); 
-	data->sensors.accelerometer.y = CALIBRATE(input.sensors.accelerometer.y, CALIBRATION_ACCELEROMETER_Y);
-	data->sensors.accelerometer.z = CALIBRATE(input.sensors.accelerometer.z, CALIBRATION_ACCELEROMETER_Z);
-	data->sensors.gyro.x = CALIBRATE(input.sensors.gyro.x, CALIBRATION_GYRO_X) / DUALSENSE_GYRO_RESOLUTION * 10.0f;
-	data->sensors.gyro.y = CALIBRATE(input.sensors.gyro.y, CALIBRATION_GYRO_Y) / DUALSENSE_GYRO_RESOLUTION * 10.0f;
-	data->sensors.gyro.z = CALIBRATE(input.sensors.gyro.z, CALIBRATION_GYRO_Z) / DUALSENSE_GYRO_RESOLUTION * 10.0f;
+	data->sensors.accelerometer.x = (CALIBRATE(input.sensors.accelerometer.x, CALIBRATION_ACCELEROMETER_X) / DUALSENSE_ACCELEROMETER_RESOLUTION) / G_CONST;
+	data->sensors.accelerometer.y = (CALIBRATE(input.sensors.accelerometer.y, CALIBRATION_ACCELEROMETER_Y) / DUALSENSE_ACCELEROMETER_RESOLUTION) / G_CONST;
+	data->sensors.accelerometer.z = (CALIBRATE(input.sensors.accelerometer.z, CALIBRATION_ACCELEROMETER_Z) / DUALSENSE_ACCELEROMETER_RESOLUTION) / G_CONST;
+	data->sensors.gyro.x = (CALIBRATE_BIAS(input.sensors.gyro.x, CALIBRATION_GYRO_X) / DUALSENSE_GYRO_RESOLUTION) * PI_CONST;
+	data->sensors.gyro.y = (CALIBRATE_BIAS(input.sensors.gyro.y, CALIBRATION_GYRO_Y) / DUALSENSE_GYRO_RESOLUTION) * PI_CONST;
+	data->sensors.gyro.z = (CALIBRATE_BIAS(input.sensors.gyro.z, CALIBRATION_GYRO_Z) / DUALSENSE_GYRO_RESOLUTION) * PI_CONST;
 
 	if(input.state.battery.state < 0x2) {
 		data->battery.level = input.state.battery.level < 10 ? input.state.battery.level * 10 + 5 : 100;
@@ -64,6 +69,7 @@ libresense_convert_input(const dualsense_input_msg input, libresense_data *data,
 	}
 
 	data->device = input.state.device;
+	data->edge_device = input.state.edge_device;
 
 	data->state = *(uint64_t*)&input.state;
 	data->reserved = input.reserved;

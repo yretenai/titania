@@ -143,6 +143,10 @@ libresense_open(libresense_hid *handle) {
 				state[i].calibration[CALIBRATION_GYRO_Y].bias = calibration.gyro_bias.y;
 				state[i].calibration[CALIBRATION_GYRO_Z].bias = calibration.gyro_bias.z;
 
+				state[i].calibration[CALIBRATION_GYRO_X].speed = calibration.gyro_speed.min;
+				state[i].calibration[CALIBRATION_GYRO_Y].speed = calibration.gyro_speed.min;
+				state[i].calibration[CALIBRATION_GYRO_Z].speed = calibration.gyro_speed.min;
+
 				state[i].calibration[CALIBRATION_ACCELEROMETER_X].max = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_X, max);
 				state[i].calibration[CALIBRATION_ACCELEROMETER_Y].max = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Y, max);
 				state[i].calibration[CALIBRATION_ACCELEROMETER_Z].max = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Z, max);
@@ -155,13 +159,12 @@ libresense_open(libresense_hid *handle) {
 				state[i].calibration[CALIBRATION_ACCELEROMETER_Y].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_Y);
 				state[i].calibration[CALIBRATION_ACCELEROMETER_Z].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_Z);
 			} else {
-				// gyro range must be [-2000, 2000], accelerometer range must be [-16, 16]
-				state[i].calibration[CALIBRATION_GYRO_X] = (libresense_calibration_bit) { DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, 0 };
-				state[i].calibration[CALIBRATION_GYRO_Y] = (libresense_calibration_bit) { DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, 0 };
-				state[i].calibration[CALIBRATION_GYRO_Z] = (libresense_calibration_bit) { DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, 0 };
-				state[i].calibration[CALIBRATION_ACCELEROMETER_X] = (libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0 };
-				state[i].calibration[CALIBRATION_ACCELEROMETER_Y] = (libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0 };
-				state[i].calibration[CALIBRATION_ACCELEROMETER_Z] = (libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0 };
+				state[i].calibration[CALIBRATION_GYRO_X] = (libresense_calibration_bit) { DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, 0, 540 };
+				state[i].calibration[CALIBRATION_GYRO_Y] = (libresense_calibration_bit) { DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, 0, 540 };
+				state[i].calibration[CALIBRATION_GYRO_Z] = (libresense_calibration_bit) { DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, 0, 540 };
+				state[i].calibration[CALIBRATION_ACCELEROMETER_X] = (libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0, 1 };
+				state[i].calibration[CALIBRATION_ACCELEROMETER_Y] = (libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0, 1 };
+				state[i].calibration[CALIBRATION_ACCELEROMETER_Z] = (libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0, 1 };
 			}
 
 #ifdef LIBRESENSE_DEBUG

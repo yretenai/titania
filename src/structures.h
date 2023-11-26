@@ -149,7 +149,9 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_uint40) == 0x5, "uint40 is not 5 bytes");
 
 typedef struct PACKED {
-	dualsense_uint40 time;
+	uint16_t unknown;
+	libresense_edge_state edge_device;
+	uint16_t unknown2;
 	dualsense_battery_state battery;
 	libresense_device_state device;
 	uint8_t reserved;
@@ -241,8 +243,8 @@ typedef struct PACKED {
 #define CALIBRATION_ACCELEROMETER_Y 4
 #define CALIBRATION_ACCELEROMETER_Z 5
 
-#define DUALSENSE_GYRO_RESOLUTION 2000
-#define DUALSENSE_ACCELEROMETER_RESOLUTION 16
+#define DUALSENSE_GYRO_RESOLUTION 8096
+#define DUALSENSE_ACCELEROMETER_RESOLUTION 1024
 
 typedef struct PACKED {
 	uint8_t op;
@@ -263,6 +265,7 @@ typedef struct {
 	float max;
 	float min;
 	int bias;
+	int speed;
 } libresense_calibration_bit;
 
 typedef struct {

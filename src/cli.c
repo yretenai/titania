@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #define MAKE_BUTTON(test) data.buttons.test ? "Y" : "N"
+#define MAKE_TEST(test) test ? "Y" : "N"
 
 int
 main(void) {
@@ -38,15 +39,16 @@ main(void) {
 	libresense_handle handle = hid.handle;
 
 	libresense_poll(&handle, 1, &data);
-	printf("hid { handle = %d, pid = %04x, vid = 0x%04x, bt = %s, serial = %ls }\n", data.hid.handle, data.hid.product_id, data.hid.vendor_id, data.hid.is_bluetooth ? "Y" : "N", data.hid.serial);
-	printf("time { sys = %u, sensor = %lu, battery = %lu, seq = { %u, %u, %u }, check = %lu }\n", data.time.system, data.time.sensor, data.time.battery, data.time.sequence, data.time.touch_sequence, data.time.driver_sequence, data.time.checksum);
+	printf("hid { handle = %d, pid = %04x, vid = 0x%04x, bt = %s, serial = %ls }\n", data.hid.handle, data.hid.product_id, data.hid.vendor_id, MAKE_TEST(data.hid.is_bluetooth), data.hid.serial);
+	printf("time { sys = %u, sensor = %lu, seq = { %u, %u, %u }, check = %lu }\n", data.time.system, data.time.sensor, data.time.sequence, data.time.touch_sequence, data.time.driver_sequence, data.time.checksum);
 	printf("buttons { dpad_up = %s, dpad_right = %s, dpad_down = %s, dpad_left = %s, square = %s, cross = %s, circle = %s, triangle = %s, l1 = %s, r1 = %s, l2 = %s, r2 = %s, share = %s, option = %s, l3 = %s, r3 = %s, ps = %s, touch = %s, mute = %s, unknown = %s, edge_f1 = %s, edge_f2 = %s, edge_lb = %s, edge_rb = %s }\n", MAKE_BUTTON(dpad_up), MAKE_BUTTON(dpad_right), MAKE_BUTTON(dpad_down), MAKE_BUTTON(dpad_left), MAKE_BUTTON(square), MAKE_BUTTON(cross), MAKE_BUTTON(circle), MAKE_BUTTON(triangle), MAKE_BUTTON(l1), MAKE_BUTTON(r1), MAKE_BUTTON(l2), MAKE_BUTTON(r2), MAKE_BUTTON(share), MAKE_BUTTON(option), MAKE_BUTTON(l3), MAKE_BUTTON(r3), MAKE_BUTTON(ps), MAKE_BUTTON(touch), MAKE_BUTTON(mute), MAKE_BUTTON(edge_unknown), MAKE_BUTTON(edge_f1), MAKE_BUTTON(edge_f2), MAKE_BUTTON(edge_lb), MAKE_BUTTON(edge_rb));
 	printf("triggers { left = { %f%%, %u, %u }, right = { %f%%, %u, %u } }\n", data.triggers[0].level * 100, data.triggers[0].id, data.triggers[0].effect, data.triggers[1].level * 100, data.triggers[1].id, data.triggers[1].effect);
 	printf("sticks { left = { %f, %f }, right = { %f, %f } }\n", data.sticks[0].x, data.sticks[0].y, data.sticks[1].x, data.sticks[1].y);
-	printf("touchpad { left = { active = %s, id = %u, pos = { %u, %u }, right = { active = %s, id = %u, pos = { %u, %u } } }\n", data.touch[0].active ? "yes" : "no", data.touch[0].id, data.touch[0].coords.x, data.touch[0].coords.y, data.touch[1].active ? "yes" : "no", data.touch[1].id, data.touch[1].coords.x, data.touch[1].coords.y);
+	printf("touchpad { left = { active = %s, id = %u, pos = { %u, %u }, right = { active = %s, id = %u, pos = { %u, %u } } }\n", MAKE_TEST(data.touch[0].active), data.touch[0].id, data.touch[0].coords.x, data.touch[0].coords.y, MAKE_TEST(data.touch[1].active), data.touch[1].id, data.touch[1].coords.x, data.touch[1].coords.y);
 	printf("sensors { accel = { %f, %f, %f }, gyro = { %f, %f, %f } }\n", data.sensors.accelerometer.x, data.sensors.accelerometer.y, data.sensors.accelerometer.z, data.sensors.gyro.x, data.sensors.gyro.y, data.sensors.gyro.z);
 	printf("battery { level = %f%%, state = %s, error = %u }\n", data.battery.level, libresense_battery_state_msg[data.battery.state], data.battery.battery_error);
-	printf("state { headphones = %s, headset = %s, muted = %s, cabled = %s, raw = %08lx, reserved = %08lx }\n", data.device.headphones ? "Y" : "N", data.device.headset ? "Y" : "N", data.device.muted ? "Y" : "N", data.device.cable_connected ? "Y" : "N", data.state, data.reserved);
+	printf("state { headphones = %s, headset = %s, muted = %s, cabled = %s, stick = { disconnect = %s, error = %s, calibrate = %s }, raw = %08lx, reserved = %08lx }\n", MAKE_TEST(data.device.headphones), MAKE_TEST(data.device.headset), MAKE_TEST(data.device.muted), MAKE_TEST(data.device.cable_connected), MAKE_TEST(data.edge_device.stick_disconnected), MAKE_TEST(data.edge_device.stick_error), MAKE_TEST(data.edge_device.stick_calibrating), data.state, data.reserved);
+
 	libresense_close(handle);
 	libresense_exit();
 	return 0;

@@ -118,7 +118,6 @@ typedef struct {
 	uint16_t driver_sequence;
 	uint32_t system;
 	uint64_t sensor;
-	uint64_t battery;
 	uint64_t checksum;
 } libresense_time;
 
@@ -133,6 +132,12 @@ typedef struct {
 	bool muted : 1;
 	bool cable_connected : 1;
 } libresense_device_state;
+
+typedef struct {
+	bool stick_disconnected : 1;
+	bool stick_error : 1;
+	bool stick_calibrating : 1;
+} libresense_edge_state;
 
 typedef struct {
 	float level;
@@ -210,6 +215,7 @@ typedef struct {
 	libresense_sensors sensors;
 	libresense_battery battery;
 	libresense_device_state device;
+	libresense_edge_state edge_device;
 	uint64_t state;
 	uint64_t reserved;
 } libresense_data;
