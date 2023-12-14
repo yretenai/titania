@@ -34,6 +34,8 @@
 
 #define DUALSENSE_LEFT (0)
 #define DUALSENSE_RIGHT (1)
+#define DUALSENSE_SMALL_MOTOR (0)
+#define DUALSENSE_LARGE_MOTOR (1)
 #define ADAPTIVE_TRIGGER_LEFT (1)
 #define ADAPTIVE_TRIGGER_RIGHT (0)
 
@@ -228,12 +230,12 @@ typedef union PACKED {
 		// byte 0
 		bool rumble : 1;
 		bool vibration_mode_compatible : 1;
-		bool rt_rumble : 1;
-		bool lt_rumble : 1;
+		bool small_rumble_motor : 1;
+		bool large_rumble_motor : 1;
 		bool jack : 1;
-		bool jack2 : 1; // always set when jack is set. maybe related to headset vs headphones?
-		bool mic : 1;
 		bool speaker : 1;
+		bool mic : 1;
+		bool audio_output : 1;
 		// byte 1
 		bool mic_led : 1;
 		bool mute : 1;
@@ -242,7 +244,7 @@ typedef union PACKED {
 		bool player_indicator_led : 1;
 		bool vibration_mode_advanced : 1;
 		bool vibration_mode : 1; // modifying rumble at all sets this
-		bool reserved : 1;		 // unused
+		bool reserved2 : 1;		 // unused
 	} bits;
 
 	uint16_t value;
@@ -271,9 +273,9 @@ static_assert(sizeof(dualsense_effect_output) == 10, "dualsense_effect_output is
 
 typedef struct PACKED {
 	uint8_t jack;
-	uint8_t jack2;
 	uint8_t speaker;
 	uint8_t mic;
+	uint8_t output;
 	bool microphone_led;
 	uint8_t flags;
 } dualsense_audio_output;

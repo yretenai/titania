@@ -273,10 +273,6 @@ typedef struct {
 
 typedef struct {
 	int todo; // todo
-} libresense_audio_update;
-
-typedef struct {
-	int todo; // todo
 } libresense_effect_update;
 
 #define libresense_init() libresense_init_checked(sizeof(libresense_hid))
@@ -337,12 +333,13 @@ libresense_result
 libresense_update_effect(const libresense_handle handle, libresense_effect_update data);
 
 /**
- * @brief update audio state of a controller
+ * @brief update effect state of a controller
  * @param handle: the controller to update
- * @param data: led update data
+ * @param large_motor
+ * @param small_motor
  */
 libresense_result
-libresense_update_audio(const libresense_handle handle, libresense_audio_update data);
+libresense_update_rumble(const libresense_handle handle, const float large_motor, const float small_motor);
 
 /**
  * @brief update a dualsense edge profile

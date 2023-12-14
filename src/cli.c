@@ -73,62 +73,111 @@ main(void) {
 	printf("battery { level = %f%%, state = %s, error = %u }\n", data.battery.level, libresense_battery_state_msg[data.battery.state], data.battery.battery_error);
 	printf("state { headphones = %s, headset = %s, muted = %s, cabled = %s, stick = { disconnect = %s, error = %s, calibrate = %s }, raw = %08lx, reserved = %08lx }\n", MAKE_TEST(data.device.headphones), MAKE_TEST(data.device.headset), MAKE_TEST(data.device.muted), MAKE_TEST(data.device.cable_connected), MAKE_TEST(data.edge_device.stick_disconnected), MAKE_TEST(data.edge_device.stick_error), MAKE_TEST(data.edge_device.stick_calibrating), data.state, data.reserved);
 
-	printf("running LED test...\n");
-	libresense_led_update update = {};
-	update.color.x = 1.0;
-	update.color.y = 0.0;
-	update.color.z = 1.0;
-	update.brightness = LIBRESENSE_LED_BRIGHTNESS_HIGH;
-	update.mode = LIBRESENSE_LED_MODE_CONTINIOUS | LIBRESENSE_LED_MODE_BRIGHTNESS;
-	update.led = LBIRESENSE_LED_NONE;
-	update.effect = LIBRESENSE_LED_EFFECT_OFF;
-	int i = 0;
-	while(true) {
-		if(i++ > 4*60) { // 250 ms per frame, 4 frames per second, 60 seconds per minute. 1 minute = 4 * 60
-			break;
+	{
+		printf("testing rumble...\n");
+		float rumble;
+
+		const float ONE_OVER_255 = 1.0f/255.0f;
+		printf("large motor...\n");
+		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+			libresense_update_rumble(handle, rumble, 0.0f);
+			libresense_push(&handle, 1);
+			usleep(10000);
 		}
 
-		if(i < 6) {
-			if(i == 1) {
-				update.led = LIBRESENSE_LED_PLAYER_1;
-			} else if(i == 2) {
-				update.led = LIBRESENSE_LED_PLAYER_2;
-			} else if(i == 3) {
-				update.led = LIBRESENSE_LED_PLAYER_3;
-			} else if(i == 4) {
-				update.led = LIBRESENSE_LED_PLAYER_4;
-			} else if(i == 5) {
-				update.led = LIBRESENSE_LED_ALL;
-			}
-		} else {
-			const int v = (i - 6) % 8;
-			if(v == 0) {
-				update.led = LIBRESENSE_LED_1;
-			} else if(v == 1) {
-				update.led = LIBRESENSE_LED_2;
-			} else if(v == 2) {
-				update.led = LIBRESENSE_LED_3;
-			} else if(v == 3) {
-				update.led = LIBRESENSE_LED_4;
-			} else if(v == 4) {
-				update.led = LIBRESENSE_LED_5;
-			} else if(v == 5) {
-				update.led = LIBRESENSE_LED_4;
-			} else if(v == 6) {
-				update.led = LIBRESENSE_LED_3;
-			} else if(v == 7) {
-				update.led = LIBRESENSE_LED_2;
-			}
+		printf("small motor...\n");
+		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+			libresense_update_rumble(handle, 0, rumble);
+			libresense_push(&handle, 1);
+			usleep(10000);
 		}
 
+		printf("both motors...\n");
+		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+			libresense_update_rumble(handle, rumble, rumble);
+			libresense_push(&handle, 1);
+			usleep(10000);
+		}
+
+		printf("rumble feedback test...\n");
+		for(int rumble_test = 0; rumble_test < 8; rumble_test++) {
+			libresense_update_rumble(handle, (rumble_test % 2) == 0 ? 1.0f : 0.1f, (rumble_test % 2) == 0 ? 1.0f : 0.1f);
+			libresense_push(&handle, 1);
+			usleep(250000);
+		}
+
+		libresense_update_rumble(handle, 0, 0);
+		libresense_push(&handle, 1);
+	}
+
+	{
+		printf("testing led...\n");
+		libresense_led_update update = {};
+		update.color.x = 1.0;
+		update.color.y = 0.0;
+		update.color.z = 1.0;
+		update.brightness = LIBRESENSE_LED_BRIGHTNESS_HIGH;
+		update.mode = LIBRESENSE_LED_MODE_CONTINIOUS | LIBRESENSE_LED_MODE_BRIGHTNESS;
+		update.led = LBIRESENSE_LED_NONE;
+		update.effect = LIBRESENSE_LED_EFFECT_OFF;
+		int i = 0;
+		while(true) {
+			if(i++ > 4*30) { // 250 ms per frame, 4 frames per second. 4 * 30 = 30 seconds worth of frames.
+				break;
+			}
+
+			if(i < 6) {
+				if(i == 1) {
+					update.led = LIBRESENSE_LED_PLAYER_1;
+				} else if(i == 2) {
+					update.led = LIBRESENSE_LED_PLAYER_2;
+				} else if(i == 3) {
+					update.led = LIBRESENSE_LED_PLAYER_3;
+				} else if(i == 4) {
+					update.led = LIBRESENSE_LED_PLAYER_4;
+				} else if(i == 5) {
+					update.led = LIBRESENSE_LED_ALL;
+				}
+			} else {
+				const int v = (i - 6) % 8;
+				if(v == 0) {
+					update.led = LIBRESENSE_LED_1;
+				} else if(v == 1) {
+					update.led = LIBRESENSE_LED_2;
+				} else if(v == 2) {
+					update.led = LIBRESENSE_LED_3;
+				} else if(v == 3) {
+					update.led = LIBRESENSE_LED_4;
+				} else if(v == 4) {
+					update.led = LIBRESENSE_LED_5;
+				} else if(v == 5) {
+					update.led = LIBRESENSE_LED_4;
+				} else if(v == 6) {
+					update.led = LIBRESENSE_LED_3;
+				} else if(v == 7) {
+					update.led = LIBRESENSE_LED_2;
+				}
+			}
+
+			libresense_update_led(handle, update);
+			libresense_push(&handle, 1);
+			const libresense_vector3 color = update.color;
+			update.color.x = color.z;
+			update.color.y = color.x;
+			update.color.z = color.y;
+
+			usleep(250000);
+		}
+
+		update.color.x = 1.0;
+		update.color.y = 0.0;
+		update.color.z = 1.0;
+		update.brightness = LIBRESENSE_LED_BRIGHTNESS_HIGH;
+		update.mode = LIBRESENSE_LED_MODE_CONTINIOUS | LIBRESENSE_LED_MODE_BRIGHTNESS;
+		update.led = LIBRESENSE_LED_PLAYER_1;
+		update.effect = LIBRESENSE_LED_EFFECT_OFF;
 		libresense_update_led(handle, update);
 		libresense_push(&handle, 1);
-		const libresense_vector3 color = update.color;
-		update.color.x = color.z;
-		update.color.y = color.x;
-		update.color.z = color.y;
-
-		usleep(250000);
 	}
 
 	result = libresense_close(handle);

@@ -323,6 +323,9 @@ libresense_push(const libresense_handle *handle, const size_t handle_count) {
 	return LIBRESENSE_OK;
 }
 
+#define NORM_CLAMP_UINT8(value) \
+	(value >= 1.0f ? UINT8_MAX : value <= 0.0f ? 0 : (uint8_t) (value * UINT8_MAX))
+
 libresense_result
 libresense_update_led(const libresense_handle handle, libresense_led_update data) {
 	CHECK_INIT;
@@ -331,9 +334,9 @@ libresense_update_led(const libresense_handle handle, libresense_led_update data
 	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
 	if(data.color.x >= 0.0f && data.color.y >= 0.0f && data.color.z >= 0.0f) {
 		hid_state->flags.bits.led = true;
-		hid_state->led.color.x = data.color.x >= 1.0f ? UINT8_MAX : (uint8_t) (data.color.x * UINT8_MAX);
-		hid_state->led.color.y = data.color.y >= 1.0f ? UINT8_MAX : (uint8_t) (data.color.y * UINT8_MAX);
-		hid_state->led.color.z = data.color.z >= 1.0f ? UINT8_MAX : (uint8_t) (data.color.z * UINT8_MAX);
+		hid_state->led.color.x = NORM_CLAMP_UINT8(data.color.x);
+		hid_state->led.color.y = NORM_CLAMP_UINT8(data.color.y);
+		hid_state->led.color.z = NORM_CLAMP_UINT8(data.color.z);
 	}
 
 	if(data.brightness != hid_state->led.brightness) {
@@ -365,10 +368,16 @@ libresense_update_effect(const libresense_handle handle, libresense_effect_updat
 }
 
 libresense_result
-libresense_update_audio(const libresense_handle handle, libresense_audio_update data) {
+libresense_update_rumble(const libresense_handle handle, const float large_motor, const float small_motor) {
 	CHECK_INIT;
 	CHECK_HANDLE_VALID(handle);
-	// todo
+
+	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
+	hid_state->flags.bits.rumble = hid_state->flags.bits.large_rumble_motor = hid_state->flags.bits.small_rumble_motor = true;
+	hid_state->flags.bits.vibration_mode = hid_state->flags.bits.vibration_mode_compatible = hid_state->flags.bits.vibration_mode_advanced = true;
+	hid_state->rumble[DUALSENSE_LARGE_MOTOR] = NORM_CLAMP_UINT8(large_motor);
+	hid_state->rumble[DUALSENSE_SMALL_MOTOR] = NORM_CLAMP_UINT8(small_motor);
+
 	return LIBRESENSE_NOT_IMPLEMENTED;
 }
 
@@ -378,7 +387,7 @@ libresense_close(const libresense_handle handle) {
 	CHECK_HANDLE(handle);
 
 	hid_close(state[handle].hid);
-	state[handle] = (dualsense_state) { 0 };
+	memset(&state[handle], 0, sizeof(dualsense_state));
 
 	return LIBRESENSE_OK;
 }
