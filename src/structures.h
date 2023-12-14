@@ -1,3 +1,8 @@
+#pragma once
+
+#ifndef LIBRESENSE_STRUCTURES_H
+#define LIBRESENSE_STRUCTURES_H
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -27,6 +32,11 @@
 #pragma pack(push, 1)
 #endif
 
+#define DUALSENSE_LEFT (0)
+#define DUALSENSE_RIGHT (1)
+#define ADAPTIVE_TRIGGER_LEFT (1)
+#define ADAPTIVE_TRIGGER_RIGHT (0)
+
 typedef enum ENUM_FORCE_8 {
 	DUALSENSE_REPORT_INPUT = 0x1,
 	DUALSENSE_REPORT_OUTPUT = 0x2,
@@ -48,14 +58,14 @@ typedef enum ENUM_FORCE_8 {
 	MAKE_EDGE_PROFILE_REPORT(0x79, PROFILE_CIRCLE)
 } dualsense_report_id;
 
-static_assert(sizeof(dualsense_report_id) == 1, "Dualsense Report ID is not 1 byte");
+static_assert(sizeof(dualsense_report_id) == 1, "dualsense report id is not 1 byte");
 
 typedef struct PACKED {
 	uint8_t x;
 	uint8_t y;
 } dualsense_stick;
 
-static_assert(sizeof(dualsense_stick) == 2, "size mismatch");
+static_assert(sizeof(dualsense_stick) == 2, "dualsense_stick is not 2 bytes");
 
 typedef enum PACKED {
 	DUALSENSE_DPAD_U = 0,
@@ -94,7 +104,7 @@ typedef struct PACKED {
 	uint8_t padding : 8;
 } dualsense_button;
 
-static_assert(sizeof(dualsense_button) == 4, "size mismatch");
+static_assert(sizeof(dualsense_button) == 4, "dualsense_button is not 4 bytes");
 
 typedef struct PACKED {
 	int16_t x;
@@ -102,14 +112,22 @@ typedef struct PACKED {
 	int16_t z;
 } dualsense_vector3;
 
-static_assert(sizeof(dualsense_vector3) == 6, "size mismatch");
+static_assert(sizeof(dualsense_vector3) == 6, "dualsense_vector3 is not 6 bytes");
+
+typedef struct PACKED {
+	uint8_t x;
+	uint8_t y;
+	uint8_t z;
+} dualsense_vector3b;
+
+static_assert(sizeof(dualsense_vector3b) == 3, "dualsense_vector3b is not 3 bytes");
 
 typedef struct PACKED {
 	uint16_t x : 12;
 	uint16_t y : 12;
 } dualsense_vector2;
 
-static_assert(sizeof(dualsense_vector2) == 3, "size mismatch");
+static_assert(sizeof(dualsense_vector2) == 3, "dualsense_vector2 is not 3 bytes");
 
 typedef struct PACKED {
 	struct {
@@ -120,7 +138,7 @@ typedef struct PACKED {
 	dualsense_vector2 coord;
 } dualsense_touch;
 
-static_assert(sizeof(dualsense_touch) == 4, "size mismatch");
+static_assert(sizeof(dualsense_touch) == 4, "dualsense_touch is not 4 bytes");
 
 typedef enum ENUM_FORCE_8 {
 	DUALSENSE_BATTERY_STATE_DISCHARGING = 0x0,
@@ -139,13 +157,14 @@ typedef struct PACKED {
 	dualsense_battery_state_v state : 4;
 } dualsense_battery_state;
 
-static_assert(sizeof(dualsense_battery_state) == 1, "size mismatch");
+static_assert(sizeof(dualsense_battery_state) == 1, "dualsense_battery_state is not 1 byte");
 
-static_assert(sizeof(libresense_device_state) == 1, "size mismatch");
+static_assert(sizeof(libresense_device_state) == 1, "libresense_device_state is not 1 byte");
 
 typedef struct PACKED {
 	uint64_t value : 40;
 } dualsense_uint40;
+
 static_assert(sizeof(dualsense_uint40) == 0x5, "uint40 is not 5 bytes");
 
 typedef struct PACKED {
@@ -156,14 +175,16 @@ typedef struct PACKED {
 	libresense_device_state device;
 	uint8_t reserved;
 } dualsense_device_state;
-static_assert(sizeof(dualsense_device_state) == 0x8, "size mismatch");
+
+static_assert(sizeof(dualsense_device_state) == 8, "dualsense_deviec_state is not 8 bytes");
 
 typedef struct PACKED {
 	dualsense_vector3 accelerometer;
 	dualsense_vector3 gyro;
 	dualsense_uint40 time;
 } dualsense_sensors;
-static_assert(sizeof(dualsense_sensors) == 0x11, "size mismatch");
+
+static_assert(sizeof(dualsense_sensors) == 0x11, "dualsense_sensors is not 17 bytes");
 
 typedef struct PACKED {
 	uint8_t id : 4;
@@ -186,7 +207,7 @@ typedef struct PACKED {
 	uint64_t checksum;
 } dualsense_input_msg;
 
-static_assert(sizeof(dualsense_input_msg) == 0x40, "size mismatch");
+static_assert(sizeof(dualsense_input_msg) == 0x40, "dualsense_input_msg is not 64 bytes");
 
 typedef struct PACKED {
 	dualsense_report_id id;
@@ -200,37 +221,89 @@ typedef struct PACKED {
 	uint32_t bt_checksum;
 } dualsense_input_msg_ex;
 
-static_assert(sizeof(dualsense_input_msg_ex) == 0x4e, "size mismatch");
+static_assert(sizeof(dualsense_input_msg_ex) == 0x4e, "dualsense_input_msg_ex is not 78 bytes");
 
-typedef struct PACKED {
-	bool rumble : 1;
-	bool vibration_mode_compatible : 1;
-	bool rt_rumble : 1;
-	bool lt_rumble : 1;
-	bool jack : 1;
-	bool jack2 : 1; // always set when jack is set. maybe related to headset vs headphones?
-	bool mic : 1;
-	bool speaker : 1;
-	bool mic_led : 1;
-	bool mute : 1;
-	bool touch_led : 1;
-	bool led : 1;
-	bool player_led : 1;
-	bool vibration_mode_advanced : 1;
-	bool vibration_mode : 1; // modifying rumble at all sets this
-	bool reserved : 1;		 // unused
+typedef union PACKED {
+	struct {
+		// byte 0
+		bool rumble : 1;
+		bool vibration_mode_compatible : 1;
+		bool rt_rumble : 1;
+		bool lt_rumble : 1;
+		bool jack : 1;
+		bool jack2 : 1; // always set when jack is set. maybe related to headset vs headphones?
+		bool mic : 1;
+		bool speaker : 1;
+		// byte 1
+		bool mic_led : 1;
+		bool mute : 1;
+		bool led : 1;
+		bool disable_led : 1;
+		bool player_led : 1;
+		bool vibration_mode_advanced : 1;
+		bool vibration_mode : 1; // modifying rumble at all sets this
+		bool reserved : 1;		 // unused
+	} bits;
+	uint16_t value;
 } dualsense_mutator_flags;
 
-static_assert(sizeof(dualsense_mutator_flags) == 2, "size mismatch");
+static_assert(sizeof(dualsense_mutator_flags) == 2, "dualsense_mutator_flags is not 2 bytes");
 
 typedef struct PACKED {
-	uint8_t vol; // todo
+	uint8_t mode;
+	uint16_t unknown;
+	uint8_t effect;
+	uint8_t brightness;
+	uint8_t player_id;
+	dualsense_vector3b color;
+} dualsense_led_output;
+
+static_assert(sizeof(dualsense_led_output) == 9, "dualsense_led_output is not 9 bytes");
+
+typedef struct PACKED {
+	uint8_t mode;
+	uint8_t values[7];
+	uint16_t unknown;
+} dualsense_effect_output;
+
+static_assert(sizeof(dualsense_effect_output) == 10, "dualsense_effect_output is not 10 bytes");
+
+typedef struct PACKED {
+	uint8_t jack;
+	uint8_t jack2;
+	uint8_t speaker;
+	uint8_t mic;
+	bool microphone_led;
+	uint8_t flags;
 } dualsense_audio_output;
 
+static_assert(sizeof(dualsense_audio_output) == 6, "dualsense_audio_output is not 6 bytes");
+
 typedef struct PACKED {
+	dualsense_report_id id;
 	dualsense_mutator_flags flags;
-	// todo
+	uint8_t rumble[2];
+	dualsense_audio_output audio;
+	dualsense_effect_output effects[2];
+	uint8_t unknown[8];
+	dualsense_led_output led;
+	uint8_t unknown2[0x10];
 } dualsense_output_msg;
+static_assert(sizeof(dualsense_output_msg) == 0x40, "dualsense_output_msg is not 64 bytes");
+
+typedef struct PACKED {
+	dualsense_report_id id;
+
+	union {
+		dualsense_output_msg data;
+		uint8_t buffer[sizeof(dualsense_output_msg)];
+	} msg;
+
+	uint8_t reserved[9];
+	uint32_t bt_checksum;
+} dualsense_output_msg_ex;
+
+static_assert(sizeof(dualsense_output_msg_ex) == 0x4e, "dualsense_output_msg_ex is not 78 bytes");
 
 #define CALIBRATION_RAW_X 0
 #define CALIBRATION_RAW_Y 1
@@ -255,7 +328,8 @@ typedef struct PACKED {
 	uint32_t crc;
 	uint8_t padding[2];
 } dualsense_calibration_info;
-static_assert(sizeof(dualsense_calibration_info) == 41, "size mismatch");
+
+static_assert(sizeof(dualsense_calibration_info) == 41, "dualsense_calibration_info is not 41 bytes");
 
 #ifdef _MSC_VER
 #pragma pack(pop)
@@ -282,8 +356,8 @@ typedef struct {
 	} input;
 
 	union {
-		dualsense_output_msg data;
-		uint8_t buffer[sizeof(dualsense_output_msg)];
+		dualsense_output_msg_ex data;
+		uint8_t buffer[sizeof(dualsense_output_msg_ex)];
 	} output;
 } dualsense_state;
 
@@ -295,61 +369,66 @@ typedef struct {
 // Check if the library is initialized
 #define CHECK_INIT       \
 	if (!is_initialized) \
-	return ELIBRESENSE_NOT_INITIALIZED
+	return LIBRESENSE_NOT_INITIALIZED
 
 // Check if a handle is a valid number.
 #define CHECK_HANDLE(h)                                                            \
-	if (h == LIBRESENSE_INVALID_HANDLE || h < 0 || h > LIBRESENSE_MAX_CONTROLLERS) \
-	return ELIBRESENSE_INVALID_HANDLE
+	if (h == LIBRESENSE_INVALID_HANDLE || h < 0 || h >= LIBRESENSE_MAX_CONTROLLERS) \
+	return LIBRESENSE_INVALID_HANDLE
 
 // Check if a handle is a valid number, and that it has been initialized.
 #define CHECK_HANDLE_VALID(h) \
 	CHECK_HANDLE(h);          \
 	if (state[h].hid == NULL) \
-	return ELIBRESENSE_INVALID_HANDLE
+	return LIBRESENSE_INVALID_HANDLE
 
-/*
- * convert dualsense input report to libresense's representation
- * @param const dualsense_input_msg input: the input to convert
- * @param libresense_data *data: the data to convert into
+/**
+ * @brief convert dualsense input report to libresense's representation
+ * @param input: the input to convert
+ * @param data: the data to convert into
+ * @param calibration: calibration data
  */
 void
 libresense_convert_input(const dualsense_input_msg input, libresense_data *data, libresense_calibration_bit calibration[6]);
 
-/*
+/**
+ * @brief todo
  * convert a dualsense edge profile to libresense's representation
- * @param const todo input: the input to convert
- * @param libresense_edge_profile *profile: the profile to convert into
+ * @param input: the input to convert
+ * @param profile: the profile to convert into
  */
 libresense_result
 libresense_convert_edge_profile_input(const void *input, libresense_edge_profile *profile); // todo
 
-/*
+/**
+ * @brief todo
  * convert a libresense profile to dualsense edge's representation
- * @param const libresense_edge_profile input: the input to convert
- * @param todo profile: the profile to convert into
+ * @param input: the input to convert
+ * @param profile: the profile to convert into
  */
 libresense_result
 libresense_convert_edge_profile_output(const libresense_edge_profile input, void *profile); // todo
 
-/*
- * get a HID feature report
- * @param hid_device *handle: the device to query
- * @param int report_id: the report to fetch
- * @param uint8_t *buffer: where to store the buffer
- * @param size_t size: the size of the buffer
- * @param bool preserve: preserve byte 0
+/**
+ * @brief get a HID feature report
+ * @param handle: the device to query
+ * @param report_id: the report to fetch
+ * @param buffer: where to store the buffer
+ * @param size: the size of the buffer
+ * @param preserve: preserve byte 0
  */
 size_t
 libresense_get_feature_report(hid_device *handle, const int report_id, uint8_t *buffer, const size_t size, const bool preserve);
 
-/*
- * send a HID feature report
- * @param hid_device *handle: the device to update
- * @param int report_id: the report to send
- * @param uint8_t *buffer: where the buffer is
- * @param size_t size: the size of the buffer
- * @param bool preserve: preserve byte 0
+/**
+ * @brief send a HID feature report
+ * @param handle: the device to update
+ * @param report_id: the report to send
+ * @param buffer: where the buffer is
+ * @param size: the size of the buffer
+ * @param preserve: preserve byte 0
  */
 size_t
 libresense_send_feature_report(hid_device *handle, const int report_id, uint8_t *buffer, const size_t size, const bool preserve);
+
+#endif

@@ -8,39 +8,49 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define LIBRESENSE_INVALID_HANDLE (-1)
+#define LIBRESENSE_INVALID_HANDLE_ID (-1)
+
+#define LIBRESENSE_LEFT (0)
+#define LIBRESENSE_RIGHT (1)
+#define LIBRESENSE_PRIMARY (0)
+#define LIBRESENSE_SECONDARY (1)
 
 typedef enum {
-	ELIBRESENSE_OK = 0,
-	ELIBRESENSE_NOT_INITIALIZED,
-	ELIBRESENSE_INVALID_HANDLE,
-	ELIBRESENSE_INVALID_DATA,
-	ELIBRESENSE_OUT_OF_RANGE,
-	ELIBRESENSE_NOT_IMPLEMENTED,
-	ELIBRESENSE_NO_SLOTS,
-	ELIBRESENSE_ERROR_MAX
+	LIBRESENSE_OK = 0,
+	LIBRESENSE_NOT_INITIALIZED,
+	LIBRESENSE_INVALID_LIBRARY,
+	LIBRESENSE_INVALID_HANDLE,
+	LIBRESENSE_INVALID_DATA,
+	LIBRESENSE_HIDAPI_FAIL,
+	LIBRESENSE_OUT_OF_RANGE,
+	LIBRESENSE_NOT_IMPLEMENTED,
+	LIBRESENSE_NO_SLOTS,
+	LIBRESENSE_ERROR_MAX
 } libresense_result;
 
 typedef enum {
-	ELIBRESENSE_BATTERY_UNKNOWN = 0,
-	ELIBRESENSE_BATTERY_DISCHARGING,
-	ELIBRESENSE_BATTERY_CHARGING,
-	ELIBRESENSE_BATTERY_FULL,
-	ELIBRESENSE_BATTERY_MAX
+	LIBRESENSE_BATTERY_UNKNOWN = 0,
+	LIBRESENSE_BATTERY_DISCHARGING,
+	LIBRESENSE_BATTERY_CHARGING,
+	LIBRESENSE_BATTERY_FULL,
+	LIBRESENSE_BATTERY_MAX
 } libresense_battery_state;
 
 typedef enum {
-	ELIBRESENSE_PROFILE_TRIANGLE,
-	ELIBRESENSE_PROFILE_SQUARE,
-	ELIBRESENSE_PROFILE_CROSS,
-	ELIBRESENSE_PROFILE_CIRCLE,
-	ELIBRESENSE_PROFILE_MAX
+	LIBRESENSE_PROFILE_TRIANGLE,
+	LIBRESENSE_PROFILE_SQUARE,
+	LIBRESENSE_PROFILE_CROSS,
+	LIBRESENSE_PROFILE_CIRCLE,
+	LIBRESENSE_PROFILE_MAX
 } libresense_edge_profile_id;
 
-extern const char *libresense_error_msg[ELIBRESENSE_ERROR_MAX + 1];
-extern const char *libresense_battery_state_msg[ELIBRESENSE_BATTERY_MAX + 1];
-extern const char *libresense_edge_profile_id_msg[ELIBRESENSE_PROFILE_MAX + 1];
+extern const char *libresense_error_msg[LIBRESENSE_ERROR_MAX + 1];
+extern const char *libresense_battery_state_msg[LIBRESENSE_BATTERY_MAX + 1];
+extern const char *libresense_edge_profile_id_msg[LIBRESENSE_PROFILE_MAX + 1];
 extern const int libresense_max_controllers;
+
+#define IS_LIBRESENSE_OKAY(result) (result == LIBRESENSE_OK)
+#define IS_LIBRESENSE_BAD(result) (result != LIBRESENSE_OK)
 
 typedef signed int libresense_handle;
 typedef wchar_t libresense_serial[0x100]; // Max HID Parameter length is 256 on USB, 512 on BT. HID serials are wide-chars, which are 2 bytes.
@@ -66,7 +76,8 @@ typedef struct {
 	int16_t y;
 	int16_t z;
 } libresense_vector3s;
-static_assert(sizeof(libresense_vector3s) == 6, "size mismatch");
+
+static_assert(sizeof(libresense_vector3s) == 6, "libresense_vector3s is not 6 bytes");
 
 typedef struct {
 	int16_t max;
@@ -220,76 +231,156 @@ typedef struct {
 	uint64_t reserved;
 } libresense_data;
 
-/**
- * Initialize the library, this is mandatory.
- */
-void
-libresense_init(void);
+typedef enum {
+	LIBRESENSE_LED_MODE_OFF = 0,
+	LIBRESENSE_LED_MODE_BRIGHTNESS = 1,
+	LIBRESENSE_LED_MODE_CONTINIOUS = 2
+} libresense_led_mode;
+
+typedef enum {
+	LIBRESENSE_LED_EFFECT_OFF = 0,
+	LIBRESENSE_LED_EFFECT_RESET = 1,
+	LIBRESENSE_LED_EFFECT_FADE = 2
+} libresense_led_effect;
+
+typedef enum {
+	LIBRESENSE_LED_BRIGHTNESS_HIGH = 0,
+	LIBRESENSE_LED_BRIGHTNESS_MEDIUM = 1,
+	LIBRESENSE_LED_BRIGHTNESS_LOW = 2,
+} libresense_led_brightness;
+
+typedef enum {
+	LBIRESENSE_PLAYER_NONE = 0,
+	LIBRESENSE_PLAYER_1   = 4,
+	LIBRESENSE_PLAYER_2   = 10,
+	LIBRESENSE_PLAYER_3   = 21,
+	LIBRESENSE_PLAYER_4   = 27,
+	LIBRESENSE_PLAYER_LED_1 = 1,
+	LIBRESENSE_PLAYER_LED_2 = 2,
+	LIBRESENSE_PLAYER_LED_3 = 4,
+	LIBRESENSE_PLAYER_LED_4 = 8,
+	LIBRESENSE_PLAYER_LED_5 = 16,
+	LIBRESENSE_PLAYER_ALL = 31,
+} libresense_player;
+
+typedef struct {
+	libresense_led_mode mode;
+	libresense_led_effect effect;
+	libresense_led_brightness brightness;
+	libresense_player player;
+	libresense_vector3 color;
+} libresense_led_update;
+
+typedef struct {
+	int todo; // todo
+} libresense_audio_update;
+
+typedef struct {
+	int todo; // todo
+} libresense_effect_update;
+
+#define libresense_init() libresense_init_checked(sizeof(libresense_hid))
 
 /**
- * scan and return all HIDs that this library supports.
- * @param libresense_hid *hids: pointer to where HID data should be stored
- * @param size_t hids_length: array size of hids
+ * @brief initialize the library, this is mandatory.
+ * @param size: sizeof(libresense_hid)
+ */
+libresense_result
+libresense_init_checked(const int size);
+
+/**
+ * @brief scan and return all HIDs that this library supports.
+ * @param hids: pointer to where HID data should be stored
+ * @param hids_length: array size of hids
  */
 libresense_result
 libresense_get_hids(libresense_hid *hids, const size_t hids_length);
 
 /**
- * open a HID handle for processing
- * @param libresense_hid *handle: pointer to the libresense HID handle, this value will hold the libresense_handle value when the function returns
+ * @brief open a HID handle for processing
+ * @param handle: pointer to the libresense HID handle, this value will hold the libresense_handle value when the function returns
  */
 libresense_result
 libresense_open(libresense_hid *handle);
 
 /**
- * poll controllers for input data
- * @param libresense_handle *handle: pointer to an array of handles, values will be set to LIBRESENSE_INVALID_HANDLE if they are invalid.
- * @param int handle_count: number of handles to process
- * @param libresense_data *data: pointer to an array of data storage
+ * @brief poll controllers for input data
+ * @param handle: pointer to an array of handles, values will be set to LIBRESENSE_INVALID_HANDLE if they are invalid.
+ * @param handle_count: number of handles to process
+ * @param data: pointer to an array of data storage
  */
 libresense_result
-libresense_poll(libresense_handle *handle, const size_t handle_count, libresense_data *data);
+libresense_pull(libresense_handle *handle, const size_t handle_count, libresense_data *data);
 
-// todo: libresense_update_led, libresense_update_effect, libresense_update_audio
+/**
+ * @brief push output data to controllers
+ * @param handle: pointer to an array of handles, values will be set to LIBRESENSE_INVALID_HANDLE if they are invalid.
+ * @param handle_count: number of handles to process
+ */
+libresense_result
+libresense_push(const libresense_handle *handle, const size_t handle_count);
 
-/*
- * update a dualsense edge profile 
- * @param const libresense_handle handle: the controller to update
- * @param const libresense_edge_profile_id id: the profile id to store the profile into
- * @param const libresense_edge_profile profile: the profile data to store
+/**
+ * @brief update LED state of a controller
+ * @param handle: the controller to update
+ * @param data: led update data
+ */
+libresense_result
+libresense_update_led(const libresense_handle handle, libresense_led_update data);
+
+/**
+ * @brief update effect state of a controller
+ * @param handle: the controller to update
+ * @param data: led update data
+ */
+libresense_result
+libresense_update_effect(const libresense_handle handle, libresense_effect_update data);
+
+/**
+ * @brief update audio state of a controller
+ * @param handle: the controller to update
+ * @param data: led update data
+ */
+libresense_result
+libresense_update_audio(const libresense_handle handle, libresense_audio_update data);
+
+/**
+ * @brief update a dualsense edge profile
+ * @param handle: the controller to update
+ * @param id: the profile id to store the profile into
+ * @param profile: the profile data to store
  */
 libresense_result
 libresense_update_profile(const libresense_handle handle, const libresense_edge_profile_id id, const libresense_edge_profile profile);
 
-/*
- * delete a dualsense edge profile
- * @param const libresense_handle handle: the controller to update
- * @param const libresense_edge_profile_id id: the profile id to store the profile into
- * @param const libresense_edge_profile profile: the profile data to store
+/**
+ * @brief delete a dualsense edge profile
+ * @param handle: the controller to update
+ * @param id: the profile id to delete
  */
 libresense_result
 libresense_delete_profile(const libresense_handle handle, const libresense_edge_profile_id id);
 
-/*
- * close a controller device handle
- * @param const libresense_handle handle: the controller to close
+/**
+ * @brief close a controller device handle
+ * @param handle: the controller to close
  */
 libresense_result
 libresense_close(const libresense_handle handle);
 
-/*
- * cleans up library internals for exit
+/**
+ * @brief cleans up library internals for exit
  */
 void
 libresense_exit(void);
 
 #ifdef LIBRESENSE_DEBUG
-/*
- * debug: get a feature report
- * @param const libresense_handle handle: the device to query
- * @param int report_id: the report to fetch
- * @param uint8_t *buffer: where to store the buffer
- * @param size_t size: the size of the buffer
+/**
+ * @brief (debug) get a feature report
+ * @param handle: the device to query
+ * @param report_id: the report to fetch
+ * @param buffer: where to store the buffer
+ * @param size: the size of the buffer
  */
 size_t
 libresense_debug_get_feature_report(const libresense_handle handle, const int report_id, uint8_t *buffer, const size_t size);
