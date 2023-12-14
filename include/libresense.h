@@ -250,24 +250,24 @@ typedef enum {
 } libresense_led_brightness;
 
 typedef enum {
-	LBIRESENSE_PLAYER_NONE = 0,
-	LIBRESENSE_PLAYER_1   = 4,
-	LIBRESENSE_PLAYER_2   = 10,
-	LIBRESENSE_PLAYER_3   = 21,
-	LIBRESENSE_PLAYER_4   = 27,
-	LIBRESENSE_PLAYER_LED_1 = 1,
-	LIBRESENSE_PLAYER_LED_2 = 2,
-	LIBRESENSE_PLAYER_LED_3 = 4,
-	LIBRESENSE_PLAYER_LED_4 = 8,
-	LIBRESENSE_PLAYER_LED_5 = 16,
-	LIBRESENSE_PLAYER_ALL = 31,
-} libresense_player;
+	LBIRESENSE_LED_NONE = 0,
+	LIBRESENSE_LED_PLAYER_1 = 4,
+	LIBRESENSE_LED_PLAYER_2 = 10,
+	LIBRESENSE_LED_PLAYER_3 = 21,
+	LIBRESENSE_LED_PLAYER_4 = 27,
+	LIBRESENSE_LED_1 = 1,
+	LIBRESENSE_LED_2 = 2,
+	LIBRESENSE_LED_3 = 4,
+	LIBRESENSE_LED_4 = 8,
+	LIBRESENSE_LED_5 = 16,
+	LIBRESENSE_LED_ALL = 31,
+} libresense_led_index;
 
 typedef struct {
 	libresense_led_mode mode;
 	libresense_led_effect effect;
 	libresense_led_brightness brightness;
-	libresense_player player;
+	libresense_led_index led;
 	libresense_vector3 color;
 } libresense_led_update;
 

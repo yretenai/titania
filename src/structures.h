@@ -239,11 +239,12 @@ typedef union PACKED {
 		bool mute : 1;
 		bool led : 1;
 		bool disable_led : 1;
-		bool player_led : 1;
+		bool player_indicator_led : 1;
 		bool vibration_mode_advanced : 1;
 		bool vibration_mode : 1; // modifying rumble at all sets this
 		bool reserved : 1;		 // unused
 	} bits;
+
 	uint16_t value;
 } dualsense_mutator_flags;
 
@@ -254,7 +255,7 @@ typedef struct PACKED {
 	uint16_t unknown;
 	uint8_t effect;
 	uint8_t brightness;
-	uint8_t player_id;
+	uint8_t led_id;
 	dualsense_vector3b color;
 } dualsense_led_output;
 
@@ -289,6 +290,7 @@ typedef struct PACKED {
 	dualsense_led_output led;
 	uint8_t unknown2[0x10];
 } dualsense_output_msg;
+
 static_assert(sizeof(dualsense_output_msg) == 0x40, "dualsense_output_msg is not 64 bytes");
 
 typedef struct PACKED {
@@ -372,7 +374,7 @@ typedef struct {
 	return LIBRESENSE_NOT_INITIALIZED
 
 // Check if a handle is a valid number.
-#define CHECK_HANDLE(h)                                                            \
+#define CHECK_HANDLE(h)                                                             \
 	if (h == LIBRESENSE_INVALID_HANDLE || h < 0 || h >= LIBRESENSE_MAX_CONTROLLERS) \
 	return LIBRESENSE_INVALID_HANDLE
 

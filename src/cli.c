@@ -73,13 +73,14 @@ main(void) {
 	printf("battery { level = %f%%, state = %s, error = %u }\n", data.battery.level, libresense_battery_state_msg[data.battery.state], data.battery.battery_error);
 	printf("state { headphones = %s, headset = %s, muted = %s, cabled = %s, stick = { disconnect = %s, error = %s, calibrate = %s }, raw = %08lx, reserved = %08lx }\n", MAKE_TEST(data.device.headphones), MAKE_TEST(data.device.headset), MAKE_TEST(data.device.muted), MAKE_TEST(data.device.cable_connected), MAKE_TEST(data.edge_device.stick_disconnected), MAKE_TEST(data.edge_device.stick_error), MAKE_TEST(data.edge_device.stick_calibrating), data.state, data.reserved);
 
+	printf("running LED test...\n");
 	libresense_led_update update = {};
 	update.color.x = 1.0;
 	update.color.y = 0.0;
 	update.color.z = 1.0;
 	update.brightness = LIBRESENSE_LED_BRIGHTNESS_HIGH;
 	update.mode = LIBRESENSE_LED_MODE_CONTINIOUS | LIBRESENSE_LED_MODE_BRIGHTNESS;
-	update.player = LIBRESENSE_PLAYER_LED_1;
+	update.led = LBIRESENSE_LED_NONE;
 	update.effect = LIBRESENSE_LED_EFFECT_OFF;
 	int i = 0;
 	while(true) {
@@ -89,43 +90,43 @@ main(void) {
 
 		if(i < 6) {
 			if(i == 1) {
-				update.player = LIBRESENSE_PLAYER_1;
+				update.led = LIBRESENSE_LED_PLAYER_1;
 			} else if(i == 2) {
-				update.player = LIBRESENSE_PLAYER_2;
+				update.led = LIBRESENSE_LED_PLAYER_2;
 			} else if(i == 3) {
-				update.player = LIBRESENSE_PLAYER_3;
+				update.led = LIBRESENSE_LED_PLAYER_3;
 			} else if(i == 4) {
-				update.player = LIBRESENSE_PLAYER_4;
+				update.led = LIBRESENSE_LED_PLAYER_4;
 			} else if(i == 5) {
-				update.player = LIBRESENSE_PLAYER_ALL;
+				update.led = LIBRESENSE_LED_ALL;
 			}
 		} else {
 			const int v = (i - 6) % 8;
 			if(v == 0) {
-				update.player = LIBRESENSE_PLAYER_LED_1;
+				update.led = LIBRESENSE_LED_1;
 			} else if(v == 1) {
-				update.player = LIBRESENSE_PLAYER_LED_2;
+				update.led = LIBRESENSE_LED_2;
 			} else if(v == 2) {
-				update.player = LIBRESENSE_PLAYER_LED_3;
+				update.led = LIBRESENSE_LED_3;
 			} else if(v == 3) {
-				update.player = LIBRESENSE_PLAYER_LED_4;
+				update.led = LIBRESENSE_LED_4;
 			} else if(v == 4) {
-				update.player = LIBRESENSE_PLAYER_LED_5;
+				update.led = LIBRESENSE_LED_5;
 			} else if(v == 5) {
-				update.player = LIBRESENSE_PLAYER_LED_4;
+				update.led = LIBRESENSE_LED_4;
 			} else if(v == 6) {
-				update.player = LIBRESENSE_PLAYER_LED_3;
+				update.led = LIBRESENSE_LED_3;
 			} else if(v == 7) {
-				update.player = LIBRESENSE_PLAYER_LED_2;
+				update.led = LIBRESENSE_LED_2;
 			}
 		}
 
 		libresense_update_led(handle, update);
 		libresense_push(&handle, 1);
-		printf("%d\n", i);
-		update.color.x = (float) rand() / RAND_MAX;
-		update.color.y = (float) rand() / RAND_MAX;
-		update.color.z = (float) rand() / RAND_MAX;
+		const libresense_vector3 color = update.color;
+		update.color.x = color.z;
+		update.color.y = color.x;
+		update.color.z = color.y;
 
 		usleep(250000);
 	}

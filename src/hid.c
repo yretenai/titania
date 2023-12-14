@@ -348,9 +348,9 @@ libresense_update_led(const libresense_handle handle, libresense_led_update data
 		hid_state->led.effect = data.effect;
 	}
 
-	if(data.player != hid_state->led.player_id) {
-		hid_state->flags.bits.player_led = true;
-		hid_state->led.player_id = data.player;
+	if(data.led != hid_state->led.led_id) {
+		hid_state->flags.bits.player_indicator_led = true;
+		hid_state->led.led_id = data.led;
 	}
 
 	return LIBRESENSE_OK;
