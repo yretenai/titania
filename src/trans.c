@@ -72,5 +72,5 @@ libresense_convert_input(const dualsense_input_msg input, libresense_data *data,
 	data->edge_device = input.state.edge_device;
 
 	data->state = *(uint64_t*)&input.state;
-	data->reserved = input.reserved;
+	data->state_id = input.state_id;
 }

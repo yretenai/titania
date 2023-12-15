@@ -38,6 +38,9 @@
 #define DUALSENSE_LARGE_MOTOR (1)
 #define ADAPTIVE_TRIGGER_LEFT (1)
 #define ADAPTIVE_TRIGGER_RIGHT (0)
+#define DUALSENSE_CRC_INPUT (0xA1)
+#define DUALSENSE_CRC_OUTPUT (0xA2)
+#define DUALSENSE_CRC_FEATURE (0xA3)
 
 typedef enum ENUM_FORCE_8 {
 	DUALSENSE_REPORT_INPUT = 0x1,
@@ -204,7 +207,7 @@ typedef struct PACKED {
 	dualsense_touch touch[2];
 	uint8_t touch_sequence;
 	dualsense_adaptive_trigger adaptive_triggers[2];
-	uint32_t reserved;
+	uint32_t state_id;
 	dualsense_device_state state;
 	uint64_t checksum;
 } dualsense_input_msg;
@@ -240,11 +243,11 @@ typedef union PACKED {
 		bool mic_led : 1;
 		bool mute : 1;
 		bool led : 1;
-		bool disable_led : 1;
+		bool reset_led : 1;
 		bool player_indicator_led : 1;
 		bool advanced_rumble : 1; // related to adaptive triggers.
 		bool trigger_rumble : 1;
-		bool reserved : 1;		 // unused
+		bool reserved : 1; // unused
 	} bits;
 
 	uint16_t value;
@@ -288,12 +291,23 @@ typedef enum ENUM_FORCE_8 {
 } dualsense_audio_mic_flags;
 
 typedef struct PACKED {
+	bool unknown1 : 1;
+	bool unknown2 : 1;
+	bool unknown3 : 1;
+	bool unknown4 : 1;
+	bool mute_mic : 1;
+	bool unknown6 : 1;
+	bool audio_mute : 1;
+	bool unknown8 : 1;
+} dualsense_audio_mute_flags;
+
+typedef struct PACKED {
 	uint8_t jack;
 	uint8_t speaker;
 	uint8_t mic;
 	dualsense_audio_flags flags;
-	bool microphone_led;
-	dualsense_audio_mic_flags mic_flags;
+	dualsense_audio_mic_flags mic_led_flags;
+	dualsense_audio_mute_flags mute_flags;
 } dualsense_audio_output;
 
 static_assert(sizeof(dualsense_audio_output) == 6, "dualsense_audio_output is not 6 bytes");
@@ -302,6 +316,7 @@ typedef struct PACKED {
 	uint8_t rumble_power_reduction : 4;
 	uint8_t trigger_power_reduction : 4;
 } dualsense_motor_flags;
+
 static_assert(sizeof(dualsense_motor_flags) == 1, "dualsense_motor_flags is not 1 byte");
 
 typedef struct PACKED {
@@ -373,7 +388,6 @@ typedef struct {
 	hid_device *hid;
 	libresense_hid hid_info;
 	libresense_calibration_bit calibration[6];
-	bool bt_initialized;
 	uint16_t in_sequence;
 	uint16_t out_sequence;
 
@@ -457,5 +471,14 @@ libresense_get_feature_report(hid_device *handle, const int report_id, uint8_t *
  */
 size_t
 libresense_send_feature_report(hid_device *handle, const int report_id, uint8_t *buffer, const size_t size, const bool preserve);
+
+/**
+ * @brief calculates a bluetooth checksum
+ * @param state: existing state.
+ * @param buffer: data to hash
+ * @param size: sizeof(buffer)
+ */
+uint32_t
+libresense_calc_checksum(uint32_t state, uint8_t *buffer, const size_t size);
 
 #endif

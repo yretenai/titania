@@ -228,7 +228,7 @@ typedef struct {
 	libresense_device_state device;
 	libresense_edge_state edge_device;
 	uint64_t state;
-	uint64_t reserved;
+	uint64_t state_id;
 } libresense_data;
 
 typedef enum {
@@ -264,10 +264,6 @@ typedef enum {
 	LIBRESENSE_LED_FADE = 64
 } libresense_led_index;
 
-typedef enum {
-	LIBRESENSE_EFFECT_OFF = 0
-} libresense_effect_mode;
-
 typedef struct {
 	libresense_led_mode mode;
 	libresense_led_effect effect;
@@ -276,9 +272,112 @@ typedef struct {
 	libresense_vector3 color;
 } libresense_led_update;
 
+typedef enum {
+	LIBRESENSE_EFFECT_OFF = 0, // 0x5
+	LIBRESENSE_EFFECT_STOP_VIBRATING, // 0x0
+	LIBRESENSE_EFFECT_UNIFORM, // 0x1
+	LIBRESENSE_EFFECT_SLOPE, // 0x22
+	LIBRESENSE_EFFECT_TRIGGER, // 0x25
+	LIBRESENSE_EFFECT_SECTION, // 0x2
+	LIBRESENSE_EFFECT_VIBRATE, // 0x6
+	LIBRESENSE_EFFECT_VIBRATE_PULSE, // 0x27
+	LIBRESENSE_EFFECT_MUTIPLE_SECTIONS, // 0x21
+	LIBRESENSE_EFFECT_MUTIPLE_VIBRATE, // 0x26
+	LIBRESENSE_EFFECT_MUTIPLE_VIBRATE_SECTIONS, // 0x23
+} libresense_effect_mode;
+
 typedef struct {
-	int todo; // todo
+	uint8_t reserved[0x60];
+} libresense_effect_update_off;
+
+typedef libresense_effect_update_off libresense_effect_update_stop;
+
+typedef struct {
+	float position;
+	float resistance;
+} libresense_effect_update_uniform;
+
+typedef struct {
+	libresense_vector2 position;
+	libresense_vector2 resistance;
+} libresense_effect_update_slope;
+
+typedef struct {
+	libresense_vector2 position;
+	float resistance;
+} libresense_effect_update_trigger;
+
+typedef struct {
+	libresense_vector2 position;
+	float resistance;
+} libresense_effect_update_section;
+
+typedef struct {
+	float position;
+	float amplitude;
+	int32_t frequency;
+} libresense_effect_update_vibrate;
+
+typedef struct {
+	libresense_vector2 position;
+	libresense_vector2 amplitude;
+	int32_t frequency;
+	int32_t period;
+} libresense_effect_update_vibrate_pulse;
+
+typedef struct {
+	float resistance[10];
+} libresense_effect_update_multiple_sections;
+
+typedef struct {
+	float amplitude[10];
+	int32_t frequency;
+	int32_t period;
+} libresense_effect_update_multiple_vibrate;
+
+typedef struct {
+	float resistance[10];
+	float amplitude[10];
+	int32_t frequency;
+	int32_t period;
+} libresense_effect_update_multiple_vibrate_sections;
+
+typedef struct {
+	libresense_effect_mode mode;
+	union {
+		libresense_effect_update_off off;
+		libresense_effect_update_stop stop;
+		libresense_effect_update_uniform uniform;
+		libresense_effect_update_slope slope;
+		libresense_effect_update_trigger trigger;
+		libresense_effect_update_section section;
+		libresense_effect_update_vibrate vibrate;
+		libresense_effect_update_vibrate_pulse vibrate_pulse;
+		libresense_effect_update_multiple_sections multiple_sections;
+		libresense_effect_update_multiple_vibrate multiple_vibrate;
+		libresense_effect_update_multiple_vibrate_sections multiple_vibrate_sections;
+	} effect;
 } libresense_effect_update;
+
+typedef enum {
+	LIBRESENSE_MIC_AUTO = 0,
+	LIBRESENSE_MIC_INTERNAL = 1,
+	LIBRESENSE_MIC_EXTERNAL = 2,
+	LIBRESENSE_MIC_BOTH = 3,
+} libresense_audio_mic;
+
+typedef struct {
+	float jack_volume;
+	float speaker_volume;
+	float microphone_volume;
+	libresense_audio_mic mic_selection;
+	libresense_audio_mic mic_balance;
+	bool disable_audio_jack;
+	bool force_enable_speaker;
+	bool enable_mic;
+	bool flash_mic_led;
+	bool enable_audio;
+} libresense_audio_update;
 
 #define libresense_init() libresense_init_checked(sizeof(libresense_hid))
 
@@ -327,21 +426,30 @@ libresense_push(const libresense_handle *handle, const size_t handle_count);
  * @param data: led update data
  */
 libresense_result
-libresense_update_led(const libresense_handle handle, libresense_led_update data);
+libresense_update_led(const libresense_handle handle, const libresense_led_update data);
 
 /**
- * @brief update effect state of a controller
+ * @brief update audio state of a controller
  * @param handle: the controller to update
- * @param data: led update data
+ * @param data: audio update data
  */
 libresense_result
-libresense_update_effect(const libresense_handle handle, libresense_effect_update data);
+libresense_update_audio(const libresense_handle handle, const libresense_audio_update data);
 
 /**
  * @brief update effect state of a controller
  * @param handle: the controller to update
- * @param large_motor
- * @param small_motor
+ * @param left_trigger: effect data for LT
+ * @param right_trigger: effect data for RT
+ */
+libresense_result
+libresense_update_effect(const libresense_handle handle, const libresense_effect_update left_trigger, const libresense_effect_update right_trigger);
+
+/**
+ * @brief update rumble state of a controller
+ * @param handle: the controller to update
+ * @param large_motor: amplitude for the large motor
+ * @param small_motor: amplitude for the small motor
  */
 libresense_result
 libresense_update_rumble(const libresense_handle handle, const float large_motor, const float small_motor);

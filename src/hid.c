@@ -133,6 +133,13 @@ libresense_open(libresense_hid *handle) {
 			state[i].hid = hid_open(handle->vendor_id, handle->product_id, handle->serial);
 			state[i].output.data.id = DUALSENSE_REPORT_BLUETOOTH;
 			state[i].output.data.msg.data.id = DUALSENSE_REPORT_OUTPUT;
+			state[i].output.data.msg.data.volume_state = 4;
+
+			// apparently needed, need to check.
+			if(state[i].hid_info.is_bluetooth) {
+				state[i].output.data.msg.data.flags.bits.reset_led = true;
+				libresense_push(&handle->handle, 1);
+			}
 
 			dualsense_calibration_info calibration;
 			const size_t report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_CALIBRATION, (uint8_t*)&calibration, 41, false);
@@ -306,6 +313,8 @@ libresense_push(const libresense_handle *handle, const size_t handle_count) {
 	for (size_t i = 0; i < handle_count; i++) {
 		CHECK_HANDLE_VALID(handle[i]);
 		dualsense_state *hid_state = &state[handle[i]];
+		hid_state->output.data.msg.data.state_id = ++hid_state->out_sequence;
+
 		const uint8_t *buffer = hid_state->output.buffer;
 		size_t size = sizeof(dualsense_output_msg_ex);
 		if (!hid_state->hid_info.is_bluetooth) {
@@ -318,6 +327,7 @@ libresense_push(const libresense_handle *handle, const size_t handle_count) {
 		hid_state->output.data.id = DUALSENSE_REPORT_BLUETOOTH;
 		hid_state->output.data.msg.data.id = DUALSENSE_REPORT_OUTPUT;
 		hid_state->output.data.msg.data.flags.value = 0;
+		hid_state->output.data.msg.data.volume_state = 4;
 	}
 
 	return LIBRESENSE_OK;
@@ -327,7 +337,7 @@ libresense_push(const libresense_handle *handle, const size_t handle_count) {
 	(value >= 1.0f ? UINT8_MAX : value <= 0.0f ? 0 : (uint8_t) (value * UINT8_MAX))
 
 libresense_result
-libresense_update_led(const libresense_handle handle, libresense_led_update data) {
+libresense_update_led(const libresense_handle handle, const libresense_led_update data) {
 	CHECK_INIT;
 	CHECK_HANDLE_VALID(handle);
 
@@ -360,7 +370,15 @@ libresense_update_led(const libresense_handle handle, libresense_led_update data
 }
 
 libresense_result
-libresense_update_effect(const libresense_handle handle, libresense_effect_update data) {
+libresense_update_audio(const libresense_handle handle, const libresense_audio_update data) {
+	CHECK_INIT;
+	CHECK_HANDLE_VALID(handle);
+	// todo
+	return LIBRESENSE_NOT_IMPLEMENTED;
+}
+
+libresense_result
+libresense_update_effect(const libresense_handle handle, const libresense_effect_update left_trigger, const libresense_effect_update right_trigger) {
 	CHECK_INIT;
 	CHECK_HANDLE_VALID(handle);
 	// todo
@@ -377,6 +395,16 @@ libresense_update_rumble(const libresense_handle handle, const float large_motor
 	hid_state->rumble[DUALSENSE_LARGE_MOTOR] = NORM_CLAMP_UINT8(large_motor);
 	hid_state->rumble[DUALSENSE_SMALL_MOTOR] = NORM_CLAMP_UINT8(small_motor);
 
+	return LIBRESENSE_NOT_IMPLEMENTED;
+}
+
+libresense_result
+libresense_update_profile(const libresense_handle handle, const libresense_edge_profile_id id, const libresense_edge_profile profile) {
+	return LIBRESENSE_NOT_IMPLEMENTED;
+}
+
+libresense_result
+libresense_delete_profile(const libresense_handle handle, const libresense_edge_profile_id id) {
 	return LIBRESENSE_NOT_IMPLEMENTED;
 }
 
