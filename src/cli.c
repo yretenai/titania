@@ -101,7 +101,7 @@ main(void) {
 
 		printf("rumble feedback test...\n");
 		for(int rumble_test = 0; rumble_test < 8; rumble_test++) {
-			libresense_update_rumble(handle, (rumble_test % 2) == 0 ? 1.0f : 0.1f, (rumble_test % 2) == 0 ? 1.0f : 0.1f);
+			libresense_update_rumble(handle, rumble_test % 2 == 0 ? 1.0f : 0.1f, rumble_test % 2 == 0 ? 1.0f : 0.1f);
 			libresense_push(&handle, 1);
 			usleep(250000);
 		}
@@ -117,7 +117,7 @@ main(void) {
 		update.color.y = 0.0;
 		update.color.z = 1.0;
 		update.brightness = LIBRESENSE_LED_BRIGHTNESS_HIGH;
-		update.mode = LIBRESENSE_LED_MODE_CONTINIOUS | LIBRESENSE_LED_MODE_BRIGHTNESS;
+		update.mode = LIBRESENSE_LED_MODE_BRIGHTNESS;
 		update.led = LBIRESENSE_LED_NONE;
 		update.effect = LIBRESENSE_LED_EFFECT_OFF;
 		int i = 0;
@@ -173,7 +173,7 @@ main(void) {
 		update.color.y = 0.0;
 		update.color.z = 1.0;
 		update.brightness = LIBRESENSE_LED_BRIGHTNESS_HIGH;
-		update.mode = LIBRESENSE_LED_MODE_CONTINIOUS | LIBRESENSE_LED_MODE_BRIGHTNESS;
+		update.mode = LIBRESENSE_LED_MODE_BRIGHTNESS;
 		update.led = LIBRESENSE_LED_PLAYER_1;
 		update.effect = LIBRESENSE_LED_EFFECT_OFF;
 		libresense_update_led(handle, update);

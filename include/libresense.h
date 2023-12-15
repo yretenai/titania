@@ -234,13 +234,13 @@ typedef struct {
 typedef enum {
 	LIBRESENSE_LED_MODE_OFF = 0,
 	LIBRESENSE_LED_MODE_BRIGHTNESS = 1,
-	LIBRESENSE_LED_MODE_CONTINIOUS = 2
+	LIBRESENSE_LED_MODE_UNINTERRUPTABLE = 2
 } libresense_led_mode;
 
 typedef enum {
 	LIBRESENSE_LED_EFFECT_OFF = 0,
 	LIBRESENSE_LED_EFFECT_RESET = 1,
-	LIBRESENSE_LED_EFFECT_FADE = 2
+	LIBRESENSE_LED_EFFECT_FADE_OUT = 2
 } libresense_led_effect;
 
 typedef enum {
@@ -261,7 +261,12 @@ typedef enum {
 	LIBRESENSE_LED_4 = 8,
 	LIBRESENSE_LED_5 = 16,
 	LIBRESENSE_LED_ALL = 31,
+	LIBRESENSE_LED_FADE = 64
 } libresense_led_index;
+
+typedef enum {
+	LIBRESENSE_EFFECT_OFF = 0
+} libresense_effect_mode;
 
 typedef struct {
 	libresense_led_mode mode;

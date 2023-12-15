@@ -373,8 +373,7 @@ libresense_update_rumble(const libresense_handle handle, const float large_motor
 	CHECK_HANDLE_VALID(handle);
 
 	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
-	hid_state->flags.bits.rumble = hid_state->flags.bits.large_rumble_motor = hid_state->flags.bits.small_rumble_motor = true;
-	hid_state->flags.bits.vibration_mode = hid_state->flags.bits.vibration_mode_compatible = hid_state->flags.bits.vibration_mode_advanced = true;
+	hid_state->flags.bits.gracefully_rumble = hid_state->flags.bits.allow_rumble_timeout = true;
 	hid_state->rumble[DUALSENSE_LARGE_MOTOR] = NORM_CLAMP_UINT8(large_motor);
 	hid_state->rumble[DUALSENSE_SMALL_MOTOR] = NORM_CLAMP_UINT8(small_motor);
 

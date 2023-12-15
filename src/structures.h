@@ -228,10 +228,10 @@ static_assert(sizeof(dualsense_input_msg_ex) == 0x4e, "dualsense_input_msg_ex is
 typedef union PACKED {
 	struct {
 		// byte 0
-		bool rumble : 1;
-		bool vibration_mode_compatible : 1;
-		bool small_rumble_motor : 1;
-		bool large_rumble_motor : 1;
+		bool gracefully_rumble : 1;
+		bool allow_rumble_timeout : 1;
+		bool right_trigger_motor : 1;
+		bool left_trigger_motor : 1;
 		bool jack : 1;
 		bool speaker : 1;
 		bool mic : 1;
@@ -242,9 +242,9 @@ typedef union PACKED {
 		bool led : 1;
 		bool disable_led : 1;
 		bool player_indicator_led : 1;
-		bool vibration_mode_advanced : 1;
-		bool vibration_mode : 1; // modifying rumble at all sets this
-		bool reserved2 : 1;		 // unused
+		bool advanced_rumble : 1; // related to adaptive triggers.
+		bool trigger_rumble : 1;
+		bool reserved : 1;		 // unused
 	} bits;
 
 	uint16_t value;
@@ -265,22 +265,44 @@ static_assert(sizeof(dualsense_led_output) == 9, "dualsense_led_output is not 9 
 
 typedef struct PACKED {
 	uint8_t mode;
-	uint8_t values[7];
-	uint16_t unknown;
+	uint8_t values[10];
 } dualsense_effect_output;
 
-static_assert(sizeof(dualsense_effect_output) == 10, "dualsense_effect_output is not 10 bytes");
+static_assert(sizeof(dualsense_effect_output) == 11, "dualsense_effect_output is not 11 bytes");
+
+typedef struct PACKED {
+	bool force_internal_mic : 1;
+	bool force_external_mic : 1;
+	bool balance_external_mic : 1;
+	bool balance_internal_mic : 1;
+	bool disable_jack : 1;
+	bool enable_speaker : 1;
+} dualsense_audio_flags;
+
+static_assert(sizeof(dualsense_audio_flags) == 1, "dualsense_audio_flags is not 1 byte");
+
+typedef enum ENUM_FORCE_8 {
+	DUALSENSE_MIC_OFF = 0,
+	DUALSENSE_MIC_ON = 1,
+	DUALSENSE_MIC_FLASH = 2,
+} dualsense_audio_mic_flags;
 
 typedef struct PACKED {
 	uint8_t jack;
 	uint8_t speaker;
 	uint8_t mic;
-	uint8_t output;
+	dualsense_audio_flags flags;
 	bool microphone_led;
-	uint8_t flags;
+	dualsense_audio_mic_flags mic_flags;
 } dualsense_audio_output;
 
 static_assert(sizeof(dualsense_audio_output) == 6, "dualsense_audio_output is not 6 bytes");
+
+typedef struct PACKED {
+	uint8_t rumble_power_reduction : 4;
+	uint8_t trigger_power_reduction : 4;
+} dualsense_motor_flags;
+static_assert(sizeof(dualsense_motor_flags) == 1, "dualsense_motor_flags is not 1 byte");
 
 typedef struct PACKED {
 	dualsense_report_id id;
@@ -288,12 +310,13 @@ typedef struct PACKED {
 	uint8_t rumble[2];
 	dualsense_audio_output audio;
 	dualsense_effect_output effects[2];
-	uint8_t unknown[8];
+	uint32_t state_id;
+	dualsense_motor_flags motor_flags;
+	uint8_t volume_state;
 	dualsense_led_output led;
-	uint8_t unknown2[0x10];
 } dualsense_output_msg;
 
-static_assert(sizeof(dualsense_output_msg) == 0x40, "dualsense_output_msg is not 64 bytes");
+static_assert(sizeof(dualsense_output_msg) == 0x30, "dualsense_output_msg is not 48 bytes");
 
 typedef struct PACKED {
 	dualsense_report_id id;
@@ -303,7 +326,7 @@ typedef struct PACKED {
 		uint8_t buffer[sizeof(dualsense_output_msg)];
 	} msg;
 
-	uint8_t reserved[9];
+	uint8_t reserved[25];
 	uint32_t bt_checksum;
 } dualsense_output_msg_ex;
 
