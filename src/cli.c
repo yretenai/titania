@@ -63,6 +63,7 @@ main(void) {
 		libresense_errorf(stderr, result, "error getting report");
 		return result;
 	}
+
 	printf("hid { handle = %d, pid = %04x, vid = 0x%04x, bt = %s, serial = %ls }\n", data.hid.handle, data.hid.product_id, data.hid.vendor_id, MAKE_TEST(data.hid.is_bluetooth), data.hid.serial);
 	printf("time { sys = %u, sensor = %lu, seq = { %u, %u, %u }, check = %lu }\n", data.time.system, data.time.sensor, data.time.sequence, data.time.touch_sequence, data.time.driver_sequence, data.time.checksum);
 	printf("buttons { dpad_up = %s, dpad_right = %s, dpad_down = %s, dpad_left = %s, square = %s, cross = %s, circle = %s, triangle = %s, l1 = %s, r1 = %s, l2 = %s, r2 = %s, share = %s, option = %s, l3 = %s, r3 = %s, ps = %s, touch = %s, mute = %s, unknown = %s, edge_f1 = %s, edge_f2 = %s, edge_lb = %s, edge_rb = %s }\n", MAKE_BUTTON(dpad_up), MAKE_BUTTON(dpad_right), MAKE_BUTTON(dpad_down), MAKE_BUTTON(dpad_left), MAKE_BUTTON(square), MAKE_BUTTON(cross), MAKE_BUTTON(circle), MAKE_BUTTON(triangle), MAKE_BUTTON(l1), MAKE_BUTTON(r1), MAKE_BUTTON(l2), MAKE_BUTTON(r2), MAKE_BUTTON(share), MAKE_BUTTON(option), MAKE_BUTTON(l3), MAKE_BUTTON(r3), MAKE_BUTTON(ps), MAKE_BUTTON(touch), MAKE_BUTTON(mute), MAKE_BUTTON(edge_unknown), MAKE_BUTTON(edge_f1), MAKE_BUTTON(edge_f2), MAKE_BUTTON(edge_lb), MAKE_BUTTON(edge_rb));
@@ -72,6 +73,44 @@ main(void) {
 	printf("sensors { accel = { %f, %f, %f }, gyro = { %f, %f, %f } }\n", data.sensors.accelerometer.x, data.sensors.accelerometer.y, data.sensors.accelerometer.z, data.sensors.gyro.x, data.sensors.gyro.y, data.sensors.gyro.z);
 	printf("battery { level = %f%%, state = %s, error = %u }\n", data.battery.level, libresense_battery_state_msg[data.battery.state], data.battery.battery_error);
 	printf("state { headphones = %s, headset = %s, muted = %s, cabled = %s, stick = { disconnect = %s, error = %s, calibrate = %s }, raw = %08lx, state_id = %08lx }\n", MAKE_TEST(data.device.headphones), MAKE_TEST(data.device.headset), MAKE_TEST(data.device.muted), MAKE_TEST(data.device.cable_connected), MAKE_TEST(data.edge_device.stick_disconnected), MAKE_TEST(data.edge_device.stick_error), MAKE_TEST(data.edge_device.stick_calibrating), data.state, data.state_id);
+
+	{
+		printf("testing mic led...\n");
+		libresense_audio_update update = {};
+		update.jack_volume = 1.0;
+		update.speaker_volume = 1.0;
+		update.microphone_volume = 1.0;
+		update.mic_selection = LIBRESENSE_MIC_AUTO;
+		update.mic_balance = LIBRESENSE_MIC_AUTO;
+		update.disable_audio_jack = false;
+		update.force_enable_speaker = false;
+		update.enable_mic = false;
+		update.enable_audio = false;
+		update.mic_led = LIBRESENSE_MIC_LED_ON;
+
+		printf("mic led should be on...\n");
+		libresense_update_audio(handle, update);
+		libresense_push(&handle, 1);
+
+		usleep(5000000);
+
+		update.mic_led = LIBRESENSE_MIC_LED_FLASH;
+		printf("mic led should be flashing...\n");
+		libresense_update_audio(handle, update);
+		libresense_push(&handle, 1);
+		usleep(5000000);
+
+		update.mic_led = LIBRESENSE_MIC_LED_OFF;
+		printf("mic led should be off...\n");
+		libresense_update_audio(handle, update);
+		libresense_push(&handle, 1);
+		usleep(5000000);
+
+		update.mic_led = data.device.muted ? LIBRESENSE_MIC_LED_ON : LIBRESENSE_MIC_LED_OFF;
+		printf("restoring mic based on state...\n");
+		libresense_update_audio(handle, update);
+		libresense_push(&handle, 1);
+	}
 
 	{
 		printf("testing rumble...\n");
@@ -111,7 +150,8 @@ main(void) {
 	}
 
 	{
-		printf("testing led...\n");
+		printf("testing touchpad leds...\n");
+
 		libresense_led_update update = {};
 		update.color.x = 1.0;
 		update.color.y = 0.0;

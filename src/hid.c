@@ -373,8 +373,30 @@ libresense_result
 libresense_update_audio(const libresense_handle handle, const libresense_audio_update data) {
 	CHECK_INIT;
 	CHECK_HANDLE_VALID(handle);
-	// todo
-	return LIBRESENSE_NOT_IMPLEMENTED;
+
+	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
+
+	hid_state->flags.bits.audio_output = true;
+	hid_state->audio.flags.force_external_mic = (data.mic_selection & LIBRESENSE_MIC_EXTERNAL) == LIBRESENSE_MIC_EXTERNAL;
+	hid_state->audio.flags.force_internal_mic = (data.mic_selection & LIBRESENSE_MIC_INTERNAL) == LIBRESENSE_MIC_INTERNAL;
+	hid_state->audio.flags.balance_external_mic = (data.mic_balance & LIBRESENSE_MIC_EXTERNAL) == LIBRESENSE_MIC_EXTERNAL;
+	hid_state->audio.flags.balance_internal_mic = (data.mic_balance & LIBRESENSE_MIC_INTERNAL) == LIBRESENSE_MIC_INTERNAL;
+	hid_state->audio.flags.disable_jack = data.disable_audio_jack;
+	hid_state->audio.flags.enable_speaker = data.force_enable_speaker;
+
+	hid_state->flags.bits.mic_led = true;
+	hid_state->audio.mic_led_flags = data.mic_led;
+
+	hid_state->flags.bits.mute = true;
+	hid_state->audio.mute_flags.audio_mute = !data.enable_audio;
+	hid_state->audio.mute_flags.mute_mic = !data.enable_mic;
+
+	hid_state->flags.bits.jack = hid_state->flags.bits.speaker = hid_state->flags.bits.mute = true;
+	hid_state->audio.jack = NORM_CLAMP_UINT8(data.jack_volume);
+	hid_state->audio.speaker = NORM_CLAMP_UINT8(data.speaker_volume);
+	hid_state->audio.mic = NORM_CLAMP_UINT8(data.microphone_volume);
+
+	return LIBRESENSE_OK;
 }
 
 libresense_result

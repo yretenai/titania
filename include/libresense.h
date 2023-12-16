@@ -366,16 +366,22 @@ typedef enum {
 	LIBRESENSE_MIC_BOTH = 3,
 } libresense_audio_mic;
 
+typedef enum {
+	LIBRESENSE_MIC_LED_OFF = 0,
+	LIBRESENSE_MIC_LED_ON = 1,
+	LIBRESENSE_MIC_LED_FLASH = 2,
+} libresense_mic_led;
+
 typedef struct {
 	float jack_volume;
 	float speaker_volume;
 	float microphone_volume;
 	libresense_audio_mic mic_selection;
 	libresense_audio_mic mic_balance;
+	libresense_mic_led mic_led;
 	bool disable_audio_jack;
 	bool force_enable_speaker;
 	bool enable_mic;
-	bool flash_mic_led;
 	bool enable_audio;
 } libresense_audio_update;
 
