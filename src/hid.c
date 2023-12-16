@@ -388,7 +388,7 @@ libresense_update_audio(const libresense_handle handle, const libresense_audio_u
 	hid_state->audio.mic_led_flags = data.mic_led;
 
 	hid_state->flags.bits.mute = true;
-	hid_state->audio.mute_flags.audio_mute = !data.enable_audio;
+	hid_state->audio.mute_flags.mute_audio = !data.enable_audio;
 	hid_state->audio.mute_flags.mute_mic = !data.enable_mic;
 
 	hid_state->flags.bits.jack = hid_state->flags.bits.speaker = hid_state->flags.bits.mute = true;

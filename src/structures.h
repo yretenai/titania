@@ -297,7 +297,7 @@ typedef struct PACKED {
 	bool unknown4 : 1;
 	bool mute_mic : 1;
 	bool unknown6 : 1;
-	bool audio_mute : 1;
+	bool mute_audio : 1;
 	bool unknown8 : 1;
 } dualsense_audio_mute_flags;
 
