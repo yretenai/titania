@@ -42,6 +42,8 @@
 #define DUALSENSE_CRC_OUTPUT (0xA2)
 #define DUALSENSE_CRC_FEATURE (0xA3)
 #define DUALSENSE_TRIGGER_MAX (0xEE)
+#define DUALSENSE_TRIGGER_AMPLITUDE_MAX (0x3F)
+#define DUALSENSE_TRIGGER_VIBRATION_MAX (0xA8)
 
 #define NORM_CLAMP(value, max) (value >= 1.0f ? max : value <= 0.0f ? 0 : (uint8_t) (value * max))
 #define NORM_CLAMP_UINT8(value) NORM_CLAMP(value, UINT8_MAX)
@@ -287,60 +289,14 @@ typedef enum ENUM_FORCE_8 {
 typedef struct PACKED {
 	dualsense_effect_mode mode;
 	union {
+		uint8_t value[10];
 		struct PACKED {
-			struct PACKED {
-				bool param1 : 1;
-				bool param2 : 1;
-				bool param3 : 1;
-				bool param4 : 1;
-				bool param5 : 1;
-				bool param6 : 1;
-				bool param7 : 1;
-				bool param8 : 1;
-				bool param9 : 1;
-				bool param10 : 1;
-				bool param11 : 1;
-				bool param12 : 1;
-				bool param13 : 1;
-				bool param14 : 1;
-				bool param15 : 1;
-				bool param16 : 1;
-			} presence;
-
-			struct PACKED {
-				uint8_t param1 : 3;
-				uint8_t param2 : 3;
-				uint8_t param3 : 3;
-				uint8_t param4 : 3;
-				uint8_t param5 : 3;
-				uint8_t param6 : 3;
-				uint8_t param7 : 3;
-				uint8_t param8 : 3;
-				uint8_t param9 : 3;
-				uint8_t param10 : 3;
-				uint8_t param11 : 3;
-				uint8_t param12 : 3;
-				uint8_t param13 : 3;
-				uint8_t param14 : 3;
-				uint8_t param15 : 3;
-				uint8_t param16 : 3;
-				uint8_t param17 : 3;
-				uint8_t param18 : 3;
-				uint8_t param19 : 3;
-				uint8_t param20 : 3;
-				uint8_t param21 : 3;
-				uint8_t unused : 1;
-			} bits;
-		} three_bit;
-		uint8_t eight_bit[10];
-		struct PACKED {
-			uint16_t command;
+			uint16_t id;
 			uint64_t value;
-		} sixtyfour_bit;
+		} multiple;
 	} params;
 } dualsense_effect_output;
 
-static_assert(offsetof(dualsense_effect_output, params.three_bit.bits) == 3, "dualsense_effect_output.params.three_bit.bits is not at 3 bytes");
 static_assert(sizeof(dualsense_effect_output) == 11, "dualsense_effect_output is not 11 bytes");
 
 typedef struct PACKED {

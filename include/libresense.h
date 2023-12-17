@@ -14,6 +14,7 @@
 #define LIBRESENSE_RIGHT (1)
 #define LIBRESENSE_PRIMARY (0)
 #define LIBRESENSE_SECONDARY (1)
+#define LIBRESENSE_MIN_DELAY (125)
 
 typedef enum {
 	LIBRESENSE_OK = 0,
@@ -51,9 +52,10 @@ extern const int libresense_max_controllers;
 
 #define IS_LIBRESENSE_OKAY(result) (result == LIBRESENSE_OK)
 #define IS_LIBRESENSE_BAD(result) (result != LIBRESENSE_OK)
+typedef wchar_t libresense_wchar;
 
 typedef signed int libresense_handle;
-typedef wchar_t libresense_serial[0x100]; // Max HID Parameter length is 256 on USB, 512 on BT. HID serials are wide-chars, which are 2 bytes.
+typedef libresense_wchar libresense_serial[0x100]; // Max HID Parameter length is 256 on USB, 512 on BT. HID serials are wide-chars, which are 2 bytes.
 
 typedef struct {
 	float x;
@@ -191,7 +193,7 @@ typedef struct __attribute__((__packed__)) {
 #endif
 
 typedef struct {
-	wchar_t name[0x64];
+	libresense_wchar name[0x64];
 	uint8_t todo;
 } libresense_edge_profile;
 

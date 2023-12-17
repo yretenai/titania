@@ -4,14 +4,38 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 
 #define MAKE_BUTTON(test) data.buttons.test ? "Y" : "N"
 #define MAKE_TEST(test) test ? "Y" : "N"
 
 #define libresense_errorf(fp, result, fmt) fprintf(fp, "[libresense] " fmt ": %s\n", libresense_error_msg[result])
 
-int
-main(void) {
+void report_hid(libresense_handle handle, __useconds_t useconds, __useconds_t delay) {
+	libresense_data data;
+	printf("\n");
+
+	while(true) {
+		const libresense_result result = libresense_pull(&handle, 1, &data);
+		if(IS_LIBRESENSE_BAD(result)) {
+			printf("invalid pull response");
+			break;
+		}
+		printf("\rleft = { %06.2f%%, %1X, %1X }, right = { %06.2f%%, %1X, %1X }", data.triggers[0].level * 100, data.triggers[0].id, data.triggers[0].effect, data.triggers[1].level * 100, data.triggers[1].id, data.triggers[1].effect);
+		usleep(delay);
+		if (useconds < delay || useconds - delay == 0) { // primary failsafe and conventional loop break
+			break;
+		}
+		const __useconds_t old = useconds;
+		useconds -= delay;
+		if(useconds > old) { // second failsafe.
+			break;
+		}
+	}
+	printf("\n");
+}
+
+int main(void) {
 	libresense_result result = libresense_init();
 	if(IS_LIBRESENSE_BAD(result)) {
 		libresense_errorf(stderr, result, "error initializing libresense");
@@ -57,13 +81,16 @@ main(void) {
 	}
 	libresense_data data;
 	libresense_handle handle = hid.handle;
-
+	struct timespec ts1, ts2;
+	timespec_get(&ts1, TIME_UTC);
 	result = libresense_pull(&handle, 1, &data);
+	timespec_get(&ts2, TIME_UTC);
 	if(IS_LIBRESENSE_BAD(result)) {
 		libresense_errorf(stderr, result, "error getting report");
 		return result;
 	}
 
+	printf("report took %ldns\n", ts2.tv_nsec - ts1.tv_nsec);
 	printf("hid { handle = %d, pid = %04x, vid = 0x%04x, bt = %s, serial = %ls }\n", data.hid.handle, data.hid.product_id, data.hid.vendor_id, MAKE_TEST(data.hid.is_bluetooth), data.hid.serial);
 	printf("time { sys = %u, sensor = %lu, seq = { %u, %u, %u }, check = %lu }\n", data.time.system, data.time.sensor, data.time.sequence, data.time.touch_sequence, data.time.driver_sequence, data.time.checksum);
 	printf("buttons { dpad_up = %s, dpad_right = %s, dpad_down = %s, dpad_left = %s, square = %s, cross = %s, circle = %s, triangle = %s, l1 = %s, r1 = %s, l2 = %s, r2 = %s, share = %s, option = %s, l3 = %s, r3 = %s, ps = %s, touch = %s, mute = %s, unknown = %s, edge_f1 = %s, edge_f2 = %s, edge_lb = %s, edge_rb = %s }\n", MAKE_BUTTON(dpad_up), MAKE_BUTTON(dpad_right), MAKE_BUTTON(dpad_down), MAKE_BUTTON(dpad_left), MAKE_BUTTON(square), MAKE_BUTTON(cross), MAKE_BUTTON(circle), MAKE_BUTTON(triangle), MAKE_BUTTON(l1), MAKE_BUTTON(r1), MAKE_BUTTON(l2), MAKE_BUTTON(r2), MAKE_BUTTON(share), MAKE_BUTTON(option), MAKE_BUTTON(l3), MAKE_BUTTON(r3), MAKE_BUTTON(ps), MAKE_BUTTON(touch), MAKE_BUTTON(mute), MAKE_BUTTON(edge_unknown), MAKE_BUTTON(edge_f1), MAKE_BUTTON(edge_f2), MAKE_BUTTON(edge_lb), MAKE_BUTTON(edge_rb));
@@ -76,7 +103,7 @@ main(void) {
 
 	{
 		printf("testing adaptive triggers\n");
-		libresense_effect_update update = {};
+		libresense_effect_update update = { 0 };
 
 		update.mode = LIBRESENSE_EFFECT_UNIFORM;
 		update.effect.uniform.position = 0.5;
@@ -84,7 +111,7 @@ main(void) {
 		printf("uniform\n");
 		libresense_update_effect(handle, update, update);
 		libresense_push(&handle, 1);
-		usleep(5000000);
+		report_hid(handle, 5000000, 8000);
 
 		update.mode = LIBRESENSE_EFFECT_SECTION;
 		update.effect.section.position.x = 0.25;
@@ -93,18 +120,27 @@ main(void) {
 		printf("section\n");
 		libresense_update_effect(handle, update, update);
 		libresense_push(&handle, 1);
-		usleep(5000000);
+		report_hid(handle, 5000000, 8000);
+
+		update.mode = LIBRESENSE_EFFECT_VIBRATE;
+		update.effect.vibrate.position = 0.33;
+		update.effect.vibrate.amplitude = 0.75;
+		update.effect.vibrate.frequency = 201;
+		printf("vibrate\n");
+		libresense_update_effect(handle, update, update);
+		libresense_push(&handle, 1);
+		report_hid(handle, 5000000, 8000);
 
 		update.mode = LIBRESENSE_EFFECT_OFF;
 		printf("reset\n");
 		libresense_update_effect(handle, update, update);
 		libresense_push(&handle, 1);
-		usleep(5000000);
+		report_hid(handle, 5000000, 8000);
 	}
 
 	{
 		printf("testing mic led...\n");
-		libresense_audio_update update = {};
+		libresense_audio_update update = { 0 };
 		update.jack_volume = 1.0;
 		update.speaker_volume = 1.0;
 		update.microphone_volume = 1.0;
@@ -180,7 +216,7 @@ main(void) {
 	{
 		printf("testing touchpad leds...\n");
 
-		libresense_led_update update = {};
+		libresense_led_update update = { 0 };
 		update.color.x = 1.0;
 		update.color.y = 0.0;
 		update.color.z = 1.0;

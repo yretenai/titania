@@ -56,7 +56,7 @@ libresense_get_hids(libresense_hid *hids, const size_t hids_length) {
 				hids[index].vendor_id = dev->vendor_id;
 				hids[index].is_bluetooth = dev->bus_type == HID_API_BUS_BLUETOOTH;
 				wcscpy(hids[index].serial, dev->serial_number);
-				// todo: request calibration, firmware, and profiles.
+				// todo: request firmware and profiles.
 
 				index += 1;
 
@@ -136,7 +136,7 @@ libresense_open(libresense_hid *handle) {
 			state[i].output.data.msg.data.volume_state = 4;
 
 			// apparently needed, need to check.
-			if(state[i].hid_info.is_bluetooth) {
+			if(state[i].hid_info.is_bluetooth) { // on linux this also releases control from the kernel driver
 				state[i].output.data.msg.data.flags.bits.reset_led = true;
 				libresense_push(&handle->handle, 1);
 			}
@@ -275,7 +275,8 @@ libresense_pull(libresense_handle *handle, const size_t handle_count, libresense
 			buffer = hid_state->input.data.msg.buffer;
 			size = sizeof(dualsense_input_msg);
 		}
-		memset(buffer + 1, (char) 0, size - 1);
+		// should we clear the buffer?
+		// memset(buffer + 1, (char) 0, size - 1);
 
 		const int count = hid_read_timeout(hid_state->hid, buffer, size, 16);
 
@@ -382,7 +383,7 @@ libresense_update_audio(const libresense_handle handle, const libresense_audio_u
 	hid_state->audio.flags.enable_speaker = data.force_enable_speaker;
 
 	hid_state->flags.bits.mic_led = true;
-	hid_state->audio.mic_led_flags = data.mic_led;
+	hid_state->audio.mic_led_flags = (dualsense_audio_mic_flags) data.mic_led;
 
 	hid_state->flags.bits.mute = true;
 	hid_state->audio.mute_flags.mute_audio = !data.enable_audio;
@@ -401,8 +402,8 @@ libresense_result
 compute_effect(dualsense_effect_output *effect, const libresense_effect_update trigger) {
 	// clear
 	effect->mode = 0;
-	effect->params.sixtyfour_bit.command = 0;
-	effect->params.sixtyfour_bit.value = 0;
+	effect->params.multiple.id = 0;
+	effect->params.multiple.value = 0;
 
 	switch(trigger.mode) {
 		case LIBRESENSE_EFFECT_NONE: break;
@@ -411,16 +412,23 @@ compute_effect(dualsense_effect_output *effect, const libresense_effect_update t
 			break;
 		case LIBRESENSE_EFFECT_STOP_VIBRATING:
 			effect->mode = DUALSENSE_EFFECT_MODE_STOP;
+			break;
 		case LIBRESENSE_EFFECT_UNIFORM:
 			effect->mode = DUALSENSE_EFFECT_MODE_UNIFORM;
-			effect->params.eight_bit[0] = NORM_CLAMP(trigger.effect.uniform.position, DUALSENSE_TRIGGER_MAX);
-			effect->params.eight_bit[1] = NORM_CLAMP_UINT8(trigger.effect.uniform.resistance);
+			effect->params.value[0] = NORM_CLAMP(trigger.effect.uniform.position, DUALSENSE_TRIGGER_MAX);
+			effect->params.value[1] = NORM_CLAMP_UINT8(trigger.effect.uniform.resistance);
 			break;
 		case LIBRESENSE_EFFECT_SECTION:
 			effect->mode = DUALSENSE_EFFECT_MODE_SECTION;
-			effect->params.eight_bit[0] = NORM_CLAMP(trigger.effect.section.position.x, DUALSENSE_TRIGGER_MAX);
-			effect->params.eight_bit[1] = NORM_CLAMP(trigger.effect.section.position.y, DUALSENSE_TRIGGER_MAX);
-			effect->params.eight_bit[2] = NORM_CLAMP_UINT8(trigger.effect.section.resistance);
+			effect->params.value[0] = NORM_CLAMP(trigger.effect.section.position.x, DUALSENSE_TRIGGER_MAX);
+			effect->params.value[1] = NORM_CLAMP(trigger.effect.section.position.y, DUALSENSE_TRIGGER_MAX);
+			effect->params.value[2] = NORM_CLAMP_UINT8(trigger.effect.section.resistance);
+			break;
+		case LIBRESENSE_EFFECT_VIBRATE:
+			effect->mode = DUALSENSE_EFFECT_MODE_VIBRATE;
+			effect->params.value[0] = trigger.effect.vibrate.frequency & UINT8_MAX;
+			effect->params.value[1] = NORM_CLAMP(trigger.effect.vibrate.amplitude, DUALSENSE_TRIGGER_AMPLITUDE_MAX);
+			effect->params.value[2] = NORM_CLAMP(trigger.effect.vibrate.position, DUALSENSE_TRIGGER_VIBRATION_MAX);
 			break;
 		default:
 			return LIBRESENSE_NOT_IMPLEMENTED;
