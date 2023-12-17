@@ -76,6 +76,9 @@ void wait_until_options_clear(libresense_handle handle, __useconds_t timeout) {
 
 	while(true) {
 		const libresense_result result = libresense_pull(&handle, 1, &data);
+		if(IS_LIBRESENSE_BAD(result)) {
+			return;
+		}
 		if(!data.buttons.option) {
 			return;
 		}
