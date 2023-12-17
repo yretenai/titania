@@ -163,6 +163,29 @@ int main(void) {
 	printf("press OPTIONS to skip test\n");
 
 	{
+		printf("testing latency, this will take 1 second\n");
+		long max = INT64_MIN;
+		long min = INT64_MAX;
+		for(int i = 0; i < 1000; ++i) {
+			timespec_get(&ts1, TIME_UTC);
+			libresense_pull(&handle, 1, &data);
+			if(data.buttons.option) {
+				break;
+			}
+			timespec_get(&ts2, TIME_UTC);
+			long delta = ts2.tv_nsec - ts1.tv_nsec;
+			if(delta < min) {
+				min = delta;
+			}
+			if(delta > max) {
+				max = delta;
+			}
+			usleep(1000);
+		}
+		printf("min: %ld, max: %ld\n", min, max);
+	}
+
+	{
 		wait_until_options_clear(handle, 250000);
 		printf("testing adaptive triggers\n");
 		libresense_effect_update update = { 0 };
