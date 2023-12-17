@@ -414,8 +414,8 @@ typedef struct {
 	hid_device *hid;
 	libresense_hid hid_info;
 	libresense_calibration_bit calibration[6];
-	uint16_t in_sequence;
-	uint16_t out_sequence;
+	uint32_t in_sequence;
+	uint32_t out_sequence;
 
 	union {
 		dualsense_input_msg_ex data;

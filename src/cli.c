@@ -11,15 +11,22 @@
 
 #define libresense_errorf(fp, result, fmt) fprintf(fp, "[libresense] " fmt ": %s\n", libresense_error_msg[result])
 
-void report_hid(libresense_handle handle, __useconds_t useconds, __useconds_t delay) {
+bool report_hid_trigger(libresense_handle handle, __useconds_t useconds, const __useconds_t delay) {
 	libresense_data data;
-	printf("\n");
 
+	bool should_exit = false;
 	while(true) {
 		const libresense_result result = libresense_pull(&handle, 1, &data);
 		if(IS_LIBRESENSE_BAD(result)) {
 			printf("invalid pull response");
-			break;
+			return true;
+		}
+		if(data.buttons.option) {
+			should_exit = true;
+		}
+		if(!data.buttons.option && should_exit) {
+			printf("\n");
+			return true;
 		}
 		printf("\rleft = { %06.2f%%, %1X, %1X }, right = { %06.2f%%, %1X, %1X }", data.triggers[0].level * 100, data.triggers[0].id, data.triggers[0].effect, data.triggers[1].level * 100, data.triggers[1].id, data.triggers[1].effect);
 		usleep(delay);
@@ -33,6 +40,55 @@ void report_hid(libresense_handle handle, __useconds_t useconds, __useconds_t de
 		}
 	}
 	printf("\n");
+	return should_exit;
+}
+
+bool report_hid_close(libresense_handle handle, __useconds_t useconds, const __useconds_t delay) {
+	libresense_data data;
+
+	bool should_exit = false;
+	while(true) {
+		const libresense_result result = libresense_pull(&handle, 1, &data);
+		if(IS_LIBRESENSE_BAD(result)) {
+			return true;
+		}
+		if(data.buttons.option && !should_exit) {
+			should_exit = true;
+		}
+		if(!data.buttons.option && should_exit) {
+			return true;
+		}
+		usleep(delay);
+		if (useconds < delay || useconds - delay == 0) { // primary failsafe and conventional loop break
+			break;
+		}
+		const __useconds_t old = useconds;
+		useconds -= delay;
+		if(useconds > old) { // second failsafe.
+			break;
+		}
+	}
+	return should_exit;
+}
+
+void wait_until_options_clear(libresense_handle handle, __useconds_t timeout) {
+	libresense_data data;
+
+	while(true) {
+		const libresense_result result = libresense_pull(&handle, 1, &data);
+		if(!data.buttons.option) {
+			return;
+		}
+		usleep(16000);
+		if (timeout < 16000 || timeout - 16000 == 0) { // primary failsafe and conventional loop break
+			break;
+		}
+		const __useconds_t old = timeout;
+		timeout -= 16000;
+		if(timeout > old) { // second failsafe.
+			break;
+		}
+	}
 }
 
 int main(void) {
@@ -101,7 +157,10 @@ int main(void) {
 	printf("battery { level = %f%%, state = %s, error = %u }\n", data.battery.level, libresense_battery_state_msg[data.battery.state], data.battery.battery_error);
 	printf("state { headphones = %s, headset = %s, muted = %s, cabled = %s, stick = { disconnect = %s, error = %s, calibrate = %s }, raw = %08lx, state_id = %08lx }\n", MAKE_TEST(data.device.headphones), MAKE_TEST(data.device.headset), MAKE_TEST(data.device.muted), MAKE_TEST(data.device.cable_connected), MAKE_TEST(data.edge_device.stick_disconnected), MAKE_TEST(data.edge_device.stick_error), MAKE_TEST(data.edge_device.stick_calibrating), data.state, data.state_id);
 
+	printf("press OPTIONS to skip test\n");
+
 	{
+		wait_until_options_clear(handle, 250000);
 		printf("testing adaptive triggers\n");
 		libresense_effect_update update = { 0 };
 
@@ -111,7 +170,9 @@ int main(void) {
 		printf("uniform\n");
 		libresense_update_effect(handle, update, update);
 		libresense_push(&handle, 1);
-		report_hid(handle, 5000000, 8000);
+		if(report_hid_trigger(handle, 5000000, 8000)) {
+			goto reset_trigger;
+		}
 
 		update.mode = LIBRESENSE_EFFECT_SECTION;
 		update.effect.section.position.x = 0.25;
@@ -120,7 +181,9 @@ int main(void) {
 		printf("section\n");
 		libresense_update_effect(handle, update, update);
 		libresense_push(&handle, 1);
-		report_hid(handle, 5000000, 8000);
+		if(report_hid_trigger(handle, 5000000, 8000)) {
+			goto reset_trigger;
+		}
 
 		update.mode = LIBRESENSE_EFFECT_VIBRATE;
 		update.effect.vibrate.position = 0.33;
@@ -129,16 +192,18 @@ int main(void) {
 		printf("vibrate\n");
 		libresense_update_effect(handle, update, update);
 		libresense_push(&handle, 1);
-		report_hid(handle, 5000000, 8000);
+		report_hid_trigger(handle, 5000000, 8000);
 
+		reset_trigger:
 		update.mode = LIBRESENSE_EFFECT_OFF;
 		printf("reset\n");
 		libresense_update_effect(handle, update, update);
 		libresense_push(&handle, 1);
-		report_hid(handle, 5000000, 8000);
+		usleep(100000);
 	}
 
 	{
+		wait_until_options_clear(handle, 250000);
 		printf("testing mic led...\n");
 		libresense_audio_update update = { 0 };
 		update.jack_volume = 1.0;
@@ -156,27 +221,36 @@ int main(void) {
 		libresense_update_audio(handle, update);
 		libresense_push(&handle, 1);
 
-		usleep(5000000);
+		if(report_hid_close(handle, 5000000, 10000)) {
+			goto reset_mic;
+		}
 
 		update.mic_led = LIBRESENSE_MIC_LED_FLASH;
 		printf("mic led should be flashing...\n");
 		libresense_update_audio(handle, update);
 		libresense_push(&handle, 1);
-		usleep(5000000);
+
+		if(report_hid_close(handle, 5000000, 10000)) {
+			goto reset_mic;
+		}
 
 		update.mic_led = LIBRESENSE_MIC_LED_OFF;
 		printf("mic led should be off...\n");
 		libresense_update_audio(handle, update);
 		libresense_push(&handle, 1);
-		usleep(5000000);
 
+		report_hid_close(handle, 5000000, 10000);
+
+		reset_mic:
 		update.mic_led = data.device.muted ? LIBRESENSE_MIC_LED_ON : LIBRESENSE_MIC_LED_OFF;
 		printf("restoring mic based on state...\n");
 		libresense_update_audio(handle, update);
 		libresense_push(&handle, 1);
+		usleep(1000000);
 	}
 
 	{
+		wait_until_options_clear(handle, 250000);
 		printf("testing rumble...\n");
 		float rumble;
 
@@ -185,35 +259,46 @@ int main(void) {
 		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			libresense_update_rumble(handle, rumble, 0.0f);
 			libresense_push(&handle, 1);
-			usleep(10000);
+			if(report_hid_close(handle, 10000, 10000)) {
+				goto reset_motor;
+			}
 		}
 
 		printf("small motor...\n");
 		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			libresense_update_rumble(handle, 0, rumble);
 			libresense_push(&handle, 1);
-			usleep(10000);
+			if(report_hid_close(handle, 10000, 10000)) {
+				break;
+			}
 		}
 
 		printf("both motors...\n");
 		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			libresense_update_rumble(handle, rumble, rumble);
 			libresense_push(&handle, 1);
-			usleep(10000);
+			if(report_hid_close(handle, 10000, 10000)) {
+				break;
+			}
 		}
 
 		printf("rumble feedback test...\n");
 		for(int rumble_test = 0; rumble_test < 8; rumble_test++) {
 			libresense_update_rumble(handle, rumble_test % 2 == 0 ? 1.0f : 0.1f, rumble_test % 2 == 0 ? 1.0f : 0.1f);
 			libresense_push(&handle, 1);
-			usleep(250000);
+			if(report_hid_close(handle, 250000, 10000)) {
+				break;
+			}
 		}
 
+		reset_motor:
 		libresense_update_rumble(handle, 0, 0);
 		libresense_push(&handle, 1);
+		usleep(100000);
 	}
 
 	{
+		wait_until_options_clear(handle, 250000);
 		printf("testing touchpad leds...\n");
 
 		libresense_led_update update = { 0 };
@@ -270,9 +355,12 @@ int main(void) {
 			update.color.y = color.x;
 			update.color.z = color.y;
 
-			usleep(250000);
+			if(report_hid_close(handle, 250000, 10000)) {
+				goto reset_led;
+			}
 		}
 
+		reset_led:
 		update.color.x = 1.0;
 		update.color.y = 0.0;
 		update.color.z = 1.0;
@@ -282,6 +370,7 @@ int main(void) {
 		update.effect = LIBRESENSE_LED_EFFECT_OFF;
 		libresense_update_led(handle, update);
 		libresense_push(&handle, 1);
+		usleep(100000);
 	}
 
 	result = libresense_close(handle);

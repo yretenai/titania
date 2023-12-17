@@ -275,7 +275,9 @@ libresense_pull(libresense_handle *handle, const size_t handle_count, libresense
 			buffer = hid_state->input.data.msg.buffer;
 			size = sizeof(dualsense_input_msg);
 		}
-		// should we clear the buffer?
+		hid_state->input.data.id = DUALSENSE_REPORT_BLUETOOTH;
+		hid_state->input.data.msg.data.id = DUALSENSE_REPORT_INPUT;
+		// should we clear the buffer? speed goes from 3us to 3ms if we do.
 		// memset(buffer + 1, (char) 0, size - 1);
 
 		const int count = hid_read_timeout(hid_state->hid, buffer, size, 16);
