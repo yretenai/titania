@@ -75,6 +75,34 @@ main(void) {
 	printf("state { headphones = %s, headset = %s, muted = %s, cabled = %s, stick = { disconnect = %s, error = %s, calibrate = %s }, raw = %08lx, state_id = %08lx }\n", MAKE_TEST(data.device.headphones), MAKE_TEST(data.device.headset), MAKE_TEST(data.device.muted), MAKE_TEST(data.device.cable_connected), MAKE_TEST(data.edge_device.stick_disconnected), MAKE_TEST(data.edge_device.stick_error), MAKE_TEST(data.edge_device.stick_calibrating), data.state, data.state_id);
 
 	{
+		printf("testing adaptive triggers\n");
+		libresense_effect_update update = {};
+
+		update.mode = LIBRESENSE_EFFECT_UNIFORM;
+		update.effect.uniform.position = 0.5;
+		update.effect.uniform.resistance = 1.0;
+		printf("uniform\n");
+		libresense_update_effect(handle, update, update);
+		libresense_push(&handle, 1);
+		usleep(5000000);
+
+		update.mode = LIBRESENSE_EFFECT_SECTION;
+		update.effect.section.position.x = 0.25;
+		update.effect.section.position.y = 0.75;
+		update.effect.section.resistance = 1.0;
+		printf("section\n");
+		libresense_update_effect(handle, update, update);
+		libresense_push(&handle, 1);
+		usleep(5000000);
+
+		update.mode = LIBRESENSE_EFFECT_OFF;
+		printf("reset\n");
+		libresense_update_effect(handle, update, update);
+		libresense_push(&handle, 1);
+		usleep(5000000);
+	}
+
+	{
 		printf("testing mic led...\n");
 		libresense_audio_update update = {};
 		update.jack_volume = 1.0;
@@ -158,7 +186,7 @@ main(void) {
 		update.color.z = 1.0;
 		update.brightness = LIBRESENSE_LED_BRIGHTNESS_HIGH;
 		update.mode = LIBRESENSE_LED_MODE_BRIGHTNESS;
-		update.led = LBIRESENSE_LED_NONE;
+		update.led = LIBRESENSE_LED_NONE;
 		update.effect = LIBRESENSE_LED_EFFECT_OFF;
 		int i = 0;
 		while(true) {

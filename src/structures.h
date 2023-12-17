@@ -41,6 +41,10 @@
 #define DUALSENSE_CRC_INPUT (0xA1)
 #define DUALSENSE_CRC_OUTPUT (0xA2)
 #define DUALSENSE_CRC_FEATURE (0xA3)
+#define DUALSENSE_TRIGGER_MAX (0xEE)
+
+#define NORM_CLAMP(value, max) (value >= 1.0f ? max : value <= 0.0f ? 0 : (uint8_t) (value * max))
+#define NORM_CLAMP_UINT8(value) NORM_CLAMP(value, UINT8_MAX)
 
 typedef enum ENUM_FORCE_8 {
 	DUALSENSE_REPORT_INPUT = 0x1,
@@ -266,11 +270,77 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_led_output) == 9, "dualsense_led_output is not 9 bytes");
 
+typedef enum ENUM_FORCE_8 {
+	DUALSENSE_EFFECT_MODE_OFF = 0x5,
+	DUALSENSE_EFFECT_MODE_STOP = 0x0,
+	DUALSENSE_EFFECT_MODE_UNIFORM = 0x1,
+	DUALSENSE_EFFECT_MODE_SLOPE = 0x22,
+	DUALSENSE_EFFECT_MODE_TRIGGER = 0x25,
+	DUALSENSE_EFFECT_MODE_SECTION = 0x2,
+	DUALSENSE_EFFECT_MODE_VIBRATE = 0x6,
+	DUALSENSE_EFFECT_MODE_VIBRATE_PULSE = 0x27,
+	DUALSENSE_EFFECT_MODE_MUTIPLE_SECTIONS = 0x21,
+	DUALSENSE_EFFECT_MODE_MUTIPLE_VIBRATE = 0x26,
+	DUALSENSE_EFFECT_MODE_MUTIPLE_VIBRATE_SECTIONS = 0x23
+} dualsense_effect_mode;
+
 typedef struct PACKED {
-	uint8_t mode;
-	uint8_t values[10];
+	dualsense_effect_mode mode;
+	union {
+		struct PACKED {
+			struct PACKED {
+				bool param1 : 1;
+				bool param2 : 1;
+				bool param3 : 1;
+				bool param4 : 1;
+				bool param5 : 1;
+				bool param6 : 1;
+				bool param7 : 1;
+				bool param8 : 1;
+				bool param9 : 1;
+				bool param10 : 1;
+				bool param11 : 1;
+				bool param12 : 1;
+				bool param13 : 1;
+				bool param14 : 1;
+				bool param15 : 1;
+				bool param16 : 1;
+			} presence;
+
+			struct PACKED {
+				uint8_t param1 : 3;
+				uint8_t param2 : 3;
+				uint8_t param3 : 3;
+				uint8_t param4 : 3;
+				uint8_t param5 : 3;
+				uint8_t param6 : 3;
+				uint8_t param7 : 3;
+				uint8_t param8 : 3;
+				uint8_t param9 : 3;
+				uint8_t param10 : 3;
+				uint8_t param11 : 3;
+				uint8_t param12 : 3;
+				uint8_t param13 : 3;
+				uint8_t param14 : 3;
+				uint8_t param15 : 3;
+				uint8_t param16 : 3;
+				uint8_t param17 : 3;
+				uint8_t param18 : 3;
+				uint8_t param19 : 3;
+				uint8_t param20 : 3;
+				uint8_t param21 : 3;
+				uint8_t unused : 1;
+			} bits;
+		} three_bit;
+		uint8_t eight_bit[10];
+		struct PACKED {
+			uint16_t command;
+			uint64_t value;
+		} sixtyfour_bit;
+	} params;
 } dualsense_effect_output;
 
+static_assert(offsetof(dualsense_effect_output, params.three_bit.bits) == 3, "dualsense_effect_output.params.three_bit.bits is not at 3 bytes");
 static_assert(sizeof(dualsense_effect_output) == 11, "dualsense_effect_output is not 11 bytes");
 
 typedef struct PACKED {

@@ -333,9 +333,6 @@ libresense_push(const libresense_handle *handle, const size_t handle_count) {
 	return LIBRESENSE_OK;
 }
 
-#define NORM_CLAMP_UINT8(value) \
-	(value >= 1.0f ? UINT8_MAX : value <= 0.0f ? 0 : (uint8_t) (value * UINT8_MAX))
-
 libresense_result
 libresense_update_led(const libresense_handle handle, const libresense_led_update data) {
 	CHECK_INIT;
@@ -399,12 +396,54 @@ libresense_update_audio(const libresense_handle handle, const libresense_audio_u
 	return LIBRESENSE_OK;
 }
 
+
+libresense_result
+compute_effect(dualsense_effect_output *effect, const libresense_effect_update trigger) {
+	// clear
+	effect->mode = 0;
+	effect->params.sixtyfour_bit.command = 0;
+	effect->params.sixtyfour_bit.value = 0;
+
+	switch(trigger.mode) {
+		case LIBRESENSE_EFFECT_NONE: break;
+		case LIBRESENSE_EFFECT_OFF:
+			effect->mode = DUALSENSE_EFFECT_MODE_OFF;
+			break;
+		case LIBRESENSE_EFFECT_STOP_VIBRATING:
+			effect->mode = DUALSENSE_EFFECT_MODE_STOP;
+		case LIBRESENSE_EFFECT_UNIFORM:
+			effect->mode = DUALSENSE_EFFECT_MODE_UNIFORM;
+			effect->params.eight_bit[0] = NORM_CLAMP(trigger.effect.uniform.position, DUALSENSE_TRIGGER_MAX);
+			effect->params.eight_bit[1] = NORM_CLAMP_UINT8(trigger.effect.uniform.resistance);
+			break;
+		case LIBRESENSE_EFFECT_SECTION:
+			effect->mode = DUALSENSE_EFFECT_MODE_SECTION;
+			effect->params.eight_bit[0] = NORM_CLAMP(trigger.effect.section.position.x, DUALSENSE_TRIGGER_MAX);
+			effect->params.eight_bit[1] = NORM_CLAMP(trigger.effect.section.position.y, DUALSENSE_TRIGGER_MAX);
+			effect->params.eight_bit[2] = NORM_CLAMP_UINT8(trigger.effect.section.resistance);
+			break;
+		default:
+			return LIBRESENSE_NOT_IMPLEMENTED;
+	}
+
+	return LIBRESENSE_OK;
+}
+
 libresense_result
 libresense_update_effect(const libresense_handle handle, const libresense_effect_update left_trigger, const libresense_effect_update right_trigger) {
 	CHECK_INIT;
 	CHECK_HANDLE_VALID(handle);
-	// todo
-	return LIBRESENSE_NOT_IMPLEMENTED;
+
+	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
+	hid_state->flags.bits.left_trigger_motor = left_trigger.mode != LIBRESENSE_EFFECT_NONE;
+	hid_state->flags.bits.right_trigger_motor = right_trigger.mode != LIBRESENSE_EFFECT_NONE;
+
+	libresense_result result = compute_effect(&hid_state->effects[ADAPTIVE_TRIGGER_LEFT], left_trigger);
+	if(IS_LIBRESENSE_BAD(result)) {
+		return result;
+	}
+
+	return compute_effect(&hid_state->effects[ADAPTIVE_TRIGGER_RIGHT], right_trigger);
 }
 
 libresense_result

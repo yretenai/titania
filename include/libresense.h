@@ -250,7 +250,7 @@ typedef enum {
 } libresense_led_brightness;
 
 typedef enum {
-	LBIRESENSE_LED_NONE = 0,
+	LIBRESENSE_LED_NONE = 0,
 	LIBRESENSE_LED_PLAYER_1 = 4,
 	LIBRESENSE_LED_PLAYER_2 = 10,
 	LIBRESENSE_LED_PLAYER_3 = 21,
@@ -273,17 +273,18 @@ typedef struct {
 } libresense_led_update;
 
 typedef enum {
-	LIBRESENSE_EFFECT_OFF = 0, // 0x5
-	LIBRESENSE_EFFECT_STOP_VIBRATING, // 0x0
-	LIBRESENSE_EFFECT_UNIFORM, // 0x1
-	LIBRESENSE_EFFECT_SLOPE, // 0x22
-	LIBRESENSE_EFFECT_TRIGGER, // 0x25
-	LIBRESENSE_EFFECT_SECTION, // 0x2
-	LIBRESENSE_EFFECT_VIBRATE, // 0x6
-	LIBRESENSE_EFFECT_VIBRATE_PULSE, // 0x27
-	LIBRESENSE_EFFECT_MUTIPLE_SECTIONS, // 0x21
-	LIBRESENSE_EFFECT_MUTIPLE_VIBRATE, // 0x26
-	LIBRESENSE_EFFECT_MUTIPLE_VIBRATE_SECTIONS, // 0x23
+	LIBRESENSE_EFFECT_NONE = -1,
+	LIBRESENSE_EFFECT_OFF = 0,
+	LIBRESENSE_EFFECT_STOP_VIBRATING,
+	LIBRESENSE_EFFECT_UNIFORM,
+	LIBRESENSE_EFFECT_SLOPE,
+	LIBRESENSE_EFFECT_TRIGGER,
+	LIBRESENSE_EFFECT_SECTION,
+	LIBRESENSE_EFFECT_VIBRATE,
+	LIBRESENSE_EFFECT_VIBRATE_PULSE,
+	LIBRESENSE_EFFECT_MUTIPLE_SECTIONS,
+	LIBRESENSE_EFFECT_MUTIPLE_VIBRATE,
+	LIBRESENSE_EFFECT_MUTIPLE_VIBRATE_SECTIONS,
 } libresense_effect_mode;
 
 typedef struct {
@@ -291,6 +292,7 @@ typedef struct {
 } libresense_effect_update_off;
 
 typedef libresense_effect_update_off libresense_effect_update_stop;
+typedef libresense_effect_update_off libresense_effect_update_none;
 
 typedef struct {
 	float position;
@@ -345,6 +347,7 @@ typedef struct {
 typedef struct {
 	libresense_effect_mode mode;
 	union {
+		libresense_effect_update_none none;
 		libresense_effect_update_off off;
 		libresense_effect_update_stop stop;
 		libresense_effect_update_uniform uniform;
