@@ -222,7 +222,6 @@ int main(void) {
 
 		reset_trigger:
 		update.mode = LIBRESENSE_EFFECT_OFF;
-		printf("reset\n");
 		libresense_update_effect(handle, update, update);
 		libresense_push(&handle, 1);
 		usleep(100000);
@@ -269,6 +268,7 @@ int main(void) {
 
 		reset_mic:
 		update.mic_led = data.device.muted ? LIBRESENSE_MIC_LED_ON : LIBRESENSE_MIC_LED_OFF;
+		update.enable_mic = !data.device.muted;
 		printf("restoring mic based on state...\n");
 		libresense_update_audio(handle, update);
 		libresense_push(&handle, 1);
