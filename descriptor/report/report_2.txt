@@ -1,0 +1,6 @@
+OUTPUT DESCRIPTOR
+Report ID 2
+
+0x30 (48) bytes
+
+todo: this format is highly bitpacked
