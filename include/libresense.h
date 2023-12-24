@@ -349,8 +349,6 @@ typedef struct {
 typedef struct {
 	float resistance[LIBRESENSE_TRIGGER_GRANULARITY];
 	float amplitude[LIBRESENSE_TRIGGER_GRANULARITY];
-	int32_t frequency;
-	int32_t period;
 } libresense_effect_update_multiple_vibrate_sections;
 
 typedef struct {

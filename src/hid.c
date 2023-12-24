@@ -488,19 +488,19 @@ compute_effect(dualsense_effect_output *effect, const libresense_effect_update t
 		}
 		case LIBRESENSE_EFFECT_MUTIPLE_VIBRATE_SECTIONS: {
 			effect->mode = DUALSENSE_EFFECT_MODE_MUTIPLE_VIBRATE_SECTIONS;
+			// 9 and 10 run into the 7 and 8th bytes, which are used for freq and period which are... not used? setup from previous frames?
+			// freq seems to be based off the speed the trigger is going.
 			for(int i = 0; i < LIBRESENSE_TRIGGER_GRANULARITY; ++i) {
 				// this is likely incorrect, have yet to find a real user of this
-				if(trigger.effect.multiple_vibrate_sections.amplitude[i] >= 0.01f) {
-					effect->params.multiple.id |= 1 << i;
-					effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_vibrate_sections.amplitude[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * i);
-				}
 				if(trigger.effect.multiple_vibrate_sections.resistance[i] >= 0.01f) {
 					effect->params.multiple.id |= 1 << i;
-					effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_vibrate_sections.resistance[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * (i + LIBRESENSE_TRIGGER_GRANULARITY));
+					effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_vibrate_sections.resistance[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * (i * 2));
+				}
+				if(trigger.effect.multiple_vibrate_sections.amplitude[i] >= 0.01f) {
+					effect->params.multiple.id |= 1 << i;
+					effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_vibrate_sections.amplitude[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * (i * 2 + 1));
 				}
 			}
-			effect->params.multiple.value |= ((uint64_t)(trigger.effect.multiple_vibrate_sections.frequency & UINT8_MAX)) << DUALSENSE_TRIGGER_FREQ_BITS;
-			effect->params.multiple.value |= ((uint64_t)(trigger.effect.multiple_vibrate_sections.period & UINT8_MAX)) << DUALSENSE_TRIGGER_PERD_BITS;
 			break;
 		}
 		// ReSharper restore CppRedundantParentheses

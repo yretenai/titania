@@ -315,8 +315,6 @@ int main(void) {
 		update.effect.multiple_vibrate_sections.resistance[7] = 0.3f;
 		update.effect.multiple_vibrate_sections.resistance[8] = 1.0f;
 		update.effect.multiple_vibrate_sections.resistance[9] = 1.0f;
-		update.effect.multiple_vibrate_sections.frequency = 201;
-		update.effect.multiple_vibrate_sections.period = 4;
 		printf("multiple vibrate sections\n");
 		libresense_update_effect(handle, update, update);
 		libresense_push(&handle, 1);
