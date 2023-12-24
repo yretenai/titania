@@ -17,6 +17,7 @@
 #define LIBRESENSE_MIN_DELAY (125)
 #define LIBRESENSE_POLLING_RATE_BT (1)
 #define LIBRESENSE_POLLING_RATE_USB (4)
+#define LIBRESENSE_TRIGGER_GRANULARITY (10)
 
 typedef enum {
 	LIBRESENSE_OK = 0,
@@ -285,7 +286,7 @@ typedef enum {
 	LIBRESENSE_EFFECT_TRIGGER,
 	LIBRESENSE_EFFECT_SECTION,
 	LIBRESENSE_EFFECT_VIBRATE,
-	LIBRESENSE_EFFECT_VIBRATE_PULSE,
+	LIBRESENSE_EFFECT_VIBRATE_SLOPE,
 	LIBRESENSE_EFFECT_MUTIPLE_SECTIONS,
 	LIBRESENSE_EFFECT_MUTIPLE_VIBRATE,
 	LIBRESENSE_EFFECT_MUTIPLE_VIBRATE_SECTIONS,
@@ -318,6 +319,10 @@ typedef struct {
 	float resistance;
 } libresense_effect_update_section;
 
+// todo: document frequency and period.
+// frequency is the raw Hz frequency of the vibration, 201 is a good value.
+// period is the period in 0.1s steps, 1 is 100ms
+// "stable" frequency table = 1..38, 39, 41, 42, 44, 46, 48, 51, 53, 56, 59, 63, 67, 72, 77, 84, 91, 101, 112, 126, 143, 167, 201, 251, 255
 typedef struct {
 	float position;
 	float amplitude;
@@ -329,21 +334,21 @@ typedef struct {
 	libresense_vector2 amplitude;
 	int32_t frequency;
 	int32_t period;
-} libresense_effect_update_vibrate_pulse;
+} libresense_effect_update_vibrate_slope;
 
 typedef struct {
-	float resistance[10];
+	float resistance[LIBRESENSE_TRIGGER_GRANULARITY];
 } libresense_effect_update_multiple_sections;
 
 typedef struct {
-	float amplitude[10];
+	float amplitude[LIBRESENSE_TRIGGER_GRANULARITY];
 	int32_t frequency;
 	int32_t period;
 } libresense_effect_update_multiple_vibrate;
 
 typedef struct {
-	float resistance[10];
-	float amplitude[10];
+	float resistance[LIBRESENSE_TRIGGER_GRANULARITY];
+	float amplitude[LIBRESENSE_TRIGGER_GRANULARITY];
 	int32_t frequency;
 	int32_t period;
 } libresense_effect_update_multiple_vibrate_sections;
@@ -359,7 +364,7 @@ typedef struct {
 		libresense_effect_update_trigger trigger;
 		libresense_effect_update_section section;
 		libresense_effect_update_vibrate vibrate;
-		libresense_effect_update_vibrate_pulse vibrate_pulse;
+		libresense_effect_update_vibrate_slope vibrate_slope;
 		libresense_effect_update_multiple_sections multiple_sections;
 		libresense_effect_update_multiple_vibrate multiple_vibrate;
 		libresense_effect_update_multiple_vibrate_sections multiple_vibrate_sections;

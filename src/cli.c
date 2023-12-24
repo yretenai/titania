@@ -160,8 +160,6 @@ int main(void) {
 	printf("battery { level = %f%%, state = %s, error = %u }\n", data.battery.level, libresense_battery_state_msg[data.battery.state], data.battery.battery_error);
 	printf("state { headphones = %s, headset = %s, muted = %s, cabled = %s, stick = { disconnect = %s, error = %s, calibrate = %s }, raw = %08lx, state_id = %08lx }\n", MAKE_TEST(data.device.headphones), MAKE_TEST(data.device.headset), MAKE_TEST(data.device.muted), MAKE_TEST(data.device.cable_connected), MAKE_TEST(data.edge_device.stick_disconnected), MAKE_TEST(data.edge_device.stick_error), MAKE_TEST(data.edge_device.stick_calibrating), data.state, data.state_id);
 
-	printf("press OPTIONS to skip test\n");
-
 	{
 		printf("testing latency, this will take 1 second\n");
 		long max = INT64_MIN;
@@ -169,9 +167,6 @@ int main(void) {
 		for(int i = 0; i < 1000; ++i) {
 			timespec_get(&ts1, TIME_UTC);
 			libresense_pull(&handle, 1, &data);
-			if(data.buttons.option) {
-				break;
-			}
 			timespec_get(&ts2, TIME_UTC);
 			long delta = ts2.tv_nsec - ts1.tv_nsec;
 			if(delta < min) {
@@ -184,6 +179,8 @@ int main(void) {
 		}
 		printf("min: %ld, max: %ld\n", min, max);
 	}
+
+	printf("press OPTIONS to skip test\n");
 
 	{
 		wait_until_options_clear(handle, 250000);
@@ -211,6 +208,47 @@ int main(void) {
 			goto reset_trigger;
 		}
 
+		update.mode = LIBRESENSE_EFFECT_MUTIPLE_SECTIONS;
+		update.effect.multiple_sections.resistance[0] = 0;
+		update.effect.multiple_sections.resistance[1] = 0;
+		update.effect.multiple_sections.resistance[2] = 0.3f;
+		update.effect.multiple_sections.resistance[3] = 0.3f;
+		update.effect.multiple_sections.resistance[4] = 0.6f;
+		update.effect.multiple_sections.resistance[5] = 0.6f;
+		update.effect.multiple_sections.resistance[6] = 0.3f;
+		update.effect.multiple_sections.resistance[7] = 0.3f;
+		update.effect.multiple_sections.resistance[8] = 1.0f;
+		update.effect.multiple_sections.resistance[9] = 1.0f;
+		printf("multiple section\n");
+		libresense_update_effect(handle, update, update);
+		libresense_push(&handle, 1);
+		if(report_hid_trigger(handle, 5000000, 8000)) {
+			goto reset_trigger;
+		}
+
+		update.mode = LIBRESENSE_EFFECT_TRIGGER;
+		update.effect.trigger.position.x = 0.50f;
+		update.effect.trigger.position.y = 1.00f;
+		update.effect.trigger.resistance = 0.5f;
+		printf("trigger\n");
+		libresense_update_effect(handle, update, update);
+		libresense_push(&handle, 1);
+		if(report_hid_trigger(handle, 5000000, 8000)) {
+			goto reset_trigger;
+		}
+
+		update.mode = LIBRESENSE_EFFECT_SLOPE;
+		update.effect.slope.position.x = 0.20;
+		update.effect.slope.position.y = 1.00;
+		update.effect.slope.resistance.x = 0.25f;
+		update.effect.slope.resistance.y = 1.0f;
+		printf("slope\n");
+		libresense_update_effect(handle, update, update);
+		libresense_push(&handle, 1);
+		if(report_hid_trigger(handle, 5000000, 8000)) {
+			goto reset_trigger;
+		}
+
 		update.mode = LIBRESENSE_EFFECT_VIBRATE;
 		update.effect.vibrate.position = 0.33;
 		update.effect.vibrate.amplitude = 0.75;
@@ -218,7 +256,73 @@ int main(void) {
 		printf("vibrate\n");
 		libresense_update_effect(handle, update, update);
 		libresense_push(&handle, 1);
-		report_hid_trigger(handle, 5000000, 8000);
+		if(report_hid_trigger(handle, 5000000, 8000)) {
+			goto reset_trigger;
+		}
+
+		update.mode = LIBRESENSE_EFFECT_VIBRATE_SLOPE;
+		update.effect.vibrate_slope.position.x = 0.20;
+		update.effect.vibrate_slope.position.y = 1.00;
+		update.effect.vibrate_slope.amplitude.x = 0.25f;
+		update.effect.vibrate_slope.amplitude.y = 1.0f;
+		update.effect.vibrate_slope.frequency = 201;
+		update.effect.vibrate_slope.period = 4;
+		printf("vibrate slope\n");
+		libresense_update_effect(handle, update, update);
+		libresense_push(&handle, 1);
+		if(report_hid_trigger(handle, 5000000, 8000)) {
+			goto reset_trigger;
+		}
+
+		update.mode = LIBRESENSE_EFFECT_MUTIPLE_VIBRATE;
+		update.effect.multiple_vibrate.amplitude[0] = 0;
+		update.effect.multiple_vibrate.amplitude[1] = 0;
+		update.effect.multiple_vibrate.amplitude[2] = 0.3f;
+		update.effect.multiple_vibrate.amplitude[3] = 0.3f;
+		update.effect.multiple_vibrate.amplitude[4] = 0.6f;
+		update.effect.multiple_vibrate.amplitude[5] = 0.6f;
+		update.effect.multiple_vibrate.amplitude[6] = 0.3f;
+		update.effect.multiple_vibrate.amplitude[7] = 0.3f;
+		update.effect.multiple_vibrate.amplitude[8] = 1.0f;
+		update.effect.multiple_vibrate.amplitude[9] = 1.0f;
+		update.effect.multiple_vibrate.frequency = 201;
+		update.effect.multiple_vibrate.period = 4;
+		printf("multiple vibrate\n");
+		libresense_update_effect(handle, update, update);
+		libresense_push(&handle, 1);
+		if(report_hid_trigger(handle, 5000000, 8000)) {
+			goto reset_trigger;
+		}
+
+		update.mode = LIBRESENSE_EFFECT_MUTIPLE_VIBRATE_SECTIONS;
+		update.effect.multiple_vibrate_sections.amplitude[0] = 0;
+		update.effect.multiple_vibrate_sections.amplitude[1] = 0;
+		update.effect.multiple_vibrate_sections.amplitude[2] = 0.3f;
+		update.effect.multiple_vibrate_sections.amplitude[3] = 0.3f;
+		update.effect.multiple_vibrate_sections.amplitude[4] = 0.6f;
+		update.effect.multiple_vibrate_sections.amplitude[5] = 0.6f;
+		update.effect.multiple_vibrate_sections.amplitude[6] = 0.3f;
+		update.effect.multiple_vibrate_sections.amplitude[7] = 0.3f;
+		update.effect.multiple_vibrate_sections.amplitude[8] = 1.0f;
+		update.effect.multiple_vibrate_sections.amplitude[9] = 1.0f;
+		update.effect.multiple_vibrate_sections.resistance[0] = 0;
+		update.effect.multiple_vibrate_sections.resistance[1] = 0;
+		update.effect.multiple_vibrate_sections.resistance[2] = 0.3f;
+		update.effect.multiple_vibrate_sections.resistance[3] = 0.3f;
+		update.effect.multiple_vibrate_sections.resistance[4] = 0.6f;
+		update.effect.multiple_vibrate_sections.resistance[5] = 0.6f;
+		update.effect.multiple_vibrate_sections.resistance[6] = 0.3f;
+		update.effect.multiple_vibrate_sections.resistance[7] = 0.3f;
+		update.effect.multiple_vibrate_sections.resistance[8] = 1.0f;
+		update.effect.multiple_vibrate_sections.resistance[9] = 1.0f;
+		update.effect.multiple_vibrate_sections.frequency = 201;
+		update.effect.multiple_vibrate_sections.period = 4;
+		printf("multiple vibrate sections\n");
+		libresense_update_effect(handle, update, update);
+		libresense_push(&handle, 1);
+		if(report_hid_trigger(handle, 5000000, 8000)) {
+			goto reset_trigger;
+		}
 
 		reset_trigger:
 		update.mode = LIBRESENSE_EFFECT_OFF;

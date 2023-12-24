@@ -184,7 +184,7 @@ libresense_open(libresense_hid *handle) {
 			uint8_t report[HID_API_MAX_REPORT_DESCRIPTOR_SIZE];
 			int report_size = hid_get_report_descriptor(state[i].hid, report, HID_API_MAX_REPORT_DESCRIPTOR_SIZE);
 
-			memset(handle->report_ids, 0, sizeof(libresense_hid_report_id) * 0xFF);
+			memset(handle->report_ids, 0, sizeof(libresense_hid_report_id) * UINT8_MAX);
 
 			int report_id = 0;
 			if (report_size > 7 && report_size < HID_API_MAX_REPORT_DESCRIPTOR_SIZE && report[0] == 0x05 && report[1] == 0x01 && // USAGE PAGE Generic Desktop
@@ -228,7 +228,7 @@ libresense_open(libresense_hid *handle) {
 					}
 
 					if (op_value == 33) { // REPORT ID
-						if (report_id == 0xFF) {
+						if (report_id == UINT8_MAX) {
 							break;
 						}
 						if (value == 0xf7) {
@@ -433,8 +433,93 @@ compute_effect(dualsense_effect_output *effect, const libresense_effect_update t
 			effect->params.value[1] = NORM_CLAMP(trigger.effect.vibrate.amplitude, DUALSENSE_TRIGGER_AMPLITUDE_MAX);
 			effect->params.value[2] = NORM_CLAMP(trigger.effect.vibrate.position, DUALSENSE_TRIGGER_VIBRATION_MAX);
 			break;
+		// ReSharper disable CppRedundantParentheses
+		case LIBRESENSE_EFFECT_SLOPE: {
+			effect->mode = DUALSENSE_EFFECT_MODE_SLOPE;
+			const uint8_t slope_start = NORM_CLAMP(trigger.effect.slope.position.x, LIBRESENSE_TRIGGER_GRANULARITY);
+			const uint8_t slope_end = NORM_CLAMP(trigger.effect.slope.position.y, LIBRESENSE_TRIGGER_GRANULARITY);
+			const uint8_t res_start = NORM_CLAMP(trigger.effect.slope.resistance.x, DUALSENSE_TRIGGER_STEP);
+			const uint8_t res_end = NORM_CLAMP(trigger.effect.slope.resistance.y, DUALSENSE_TRIGGER_STEP);
+			effect->params.multiple.id = (1 << (slope_start - 1)) | (1 << (slope_end - 1));
+			effect->params.value[2] = res_start | res_end << DUALSENSE_TRIGGER_SHIFT;
+			break;
+		}
+		case LIBRESENSE_EFFECT_TRIGGER: {
+			effect->mode = DUALSENSE_EFFECT_MODE_TRIGGER;
+			const uint8_t slope_start = NORM_CLAMP(trigger.effect.trigger.position.x, LIBRESENSE_TRIGGER_GRANULARITY);
+			const uint8_t slope_end = NORM_CLAMP(trigger.effect.trigger.position.y, LIBRESENSE_TRIGGER_GRANULARITY);
+			effect->params.multiple.id = (1 << (slope_start - 1)) | (1 << (slope_end - 1));
+			effect->params.value[2] = NORM_CLAMP(trigger.effect.trigger.resistance, DUALSENSE_TRIGGER_STEP);
+			break;
+		}
+		case LIBRESENSE_EFFECT_VIBRATE_SLOPE: {
+			effect->mode = DUALSENSE_EFFECT_MODE_VIBRATE_SLOPE;
+			const uint8_t slope_start = NORM_CLAMP(trigger.effect.vibrate_slope.position.x, LIBRESENSE_TRIGGER_GRANULARITY);
+			const uint8_t slope_end = NORM_CLAMP(trigger.effect.vibrate_slope.position.y, LIBRESENSE_TRIGGER_GRANULARITY);
+			const uint8_t res_start = NORM_CLAMP(trigger.effect.vibrate_slope.amplitude.x, DUALSENSE_TRIGGER_STEP);
+			const uint8_t res_end = NORM_CLAMP(trigger.effect.vibrate_slope.amplitude.y, DUALSENSE_TRIGGER_STEP);
+			effect->params.multiple.id = (1 << (slope_start - 1)) | (1 << (slope_end - 1));
+			effect->params.value[2] = res_start | res_end << DUALSENSE_TRIGGER_SHIFT;
+			effect->params.value[3] = trigger.effect.vibrate_slope.frequency & UINT8_MAX;
+			effect->params.value[4] = trigger.effect.vibrate_slope.period & UINT8_MAX;
+			break;
+		}
+		case LIBRESENSE_EFFECT_MUTIPLE_SECTIONS: {
+			effect->mode = DUALSENSE_EFFECT_MODE_MUTIPLE_SECTIONS;
+			for(int i = 0; i < LIBRESENSE_TRIGGER_GRANULARITY; ++i) {
+				if(trigger.effect.multiple_sections.resistance[i] >= 0.01f) {
+					effect->params.multiple.id |= 1 << i;
+					effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_sections.resistance[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * i);
+				}
+			}
+			break;
+		}
+		case LIBRESENSE_EFFECT_MUTIPLE_VIBRATE: {
+			effect->mode = DUALSENSE_EFFECT_MODE_MUTIPLE_VIBRATE;
+			for(int i = 0; i < LIBRESENSE_TRIGGER_GRANULARITY; ++i) {
+				if(trigger.effect.multiple_vibrate.amplitude[i] >= 0.01f) {
+					effect->params.multiple.id |= 1 << i;
+					effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_vibrate.amplitude[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * i);
+				}
+			}
+			effect->params.multiple.value |= ((uint64_t)(trigger.effect.multiple_vibrate.frequency & UINT8_MAX)) << DUALSENSE_TRIGGER_FREQ_BITS;
+			effect->params.multiple.value |= ((uint64_t)(trigger.effect.multiple_vibrate.period & UINT8_MAX)) << DUALSENSE_TRIGGER_PERD_BITS;
+			break;
+		}
+		case LIBRESENSE_EFFECT_MUTIPLE_VIBRATE_SECTIONS: {
+			effect->mode = DUALSENSE_EFFECT_MODE_MUTIPLE_VIBRATE_SECTIONS;
+			for(int i = 0; i < LIBRESENSE_TRIGGER_GRANULARITY; ++i) {
+				// this is likely incorrect, have yet to find a real user of this
+				if(trigger.effect.multiple_vibrate_sections.amplitude[i] >= 0.01f) {
+					effect->params.multiple.id |= 1 << i;
+					effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_vibrate_sections.amplitude[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * i);
+				}
+				if(trigger.effect.multiple_vibrate_sections.resistance[i] >= 0.01f) {
+					effect->params.multiple.id |= 1 << i;
+					effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_vibrate_sections.resistance[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * (i + LIBRESENSE_TRIGGER_GRANULARITY));
+				}
+			}
+			effect->params.multiple.value |= ((uint64_t)(trigger.effect.multiple_vibrate_sections.frequency & UINT8_MAX)) << DUALSENSE_TRIGGER_FREQ_BITS;
+			effect->params.multiple.value |= ((uint64_t)(trigger.effect.multiple_vibrate_sections.period & UINT8_MAX)) << DUALSENSE_TRIGGER_PERD_BITS;
+			break;
+		}
+		// ReSharper restore CppRedundantParentheses
 		default:
 			return LIBRESENSE_NOT_IMPLEMENTED;
+	}
+
+	return LIBRESENSE_OK;
+}
+
+// sanity check to make sure we don't (temporarily) brick the controller
+libresense_result
+check_if_trigger_state_bad(const libresense_handle handle, const uint8_t id) {
+	CHECK_INIT;
+	CHECK_HANDLE_VALID(handle);
+
+	const dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
+	if(hid_state->effects[id].mode >= 0xF0) { // these are calibration modes, will temporarily brick the controller!!
+		return LIBRESENSE_INVALID_DATA;
 	}
 
 	return LIBRESENSE_OK;
@@ -450,11 +535,28 @@ libresense_update_effect(const libresense_handle handle, const libresense_effect
 	hid_state->flags.bits.right_trigger_motor = right_trigger.mode != LIBRESENSE_EFFECT_NONE;
 
 	libresense_result result = compute_effect(&hid_state->effects[ADAPTIVE_TRIGGER_LEFT], left_trigger);
+	if(IS_LIBRESENSE_OKAY(result)) {
+		result = check_if_trigger_state_bad(handle, ADAPTIVE_TRIGGER_LEFT);
+	}
+
 	if(IS_LIBRESENSE_BAD(result)) {
+		memset(&hid_state->effects[ADAPTIVE_TRIGGER_RIGHT], 0, sizeof(hid_state->effects[ADAPTIVE_TRIGGER_RIGHT]));
+		hid_state->flags.bits.left_trigger_motor = false;
 		return result;
 	}
 
-	return compute_effect(&hid_state->effects[ADAPTIVE_TRIGGER_RIGHT], right_trigger);
+	result = compute_effect(&hid_state->effects[ADAPTIVE_TRIGGER_RIGHT], right_trigger);
+	if(IS_LIBRESENSE_OKAY(result)) {
+		result = check_if_trigger_state_bad(handle, ADAPTIVE_TRIGGER_RIGHT);
+	}
+
+	if(IS_LIBRESENSE_BAD(result)) {
+		memset(&hid_state->effects[ADAPTIVE_TRIGGER_RIGHT], 0, sizeof(hid_state->effects[ADAPTIVE_TRIGGER_RIGHT]));
+		hid_state->flags.bits.right_trigger_motor = false;
+		return result;
+	}
+
+	return result;
 }
 
 libresense_result
