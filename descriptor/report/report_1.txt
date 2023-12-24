@@ -4,80 +4,80 @@ Report ID 1
 0x40 (64) bytes
 types are C types, with stdint.h
 
-uint8_t report_id;                            // this will be 1.
-uint8_t sticks[2][2];                         // left x, left y, right x, right y
-uint8_t triggers[2];                          // UNORM actuation point of [0] = left, [1] = right
-uint8_t sequence;                             // always incrementing
-uint32_t buttons_bitset buttons;              // see below 
-uint32_t firmware_time;                       // name is an assumption, but it is definitely a timestamp.
-int16_t accelerometer[3];                     // x, y, z, SNORM.
-int16_t gyro[3];                              // x, y, z, SNORM. NOT ORIENTATION. Detects changes in orientation.
-uint40_t time;                                // 40 bit time!
-uint32_t touch_bitset touch[2];               // two-finger touch points, see below for touch_bitset
-uint8_t touch_sequence;                       // last touch id
-uint8_t adaptive_trgger adaptive_triggers[2]; // see below
-uint32_t state_id;                            // state_id that is provided in the output report
-uint16_t unknown;                             // unknown, if you know please let me know
-uint8_t edge_state_bitset edge_state;         // see below
-uint16_t unknown;                             // unknown, if you know please let me know
-uint8_t battery_bitset battery;               // battery state, see below
-uint8_t device_bitset state;                  // device state, see below
-uint8_t reserved;                             //
-uint64_t checksum;                            // sanity checksum of this packet
+uint8_t report_id                            // this will be 1
+uint8_t sticks[2][2]                         // left x, left y, right x, right y
+uint8_t triggers[2]                          // UNORM actuation point of [0] = left, [1] = right
+uint8_t sequence                             // always incrementing
+uint32_t buttons_bitset buttons              // see below 
+uint32_t firmware_time                       // name is an assumption, but it is definitely a timestamp
+int16_t accelerometer[3]                     // x, y, z, SNORM
+int16_t gyro[3]                              // x, y, z, SNORM Detects changes in orientation
+uint40_t time                                // 40 bit time!
+uint32_t touch_bitset touch[2]               // two-finger touch points, see below for touch_bitset
+uint8_t touch_sequence                       // last touch id
+uint8_t adaptive_trgger adaptive_triggers[2] // see below
+uint32_t state_id                            // state_id that is provided in the output report
+uint16_t unknown                             // unknown, if you know please let me know
+uint8_t edge_state_bitset edge_state         // see below
+uint16_t unknown                             // unknown, if you know please let me know
+uint8_t battery_bitset battery               // battery state, see below
+uint8_t device_bitset state                  // device state, see below
+uint8_t reserved                             //
+uint64_t checksum                            // sanity checksum of this packet
 
 buttons_bitset:
-	uint8_t buttons_dpad dpad : 4; // 4 bits! see below for buttons_dpad
-	bool square;
-	bool cross;
-	bool circle;
-	bool triangle;
-	bool l1;
-	bool r1;
-	bool l2;
-	bool r2;
-	bool share;
-	bool option;
-	bool l3;
-	bool r3;
-	bool ps_button;
-	bool touch;
-	bool mute;
-	bool reserved;
-	bool edge_f1;
-	bool edge_f2;
-	bool edge_lb;
-	bool edge_rb;
-	uint8_t reserved : 8;
+	uint8_t buttons_dpad dpad : 4 // 4 bits! see below for buttons_dpad
+	bool square : 1
+	bool cross : 1
+	bool circle : 1
+	bool triangle : 1
+	bool l1 : 1
+	bool r1 : 1
+	bool l2 : 1
+	bool r2 : 1
+	bool share : 1
+	bool option : 1
+	bool l3 : 1
+	bool r3 : 1
+	bool ps_button : 1
+	bool touch : 1
+	bool mute : 1
+	bool reserved : 1
+	bool edge_f1 : 1
+	bool edge_f2 : 1
+	bool edge_lb : 1
+	bool edge_rb : 1
+	uint8_t reserved : 8
 
 buttons_dpad:
-	up = 0,
-	up right = 1,
-	right = 2,
-	down right = 3,
-	down = 4,
-	down left = 5,
-	left = 6,
-	up left = 7,
+	up = 0
+	up right = 1
+	right = 2
+	down right = 3
+	down = 4
+	down left = 5
+	left = 6
+	up left = 7
 	clear = 8
 
 touch_bitset:
-	uint8_t value : 7; // 7 bits! goes up with each distinct press
-	bool idle : 1;     // bit is cleared when touched
-	uint16_t x : 12;   // 12 bits, x coordinate
-	uint16_t y : 12;   // 12 bits, y coordinate
+	uint8_t value : 7 // 7 bits! goes up with each distinct press
+	bool idle : 1     // bit is cleared when touched
+	uint16_t x : 12   // 12 bits, x coordinate
+	uint16_t y : 12   // 12 bits, y coordinate
 
 adaptive_trgger:
-	uint8_t id : 4;    // the section id, 0..9, refer to output report
-	uint8_t state : 4; // 0, 1, and 2 is observed. depends on trigger effect
+	uint8_t id : 4    // the section id, values are 0 through 9, refer to output report
+	uint8_t state : 4 // 0, 1, and 2 is observed depends on trigger effect
 
 edge_state_bitset:
-	bool stick_disconnected : 1; // one of the sticks is removed
-	bool stick_error : 1;        // one of the sticks is not initialized or errorings
-	bool stick_calibrating : 1;  // the controller is initializing or calibrating the stick
+	bool stick_disconnected : 1 // one of the sticks is removed
+	bool stick_error : 1        // one of the sticks is not initialized or errorings
+	bool stick_calibrating : 1  // the controller is initializing or calibrating the stick
 
 battery_bitset:
-	uint8_t level : 4; // 4 bits! multiply by ten and add 5.
-	uint8_t battery_state state : 4; // 4 bits! see below
+	uint8_t level : 4               // 4 bits! multiply by ten and add 5
+	uint8_t battery_state state : 4 // 4 bits! see below
 
 battery_state:
 	discharging = 0
@@ -91,7 +91,7 @@ battery_state:
 	error_segfault = 15
 
 device_bitset:
-	bool headphones_connected : 1; // audio jack is plugged in
-	bool headset_connected : 1;    // audio jack is LINE IN and has a microphone 
-	bool muted : 1;                // user or output has specified the microphone must be muted
-	bool cabled : 1;               // we are on USB
+	bool headphones_connected : 1 // audio jack is plugged in
+	bool headset_connected : 1    // audio jack is LINE IN and has a microphone 
+	bool muted : 1                // user or output has specified the microphone must be muted
+	bool cabled : 1               // we are on USB

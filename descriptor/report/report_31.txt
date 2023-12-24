@@ -3,10 +3,10 @@ Report ID 31
 
 0x4E bytes
 
-uint8_t id;           // this must be 0x1F
-uint8_t report[0x40]; // usb report
-uint8_t reserved[9];  // padding?
-uint32_t checksum;    // CRC32 with the polynomial 0xEDB88320
+uint8_t id           // this must be 0x1F
+uint8_t report[0x40] // usb report
+uint8_t reserved[9]  // padding?
+uint32_t checksum    // CRC32 with the polynomial 0xEDB88320
 
 checksum notes:
 
