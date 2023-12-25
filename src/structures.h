@@ -391,6 +391,9 @@ static_assert(sizeof(dualsense_output_msg_ex) == 0x4e, "dualsense_output_msg_ex 
 #define DUALSENSE_GYRO_RESOLUTION 8096
 #define DUALSENSE_ACCELEROMETER_RESOLUTION 1024
 
+#define DUALSENSE_FIRMWARE_VERSION_DATE_LEN 0xB
+#define DUALSENSE_FIRMWARE_VERSION_TIME_LEN 0x8
+
 typedef struct PACKED {
 	uint8_t op;
 	libresense_vector3s gyro_bias;
@@ -403,9 +406,23 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_calibration_info) == 41, "dualsense_calibration_info is not 41 bytes");
 
-#ifdef _MSC_VER
-#pragma pack(pop)
-#endif
+typedef struct PACKED {
+	uint16_t major;
+	uint16_t minor;
+} dualsense_firmware_version;
+
+static_assert(sizeof(dualsense_firmware_version) == 4, "dualsense_firmware_version is 4 bytes");
+
+typedef struct PACKED {
+	uint8_t report_id;
+	char date[DUALSENSE_FIRMWARE_VERSION_DATE_LEN];
+	char time[DUALSENSE_FIRMWARE_VERSION_TIME_LEN];
+	dualsense_firmware_version versions[LIBRESENSE_VERSION_MAX];
+} dualsense_firmware_info;
+
+static_assert(DUALSENSE_FIRMWARE_VERSION_DATE_LEN + 1 + DUALSENSE_FIRMWARE_VERSION_TIME_LEN + 1 < LIBRESENSE_FIRMWARE_DATE_LEN,
+	"date + space + time + null is >= libresense_firmware_info.version");
+static_assert(sizeof(dualsense_firmware_info) == 64, "dualsense_firmware_info is not 64 bytes");
 
 typedef struct {
 	float max;

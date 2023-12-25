@@ -18,6 +18,7 @@
 #define LIBRESENSE_POLLING_RATE_BT (1)
 #define LIBRESENSE_POLLING_RATE_USB (4)
 #define LIBRESENSE_TRIGGER_GRANULARITY (10)
+#define LIBRESENSE_FIRMWARE_DATE_LEN (0x20)
 
 typedef enum {
 	LIBRESENSE_OK = 0,
@@ -48,9 +49,25 @@ typedef enum {
 	LIBRESENSE_PROFILE_MAX
 } libresense_edge_profile_id;
 
+typedef enum {
+	LIBRESENSE_VERSION_UNKNOWN0 = 0,
+	LIBRESENSE_VERSION_UNKNOWN1 = 1,
+	LIBRESENSE_VERSION_UNKNOWN2 = 2,
+	LIBRESENSE_VERSION_UNKNOWN3 = 3,
+	LIBRESENSE_VERSION_UNKNOWN4 = 4,
+	LIBRESENSE_VERSION_UNKNOWN5 = 5,
+	LIBRESENSE_VERSION_FIRMWARE = 6,
+	LIBRESENSE_VERSION_UNKNOWN7 = 7,
+	LIBRESENSE_VERSION_UNKNOWN8 = 8,
+	LIBRESENSE_VERSION_UNKNOWN9 = 9,
+	LIBRESENSE_VERSION_UNKNOWN10 = 10,
+	LIBRESENSE_VERSION_MAX
+} libresense_version_id;
+
 extern const char *libresense_error_msg[LIBRESENSE_ERROR_MAX + 1];
 extern const char *libresense_battery_state_msg[LIBRESENSE_BATTERY_MAX + 1];
 extern const char *libresense_edge_profile_id_msg[LIBRESENSE_PROFILE_MAX + 1];
+extern const char *libresense_version_msg[LIBRESENSE_VERSION_MAX + 1];
 extern const int libresense_max_controllers;
 
 #define IS_LIBRESENSE_OKAY(result) (result == LIBRESENSE_OK)
@@ -162,38 +179,14 @@ typedef struct {
 } libresense_battery;
 
 typedef struct {
-	uint8_t major;
-	uint8_t minor;
-	uint8_t patch;
-	uint8_t revision;
+	uint16_t major;
+	uint16_t minjor;
 } libresense_firmware_version;
 
 typedef struct {
-	uint8_t major;
-	uint8_t minor;
-} libresense_version;
-
-#ifdef _MSC_VER
-#pragma pack(push, 1)
-typedef struct {
-#else
-typedef struct __attribute__((__packed__)) {
-#endif
-	char datetime[0x15];
-	libresense_firmware_version device;
-	libresense_firmware_version hardware;
-	libresense_firmware_version software;
-	uint16_t device_code;
-	uint64_t unknown3;
-	libresense_version update;
-	uint8_t unknown4;
-	libresense_firmware_version unknownVersion1;
-	libresense_firmware_version unknownVersion2;
-	uint16_t unknown5;
+	char datetime[LIBRESENSE_FIRMWARE_DATE_LEN];
+	libresense_firmware_version versions[LIBRESENSE_VERSION_MAX];
 } libresense_firmware_info;
-#ifdef _MSC_VER
-#pragma pack(pop)
-#endif
 
 typedef struct {
 	libresense_wchar name[0x64];

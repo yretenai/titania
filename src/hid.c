@@ -2,6 +2,8 @@
 
 #include "structures.h"
 
+#include <stdio.h>
+
 const int libresense_max_controllers = LIBRESENSE_MAX_CONTROLLERS;
 
 static dualsense_state state[LIBRESENSE_MAX_CONTROLLERS];
@@ -56,7 +58,6 @@ libresense_get_hids(libresense_hid *hids, const size_t hids_length) {
 				hids[index].vendor_id = dev->vendor_id;
 				hids[index].is_bluetooth = dev->bus_type == HID_API_BUS_BLUETOOTH;
 				wcscpy(hids[index].serial, dev->serial_number);
-				// todo: request firmware and profiles.
 
 				index += 1;
 
@@ -141,9 +142,24 @@ libresense_open(libresense_hid *handle) {
 				libresense_push(&handle->handle, 1);
 			}
 
+			// todo: request profiles.
+
+			dualsense_firmware_info firmware;
+			const size_t firmware_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_FIRMWARE, (uint8_t*)&firmware, 64, false);
+			if(firmware_report_sz == 64) {
+				memset(handle->firmware.datetime, 0, sizeof(handle->firmware.datetime));
+				memcpy(handle->firmware.datetime, firmware.date, sizeof(firmware.date));
+				handle->firmware.datetime[sizeof(firmware.date)] = ' ';
+				memcpy(handle->firmware.datetime + sizeof(firmware.date) + 1, firmware.time, sizeof(firmware.time));
+
+				for(int j = 0; j < LIBRESENSE_VERSION_MAX; ++j) {
+					handle->firmware.versions[j] = (libresense_firmware_version) { firmware.versions[j].major, firmware.versions[j].minor };
+				}
+			}
+
 			dualsense_calibration_info calibration;
-			const size_t report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_CALIBRATION, (uint8_t*)&calibration, 41, false);
-			if(report_sz > 1 && report_sz <= 41) {
+			const size_t calibration_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_CALIBRATION, (uint8_t*)&calibration, sizeof(dualsense_calibration_info), false);
+			if(calibration_report_sz == 41) {
 				state[i].calibration[CALIBRATION_GYRO_X].max = CALIBRATION_GYRO(CALIBRATION_RAW_X, max);
 				state[i].calibration[CALIBRATION_GYRO_Y].max = CALIBRATION_GYRO(CALIBRATION_RAW_Y, max);
 				state[i].calibration[CALIBRATION_GYRO_Z].max = CALIBRATION_GYRO(CALIBRATION_RAW_Z, max);
@@ -182,18 +198,19 @@ libresense_open(libresense_hid *handle) {
 
 #ifdef LIBRESENSE_DEBUG
 			uint8_t report[HID_API_MAX_REPORT_DESCRIPTOR_SIZE];
-			int report_size = hid_get_report_descriptor(state[i].hid, report, HID_API_MAX_REPORT_DESCRIPTOR_SIZE);
+			const int report_size = hid_get_report_descriptor(state[i].hid, report, HID_API_MAX_REPORT_DESCRIPTOR_SIZE);
 
 			memset(handle->report_ids, 0, sizeof(libresense_hid_report_id) * UINT8_MAX);
 
-			int report_id = 0;
 			if (report_size > 7 && report_size < HID_API_MAX_REPORT_DESCRIPTOR_SIZE && report[0] == 0x05 && report[1] == 0x01 && // USAGE PAGE Generic Desktop
 				report[2] == 0x09 && report[3] == 0x05 &&																		 // USAGE Game Pad
-				report[4] == 0xA1 && report[5] == 0x01) {																		 // COLLECTION Application
+				report[4] == 0xA1 && report[5] == 0x01) {
+				int report_id = 0;
+				// COLLECTION Application
 				for (int j = 6; j < report_size;) {
-					uint8_t op = report[j++];
+					const uint8_t op = report[j++];
 					uint32_t value = 0;
-					uint8_t size = op & 0x3;
+					const uint8_t size = op & 0x3;
 					switch (size) {
 						case 0: continue;
 						case 1:
@@ -220,9 +237,10 @@ libresense_open(libresense_hid *handle) {
 							value = *(uint32_t *) (report + j);
 							j += 4;
 							break;
+						default: continue;
 					}
 
-					uint8_t op_value = op >> 2;
+					const uint8_t op_value = op >> 2;
 					if (op_value == 48) { // END COLLECTION
 						break;
 					}

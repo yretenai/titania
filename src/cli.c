@@ -4,6 +4,7 @@
 #include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -50,10 +51,9 @@ bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, _
 }
 
 bool report_hid_close(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
-	libresense_data data[LIBRESENSE_MAX_CONTROLLERS];
-
 	bool should_exit = false;
 	while(true) {
+		libresense_data data[LIBRESENSE_MAX_CONTROLLERS];
 		const libresense_result result = libresense_pull(handles, handle_count, data);
 		if(IS_LIBRESENSE_BAD(result)) {
 			return true;
@@ -103,7 +103,7 @@ void wait_until_options_clear(libresense_handle handle, __useconds_t timeout) {
 	}
 }
 
-int main(void) {
+int main(int argc, const char** argv) {
 	libresense_result result = libresense_init();
 	if(IS_LIBRESENSE_BAD(result)) {
 		libresense_errorf(stderr, result, "error initializing libresense");
@@ -129,22 +129,34 @@ int main(void) {
 			printf("connected to hid %ls\n", hid[hid_id].serial);
 			handles[connected++] = hid[hid_id].handle;
 #ifdef LIBRESENSE_DEBUG
-			uint8_t buffer[0x4096];
+			char name[0x2000] = { 0 };
+			if(wcslen(hid[hid_id].serial) > 0x40) {
+				continue;
+			}
+			sprintf(name, "report_%ls_%%d.bin", (wchar_t*) hid[hid_id].serial);
+
 			for (int i = 0; i < 0xFF; i++) {
+				uint8_t buffer[0x4096];
 				if (hid[hid_id].report_ids[i].id == 0) {
 					break;
 				}
 
-				printf("report %d: reported size is %ld\n\t", hid[hid_id].report_ids[i].id, hid[hid_id].report_ids[i].size);
+				printf("report %d: reported size is %ld", hid[hid_id].report_ids[i].id, hid[hid_id].report_ids[i].size);
 
-				size_t size = libresense_debug_get_feature_report(hid[hid_id].handle, hid[hid_id].report_ids[i].id, (uint8_t *) buffer, hid[hid_id].report_ids[i].size <= 0x40 ? 0x40 : hid[hid_id].report_ids[i].size);
-				printf("actual size is %ld\n\t", size);
+				size_t size = libresense_debug_get_feature_report(hid[hid_id].handle, hid[hid_id].report_ids[i].id, buffer, hid[hid_id].report_ids[i].size <= 0x40 ? 0x40 : hid[hid_id].report_ids[i].size);
+				printf(" actual size is %ld\n", size);
 				if (size > 1 && size <= 0x4096) {
+					printf("\t");
 					for (size_t j = 0; j < size; j++) {
 						printf("%02x ", buffer[j]);
 					}
+					printf("\n");
+					char report_name[0x100] = { 0 };
+					sprintf(report_name, name, hid[hid_id].report_ids[i].id);
+					FILE* file = fopen(report_name, "w+b");
+					fwrite(buffer, 1, size, file);
+					fclose(file);
 				}
-				printf("\n");
 			}
 #endif
 		}
@@ -169,6 +181,11 @@ int main(void) {
 	for(size_t i = 0; i < connected; ++i) {
 		libresense_data data = datum[i];
 		printf("hid { handle = %d, pid = %04x, vid = 0x%04x, bt = %s, serial = %ls }\n", data.hid.handle, data.hid.product_id, data.hid.vendor_id, MAKE_TEST(data.hid.is_bluetooth), data.hid.serial);
+		printf("firmware { time = %s", hid->firmware.datetime);
+		for(size_t j = 0; j < LIBRESENSE_VERSION_MAX; ++j) {
+			printf(", %s = %04x:%04x", libresense_version_msg[j], hid->firmware.versions[j].major, hid->firmware.versions[j].minjor);
+		}
+		printf(" }\n");
 		printf("time { sys = %u, sensor = %lu, seq = { %u, %u, %u }, check = %lu }\n", data.time.system, data.time.sensor, data.time.sequence, data.time.touch_sequence, data.time.driver_sequence, data.time.checksum);
 		printf("buttons { dpad_up = %s, dpad_right = %s, dpad_down = %s, dpad_left = %s, square = %s, cross = %s, circle = %s, triangle = %s, l1 = %s, r1 = %s, l2 = %s, r2 = %s, share = %s, option = %s, l3 = %s, r3 = %s, ps = %s, touch = %s, mute = %s, unknown = %s, edge_f1 = %s, edge_f2 = %s, edge_lb = %s, edge_rb = %s }\n", MAKE_BUTTON(dpad_up), MAKE_BUTTON(dpad_right), MAKE_BUTTON(dpad_down), MAKE_BUTTON(dpad_left), MAKE_BUTTON(square), MAKE_BUTTON(cross), MAKE_BUTTON(circle), MAKE_BUTTON(triangle), MAKE_BUTTON(l1), MAKE_BUTTON(r1), MAKE_BUTTON(l2), MAKE_BUTTON(r2), MAKE_BUTTON(share), MAKE_BUTTON(option), MAKE_BUTTON(l3), MAKE_BUTTON(r3), MAKE_BUTTON(ps), MAKE_BUTTON(touch), MAKE_BUTTON(mute), MAKE_BUTTON(edge_unknown), MAKE_BUTTON(edge_f1), MAKE_BUTTON(edge_f2), MAKE_BUTTON(edge_lb), MAKE_BUTTON(edge_rb));
 		printf("triggers { left = { %f%%, %u, %u }, right = { %f%%, %u, %u } }\n", data.triggers[0].level * 100, data.triggers[0].id, data.triggers[0].effect, data.triggers[1].level * 100, data.triggers[1].id, data.triggers[1].effect);
@@ -177,6 +194,10 @@ int main(void) {
 		printf("sensors { accel = { %f, %f, %f }, gyro = { %f, %f, %f } }\n", data.sensors.accelerometer.x, data.sensors.accelerometer.y, data.sensors.accelerometer.z, data.sensors.gyro.x, data.sensors.gyro.y, data.sensors.gyro.z);
 		printf("battery { level = %f%%, state = %s, error = %u }\n", data.battery.level, libresense_battery_state_msg[data.battery.state], data.battery.battery_error);
 		printf("state { headphones = %s, headset = %s, muted = %s, cabled = %s, stick = { disconnect = %s, error = %s, calibrate = %s }, raw = %08lx, state_id = %08lx }\n", MAKE_TEST(data.device.headphones), MAKE_TEST(data.device.headset), MAKE_TEST(data.device.muted), MAKE_TEST(data.device.cable_connected), MAKE_TEST(data.edge_device.stick_disconnected), MAKE_TEST(data.edge_device.stick_error), MAKE_TEST(data.edge_device.stick_calibrating), data.state, data.state_id);
+	}
+
+	if(argc > 1) {
+		return 0;
 	}
 
 	{
