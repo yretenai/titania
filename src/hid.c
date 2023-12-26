@@ -163,8 +163,8 @@ libresense_open(libresense_hid *handle) {
 			dualsense_serial_info serial;
 			const size_t serial_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_SERIAL, (uint8_t*)&serial, sizeof(dualsense_serial_info), false);
 			if(serial_report_sz == 20) {
-				sprintf(handle->serial.mac, "%02x:%02x:%02x:%02x:%02x:%02x", serial.device_mac[0], serial.device_mac[1], serial.device_mac[2], serial.device_mac[3], serial.device_mac[4], serial.device_mac[5]);
-				sprintf(handle->serial.paired_mac, "%02x:%02x:%02x:%02x:%02x:%02x", serial.pair_mac[0], serial.pair_mac[1], serial.pair_mac[2], serial.pair_mac[3], serial.pair_mac[4], serial.pair_mac[5]);
+				sprintf(handle->serial.mac, "%02x:%02x:%02x:%02x:%02x:%02x", serial.device_mac[5], serial.device_mac[4], serial.device_mac[3], serial.device_mac[2], serial.device_mac[1], serial.device_mac[0]);
+				sprintf(handle->serial.paired_mac, "%02x:%02x:%02x:%02x:%02x:%02x", serial.pair_mac[5], serial.pair_mac[4], serial.pair_mac[3], serial.pair_mac[2], serial.pair_mac[1], serial.pair_mac[0]);
 				handle->serial.mac[sizeof(handle->serial.mac) - 1] = 0;
 				handle->serial.paired_mac[sizeof(handle->serial.paired_mac) - 1] = 0;
 				handle->serial.unknown = (uint64_t) serial.unknown[0] << 16 | (uint64_t) serial.unknown[1] << 8 | (uint64_t) serial.unknown[2];

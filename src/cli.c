@@ -195,7 +195,7 @@ int main(int argc, const char** argv) {
 	}
 
 	if(argc > 1) {
-		return 0;
+		goto shutdown;
 	}
 
 	{
@@ -617,6 +617,7 @@ int main(int argc, const char** argv) {
 		usleep(100000);
 	}
 
+	shutdown:
 	for(size_t i = 0; i < connected; ++i) {
 		libresense_close(handles[i]);
 		if(IS_LIBRESENSE_BAD(result)) {
