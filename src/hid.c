@@ -158,6 +158,8 @@ libresense_open(libresense_hid *handle) {
 				for(int j = 0; j < LIBRESENSE_VERSION_MAX; ++j) {
 					handle->firmware.versions[j] = (libresense_firmware_version) { firmware.versions[j].major, firmware.versions[j].minor };
 				}
+			} else {
+				handle->firmware.datetime[0] = 0;
 			}
 
 			dualsense_serial_info serial;
@@ -168,6 +170,9 @@ libresense_open(libresense_hid *handle) {
 				handle->serial.mac[sizeof(handle->serial.mac) - 1] = 0;
 				handle->serial.paired_mac[sizeof(handle->serial.paired_mac) - 1] = 0;
 				handle->serial.unknown = (uint64_t) serial.unknown[0] << 16 | (uint64_t) serial.unknown[1] << 8 | (uint64_t) serial.unknown[2];
+			} else {
+				handle->serial.mac[0] = 0;
+				handle->serial.paired_mac[0] = 0;
 			}
 
 
