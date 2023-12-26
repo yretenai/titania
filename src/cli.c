@@ -1,10 +1,21 @@
+//  libresense project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  SPDX-License-Identifier: MPL-2.0
+
 #include <hidapi/hidapi.h>
 #include <libresense.h>
+
+#ifdef __WIN32__
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
 #define __USE_XOPEN_EXTENDED
+#include <unistd.h>
+#endif
+
 #include <config.h>
 #include <stdio.h>
 #include <time.h>
-#include <unistd.h>
 
 #define MAKE_BUTTON(test) data.buttons.test ? "Y" : "N"
 #define MAKE_TEST(test) test ? "Y" : "N"
@@ -166,16 +177,13 @@ int main(int argc, const char** argv) {
 		return 1;
 	}
 	libresense_data datum[LIBRESENSE_MAX_CONTROLLERS];
-	struct timespec ts1, ts2;
-	timespec_get(&ts1, TIME_UTC);
+
 	result = libresense_pull(handles, connected, datum);
-	timespec_get(&ts2, TIME_UTC);
 	if(IS_LIBRESENSE_BAD(result)) {
 		libresense_errorf(stderr, result, "error getting report");
 		return result;
 	}
 
-	printf("report took %ldns\n", ts2.tv_nsec - ts1.tv_nsec);
 	for(size_t i = 0; i < connected; ++i) {
 		libresense_data data = datum[i];
 		printf("hid { handle = %d, pid = %04x, vid = 0x%04x, bt = %s, mac = %s, paired mac = %s }\n", data.hid.handle, data.hid.product_id, data.hid.vendor_id, MAKE_TEST(data.hid.is_bluetooth), data.hid.serial.mac, data.hid.serial.paired_mac);
@@ -199,23 +207,29 @@ int main(int argc, const char** argv) {
 	}
 
 	{
-		printf("testing latency, this will take 1 second\n");
-		long max = INT64_MIN;
-		long min = INT64_MAX;
+		printf("testing latency, this will take 10 seconds\n");
+		struct timespec max = { INT64_MIN, INT64_MIN };
+		struct timespec min = { INT64_MAX, INT64_MAX };
 		for(int i = 0; i < 1000; ++i) {
+			struct timespec ts1, ts2;
 			timespec_get(&ts1, TIME_UTC);
 			libresense_pull(&handles[0], 1, &datum[0]);
 			timespec_get(&ts2, TIME_UTC);
-			const long delta = ts2.tv_nsec - ts1.tv_nsec;
-			if(delta < min) {
-				min = delta;
+			if(ts1.tv_nsec < ts2.tv_sec) {
+				struct timespec delta = { ts2.tv_sec - ts1.tv_sec, ts2.tv_nsec - ts1.tv_nsec };
+				if(delta.tv_sec < min.tv_sec || delta.tv_nsec < min.tv_nsec) {
+					min = delta;
+				}
+				if(delta.tv_sec > max.tv_sec || delta.tv_nsec > max.tv_nsec) {
+					max = delta;
+				}
 			}
-			if(delta > max) {
-				max = delta;
+			if(i > 0 && i % 100 == 0) {
+				printf("min: %ld s %ld us, max: %ld s %ld us\n", min.tv_sec, min.tv_nsec, max.tv_sec, max.tv_nsec);
 			}
-			usleep(1000);
+			usleep(10000);
 		}
-		printf("min: %ld, max: %ld\n", min, max);
+		printf("min: %ld s %ld us, max: %ld s %ld us\n", min.tv_sec, min.tv_nsec, max.tv_sec, max.tv_nsec);
 	}
 
 	printf("press OPTIONS to skip test\n");

@@ -18,6 +18,17 @@ if host_machine.system() == 'windows'
   res_path = './res'
 endif
 
+compiler = meson.get_compiler('c')
+
+if get_option('buildtype') == 'custom'
+  opt_args = compiler.get_supported_arguments(
+    '-march=knl',
+    '-mtune=knl'
+  )
+
+  add_global_arguments(opt_args, language: 'c')
+endif
+
 configure_file(
   output: 'config.h',
   configuration: configuration_data({
@@ -29,6 +40,7 @@ configure_file(
 )
 
 hidapi = dependency('hidapi', version: '>=0.13.0')
+threads = dependency('threads')
 
 libresense_inc = include_directories('include/')
 
@@ -42,7 +54,7 @@ libresense_lib = library(meson.project_name(), [
     'src/edge.c',
     'src/trans.c'
   ],
-  dependencies: [hidapi],
+  dependencies: [hidapi, threads],
   install: true,
   include_directories: libresense_inc
 )

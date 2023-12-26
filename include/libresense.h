@@ -1,3 +1,7 @@
+//  libresense project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  SPDX-License-Identifier: MPL-2.0
+
 #pragma once
 
 #ifndef LIBRESENSE_H

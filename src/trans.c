@@ -1,3 +1,7 @@
+//  libresense project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  SPDX-License-Identifier: MPL-2.0
+
 #include "structures.h"
 
 #define PI_CONST 3.14159265358979323846f

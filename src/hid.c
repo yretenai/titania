@@ -1,13 +1,33 @@
+//  libresense project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  SPDX-License-Identifier: MPL-2.0
+
 #include <stdlib.h>
+#include <stdio.h>
+
+#ifdef __WIN32__
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+HANDLE _lock;
+#define LIBRESENSE_THREAD_INIT() _lock = CreateMutex(NULL, FALSE, NULL); if(_lock == NULL) return LIBRESENSE_INVALID
+#define LIBRESENSE_THREAD_LOCK() WaitForSingleObject(_lock, INFINITE)
+#define LIBRESENSE_THREAD_UNLOCK() ReleaseMutex(_lock, INFINITE)
+#define LIBRESENSE_THREAD_DEINIT() CloseHandle(_lock)
+#else
+#include <pthread.h>
+pthread_mutex_t _lock;
+#define LIBRESENSE_THREAD_INIT()
+#define LIBRESENSE_THREAD_LOCK() pthread_mutex_lock(&_lock)
+#define LIBRESENSE_THREAD_UNLOCK() pthread_mutex_unlock(&_lock)
+#define LIBRESENSE_THREAD_DEINIT()
+#endif
 
 #include "structures.h"
 
-#include <stdio.h>
-
-const int libresense_max_controllers = LIBRESENSE_MAX_CONTROLLERS;
+const int32_t libresense_max_controllers = LIBRESENSE_MAX_CONTROLLERS;
 
 static dualsense_state state[LIBRESENSE_MAX_CONTROLLERS];
-bool is_initialized = false;
+static bool is_initialized = false;
 
 static libresense_device_info device_infos[] = {
 	{ 0x054C, 0x0CE6 }, // DualSense
@@ -27,6 +47,10 @@ libresense_init_checked(const int size) {
 	if (hid_init() != 0) {
 		return LIBRESENSE_HIDAPI_FAIL;
 	}
+
+	memset(&state, 0, sizeof(state));
+
+	LIBRESENSE_THREAD_INIT();
 
 	is_initialized = true;
 	return LIBRESENSE_OK;
@@ -319,18 +343,14 @@ libresense_pull(libresense_handle *handle, const size_t handle_count, libresense
 		hid_state->input.data.id = DUALSENSE_REPORT_BLUETOOTH;
 		hid_state->input.data.msg.data.id = DUALSENSE_REPORT_INPUT;
 
-		const int count = hid_read_timeout(hid_state->hid, buffer, size, 16);
+		const int count = hid_read(hid_state->hid, buffer, size);
 
-		if (count < 0) {
+		if (count != (int) size) {
 			handle[i] = LIBRESENSE_INVALID_HANDLE_ID;
 			data[i] = invalid;
 
 			libresense_close(handle[i]);
 			continue; // invalid!
-		}
-
-		if (count != (int) size) {
-			continue; // truncated?
 		}
 
 		libresense_convert_input(hid_state->input.data.msg.data, &data[i], hid_state->calibration);
@@ -380,6 +400,8 @@ libresense_update_led(const libresense_handle handle, const libresense_led_updat
 	CHECK_INIT;
 	CHECK_HANDLE_VALID(handle);
 
+	LIBRESENSE_THREAD_LOCK();
+
 	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
 	if(data.color.x >= 0.0f && data.color.y >= 0.0f && data.color.z >= 0.0f) {
 		hid_state->flags.bits.led = true;
@@ -405,6 +427,8 @@ libresense_update_led(const libresense_handle handle, const libresense_led_updat
 		hid_state->led.led_id = data.led;
 	}
 
+	LIBRESENSE_THREAD_UNLOCK();
+
 	return LIBRESENSE_OK;
 }
 
@@ -412,6 +436,8 @@ libresense_result
 libresense_update_audio(const libresense_handle handle, const libresense_audio_update data) {
 	CHECK_INIT;
 	CHECK_HANDLE_VALID(handle);
+
+	LIBRESENSE_THREAD_LOCK();
 
 	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
 
@@ -434,6 +460,8 @@ libresense_update_audio(const libresense_handle handle, const libresense_audio_u
 	hid_state->audio.jack = NORM_CLAMP_UINT8(data.jack_volume);
 	hid_state->audio.speaker = NORM_CLAMP_UINT8(data.speaker_volume);
 	hid_state->audio.mic = NORM_CLAMP_UINT8(data.microphone_volume);
+
+	LIBRESENSE_THREAD_UNLOCK();
 
 	return LIBRESENSE_OK;
 }
@@ -568,6 +596,8 @@ libresense_update_effect(const libresense_handle handle, const libresense_effect
 	CHECK_INIT;
 	CHECK_HANDLE_VALID(handle);
 
+	LIBRESENSE_THREAD_LOCK();
+
 	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
 	hid_state->flags.bits.left_trigger_motor = left_trigger.mode != LIBRESENSE_EFFECT_NONE;
 	hid_state->flags.bits.right_trigger_motor = right_trigger.mode != LIBRESENSE_EFFECT_NONE;
@@ -594,6 +624,8 @@ libresense_update_effect(const libresense_handle handle, const libresense_effect
 		return result;
 	}
 
+	LIBRESENSE_THREAD_UNLOCK();
+
 	return result;
 }
 
@@ -602,21 +634,39 @@ libresense_update_rumble(const libresense_handle handle, const float large_motor
 	CHECK_INIT;
 	CHECK_HANDLE_VALID(handle);
 
+	LIBRESENSE_THREAD_LOCK();
+
 	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
 	hid_state->flags.bits.gracefully_rumble = hid_state->flags.bits.allow_rumble_timeout = true;
 	hid_state->rumble[DUALSENSE_LARGE_MOTOR] = NORM_CLAMP_UINT8(large_motor);
 	hid_state->rumble[DUALSENSE_SMALL_MOTOR] = NORM_CLAMP_UINT8(small_motor);
+
+	LIBRESENSE_THREAD_UNLOCK();
 
 	return LIBRESENSE_NOT_IMPLEMENTED;
 }
 
 libresense_result
 libresense_update_profile(const libresense_handle handle, const libresense_edge_profile_id id, const libresense_edge_profile profile) {
+	CHECK_INIT;
+	CHECK_HANDLE_VALID(handle);
+
+	LIBRESENSE_THREAD_LOCK();
+
+	LIBRESENSE_THREAD_UNLOCK();
+
 	return LIBRESENSE_NOT_IMPLEMENTED;
 }
 
 libresense_result
 libresense_delete_profile(const libresense_handle handle, const libresense_edge_profile_id id) {
+	CHECK_INIT;
+	CHECK_HANDLE_VALID(handle);
+
+	LIBRESENSE_THREAD_LOCK();
+
+	LIBRESENSE_THREAD_UNLOCK();
+
 	return LIBRESENSE_NOT_IMPLEMENTED;
 }
 
@@ -640,6 +690,8 @@ libresense_exit(void) {
 	for (int i = 0; i < LIBRESENSE_MAX_CONTROLLERS; i++) {
 		libresense_close(i);
 	}
+
+	LIBRESENSE_THREAD_DEINIT();
 
 	is_initialized = false;
 }
