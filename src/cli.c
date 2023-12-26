@@ -3,8 +3,6 @@
 #define __USE_XOPEN_EXTENDED
 #include <config.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -126,14 +124,14 @@ int main(int argc, const char** argv) {
 				libresense_exit();
 				return result;
 			}
-			printf("connected to hid %ls\n", hid[hid_id].serial);
+			printf("connected to hid %s\n", hid[hid_id].serial.mac);
 			handles[connected++] = hid[hid_id].handle;
 #ifdef LIBRESENSE_DEBUG
-			char name[0x2000] = { 0 };
-			if(wcslen(hid[hid_id].serial) > 0x40) {
+			char name[0x30] = { 0 };
+			if(hid[hid_id].is_bluetooth) {
 				continue;
 			}
-			sprintf(name, "report_%ls_%%d.bin", (wchar_t*) hid[hid_id].serial);
+			sprintf(name, "report_%s_%%d.bin", hid[hid_id].serial.paired_mac);
 
 			for (int i = 0; i < 0xFF; i++) {
 				uint8_t buffer[0x4096];
@@ -151,7 +149,7 @@ int main(int argc, const char** argv) {
 						printf("%02x ", buffer[j]);
 					}
 					printf("\n");
-					char report_name[0x100] = { 0 };
+					char report_name[0x30] = { 0 };
 					sprintf(report_name, name, hid[hid_id].report_ids[i].id);
 					FILE* file = fopen(report_name, "w+b");
 					fwrite(buffer, 1, size, file);
@@ -180,7 +178,7 @@ int main(int argc, const char** argv) {
 	printf("report took %ldns\n", ts2.tv_nsec - ts1.tv_nsec);
 	for(size_t i = 0; i < connected; ++i) {
 		libresense_data data = datum[i];
-		printf("hid { handle = %d, pid = %04x, vid = 0x%04x, bt = %s, serial = %ls }\n", data.hid.handle, data.hid.product_id, data.hid.vendor_id, MAKE_TEST(data.hid.is_bluetooth), data.hid.serial);
+		printf("hid { handle = %d, pid = %04x, vid = 0x%04x, bt = %s, mac = %s, paired mac = %s }\n", data.hid.handle, data.hid.product_id, data.hid.vendor_id, MAKE_TEST(data.hid.is_bluetooth), data.hid.serial.mac, data.hid.serial.paired_mac);
 		printf("firmware { time = %s", hid->firmware.datetime);
 		for(size_t j = 0; j < LIBRESENSE_VERSION_MAX; ++j) {
 			printf(", %s = %04x:%04x", libresense_version_msg[j], hid->firmware.versions[j].major, hid->firmware.versions[j].minjor);

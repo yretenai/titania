@@ -60,7 +60,6 @@ typedef enum {
 	LIBRESENSE_VERSION_UNKNOWN7 = 7,
 	LIBRESENSE_VERSION_UNKNOWN8 = 8,
 	LIBRESENSE_VERSION_UNKNOWN9 = 9,
-	LIBRESENSE_VERSION_UNKNOWN10 = 10,
 	LIBRESENSE_VERSION_MAX
 } libresense_version_id;
 
@@ -189,6 +188,12 @@ typedef struct {
 } libresense_firmware_info;
 
 typedef struct {
+	char mac[0x12];
+	char paired_mac[0x12];
+	uint32_t unknown;
+} libresense_serial_info;
+
+typedef struct {
 	libresense_wchar name[0x64];
 	uint8_t todo;
 } libresense_edge_profile;
@@ -205,8 +210,8 @@ typedef struct {
 	uint16_t product_id;
 	uint16_t vendor_id;
 	bool is_bluetooth;
-	libresense_serial serial;
-	char mac[18];
+	libresense_serial hid_serial;
+	libresense_serial_info serial;
 	libresense_firmware_info firmware;
 	libresense_edge_profile edge_profiles[4];
 #ifdef LIBRESENSE_DEBUG

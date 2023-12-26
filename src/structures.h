@@ -58,6 +58,7 @@ typedef enum ENUM_FORCE_8 {
 	DUALSENSE_REPORT_CALIBRATION = 0x5,
 	DUALSENSE_REPORT_SERIAL = 0x9,
 	DUALSENSE_REPORT_FIRMWARE = 0x20,
+	DUALSENSE_REPORT_34 = 0x22,                 // a lot of values
 	DUALSENSE_REPORT_BLUETOOTH = 0x31,
 	DUALSENSE_REPORT_129 = 0x81,				// zeroes?
 	DUALSENSE_REPORT_131 = 0X83,				// -1 and then zeroes
@@ -400,8 +401,8 @@ typedef struct PACKED {
 	libresense_minmax gyro[3];
 	libresense_minmax gyro_speed;
 	libresense_minmax accelerometer[3];
-	uint32_t crc;
-	uint8_t padding[2];
+	uint16_t flags;
+	uint32_t checksum;
 } dualsense_calibration_info;
 
 static_assert(sizeof(dualsense_calibration_info) == 41, "dualsense_calibration_info is not 41 bytes");
@@ -418,11 +419,21 @@ typedef struct PACKED {
 	char date[DUALSENSE_FIRMWARE_VERSION_DATE_LEN];
 	char time[DUALSENSE_FIRMWARE_VERSION_TIME_LEN];
 	dualsense_firmware_version versions[LIBRESENSE_VERSION_MAX];
+	uint32_t checksum;
 } dualsense_firmware_info;
 
 static_assert(DUALSENSE_FIRMWARE_VERSION_DATE_LEN + 1 + DUALSENSE_FIRMWARE_VERSION_TIME_LEN + 1 < LIBRESENSE_FIRMWARE_DATE_LEN,
 	"date + space + time + null is >= libresense_firmware_info.version");
 static_assert(sizeof(dualsense_firmware_info) == 64, "dualsense_firmware_info is not 64 bytes");
+
+typedef struct PACKED {
+	uint8_t report_id;
+	uint8_t device_mac[6];
+	uint8_t unknown[3];
+	uint8_t pair_mac[6];
+	uint32_t checksum;
+} dualsense_serial_info;
+static_assert(sizeof(dualsense_serial_info) == 20, "dualsense_serial_info is not 20 bytes");
 
 typedef struct {
 	float max;

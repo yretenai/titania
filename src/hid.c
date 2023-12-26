@@ -57,7 +57,7 @@ libresense_get_hids(libresense_hid *hids, const size_t hids_length) {
 				hids[index].product_id = dev->product_id;
 				hids[index].vendor_id = dev->vendor_id;
 				hids[index].is_bluetooth = dev->bus_type == HID_API_BUS_BLUETOOTH;
-				wcscpy(hids[index].serial, dev->serial_number);
+				wcscpy(hids[index].hid_serial, dev->serial_number);
 
 				index += 1;
 
@@ -123,6 +123,9 @@ libresense_debug_get_feature_report(const libresense_handle handle, const int re
 #define CALIBRATION_ACCELEROMETER_BIAS(slot) \
 	calibration.accelerometer[slot].max - (calibration.accelerometer[slot].max - calibration.accelerometer[slot].min) / 2
 
+#define MAC6_TO_UINT64(v) \
+	(((uint64_t) v[5] << 40) | ((uint64_t) v[4] << 32) | ((uint64_t) v[3] << 24) | ((uint64_t) v[2] << 16) | ((uint64_t) v[1] << 8) | (uint64_t) v[0])
+
 libresense_result
 libresense_open(libresense_hid *handle) {
 	CHECK_INIT;
@@ -131,7 +134,7 @@ libresense_open(libresense_hid *handle) {
 		if (state[i].hid == NULL) {
 			memset(&state[i], 0, sizeof(dualsense_state));
 			handle->handle = i;
-			state[i].hid = hid_open(handle->vendor_id, handle->product_id, handle->serial);
+			state[i].hid = hid_open(handle->vendor_id, handle->product_id, handle->hid_serial);
 			state[i].output.data.id = DUALSENSE_REPORT_BLUETOOTH;
 			state[i].output.data.msg.data.id = DUALSENSE_REPORT_OUTPUT;
 			state[i].output.data.msg.data.volume_state = 4;
@@ -145,7 +148,7 @@ libresense_open(libresense_hid *handle) {
 			// todo: request profiles.
 
 			dualsense_firmware_info firmware;
-			const size_t firmware_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_FIRMWARE, (uint8_t*)&firmware, 64, false);
+			const size_t firmware_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_FIRMWARE, (uint8_t*)&firmware, sizeof(dualsense_firmware_info), false);
 			if(firmware_report_sz == 64) {
 				memset(handle->firmware.datetime, 0, sizeof(handle->firmware.datetime));
 				memcpy(handle->firmware.datetime, firmware.date, sizeof(firmware.date));
@@ -156,6 +159,17 @@ libresense_open(libresense_hid *handle) {
 					handle->firmware.versions[j] = (libresense_firmware_version) { firmware.versions[j].major, firmware.versions[j].minor };
 				}
 			}
+
+			dualsense_serial_info serial;
+			const size_t serial_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_SERIAL, (uint8_t*)&serial, sizeof(dualsense_serial_info), false);
+			if(serial_report_sz == 20) {
+				sprintf(handle->serial.mac, "%02x:%02x:%02x:%02x:%02x:%02x", serial.device_mac[0], serial.device_mac[1], serial.device_mac[2], serial.device_mac[3], serial.device_mac[4], serial.device_mac[5]);
+				sprintf(handle->serial.paired_mac, "%02x:%02x:%02x:%02x:%02x:%02x", serial.pair_mac[0], serial.pair_mac[1], serial.pair_mac[2], serial.pair_mac[3], serial.pair_mac[4], serial.pair_mac[5]);
+				handle->serial.mac[sizeof(handle->serial.mac) - 1] = 0;
+				handle->serial.paired_mac[sizeof(handle->serial.paired_mac) - 1] = 0;
+				handle->serial.unknown = (uint64_t) serial.unknown[0] << 16 | (uint64_t) serial.unknown[1] << 8 | (uint64_t) serial.unknown[2];
+			}
+
 
 			dualsense_calibration_info calibration;
 			const size_t calibration_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_CALIBRATION, (uint8_t*)&calibration, sizeof(dualsense_calibration_info), false);
