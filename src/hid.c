@@ -58,7 +58,7 @@ libresense_init_checked(const int size) {
 
 libresense_result
 libresense_get_hids(libresense_hid *hids, const size_t hids_length) {
-	CHECK_INIT;
+	CHECK_INIT();
 	size_t index = 0;
 
 	for (size_t i = 0; i < sizeof(device_infos) / sizeof(libresense_device_info); i++) {
@@ -132,7 +132,7 @@ libresense_send_feature_report(hid_device *handle, const int report_id, uint8_t 
 
 size_t
 libresense_debug_get_feature_report(const libresense_handle handle, const int report_id, uint8_t *buffer, const size_t size) {
-	CHECK_INIT;
+	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
 	return libresense_get_feature_report(state[handle].hid, report_id, buffer, size, false);
@@ -152,7 +152,7 @@ libresense_debug_get_feature_report(const libresense_handle handle, const int re
 
 libresense_result
 libresense_open(libresense_hid *handle) {
-	CHECK_INIT;
+	CHECK_INIT();
 
 	for (int i = 0; i < LIBRESENSE_MAX_CONTROLLERS; i++) {
 		if (state[i].hid == NULL) {
@@ -316,7 +316,7 @@ libresense_open(libresense_hid *handle) {
 
 libresense_result
 libresense_pull(libresense_handle *handle, const size_t handle_count, libresense_data *data) {
-	CHECK_INIT;
+	CHECK_INIT();
 	if (handle == NULL || data == NULL) {
 		return LIBRESENSE_INVALID_DATA;
 	}
@@ -363,7 +363,7 @@ libresense_pull(libresense_handle *handle, const size_t handle_count, libresense
 
 libresense_result
 libresense_push(const libresense_handle *handle, const size_t handle_count) {
-	CHECK_INIT;
+	CHECK_INIT();
 	if (handle == NULL) {
 		return LIBRESENSE_INVALID_DATA;
 	}
@@ -397,7 +397,7 @@ libresense_push(const libresense_handle *handle, const size_t handle_count) {
 
 libresense_result
 libresense_update_led(const libresense_handle handle, const libresense_led_update data) {
-	CHECK_INIT;
+	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
 	LIBRESENSE_THREAD_LOCK();
@@ -434,7 +434,7 @@ libresense_update_led(const libresense_handle handle, const libresense_led_updat
 
 libresense_result
 libresense_update_audio(const libresense_handle handle, const libresense_audio_update data) {
-	CHECK_INIT;
+	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
 	LIBRESENSE_THREAD_LOCK();
@@ -580,7 +580,7 @@ compute_effect(dualsense_effect_output *effect, const libresense_effect_update t
 // sanity check to make sure we don't (temporarily) brick the controller
 libresense_result
 check_if_trigger_state_bad(const libresense_handle handle, const uint8_t id) {
-	CHECK_INIT;
+	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
 	const dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
@@ -593,7 +593,7 @@ check_if_trigger_state_bad(const libresense_handle handle, const uint8_t id) {
 
 libresense_result
 libresense_update_effect(const libresense_handle handle, const libresense_effect_update left_trigger, const libresense_effect_update right_trigger) {
-	CHECK_INIT;
+	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
 	LIBRESENSE_THREAD_LOCK();
@@ -631,7 +631,7 @@ libresense_update_effect(const libresense_handle handle, const libresense_effect
 
 libresense_result
 libresense_update_rumble(const libresense_handle handle, const float large_motor, const float small_motor) {
-	CHECK_INIT;
+	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
 	LIBRESENSE_THREAD_LOCK();
@@ -648,7 +648,7 @@ libresense_update_rumble(const libresense_handle handle, const float large_motor
 
 libresense_result
 libresense_update_profile(const libresense_handle handle, const libresense_edge_profile_id id, const libresense_edge_profile profile) {
-	CHECK_INIT;
+	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
 	LIBRESENSE_THREAD_LOCK();
@@ -660,7 +660,7 @@ libresense_update_profile(const libresense_handle handle, const libresense_edge_
 
 libresense_result
 libresense_delete_profile(const libresense_handle handle, const libresense_edge_profile_id id) {
-	CHECK_INIT;
+	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
 	LIBRESENSE_THREAD_LOCK();
@@ -672,7 +672,7 @@ libresense_delete_profile(const libresense_handle handle, const libresense_edge_
 
 libresense_result
 libresense_close(const libresense_handle handle) {
-	CHECK_INIT;
+	CHECK_INIT();
 	CHECK_HANDLE(handle);
 
 	hid_close(state[handle].hid);

@@ -470,7 +470,7 @@ typedef struct {
 } libresense_device_info;
 
 // Check if the library is initialized
-#define CHECK_INIT       \
+#define CHECK_INIT()     \
 	if (!is_initialized) \
 	return LIBRESENSE_NOT_INITIALIZED
 
