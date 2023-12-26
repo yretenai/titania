@@ -154,6 +154,7 @@ libresense_open(libresense_hid *handle) {
 				memcpy(handle->firmware.datetime, firmware.date, sizeof(firmware.date));
 				handle->firmware.datetime[sizeof(firmware.date)] = ' ';
 				memcpy(handle->firmware.datetime + sizeof(firmware.date) + 1, firmware.time, sizeof(firmware.time));
+				handle->firmware.datetime[sizeof(handle->firmware.datetime) - 1] = 0;
 
 				for(int j = 0; j < LIBRESENSE_VERSION_MAX; ++j) {
 					handle->firmware.versions[j] = (libresense_firmware_version) { firmware.versions[j].major, firmware.versions[j].minor };
