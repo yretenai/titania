@@ -83,6 +83,7 @@ libresense_get_hids(libresense_hid *hids, const size_t hids_length) {
 				hids[index].product_id = dev->product_id;
 				hids[index].vendor_id = dev->vendor_id;
 				hids[index].is_bluetooth = dev->bus_type == HID_API_BUS_BLUETOOTH;
+				hids[index].is_edge = IS_EDGE(hids[index]);
 				wcscpy(hids[index].hid_serial, dev->serial_number);
 
 				index += 1;
@@ -248,15 +249,19 @@ libresense_open(libresense_hid *handle) {
 
 				for (int32_t j = 0; j < LIBRESENSE_PROFILE_MAX; ++j) {
 					dualsense_profile_data profile_data[3];
+					bool exit = false;
 					for(int32_t k = 0; k < 3; ++k) {
 						const size_t sz = libresense_get_feature_report(state[i].hid, profile_reports[j] + k, profile_data[i], sizeof(dualsense_profile_data));
 						if(sz != sizeof(dualsense_profile_data)) {
-							goto skip_edge;
+							exit = true;
+							break;
 						}
+					}
+					if (exit) {
+						break;
 					}
 					libresense_convert_edge_profile_input(profile_data, &handle->edge_profiles[j]);
 				}
-				skip_edge:
 			}
 
 #ifdef LIBRESENSE_DEBUG
@@ -376,9 +381,7 @@ libresense_pull(libresense_handle *handle, const size_t handle_count, libresense
 			continue; // invalid!
 		}
 
-		libresense_convert_input(hid_state->input.data.msg.data, &data[i], hid_state->calibration);
-		data[i].hid = hid_state->hid_info;
-		data[i].time.driver_sequence = ++hid_state->in_sequence;
+		libresense_convert_input(hid_state->hid_info, hid_state->input.data.msg.data, &data[i], hid_state->calibration);
 	}
 
 	return LIBRESENSE_OK;
@@ -398,7 +401,7 @@ libresense_push(const libresense_handle *handle, const size_t handle_count) {
 	for (size_t i = 0; i < handle_count; i++) {
 		CHECK_HANDLE_VALID(handle[i]);
 		dualsense_state *hid_state = &state[handle[i]];
-		hid_state->output.data.msg.data.state_id = ++hid_state->out_sequence;
+		hid_state->output.data.msg.data.state_id = hid_state->seq;
 
 		const uint8_t *buffer = hid_state->output.buffer;
 		size_t size = sizeof(dualsense_output_msg_ex);

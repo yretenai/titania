@@ -8,16 +8,20 @@
 #ifdef __WIN32__
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <conio.h>
 #else
 #define __USE_XOPEN_EXTENDED
 #include <unistd.h>
+#define clrscr() printf("\e[1;1H\e[2J")
 #endif
 
 #include <config.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 #define MAKE_BUTTON(test) data.buttons.test ? "Y" : "N"
+#define MAKE_EDGE_BUTTON(test) data.edge_device.unmapped_buttons.test ? "Y" : "N"
 #define MAKE_TEST(test) test ? "Y" : "N"
 
 #define libresense_errorf(fp, result, fmt) fprintf(fp, "[libresense] " fmt ": %s\n", libresense_error_msg[result])
@@ -179,28 +183,42 @@ int main(int argc, const char** argv) {
 	}
 	libresense_data datum[LIBRESENSE_MAX_CONTROLLERS];
 
-	result = libresense_pull(handles, connected, datum);
-	if(IS_LIBRESENSE_BAD(result)) {
-		libresense_errorf(stderr, result, "error getting report");
-		return result;
-	}
-
-	for(size_t i = 0; i < connected; ++i) {
-		libresense_data data = datum[i];
-		printf("hid { handle = %d, pid = %04x, vid = 0x%04x, bt = %s, mac = %s, paired mac = %s }\n", data.hid.handle, data.hid.product_id, data.hid.vendor_id, MAKE_TEST(data.hid.is_bluetooth), data.hid.serial.mac, data.hid.serial.paired_mac);
-		printf("firmware { time = %s", hid->firmware.datetime);
-		for(size_t j = 0; j < LIBRESENSE_VERSION_MAX; ++j) {
-			printf(", %s = %04x:%04x", libresense_version_msg[j], hid->firmware.versions[j].major, hid->firmware.versions[j].minjor);
+	bool clr = argc > 1 && strcmp(argv[1], "report") == 0;
+	while(true) {
+		result = libresense_pull(handles, connected, datum);
+		if(IS_LIBRESENSE_BAD(result)) {
+			libresense_errorf(stderr, result, "error getting report");
+			return result;
 		}
-		printf(" }\n");
-		printf("time { sys = %u, sensor = %lu, seq = { %u, %u, %u }, check = %lu }\n", data.time.system, data.time.sensor, data.time.sequence, data.time.touch_sequence, data.time.driver_sequence, data.time.checksum);
-		printf("buttons { dpad_up = %s, dpad_right = %s, dpad_down = %s, dpad_left = %s, square = %s, cross = %s, circle = %s, triangle = %s, l1 = %s, r1 = %s, l2 = %s, r2 = %s, share = %s, option = %s, l3 = %s, r3 = %s, ps = %s, touch = %s, mute = %s, unknown = %s, edge_f1 = %s, edge_f2 = %s, edge_lb = %s, edge_rb = %s }\n", MAKE_BUTTON(dpad_up), MAKE_BUTTON(dpad_right), MAKE_BUTTON(dpad_down), MAKE_BUTTON(dpad_left), MAKE_BUTTON(square), MAKE_BUTTON(cross), MAKE_BUTTON(circle), MAKE_BUTTON(triangle), MAKE_BUTTON(l1), MAKE_BUTTON(r1), MAKE_BUTTON(l2), MAKE_BUTTON(r2), MAKE_BUTTON(share), MAKE_BUTTON(option), MAKE_BUTTON(l3), MAKE_BUTTON(r3), MAKE_BUTTON(ps), MAKE_BUTTON(touch), MAKE_BUTTON(mute), MAKE_BUTTON(edge_unknown), MAKE_BUTTON(edge_f1), MAKE_BUTTON(edge_f2), MAKE_BUTTON(edge_lb), MAKE_BUTTON(edge_rb));
-		printf("triggers { left = { %f%%, %u, %u }, right = { %f%%, %u, %u } }\n", data.triggers[0].level * 100, data.triggers[0].id, data.triggers[0].effect, data.triggers[1].level * 100, data.triggers[1].id, data.triggers[1].effect);
-		printf("sticks { left = { %f, %f }, right = { %f, %f } }\n", data.sticks[0].x, data.sticks[0].y, data.sticks[1].x, data.sticks[1].y);
-		printf("touchpad { left = { active = %s, id = %u, pos = { %u, %u }, right = { active = %s, id = %u, pos = { %u, %u } } }\n", MAKE_TEST(data.touch[0].active), data.touch[0].id, data.touch[0].coords.x, data.touch[0].coords.y, MAKE_TEST(data.touch[1].active), data.touch[1].id, data.touch[1].coords.x, data.touch[1].coords.y);
-		printf("sensors { accel = { %f, %f, %f }, gyro = { %f, %f, %f } }\n", data.sensors.accelerometer.x, data.sensors.accelerometer.y, data.sensors.accelerometer.z, data.sensors.gyro.x, data.sensors.gyro.y, data.sensors.gyro.z);
-		printf("battery { level = %f%%, state = %s, error = %u }\n", data.battery.level, libresense_battery_state_msg[data.battery.state], data.battery.battery_error);
-		printf("state { headphones = %s, headset = %s, muted = %s, cabled = %s, stick = { disconnect = %s, error = %s, calibrate = %s }, raw = %08lx, state_id = %08lx }\n", MAKE_TEST(data.device.headphones), MAKE_TEST(data.device.headset), MAKE_TEST(data.device.muted), MAKE_TEST(data.device.cable_connected), MAKE_TEST(false), MAKE_TEST(false), MAKE_TEST(false), data.state, data.state_id);
+
+		for(size_t i = 0; i < connected; ++i) {
+			libresense_data data = datum[i];
+			printf("hid { handle = %d, pid = 0x%04x, vid = 0x%04x, bt = %s, mac = %s, paired mac = %s }\n", data.hid.handle, data.hid.product_id, data.hid.vendor_id, MAKE_TEST(data.hid.is_bluetooth), data.hid.serial.mac, data.hid.serial.paired_mac);
+			printf("firmware { time = %s", hid->firmware.datetime);
+			for(size_t j = 0; j < LIBRESENSE_VERSION_MAX; ++j) {
+				printf(", %s = %04x:%04x", libresense_version_msg[j], hid->firmware.versions[j].major, hid->firmware.versions[j].minjor);
+			}
+			printf(" }\n");
+			printf("time { sys = %u, sensor = %u, battery = %u, seq = { %u, %u, %u }, check = %lu }\n", data.time.system, data.time.sensor, data.time.battery, data.time.sequence, data.time.touch_sequence, data.time.driver_sequence, data.time.checksum);
+			printf("buttons { dpad_up = %s, dpad_right = %s, dpad_down = %s, dpad_left = %s, square = %s, cross = %s, circle = %s, triangle = %s, l1 = %s, r1 = %s, l2 = %s, r2 = %s, share = %s, option = %s, l3 = %s, r3 = %s, ps = %s, touch = %s, mute = %s, edge_f1 = %s, edge_f2 = %s, edge_lb = %s, edge_rb = %s }\n", MAKE_BUTTON(dpad_up), MAKE_BUTTON(dpad_right), MAKE_BUTTON(dpad_down), MAKE_BUTTON(dpad_left), MAKE_BUTTON(square), MAKE_BUTTON(cross), MAKE_BUTTON(circle), MAKE_BUTTON(triangle), MAKE_BUTTON(l1), MAKE_BUTTON(r1), MAKE_BUTTON(l2), MAKE_BUTTON(r2), MAKE_BUTTON(share), MAKE_BUTTON(option), MAKE_BUTTON(l3), MAKE_BUTTON(r3), MAKE_BUTTON(ps), MAKE_BUTTON(touch), MAKE_BUTTON(mute), MAKE_BUTTON(edge_f1), MAKE_BUTTON(edge_f2), MAKE_BUTTON(edge_lb), MAKE_BUTTON(edge_rb));
+			printf("triggers { left = { %f%%, %u, %u, %s }, right = { %f%%, %u, %u, %s } }\n", data.triggers[0].level * 100, data.triggers[0].id, data.triggers[0].section, libresense_trigger_effect_msg[data.triggers[0].effect], data.triggers[1].level * 100, data.triggers[1].id, data.triggers[1].section, libresense_trigger_effect_msg[data.triggers[1].effect]);
+			printf("sticks { left = { %f, %f }, right = { %f, %f } }\n", data.sticks[0].x, data.sticks[0].y, data.sticks[1].x, data.sticks[1].y);
+			printf("touchpad { left = { active = %s, id = %u, pos = { %u, %u }, right = { active = %s, id = %u, pos = { %u, %u } } }\n", MAKE_TEST(data.touch[0].active), data.touch[0].id, data.touch[0].coords.x, data.touch[0].coords.y, MAKE_TEST(data.touch[1].active), data.touch[1].id, data.touch[1].coords.x, data.touch[1].coords.y);
+			printf("sensors { temp = %d, accel = { %f, %f, %f }, gyro = { %f, %f, %f } }\n", data.sensors.temperature, data.sensors.accelerometer.x, data.sensors.accelerometer.y, data.sensors.accelerometer.z, data.sensors.gyro.x, data.sensors.gyro.y, data.sensors.gyro.z);
+			printf("battery { level = %f%%, state = %s, error = %u }\n", data.battery.level, libresense_battery_state_msg[data.battery.state], data.battery.battery_error);
+			printf("state { headphones = %s, headset = %s, muted = %s, usb data = %s, usb power = %s, external mic = %s, mic filter = %s }\n", MAKE_TEST(data.device.headphones), MAKE_TEST(data.device.headset), MAKE_TEST(data.device.muted), MAKE_TEST(data.device.usb_data), MAKE_TEST(data.device.usb_power), MAKE_TEST(data.device.external_mic), MAKE_TEST(data.device.mic_filter));
+			if (hid->is_edge) {
+				printf("unmapped buttons { dpad_up = %s, dpad_right = %s, dpad_down = %s, dpad_left = %s, square = %s, cross = %s, circle = %s, triangle = %s, l1 = %s, r1 = %s, l2 = %s, r2 = %s, share = %s, option = %s, l3 = %s, r3 = %s, ps = %s, touch = %s, mute = %s, edge_f1 = %s, edge_f2 = %s, edge_lb = %s, edge_rb = %s }\n", MAKE_EDGE_BUTTON(dpad_up), MAKE_EDGE_BUTTON(dpad_right), MAKE_EDGE_BUTTON(dpad_down), MAKE_EDGE_BUTTON(dpad_left), MAKE_EDGE_BUTTON(square), MAKE_EDGE_BUTTON(cross), MAKE_EDGE_BUTTON(circle), MAKE_EDGE_BUTTON(triangle), MAKE_EDGE_BUTTON(l1), MAKE_EDGE_BUTTON(r1), MAKE_EDGE_BUTTON(l2), MAKE_EDGE_BUTTON(r2), MAKE_EDGE_BUTTON(share), MAKE_EDGE_BUTTON(option), MAKE_EDGE_BUTTON(l3), MAKE_EDGE_BUTTON(r3), MAKE_EDGE_BUTTON(ps), MAKE_EDGE_BUTTON(touch), MAKE_EDGE_BUTTON(mute), MAKE_EDGE_BUTTON(edge_f1), MAKE_EDGE_BUTTON(edge_f2), MAKE_EDGE_BUTTON(edge_lb), MAKE_EDGE_BUTTON(edge_rb));
+				printf("edge state { stick { disconnceted = %s, error = %s, calibrating = %s, unknown = %s }, trigger { left = %s, right = %s }, profile = %s, indicator = { led = %s, vibrate = %s }, brightness = %s, unknown = %u }\n", MAKE_TEST(data.edge_device.stick.disconnected), MAKE_TEST(data.edge_device.stick.errored), MAKE_TEST(data.edge_device.stick.calibrating), MAKE_TEST(data.edge_device.stick.unknown), libresense_level_msg[data.edge_device.trigger_levels[0]], libresense_level_msg[data.edge_device.trigger_levels[1]], libresense_edge_profile_id_msg[data.edge_device.current_profile_id], MAKE_TEST(data.edge_device.profile_indicator.led), MAKE_TEST(data.edge_device.profile_indicator.vibration), libresense_level_msg[data.edge_device.brightness], data.edge_device.unknown);
+
+			}
+		}
+
+		if(!clr) {
+			break;
+		}
+
+		clrscr();
 	}
 
 	if(argc > 1) {

@@ -11,15 +11,15 @@ uint32_t crc_seed_output = 0;
 uint32_t crc_seed_feature = 0;
 
 
-uint32_t checksum(uint32_t crc, const uint8_t *buffer, const uint32_t size) {
-	for(int32_t i = 0; i < size; ++i) {
+uint32_t checksum(uint32_t crc, const uint8_t *buffer, const size_t size) {
+	for(size_t i = 0; i < size; ++i) {
 		crc = crc_table[((uint8_t) crc ^ buffer[i])] ^ crc >> 8;
 	}
 	return crc;
 }
 
 void
-libresense_init_checksum() {
+libresense_init_checksum(void) {
 	for (int32_t i = 1; i < 256; ++i) {
 		uint32_t crc = i;
 		for (int32_t j = 8; j; --j) {

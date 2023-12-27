@@ -141,12 +141,12 @@ typedef struct PACKED {
 	bool ps : 1;
 	bool touch : 1;
 	bool mute : 1;
-	bool unknown : 1;
+	bool reserved : 1;
 	bool edge_f1 : 1;
 	bool edge_f2 : 1;
 	bool edge_lb : 1;
 	bool edge_rb : 1;
-	uint8_t padding : 8;
+	uint8_t edge_reserved : 8;
 } dualsense_button;
 
 static_assert(sizeof(dualsense_button) == 4, "dualsense_button is not 4 bytes");
@@ -204,16 +204,15 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_battery_state) == 1, "dualsense_battery_state is not 1 byte");
 
-static_assert(sizeof(libresense_device_state) == 1, "libresense_device_state is not 1 byte");
+static_assert(sizeof(libresense_device_state) == 2, "libresense_device_state is not 2 byte");
 
 typedef struct PACKED {
-	uint64_t value : 40;
-} dualsense_uint40;
-
-static_assert(sizeof(dualsense_uint40) == 0x5, "uint40 is not 5 bytes");
+	libresense_trigger_effect_state right : 4;
+	libresense_trigger_effect_state left : 4;
+} dualsense_trigger_state;
 
 typedef struct PACKED {
-	uint8_t unknown;
+	dualsense_trigger_state trigger;
 	union {
 		struct PACKED dualsense_device_state_edge {
 			uint8_t unknown : 2;
@@ -239,15 +238,14 @@ typedef struct PACKED {
 				bool mute : 1;
 				bool ps : 1;
 				bool share : 1;
-				bool options : 1;
+				bool option : 1;
 			} unmapped_peculiar;
 		} edge;
 		static_assert(sizeof(struct dualsense_device_state_edge) == 4, "dualsense_device_state.edge is not 4 bytes");
 		uint32_t battery_time; // why tf is this not reserved, sony please
-	} state;
+	};
 	dualsense_battery_state battery;
 	libresense_device_state device;
-	uint8_t reserved;
 } dualsense_device_state;
 
 static_assert(sizeof(dualsense_device_state) == 8, "dualsense_device_state is not 8 bytes");
@@ -255,7 +253,8 @@ static_assert(sizeof(dualsense_device_state) == 8, "dualsense_device_state is no
 typedef struct PACKED {
 	dualsense_vector3 accelerometer;
 	dualsense_vector3 gyro;
-	dualsense_uint40 time;
+	uint32_t time;
+	uint8_t temperature;
 } dualsense_sensors;
 
 static_assert(sizeof(dualsense_sensors) == 0x11, "dualsense_sensors is not 17 bytes");
@@ -290,8 +289,9 @@ typedef struct PACKED {
 		dualsense_input_msg data;
 		uint8_t buffer[sizeof(dualsense_input_msg)];
 	} msg;
-
-	uint8_t reserved[9];
+	uint8_t connection;
+	uint8_t failed_counter;
+	uint8_t reserved[7];
 	uint32_t bt_checksum;
 } dualsense_input_msg_ex;
 
@@ -454,11 +454,22 @@ static_assert(sizeof(dualsense_output_msg_ex) == 0x4e, "dualsense_output_msg_ex 
 #define DUALSENSE_FIRMWARE_VERSION_TIME_LEN 0x8
 
 typedef struct PACKED {
+	int16_t max;
+	int16_t min;
+} dualsense_minmax;
+
+typedef struct {
+	int16_t x;
+	int16_t y;
+	int16_t z;
+} dualsense_vector3s;
+
+typedef struct PACKED {
 	uint8_t op;
-	libresense_vector3s gyro_bias;
-	libresense_minmax gyro[3];
-	libresense_minmax gyro_speed;
-	libresense_minmax accelerometer[3];
+	dualsense_vector3s gyro_bias;
+	dualsense_minmax gyro[3];
+	dualsense_minmax gyro_speed;
+	dualsense_minmax accelerometer[3];
 	uint16_t flags;
 	uint32_t checksum;
 } dualsense_calibration_info;
@@ -504,8 +515,7 @@ typedef struct {
 	hid_device *hid;
 	libresense_hid hid_info;
 	libresense_calibration_bit calibration[6];
-	uint32_t in_sequence;
-	uint32_t out_sequence;
+	uint32_t seq;
 
 	union {
 		dualsense_input_msg_ex data;
@@ -587,10 +597,10 @@ static_assert(sizeof(dualsense_profile_p3) == 64, "dualsense_profile_p3 size is 
 		return LIBRESENSE_INVALID_HANDLE
 
 #define IS_EDGE(h) \
-	h.vendor_id != 0x054C || h.product_id != 0x0DF2
+	(h.vendor_id == 0x054C && h.product_id == 0x0DF2)
 
 #define CHECK_EDGE(h) \
-	if (IS_EDGE(state[h].hid_info)) \
+	if (!IS_EDGE(state[h].hid_info)) \
 		return LIBRESENSE_NOT_EDGE
 
 extern uint32_t crc_seed_input;
@@ -599,12 +609,13 @@ extern uint32_t crc_seed_feature;
 
 /**
  * @brief convert dualsense input report to libresense's representation
+ * @param hid_info: hid device info
  * @param input: the input to convert
  * @param data: the data to convert into
  * @param calibration: calibration data
  */
 void
-libresense_convert_input(const dualsense_input_msg input, libresense_data *data, libresense_calibration_bit calibration[6]);
+libresense_convert_input(const libresense_hid hid_info, const dualsense_input_msg input, libresense_data *data, libresense_calibration_bit calibration[6]);
 
 /**
  * @brief todo
@@ -649,7 +660,7 @@ libresense_send_feature_report(hid_device *handle, const int report_id, uint8_t 
  * @brief initializes checksum tables
  */
 void
-libresense_init_checksum();
+libresense_init_checksum(void);
 
 /**
  * @brief calculates a bluetooth checksum

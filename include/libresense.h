@@ -69,10 +69,38 @@ typedef enum {
 	LIBRESENSE_VERSION_MAX
 } libresense_version_id;
 
+typedef enum {
+	LIBRESENSE_LEVEL_HIGH = 0,
+	LIBRESENSE_LEVEL_MEDIUM = 1,
+	LIBRESENSE_LEVEL_LOW = 2
+} libresense_level;
+
+typedef enum ENUM_FORCE_8 {
+	LIBRESENSE_TRIGGER_EFFECT_OFF = 0,
+	LIBRESENSE_TRIGGER_EFFECT_UNIFORM = 1,
+	LIBRESENSE_TRIGGER_EFFECT_TRIGGER = 2,
+	LIBRESENSE_TRIGGER_EFFECT_VIBRATION = 3,
+	LIBRESENSE_TRIGGER_EFFECT_MIXED = 4,
+	LIBRESENSE_TRIGGER_EFFECT_UNKNOWN5 = 5,
+	LIBRESENSE_TRIGGER_EFFECT_UNKNOWN6 = 6,
+	LIBRESENSE_TRIGGER_EFFECT_UNKNOWN7 = 7,
+	LIBRESENSE_TRIGGER_EFFECT_UNKNOWN8 = 8,
+	LIBRESENSE_TRIGGER_EFFECT_UNKNOWN9 = 9,
+	LIBRESENSE_TRIGGER_EFFECT_UNKNOWN10 = 10,
+	LIBRESENSE_TRIGGER_EFFECT_UNKNOWN11 = 11,
+	LIBRESENSE_TRIGGER_EFFECT_UNKNOWN12 = 12,
+	LIBRESENSE_TRIGGER_EFFECT_UNKNOWN13 = 13,
+	LIBRESENSE_TRIGGER_EFFECT_UNKNOWN14 = 14,
+	LIBRESENSE_TRIGGER_EFFECT_UNKNOWN15 = 15,
+	LIBRESENSE_TRIGGER_EFFECT_MAX
+} libresense_trigger_effect_state;
+
 extern const char *libresense_error_msg[LIBRESENSE_ERROR_MAX + 1];
 extern const char *libresense_battery_state_msg[LIBRESENSE_BATTERY_MAX + 1];
 extern const char *libresense_edge_profile_id_msg[LIBRESENSE_PROFILE_MAX + 1];
 extern const char *libresense_version_msg[LIBRESENSE_VERSION_MAX + 1];
+extern const char *libresense_level_msg[LIBRESENSE_LEVEL_LOW + 2];
+extern const char *libresense_trigger_effect_msg[LIBRESENSE_TRIGGER_EFFECT_MAX + 1];
 extern const int libresense_max_controllers;
 
 #define IS_LIBRESENSE_OKAY(result) (result == LIBRESENSE_OK)
@@ -99,20 +127,9 @@ typedef struct {
 } libresense_vector3;
 
 typedef struct {
-	int16_t x;
-	int16_t y;
-	int16_t z;
-} libresense_vector3s;
-
-typedef struct {
-	int16_t max;
-	int16_t min;
+	float min;
+	float max;
 } libresense_minmax;
-
-typedef struct {
-	int16_t max;
-	int16_t min;
-} libresense_minmaxf;
 
 typedef struct {
 	bool dpad_up : 1;
@@ -134,17 +151,19 @@ typedef struct {
 	bool ps : 1;
 	bool touch : 1;
 	bool mute : 1;
-	bool edge_unknown : 1;
+	bool reserved : 1;
 	bool edge_f1 : 1;
 	bool edge_f2 : 1;
 	bool edge_lb : 1;
 	bool edge_rb : 1;
+	uint8_t edge_reserved : 8;
 } libresense_buttons;
 
 typedef struct {
 	float level;
 	uint8_t id;
-	uint8_t effect;
+	uint8_t section;
+	libresense_trigger_effect_state effect;
 } libresense_trigger;
 
 typedef struct {
@@ -156,23 +175,29 @@ typedef struct {
 typedef struct {
 	uint8_t sequence;
 	uint8_t touch_sequence;
-	uint16_t driver_sequence;
+	uint32_t driver_sequence;
 	uint32_t system;
 	uint32_t battery; // does not exist in edge because the field is re-used
-	uint64_t sensor;
+	uint32_t sensor;
 	uint64_t checksum;
 } libresense_time;
 
 typedef struct {
 	libresense_vector3 accelerometer;
 	libresense_vector3 gyro;
+	int32_t temperature;
 } libresense_sensors;
 
 typedef struct {
 	bool headphones : 1;
 	bool headset : 1;
 	bool muted : 1;
-	bool cable_connected : 1;
+	bool usb_data : 1;
+	bool usb_power : 1;
+	uint8_t reserved1 : 3;
+	bool external_mic : 1;
+	bool mic_filter : 1;
+	uint8_t reserved2 : 6;
 } libresense_device_state;
 
 typedef struct {
@@ -278,6 +303,7 @@ typedef struct {
 	uint16_t product_id;
 	uint16_t vendor_id;
 	bool is_bluetooth;
+	bool is_edge;
 	libresense_serial hid_serial;
 	libresense_serial_info serial;
 	libresense_firmware_info firmware;
@@ -291,27 +317,22 @@ typedef struct {
 #endif
 } libresense_hid;
 
-typedef enum {
-	LIBRESENSE_LEVEL_HIGH = 0,
-	LIBRESENSE_LEVEL_MEDIUM = 1,
-	LIBRESENSE_LEVEL_LOW = 2,
-} libresense_level;
-
 typedef struct {
 	libresense_buttons unmapped_buttons;
 	struct {
 		bool disconnected;
 		bool errored;
 		bool calibrating;
+		bool unknown;
 	} stick;
-	int32_t trigger_levels[2];
+	libresense_level trigger_levels[2];
 	libresense_edge_profile_id current_profile_id;
 	struct {
-		bool led_indicator;
+		bool led;
 		bool vibration;
 	} profile_indicator;
-	int32_t unknown;
 	libresense_level brightness;
+	int32_t unknown;
 } libresense_edge_state;
 
 typedef struct {
@@ -325,7 +346,6 @@ typedef struct {
 	libresense_battery battery;
 	libresense_device_state device;
 	libresense_edge_state edge_device;
-	uint64_t state;
 	uint64_t state_id;
 } libresense_data;
 
