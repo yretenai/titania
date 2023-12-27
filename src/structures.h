@@ -12,7 +12,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-#include <wchar.h>
 
 #include <hidapi/hidapi.h>
 
@@ -57,25 +56,51 @@
 #define NORM_CLAMP_UINT8(value) NORM_CLAMP(value, UINT8_MAX)
 
 typedef enum ENUM_FORCE_8 {
+	// usb:
 	DUALSENSE_REPORT_INPUT = 0x1,
 	DUALSENSE_REPORT_OUTPUT = 0x2,
 	DUALSENSE_REPORT_CALIBRATION = 0x5,
+	DUALSENSE_REPORT_CONNECT = 0x8,
 	DUALSENSE_REPORT_SERIAL = 0x9,
+	DUALSENSE_REPORT_PAIR = 0x0A,
 	DUALSENSE_REPORT_FIRMWARE = 0x20,
-	DUALSENSE_REPORT_34 = 0x22,                 // a lot of values
-	DUALSENSE_REPORT_BLUETOOTH = 0x31,
-	DUALSENSE_REPORT_129 = 0x81,				// zeroes?
-	DUALSENSE_REPORT_131 = 0X83,				// -1 and then zeroes
-	DUALSENSE_REPORT_133 = 0x85,				// 3 values
-	DUALSENSE_REPORT_224 = 0xe0,				// zeroes
-	DUALSENSE_REPORT_241 = 0xf1,				// zeroes
-	DUALSENSE_REPORT_242 = 0xf2,				// 5 values then zeroes?
-	DUALSENSE_REPORT_245 = 0xf5,				// 3 values
+	DUALSENSE_REPORT_AUDIO = 0x21,
+	DUALSENSE_REPORT_HARDWARE = 0x22,
+	DUALSENSE_REPORT_SET_TEST = 0x80,
+	DUALSENSE_REPORT_GET_TEST = 0x81,
+	DUALSENSE_REPORT_RECALIBRATE = 0x83,
+	DUALSENSE_REPORT_CALIBRATION_STATUS = 0x83,
+	DUALSENSE_REPORT_SET_DATA = 0x84,
+	DUALSENSE_REPORT_GET_DATA = 0x85,
+	DUALSENSE_REPORT_SYS = 0xe0,
+	DUALSENSE_REPORT_COMMAND_REQ = 0xf0,
+	DUALSENSE_REPORT_STATUS = 0xf1,
+	DUALSENSE_REPORT_COMMAND_RES = 0xf2,
+	DUALSENSE_REPORT_SET_USER = 0xf4,
+	DUALSENSE_REPORT_GET_USER = 0xf5,
+	// edge:
+	DUALSENSE_UPDATE_PROFILE_SQUARE = 0x60,
+	DUALSENSE_UPDATE_PROFILE_CROSS = 0x61,
+	DUALSENSE_UPDATE_PROFILE_CIRCLE = 0x62,
 	MAKE_EDGE_PROFILE_REPORT(0x63, PROFILE_99), // base profile, maybe? empty
+	DUALSENSE_DELETE_PROFILE = 0x68,
 	MAKE_EDGE_PROFILE_REPORT(0x70, PROFILE_TRIANGLE),
 	MAKE_EDGE_PROFILE_REPORT(0x73, PROFILE_SQUARE),
 	MAKE_EDGE_PROFILE_REPORT(0x76, PROFILE_CROSS),
-	MAKE_EDGE_PROFILE_REPORT(0x79, PROFILE_CIRCLE)
+	MAKE_EDGE_PROFILE_REPORT(0x79, PROFILE_CIRCLE),
+	// bluetooth:
+	DUALSENSE_REPORT_BLUETOOTH = 0x31,
+	DUALSENSE_REPORT_BLUETOOTH_OUTPUT1 = 0x32,
+	DUALSENSE_REPORT_BLUETOOTH_OUTPUT2 = 0x33,
+	DUALSENSE_REPORT_BLUETOOTH_OUTPUT3 = 0x34,
+	DUALSENSE_REPORT_BLUETOOTH_OUTPUT4 = 0x35,
+	DUALSENSE_REPORT_BLUETOOTH_OUTPUT5 = 0x36,
+	DUALSENSE_REPORT_BLUETOOTH_OUTPUT6 = 0x37,
+	DUALSENSE_REPORT_BLUETOOTH_OUTPUT7 = 0x38,
+	DUALSENSE_REPORT_BLUETOOTH_OUTPUT8 = 0x39,
+	// bluetooth + edge:
+	DUALSENSE_REPORT_BLUETOOTH_SET_DATA = 0xf6,
+	DUALSENSE_REPORT_BLUETOOTH_GET_DATA = 0xf7,
 } dualsense_report_id;
 
 static_assert(sizeof(dualsense_report_id) == 1, "dualsense report id is not 1 byte");
@@ -188,15 +213,44 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_uint40) == 0x5, "uint40 is not 5 bytes");
 
 typedef struct PACKED {
-	uint16_t unknown;
-	libresense_edge_state edge_device;
-	uint16_t unknown2;
+	uint8_t unknown;
+	union {
+		struct PACKED dualsense_device_state_edge {
+			uint8_t unknown : 2;
+			bool edge_profile_indicator : 1; // todo: find out how this is updated
+			bool edge_profile_vibration : 1; // todo: find out how this is updated
+			libresense_edge_profile_id edge_profile_id : 4;
+			bool stick_disconnected : 1;
+			bool stick_error : 1;
+			bool stick_calibrating : 1;
+			bool stick_unknown : 1;
+			libresense_level left_trigger_level : 2;
+			libresense_level right_trigger_level : 2;
+			struct {
+				dualsense_dpad dpad : 4;
+				bool square : 1;
+				bool cross : 1;
+				bool circle : 1;
+				bool triangle : 1;
+			} unmapped_buttons;
+			struct PACKED {
+				libresense_level brightness_override : 2; // todo: find out how this is updated
+				uint8_t reserved : 2;
+				bool mute : 1;
+				bool ps : 1;
+				bool share : 1;
+				bool options : 1;
+			} unmapped_peculiar;
+		} edge;
+		static_assert(sizeof(struct dualsense_device_state_edge) == 4, "dualsense_device_state.edge is not 4 bytes");
+		uint32_t battery_time; // why tf is this not reserved, sony please
+	} state;
 	dualsense_battery_state battery;
 	libresense_device_state device;
 	uint8_t reserved;
 } dualsense_device_state;
 
-static_assert(sizeof(dualsense_device_state) == 8, "dualsense_deviec_state is not 8 bytes");
+static_assert(sizeof(dualsense_device_state) == 8, "dualsense_device_state is not 8 bytes");
 
 typedef struct PACKED {
 	dualsense_vector3 accelerometer;
@@ -469,21 +523,79 @@ typedef struct {
 	uint16_t product_id;
 } libresense_device_info;
 
+typedef uint8_t dualsense_profile_guid[0x10];
+typedef uint8_t dualsense_profile_data[0x40];
+
+static_assert(sizeof(libresense_wchar) == 2, "libresense_wchar size is not 2");
+
+typedef struct PACKED {
+	uint8_t id;
+	uint8_t part;
+	uint32_t version;
+	libresense_wchar name[27];
+	uint32_t checksum;
+} dualsense_profile_p1;
+static_assert(sizeof(dualsense_profile_p1) == 64, "dualsense_profile_p1 size is not 64");
+
+typedef struct PACKED {
+	uint8_t id;
+	uint8_t part;
+	libresense_wchar name[13];
+	dualsense_profile_guid guid;
+	uint8_t left_stick_unknown1;
+	uint16_t left_stick_unknown2;
+	uint8_t left_stick_curve[6];
+	uint8_t right_stick_unknown1;
+	uint16_t right_stick_unknown2;
+	uint8_t right_stick_curve[4];
+	uint32_t checksum;
+} dualsense_profile_p2;
+static_assert(sizeof(dualsense_profile_p2) == 64, "dualsense_profile_p2 size is not 64");
+
+typedef struct PACKED {
+	uint8_t id;
+	uint8_t part;
+	uint8_t right_stick_curve[2];
+	uint8_t left_trigger[2];
+	uint8_t right_trigger[2];
+	uint16_t unknown1;
+	uint8_t buttons[0x12];
+	uint16_t unknown2;
+	uint16_t unknown3;
+	uint16_t unknown4;
+	uint64_t timestamp;
+	uint8_t reserved[14];
+	uint32_t full_checksum;
+	uint32_t checksum;
+} dualsense_profile_p3;
+static_assert(sizeof(dualsense_profile_p3) == 64, "dualsense_profile_p3 size is not 64");
+
 // Check if the library is initialized
 #define CHECK_INIT()     \
 	if (!is_initialized) \
-	return LIBRESENSE_NOT_INITIALIZED
+		return LIBRESENSE_NOT_INITIALIZED
 
 // Check if a handle is a valid number.
 #define CHECK_HANDLE(h)                                                             \
 	if (h == LIBRESENSE_INVALID_HANDLE || h < 0 || h >= LIBRESENSE_MAX_CONTROLLERS) \
-	return LIBRESENSE_INVALID_HANDLE
+		return LIBRESENSE_INVALID_HANDLE
 
 // Check if a handle is a valid number, and that it has been initialized.
 #define CHECK_HANDLE_VALID(h) \
 	CHECK_HANDLE(h);          \
 	if (state[h].hid == NULL) \
-	return LIBRESENSE_INVALID_HANDLE
+		return LIBRESENSE_INVALID_HANDLE
+
+#define IS_EDGE(h) \
+	h.vendor_id != 0x054C || h.product_id != 0x0DF2
+
+#define CHECK_EDGE(h) \
+	if (IS_EDGE(state[h].hid_info)) \
+		return LIBRESENSE_NOT_EDGE
+
+extern uint32_t crc_seed_input;
+extern uint32_t crc_seed_output;
+extern uint32_t crc_seed_feature;
 
 /**
  * @brief convert dualsense input report to libresense's representation
@@ -501,7 +613,7 @@ libresense_convert_input(const dualsense_input_msg input, libresense_data *data,
  * @param profile: the profile to convert into
  */
 libresense_result
-libresense_convert_edge_profile_input(const void *input, libresense_edge_profile *profile); // todo
+libresense_convert_edge_profile_input(const dualsense_profile_data input[3], libresense_edge_profile *profile); // todo
 
 /**
  * @brief todo
@@ -510,7 +622,7 @@ libresense_convert_edge_profile_input(const void *input, libresense_edge_profile
  * @param profile: the profile to convert into
  */
 libresense_result
-libresense_convert_edge_profile_output(const libresense_edge_profile input, void *profile); // todo
+libresense_convert_edge_profile_output(const libresense_edge_profile input, dualsense_profile_data profile[3]); // todo
 
 /**
  * @brief get a HID feature report
@@ -518,10 +630,9 @@ libresense_convert_edge_profile_output(const libresense_edge_profile input, void
  * @param report_id: the report to fetch
  * @param buffer: where to store the buffer
  * @param size: the size of the buffer
- * @param preserve: preserve byte 0
  */
 size_t
-libresense_get_feature_report(hid_device *handle, const int report_id, uint8_t *buffer, const size_t size, const bool preserve);
+libresense_get_feature_report(hid_device *handle, const int report_id, uint8_t *buffer, const size_t size);
 
 /**
  * @brief send a HID feature report
@@ -535,12 +646,18 @@ size_t
 libresense_send_feature_report(hid_device *handle, const int report_id, uint8_t *buffer, const size_t size, const bool preserve);
 
 /**
+ * @brief initializes checksum tables
+ */
+void
+libresense_init_checksum();
+
+/**
  * @brief calculates a bluetooth checksum
  * @param state: existing state.
  * @param buffer: data to hash
  * @param size: sizeof(buffer)
  */
 uint32_t
-libresense_calc_checksum(uint32_t state, uint8_t *buffer, const size_t size);
+libresense_calc_checksum(const uint32_t state, const uint8_t *buffer, const size_t size);
 
 #endif

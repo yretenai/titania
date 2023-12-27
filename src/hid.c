@@ -52,6 +52,8 @@ libresense_init_checked(const int size) {
 
 	LIBRESENSE_THREAD_INIT();
 
+	libresense_init_checksum();
+
 	is_initialized = true;
 	return LIBRESENSE_OK;
 }
@@ -103,16 +105,12 @@ libresense_get_hids(libresense_hid *hids, const size_t hids_length) {
 }
 
 size_t
-libresense_get_feature_report(hid_device *handle, const int report_id, uint8_t *buffer, const size_t size, const bool preserve) {
+libresense_get_feature_report(hid_device *handle, const int report_id, uint8_t *buffer, const size_t size) {
 	if (handle == NULL || buffer == NULL || size < 2) {
 		return 0;
 	}
-	const uint8_t old_byte = buffer[0];
 	buffer[0] = (uint8_t) report_id;
 	const size_t ret = hid_get_feature_report(handle, buffer, size);
-	if (preserve) {
-		buffer[0] = old_byte;
-	}
 	return ret;
 }
 
@@ -135,7 +133,7 @@ libresense_debug_get_feature_report(const libresense_handle handle, const int re
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
-	return libresense_get_feature_report(state[handle].hid, report_id, buffer, size, false);
+	return libresense_get_feature_report(state[handle].hid, report_id, buffer, size);
 }
 
 #define CALIBRATION_GYRO(slot, type) \
@@ -159,6 +157,7 @@ libresense_open(libresense_hid *handle) {
 			memset(&state[i], 0, sizeof(dualsense_state));
 			handle->handle = i;
 			state[i].hid = hid_open(handle->vendor_id, handle->product_id, handle->hid_serial);
+			state[i].hid_info = *handle;
 			state[i].output.data.id = DUALSENSE_REPORT_BLUETOOTH;
 			state[i].output.data.msg.data.id = DUALSENSE_REPORT_OUTPUT;
 			state[i].output.data.msg.data.volume_state = 4;
@@ -169,10 +168,8 @@ libresense_open(libresense_hid *handle) {
 				libresense_push(&handle->handle, 1);
 			}
 
-			// todo: request profiles.
-
 			dualsense_firmware_info firmware;
-			const size_t firmware_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_FIRMWARE, (uint8_t*)&firmware, sizeof(dualsense_firmware_info), false);
+			const size_t firmware_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_FIRMWARE, (uint8_t *) &firmware, sizeof(dualsense_firmware_info));
 			if(firmware_report_sz == 64) {
 				memset(handle->firmware.datetime, 0, sizeof(handle->firmware.datetime));
 				memcpy(handle->firmware.datetime, firmware.date, sizeof(firmware.date));
@@ -188,7 +185,7 @@ libresense_open(libresense_hid *handle) {
 			}
 
 			dualsense_serial_info serial;
-			const size_t serial_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_SERIAL, (uint8_t*)&serial, sizeof(dualsense_serial_info), false);
+			const size_t serial_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_SERIAL, (uint8_t *) &serial, sizeof(dualsense_serial_info));
 			if(serial_report_sz == 20) {
 				sprintf(handle->serial.mac, "%02x:%02x:%02x:%02x:%02x:%02x", serial.device_mac[5], serial.device_mac[4], serial.device_mac[3], serial.device_mac[2], serial.device_mac[1], serial.device_mac[0]);
 				sprintf(handle->serial.paired_mac, "%02x:%02x:%02x:%02x:%02x:%02x", serial.pair_mac[5], serial.pair_mac[4], serial.pair_mac[3], serial.pair_mac[2], serial.pair_mac[1], serial.pair_mac[0]);
@@ -202,7 +199,7 @@ libresense_open(libresense_hid *handle) {
 
 
 			dualsense_calibration_info calibration;
-			const size_t calibration_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_CALIBRATION, (uint8_t*)&calibration, sizeof(dualsense_calibration_info), false);
+			const size_t calibration_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_CALIBRATION, (uint8_t *) &calibration, sizeof(dualsense_calibration_info));
 			if(calibration_report_sz == 41) {
 				state[i].calibration[CALIBRATION_GYRO_X].max = CALIBRATION_GYRO(CALIBRATION_RAW_X, max);
 				state[i].calibration[CALIBRATION_GYRO_Y].max = CALIBRATION_GYRO(CALIBRATION_RAW_Y, max);
@@ -240,11 +237,33 @@ libresense_open(libresense_hid *handle) {
 				state[i].calibration[CALIBRATION_ACCELEROMETER_Z] = (libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0, 1 };
 			}
 
+			if (IS_EDGE(state[i].hid_info)) {
+				const uint8_t profile_reports[LIBRESENSE_PROFILE_MAX] = {
+					DUALSENSE_EDGE_REPORT_PROFILE_99_P1,
+					DUALSENSE_EDGE_REPORT_PROFILE_TRIANGLE_P1,
+					DUALSENSE_EDGE_REPORT_PROFILE_SQUARE_P1,
+					DUALSENSE_EDGE_REPORT_PROFILE_CROSS_P1,
+					DUALSENSE_EDGE_REPORT_PROFILE_CIRCLE_P1
+				};
+
+				for (int32_t j = 0; j < LIBRESENSE_PROFILE_MAX; ++j) {
+					dualsense_profile_data profile_data[3];
+					for(int32_t k = 0; k < 3; ++k) {
+						const size_t sz = libresense_get_feature_report(state[i].hid, profile_reports[j] + k, profile_data[i], sizeof(dualsense_profile_data));
+						if(sz != sizeof(dualsense_profile_data)) {
+							goto skip_edge;
+						}
+					}
+					libresense_convert_edge_profile_input(profile_data, &handle->edge_profiles[j]);
+				}
+				skip_edge:
+			}
+
 #ifdef LIBRESENSE_DEBUG
 			uint8_t report[HID_API_MAX_REPORT_DESCRIPTOR_SIZE];
 			const int report_size = hid_get_report_descriptor(state[i].hid, report, HID_API_MAX_REPORT_DESCRIPTOR_SIZE);
 
-			memset(handle->report_ids, 0, sizeof(libresense_hid_report_id) * UINT8_MAX);
+			memset(handle->report_ids, 0, sizeof(handle->report_ids));
 
 			if (report_size > 7 && report_size < HID_API_MAX_REPORT_DESCRIPTOR_SIZE && report[0] == 0x05 && report[1] == 0x01 && // USAGE PAGE Generic Desktop
 				report[2] == 0x09 && report[3] == 0x05 &&																		 // USAGE Game Pad
@@ -293,15 +312,19 @@ libresense_open(libresense_hid *handle) {
 						if (report_id == UINT8_MAX) {
 							break;
 						}
-						if (value == 0xf7) {
-							//
-						}
+
 						handle->report_ids[report_id++].id = (uint8_t) value;
 						handle->report_ids[report_id - 1].size = 1;
-					}
-
-					if (op_value == 37 && report_id > 0) {				 // REPORT COUNT
-						handle->report_ids[report_id - 1].size += value; // report_id_size * value;
+					} else if(report_id > 0) {
+						if (op_value == 37) { // REPORT COUNT
+							handle->report_ids[report_id - 1].size = value;
+						} else if (op_value == 32) { // INPUT
+							handle->report_ids[report_id - 1].type = 0;
+						} else if (op_value == 36) { // OUTPUT
+							handle->report_ids[report_id - 1].type = 1;
+						} else if (op_value == 44) { // FEATURE
+							handle->report_ids[report_id - 1].type = 2;
+						}
 					}
 				}
 			}
@@ -382,6 +405,8 @@ libresense_push(const libresense_handle *handle, const size_t handle_count) {
 		if (!hid_state->hid_info.is_bluetooth) {
 			buffer = hid_state->output.data.msg.buffer;
 			size = sizeof(dualsense_output_msg);
+		} else {
+			hid_state->output.data.bt_checksum = libresense_calc_checksum(crc_seed_output, buffer, size - 4);
 		}
 
 		hid_write(hid_state->hid, buffer, size);
@@ -650,6 +675,7 @@ libresense_result
 libresense_update_profile(const libresense_handle handle, const libresense_edge_profile_id id, const libresense_edge_profile profile) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
+	CHECK_EDGE(handle);
 
 	LIBRESENSE_THREAD_LOCK();
 
@@ -662,6 +688,7 @@ libresense_result
 libresense_delete_profile(const libresense_handle handle, const libresense_edge_profile_id id) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
+	CHECK_EDGE(handle);
 
 	LIBRESENSE_THREAD_LOCK();
 

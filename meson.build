@@ -52,7 +52,8 @@ libresense_lib = library(meson.project_name(), [
     'src/hid.c',
     'src/enums.c',
     'src/edge.c',
-    'src/trans.c'
+    'src/trans.c',
+    'src/crc.c'
   ],
   dependencies: [hidapi, threads],
   install: true,

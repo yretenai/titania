@@ -139,9 +139,6 @@ int main(int argc, const char** argv) {
 			handles[connected++] = hid[hid_id].handle;
 #ifdef LIBRESENSE_DEBUG
 			char name[0x30] = { 0 };
-			if(hid[hid_id].is_bluetooth) {
-				continue;
-			}
 			sprintf(name, "report_%s_%%d.bin", hid[hid_id].serial.paired_mac);
 
 			for (int i = 0; i < 0xFF; i++) {
@@ -150,21 +147,25 @@ int main(int argc, const char** argv) {
 					break;
 				}
 
-				printf("report %d: reported size is %ld", hid[hid_id].report_ids[i].id, hid[hid_id].report_ids[i].size);
+				int32_t hid_report_size = hid[hid_id].report_ids[i].size + 1;
+				printf("report %d (%x): reported size is %d, type is %s", hid[hid_id].report_ids[i].id, hid[hid_id].report_ids[i].id, hid_report_size, hid[hid_id].report_ids[i].type == 0 ? "INPUT" : hid[hid_id].report_ids[i].type == 1 ? "OUTPUT": "FEATURE");
 
-				size_t size = libresense_debug_get_feature_report(hid[hid_id].handle, hid[hid_id].report_ids[i].id, buffer, hid[hid_id].report_ids[i].size <= 0x40 ? 0x40 : hid[hid_id].report_ids[i].size);
-				printf(" actual size is %ld\n", size);
-				if (size > 1 && size <= 0x4096) {
-					printf("\t");
-					for (size_t j = 0; j < size; j++) {
-						printf("%02x ", buffer[j]);
-					}
+				if(hid[hid_id].report_ids[i].type < 2) {
 					printf("\n");
+					continue;
+				}
+
+				printf(", actual size is ");
+				size_t size = libresense_debug_get_feature_report(hid[hid_id].handle, hid[hid_id].report_ids[i].id, buffer, hid_report_size);
+				if (size > 1 && size <= 0x4096) {
+					printf("%ld\n", size);
 					char report_name[0x30] = { 0 };
 					sprintf(report_name, name, hid[hid_id].report_ids[i].id);
 					FILE* file = fopen(report_name, "w+b");
 					fwrite(buffer, 1, size, file);
 					fclose(file);
+				} else {
+					printf("??\n");
 				}
 			}
 #endif
@@ -199,7 +200,7 @@ int main(int argc, const char** argv) {
 		printf("touchpad { left = { active = %s, id = %u, pos = { %u, %u }, right = { active = %s, id = %u, pos = { %u, %u } } }\n", MAKE_TEST(data.touch[0].active), data.touch[0].id, data.touch[0].coords.x, data.touch[0].coords.y, MAKE_TEST(data.touch[1].active), data.touch[1].id, data.touch[1].coords.x, data.touch[1].coords.y);
 		printf("sensors { accel = { %f, %f, %f }, gyro = { %f, %f, %f } }\n", data.sensors.accelerometer.x, data.sensors.accelerometer.y, data.sensors.accelerometer.z, data.sensors.gyro.x, data.sensors.gyro.y, data.sensors.gyro.z);
 		printf("battery { level = %f%%, state = %s, error = %u }\n", data.battery.level, libresense_battery_state_msg[data.battery.state], data.battery.battery_error);
-		printf("state { headphones = %s, headset = %s, muted = %s, cabled = %s, stick = { disconnect = %s, error = %s, calibrate = %s }, raw = %08lx, state_id = %08lx }\n", MAKE_TEST(data.device.headphones), MAKE_TEST(data.device.headset), MAKE_TEST(data.device.muted), MAKE_TEST(data.device.cable_connected), MAKE_TEST(data.edge_device.stick_disconnected), MAKE_TEST(data.edge_device.stick_error), MAKE_TEST(data.edge_device.stick_calibrating), data.state, data.state_id);
+		printf("state { headphones = %s, headset = %s, muted = %s, cabled = %s, stick = { disconnect = %s, error = %s, calibrate = %s }, raw = %08lx, state_id = %08lx }\n", MAKE_TEST(data.device.headphones), MAKE_TEST(data.device.headset), MAKE_TEST(data.device.muted), MAKE_TEST(data.device.cable_connected), MAKE_TEST(false), MAKE_TEST(false), MAKE_TEST(false), data.state, data.state_id);
 	}
 
 	if(argc > 1) {
@@ -520,7 +521,7 @@ int main(int argc, const char** argv) {
 		update.color.x = 1.0;
 		update.color.y = 0.0;
 		update.color.z = 1.0;
-		update.brightness = LIBRESENSE_LED_BRIGHTNESS_HIGH;
+		update.brightness = LIBRESENSE_LEVEL_HIGH;
 		update.mode = LIBRESENSE_LED_MODE_BRIGHTNESS;
 		update.led = LIBRESENSE_LED_NONE;
 		update.effect = LIBRESENSE_LED_EFFECT_OFF;
@@ -592,7 +593,7 @@ int main(int argc, const char** argv) {
 		update.color.x = 1.0;
 		update.color.y = 0.0;
 		update.color.z = 1.0;
-		update.brightness = LIBRESENSE_LED_BRIGHTNESS_HIGH;
+		update.brightness = LIBRESENSE_LEVEL_HIGH;
 		update.mode = LIBRESENSE_LED_MODE_BRIGHTNESS;
 		update.effect = LIBRESENSE_LED_EFFECT_OFF;
 		for(size_t j = 0; j < connected; ++j) {

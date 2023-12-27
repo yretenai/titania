@@ -7,7 +7,7 @@
 #ifndef LIBRESENSE_H
 #define LIBRESENSE_H
 
-#include <assert.h>
+#include <wchar.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -34,6 +34,7 @@ typedef enum {
 	LIBRESENSE_OUT_OF_RANGE,
 	LIBRESENSE_NOT_IMPLEMENTED,
 	LIBRESENSE_NO_SLOTS,
+	LIBRESENSE_NOT_EDGE,
 	LIBRESENSE_ERROR_MAX
 } libresense_result;
 
@@ -46,6 +47,7 @@ typedef enum {
 } libresense_battery_state;
 
 typedef enum {
+	LIBRESENSE_PROFILE_NONE,
 	LIBRESENSE_PROFILE_TRIANGLE,
 	LIBRESENSE_PROFILE_SQUARE,
 	LIBRESENSE_PROFILE_CROSS,
@@ -75,10 +77,10 @@ extern const int libresense_max_controllers;
 
 #define IS_LIBRESENSE_OKAY(result) (result == LIBRESENSE_OK)
 #define IS_LIBRESENSE_BAD(result) (result != LIBRESENSE_OK)
-typedef wchar_t libresense_wchar;
+typedef uint16_t libresense_wchar;
 
 typedef signed int libresense_handle;
-typedef libresense_wchar libresense_serial[0x100]; // Max HID Parameter length is 256 on USB, 512 on BT. HID serials are wide-chars, which are 2 bytes.
+typedef wchar_t libresense_serial[0x100]; // Max HID Parameter length is 256 on USB, 512 on BT. HID serials are wide-chars, which are 2 bytes.
 
 typedef struct {
 	float x;
@@ -102,12 +104,15 @@ typedef struct {
 	int16_t z;
 } libresense_vector3s;
 
-static_assert(sizeof(libresense_vector3s) == 6, "libresense_vector3s is not 6 bytes");
-
 typedef struct {
 	int16_t max;
 	int16_t min;
 } libresense_minmax;
+
+typedef struct {
+	int16_t max;
+	int16_t min;
+} libresense_minmaxf;
 
 typedef struct {
 	bool dpad_up : 1;
@@ -153,6 +158,7 @@ typedef struct {
 	uint8_t touch_sequence;
 	uint16_t driver_sequence;
 	uint32_t system;
+	uint32_t battery; // does not exist in edge because the field is re-used
 	uint64_t sensor;
 	uint64_t checksum;
 } libresense_time;
@@ -168,12 +174,6 @@ typedef struct {
 	bool muted : 1;
 	bool cable_connected : 1;
 } libresense_device_state;
-
-typedef struct {
-	bool stick_disconnected : 1;
-	bool stick_error : 1;
-	bool stick_calibrating : 1;
-} libresense_edge_state;
 
 typedef struct {
 	float level;
@@ -197,17 +197,81 @@ typedef struct {
 	uint32_t unknown;
 } libresense_serial_info;
 
-typedef struct {
-	libresense_wchar name[0x64];
-	uint8_t todo;
-} libresense_edge_profile;
+typedef enum {
+	LIBRESENSE_EDGE_STICK_TEMPLATE_DEFAULT,
+	LIBRESENSE_EDGE_STICK_TEMPLATE_QUICK,
+	LIBRESENSE_EDGE_STICK_TEMPLATE_PRECISE,
+	LIBRESENSE_EDGE_STICK_TEMPLATE_STEADY,
+	LIBRESENSE_EDGE_STICK_TEMPLATE_DIGITAL,
+	LIBRESENSE_EDGE_STICK_TEMPLATE_DYNAMIC,
+} libresense_edge_stick_template;
 
-#ifdef LIBRESENSE_DEBUG
 typedef struct {
-	uint8_t id;
-	size_t size;
-} libresense_hid_report_id;
-#endif
+	libresense_edge_stick_template id;
+	uint8_t unknown1;
+	uint16_t unknown2;
+	float curve_points[6];
+} libresense_edge_stick;
+
+typedef struct {
+	float min;
+	float max;
+} libresense_edge_trigger;
+
+typedef enum {
+	LIBRESENSE_BUTTON_UP,
+	LIBRESENSE_BUTTON_LEFT,
+	LIBRESENSE_BUTTON_DOWN,
+	LIBRESENSE_BUTTON_RIGHT,
+	LIBRESENSE_BUTTON_CIRCLE,
+	LIBRESENSE_BUTTON_CROSS,
+	LIBRESENSE_BUTTON_SQUARE,
+	LIBRESENSE_BUTTON_TRIANGLE,
+	LIBRESENSE_BUTTON_R1,
+	LIBRESENSE_BUTTON_R2,
+	LIBRESENSE_BUTTON_R3,
+	LIBRESENSE_BUTTON_L1,
+	LIBRESENSE_BUTTON_L2,
+	LIBRESENSE_BUTTON_L3,
+	LIBRESENSE_BUTTON_LP,
+	LIBRESENSE_BUTTON_RP,
+	LIBRESENSE_BUTTON_OPT,
+	LIBRESENSE_BUTTON_TOUCH,
+} libresense_edge_button_id;
+
+typedef union {
+	struct {
+		libresense_edge_button_id up;
+		libresense_edge_button_id down;
+		libresense_edge_button_id left;
+		libresense_edge_button_id right;
+		libresense_edge_button_id circle;
+		libresense_edge_button_id cross;
+		libresense_edge_button_id square;
+		libresense_edge_button_id triangle;
+		libresense_edge_button_id r1;
+		libresense_edge_button_id r2;
+		libresense_edge_button_id r3;
+		libresense_edge_button_id l1;
+		libresense_edge_button_id l2;
+		libresense_edge_button_id l3;
+		libresense_edge_button_id left_paddle;
+		libresense_edge_button_id right_paddle;
+		libresense_edge_button_id options;
+		libresense_edge_button_id touch;
+	};
+	libresense_edge_button_id buttons[0x12];
+} libresense_edge_button_remap;
+
+typedef struct {
+	char name[0x80];
+	uint8_t id[0x10];
+	libresense_edge_stick sticks[2];
+	libresense_edge_trigger triggers[2];
+	libresense_edge_button_remap buttons;
+	uint64_t unknown;
+	uint64_t timestamp;
+} libresense_edge_profile;
 
 typedef struct {
 	libresense_handle handle;
@@ -217,11 +281,38 @@ typedef struct {
 	libresense_serial hid_serial;
 	libresense_serial_info serial;
 	libresense_firmware_info firmware;
-	libresense_edge_profile edge_profiles[4];
+	libresense_edge_profile edge_profiles[LIBRESENSE_PROFILE_MAX];
 #ifdef LIBRESENSE_DEBUG
-	libresense_hid_report_id report_ids[0xFF];
+	struct libresense_report_id {
+		uint8_t id;
+		uint8_t type;
+		uint32_t size;
+	} report_ids[0xFF];
 #endif
 } libresense_hid;
+
+typedef enum {
+	LIBRESENSE_LEVEL_HIGH = 0,
+	LIBRESENSE_LEVEL_MEDIUM = 1,
+	LIBRESENSE_LEVEL_LOW = 2,
+} libresense_level;
+
+typedef struct {
+	libresense_buttons unmapped_buttons;
+	struct {
+		bool disconnected;
+		bool errored;
+		bool calibrating;
+	} stick;
+	int32_t trigger_levels[2];
+	libresense_edge_profile_id current_profile_id;
+	struct {
+		bool led_indicator;
+		bool vibration;
+	} profile_indicator;
+	int32_t unknown;
+	libresense_level brightness;
+} libresense_edge_state;
 
 typedef struct {
 	libresense_hid hid;
@@ -251,12 +342,6 @@ typedef enum {
 } libresense_led_effect;
 
 typedef enum {
-	LIBRESENSE_LED_BRIGHTNESS_HIGH = 0,
-	LIBRESENSE_LED_BRIGHTNESS_MEDIUM = 1,
-	LIBRESENSE_LED_BRIGHTNESS_LOW = 2,
-} libresense_led_brightness;
-
-typedef enum {
 	LIBRESENSE_LED_NONE = 0,
 	LIBRESENSE_LED_PLAYER_1 = 4,
 	LIBRESENSE_LED_PLAYER_2 = 10,
@@ -278,7 +363,7 @@ typedef enum {
 typedef struct {
 	libresense_led_mode mode;
 	libresense_led_effect effect;
-	libresense_led_brightness brightness;
+	libresense_level brightness;
 	libresense_led_index led;
 	libresense_vector3 color;
 } libresense_led_update;

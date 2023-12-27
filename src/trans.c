@@ -73,7 +73,11 @@ libresense_convert_input(const dualsense_input_msg input, libresense_data *data,
 	}
 
 	data->device = input.state.device;
-	data->edge_device = input.state.edge_device;
+	if(IS_EDGE(data->hid)) {
+		// todo.
+	} else {
+		data->time.battery = input.state.state.battery_time;
+	}
 
 	data->state = *(uint64_t*)&input.state;
 	data->state_id = input.state_id;
