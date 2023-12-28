@@ -237,8 +237,6 @@ int main(int argc, const char** argv) {
 		goto shutdown;
 	}
 
-	goto test;
-
 	{
 		printf("testing latency, this will take 10 seconds\n");
 		struct timespec max = { INT64_MIN, INT64_MIN };
@@ -494,7 +492,6 @@ int main(int argc, const char** argv) {
 		usleep(1000000);
 	}
 
-	test:
 	{
 		wait_until_options_clear(handles[0], 250000);
 		printf("testing rumble...\n");
