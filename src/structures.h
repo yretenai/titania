@@ -18,6 +18,7 @@
 
 #ifdef _MSC_VER
 #define PACKED
+#pragma pack(push, 1)
 #else
 #define PACKED __attribute__((__packed__))
 #endif
@@ -25,10 +26,6 @@
 static_assert(__STDC_VERSION__ >= 202000L, "a c2x compiler is required");
 
 #define MAKE_EDGE_PROFILE_REPORT(id, name) DUALSENSE_EDGE_REPORT_##name##_P1 = id, DUALSENSE_EDGE_REPORT_##name##_P2 = id + 1, DUALSENSE_EDGE_REPORT_##name##_P3 = id + 2
-
-#ifdef _MSC_VER
-#pragma pack(push, 1)
-#endif
 
 #define DUALSENSE_LEFT (0)
 #define DUALSENSE_RIGHT (1)
