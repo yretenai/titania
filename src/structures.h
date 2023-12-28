@@ -11,7 +11,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 #include <hidapi/hidapi.h>
 
@@ -20,13 +19,8 @@
 
 #ifdef _MSC_VER
 #define PACKED
-#define ENUM_FORCE_8
-#define ENUM_FORCE_16
 #else
 #define PACKED __attribute__((__packed__))
-#define ENUM_FORCE_8 PACKED
-#define ENUM_FORCE_16 PACKED
-#define static_assert _Static_assert
 #endif
 
 #define MAKE_EDGE_PROFILE_REPORT(id, name) DUALSENSE_EDGE_REPORT_##name##_P1 = id, DUALSENSE_EDGE_REPORT_##name##_P2 = id + 1, DUALSENSE_EDGE_REPORT_##name##_P3 = id + 2
@@ -55,7 +49,7 @@
 #define NORM_CLAMP(value, max) (value >= 1.0f ? max : value <= 0.0f ? 0 : (uint8_t) (value * max))
 #define NORM_CLAMP_UINT8(value) NORM_CLAMP(value, UINT8_MAX)
 
-typedef enum ENUM_FORCE_8 {
+typedef enum _dualsense_report_id : uint8_t {
 	// usb:
 	DUALSENSE_REPORT_INPUT = 0x1,
 	DUALSENSE_REPORT_OUTPUT = 0x2,
@@ -112,7 +106,7 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_stick) == 2, "dualsense_stick is not 2 bytes");
 
-typedef enum PACKED {
+typedef enum _dualsense_dpad : uint8_t {
 	DUALSENSE_DPAD_U = 0,
 	DUALSENSE_DPAD_UR = 1,
 	DUALSENSE_DPAD_R = 2,
@@ -185,7 +179,7 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_touch) == 4, "dualsense_touch is not 4 bytes");
 
-typedef enum ENUM_FORCE_8 {
+typedef enum _dualsense_battery_state_v : uint8_t {
 	DUALSENSE_BATTERY_STATE_DISCHARGING = 0x0,
 	DUALSENSE_BATTERY_STATE_CHARGING = 0x1,
 	DUALSENSE_BATTERY_STATE_FULL = 0x2,
@@ -338,7 +332,7 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_led_output) == 6, "dualsense_led_output is not 6 bytes");
 
-typedef enum ENUM_FORCE_8 {
+typedef enum _dualsense_effect_mode : uint8_t {
 	DUALSENSE_EFFECT_MODE_OFF = 0x5,
 	DUALSENSE_EFFECT_MODE_STOP = 0x0,
 	DUALSENSE_EFFECT_MODE_UNIFORM = 0x1,
@@ -378,7 +372,7 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_audio_flags) == 1, "dualsense_audio_flags is not 1 byte");
 
-typedef enum ENUM_FORCE_8 {
+typedef enum _dualsense_audio_mic_flags : uint8_t {
 	DUALSENSE_MIC_OFF = 0,
 	DUALSENSE_MIC_ON = 1,
 	DUALSENSE_MIC_FLASH = 2,
@@ -433,8 +427,8 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_audio_output) == 5, "dualsense_audio_output is not 5 bytes");
 
 typedef struct PACKED {
-	uint8_t trigger_power_reduction : 4;
 	uint8_t rumble_power_reduction : 4;
+	uint8_t trigger_power_reduction : 4;
 } dualsense_motor_flags;
 
 static_assert(sizeof(dualsense_motor_flags) == 1, "dualsense_motor_flags is not 1 byte");

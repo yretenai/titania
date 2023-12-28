@@ -597,18 +597,21 @@ libresense_update_control(const libresense_handle handle, const libresense_contr
  * @param handle: the controller to update
  * @param left_trigger: effect data for LT
  * @param right_trigger: effect data for RT
+ * @param power_reduction: power reduction amount for trigger motors
  */
 libresense_result
-libresense_update_effect(const libresense_handle handle, const libresense_effect_update left_trigger, const libresense_effect_update right_trigger);
+libresense_update_effect(const libresense_handle handle, const libresense_effect_update left_trigger, const libresense_effect_update right_trigger, const float power_reduction);
 
 /**
  * @brief update rumble state of a controller
  * @param handle: the controller to update
  * @param large_motor: amplitude for the large motor
  * @param small_motor: amplitude for the small motor
+ * @param power_reduction: power reduction amount for haptic motors
+ * @param emulate_legacy_behavior: instructs the dualsense to emulate how rumble motors used to work
  */
 libresense_result
-libresense_update_rumble(const libresense_handle handle, const float large_motor, const float small_motor);
+libresense_update_rumble(const libresense_handle handle, const float large_motor, const float small_motor, const float power_reduction, const bool emulate_legacy_behavior);
 
 /**
  * @brief update a dualsense edge profile

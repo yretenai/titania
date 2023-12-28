@@ -29,6 +29,7 @@ void usleep(__int64 usec) {
 #include <config.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #define MAKE_BUTTON(test) data.buttons.test ? "Y" : "N"
 #define MAKE_EDGE_BUTTON(test) data.edge_device.unmapped_buttons.test ? "Y" : "N"
@@ -236,6 +237,34 @@ int main(int argc, const char** argv) {
 		goto shutdown;
 	}
 
+	goto test;
+
+	{
+		printf("testing latency, this will take 10 seconds\n");
+		struct timespec max = { INT64_MIN, INT64_MIN };
+		struct timespec min = { INT64_MAX, INT64_MAX };
+		for(int i = 0; i < 1000; ++i) {
+			struct timespec ts1, ts2;
+			timespec_get(&ts1, TIME_UTC);
+			libresense_pull(&handles[0], 1, &datum[0]);
+			timespec_get(&ts2, TIME_UTC);
+			if(ts1.tv_nsec < ts2.tv_sec) {
+				struct timespec delta = { ts2.tv_sec - ts1.tv_sec, ts2.tv_nsec - ts1.tv_nsec };
+				if(delta.tv_sec < min.tv_sec || delta.tv_nsec < min.tv_nsec) {
+					min = delta;
+				}
+				if(delta.tv_sec > max.tv_sec || delta.tv_nsec > max.tv_nsec) {
+					max = delta;
+				}
+			}
+			if(i > 0 && i % 100 == 0) {
+				printf("min: %ld s %ld us, max: %ld s %ld us\n", min.tv_sec, min.tv_nsec, max.tv_sec, max.tv_nsec);
+			}
+			usleep(10000);
+		}
+		printf("min: %ld s %ld us, max: %ld s %ld us\n", min.tv_sec, min.tv_nsec, max.tv_sec, max.tv_nsec);
+	}
+
 	printf("press OPTIONS to skip test\n");
 
 	{
@@ -248,7 +277,7 @@ int main(int argc, const char** argv) {
 		update.effect.uniform.resistance = 1.0;
 		printf("uniform\n");
 		for(size_t i = 0; i < connected; ++i) {
-			libresense_update_effect(handles[i], update, update);
+			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
 		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
@@ -261,7 +290,7 @@ int main(int argc, const char** argv) {
 		update.effect.section.resistance = 1.0;
 		printf("section\n");
 		for(size_t i = 0; i < connected; ++i) {
-			libresense_update_effect(handles[i], update, update);
+			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
 		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
@@ -281,7 +310,7 @@ int main(int argc, const char** argv) {
 		update.effect.multiple_sections.resistance[9] = 1.0f;
 		printf("multiple section\n");
 		for(size_t i = 0; i < connected; ++i) {
-			libresense_update_effect(handles[i], update, update);
+			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
 		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
@@ -294,7 +323,7 @@ int main(int argc, const char** argv) {
 		update.effect.trigger.resistance = 0.5f;
 		printf("trigger\n");
 		for(size_t i = 0; i < connected; ++i) {
-			libresense_update_effect(handles[i], update, update);
+			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
 		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
@@ -308,7 +337,7 @@ int main(int argc, const char** argv) {
 		update.effect.slope.resistance.y = 1.0f;
 		printf("slope\n");
 		for(size_t i = 0; i < connected; ++i) {
-			libresense_update_effect(handles[i], update, update);
+			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
 		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
@@ -321,7 +350,7 @@ int main(int argc, const char** argv) {
 		update.effect.vibrate.frequency = 201;
 		printf("vibrate\n");
 		for(size_t i = 0; i < connected; ++i) {
-			libresense_update_effect(handles[i], update, update);
+			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
 		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
@@ -337,7 +366,7 @@ int main(int argc, const char** argv) {
 		update.effect.vibrate_slope.period = 4;
 		printf("vibrate slope\n");
 		for(size_t i = 0; i < connected; ++i) {
-			libresense_update_effect(handles[i], update, update);
+			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
 		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
@@ -359,7 +388,7 @@ int main(int argc, const char** argv) {
 		update.effect.multiple_vibrate.period = 4;
 		printf("multiple vibrate\n");
 		for(size_t i = 0; i < connected; ++i) {
-			libresense_update_effect(handles[i], update, update);
+			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
 		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
@@ -389,7 +418,7 @@ int main(int argc, const char** argv) {
 		update.effect.multiple_vibrate_sections.resistance[9] = 1.0f;
 		printf("multiple vibrate sections\n");
 		for(size_t i = 0; i < connected; ++i) {
-			libresense_update_effect(handles[i], update, update);
+			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
 		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
@@ -399,7 +428,7 @@ int main(int argc, const char** argv) {
 		reset_trigger:
 		update.mode = LIBRESENSE_EFFECT_OFF;
 		for(size_t i = 0; i < connected; ++i) {
-			libresense_update_effect(handles[i], update, update);
+			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
 		usleep(100000);
@@ -465,6 +494,7 @@ int main(int argc, const char** argv) {
 		usleep(1000000);
 	}
 
+	test:
 	{
 		wait_until_options_clear(handles[0], 250000);
 		printf("testing rumble...\n");
@@ -474,7 +504,7 @@ int main(int argc, const char** argv) {
 		printf("large motor...\n");
 		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for(size_t i = 0; i < connected; ++i) {
-				libresense_update_rumble(handles[i], rumble, 0.0f);
+				libresense_update_rumble(handles[i], rumble, 0.0f, 0.5f, false);
 			}
 			libresense_push(handles, connected);
 			if(report_hid_close(handles, connected, 10000, 10000)) {
@@ -485,7 +515,7 @@ int main(int argc, const char** argv) {
 		printf("small motor...\n");
 		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for(size_t i = 0; i < connected; ++i) {
-				libresense_update_rumble(handles[i], 0, rumble);
+				libresense_update_rumble(handles[i], 0, rumble, 0.5f, false);
 			}
 			libresense_push(handles, connected);
 			if(report_hid_close(handles, connected, 10000, 10000)) {
@@ -496,7 +526,7 @@ int main(int argc, const char** argv) {
 		printf("both motors...\n");
 		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for(size_t i = 0; i < connected; ++i) {
-				libresense_update_rumble(handles[i], rumble, rumble);
+				libresense_update_rumble(handles[i], rumble, rumble, 0.5f, false);
 			}
 			libresense_push(handles, connected);
 			if(report_hid_close(handles, connected, 10000, 10000)) {
@@ -507,7 +537,51 @@ int main(int argc, const char** argv) {
 		printf("rumble feedback test...\n");
 		for(int rumble_test = 0; rumble_test < 8; rumble_test++) {
 			for(size_t i = 0; i < connected; ++i) {
-				libresense_update_rumble(handles[i], rumble_test % 2 == 0 ? 1.0f : 0.1f, rumble_test % 2 == 0 ? 1.0f : 0.1f);
+				libresense_update_rumble(handles[i], rumble_test % 2 == 0 ? 1.0f : 0.1f, rumble_test % 2 == 0 ? 1.0f : 0.1f, 0.5f, false);
+			}
+			libresense_push(handles, connected);
+			if(report_hid_close(handles, connected, 250000, 10000)) {
+				goto reset_motor;
+			}
+		}
+
+		printf("large motor (legacy)...\n");
+		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+			for(size_t i = 0; i < connected; ++i) {
+				libresense_update_rumble(handles[i], rumble, 0.0f, 0.0f, true);
+			}
+			libresense_push(handles, connected);
+			if(report_hid_close(handles, connected, 10000, 10000)) {
+				goto reset_motor;
+			}
+		}
+
+		printf("small motor (legacy)...\n");
+		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+			for(size_t i = 0; i < connected; ++i) {
+				libresense_update_rumble(handles[i], 0, rumble, 0.0f, true);
+			}
+			libresense_push(handles, connected);
+			if(report_hid_close(handles, connected, 10000, 10000)) {
+				goto reset_motor;
+			}
+		}
+
+		printf("both motors (legacy)...\n");
+		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+			for(size_t i = 0; i < connected; ++i) {
+				libresense_update_rumble(handles[i], rumble, rumble, 0.0f, true);
+			}
+			libresense_push(handles, connected);
+			if(report_hid_close(handles, connected, 10000, 10000)) {
+				goto reset_motor;
+			}
+		}
+
+		printf("rumble feedback test (legacy)...\n");
+		for(int rumble_test = 0; rumble_test < 8; rumble_test++) {
+			for(size_t i = 0; i < connected; ++i) {
+				libresense_update_rumble(handles[i], rumble_test % 2 == 0 ? 1.0f : 0.1f, rumble_test % 2 == 0 ? 1.0f : 0.1f, 0.0f, true);
 			}
 			libresense_push(handles, connected);
 			if(report_hid_close(handles, connected, 250000, 10000)) {
@@ -517,7 +591,7 @@ int main(int argc, const char** argv) {
 
 		reset_motor:
 		for(size_t i = 0; i < connected; ++i) {
-			libresense_update_rumble(handles[i], 0, 0);
+			libresense_update_rumble(handles[i], 0, 0, 0.0f, false);
 		}
 		libresense_push(handles, connected);
 		usleep(100000);

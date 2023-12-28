@@ -3,7 +3,7 @@ project(
   'c',
   default_options: [
     'prefix=/usr',
-    'c_std=c17',
+    'c_std=c2x',
     'warning_level=3',
     'default_library=both'
   ],
@@ -23,6 +23,7 @@ linker = meson.get_compiler('c')
 
 args = compiler.get_supported_arguments(
   '-fanalyzer',
+  '-fms-extensions',
   '-ffast-math'
 )
 
@@ -44,7 +45,6 @@ configure_file(
 )
 
 hidapi = dependency('hidapi', version: '>=0.13.0')
-threads = dependency('threads')
 
 libresense_inc = include_directories('include/')
 
@@ -59,7 +59,7 @@ libresense_lib = library(meson.project_name(), [
     'src/trans.c',
     'src/crc.c'
   ],
-  dependencies: [hidapi, threads],
+  dependencies: [hidapi],
   c_args: args,
   install: true,
   include_directories: libresense_inc
