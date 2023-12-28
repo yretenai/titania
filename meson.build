@@ -24,6 +24,13 @@ linker = meson.get_compiler('c')
 args = compiler.get_supported_arguments(
   '-fanalyzer',
   '-fms-extensions',
+  '-Wall',
+  '-Wextra',
+  '-pedantic',
+  '-Werror',
+  '-Wno-unused-variable',
+  '-Wno-unused-parameter',
+  '-Wno-microsoft-fixed-enum',
   '-ffast-math'
 )
 

@@ -19,7 +19,7 @@ this project is not authorized, affiliated or endorsed by sony interactive enter
 ## build requirements
 
 - hidapi 0.14 or newer (meson wrap subproject, will compile if system is missing)
-- a C2x capable compiler (GCC 13 or newer, Clang 9 or newer, Visual Studio 2022 or newer)
+- a C2x capable compiler (GCC 13 or newer, Clang 16 or newer, Visual Studio 2022 or newer)
 - meson 1.2.0 or newer
 - ninja 1.10.0 or newer
 
@@ -42,6 +42,9 @@ cd build
 meson setup .. -Dbuildtype=release
 meson compile
 ```
+### notice
+
+while the library is built on c2x, the `libresense.h` header is c17 (maybe c11) compatible.
 
 ## usage
 

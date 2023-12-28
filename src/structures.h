@@ -23,6 +23,8 @@
 #define PACKED __attribute__((__packed__))
 #endif
 
+static_assert(__STDC_VERSION__ >= 202000L, "a c2x compiler is required");
+
 #define MAKE_EDGE_PROFILE_REPORT(id, name) DUALSENSE_EDGE_REPORT_##name##_P1 = id, DUALSENSE_EDGE_REPORT_##name##_P2 = id + 1, DUALSENSE_EDGE_REPORT_##name##_P3 = id + 2
 
 #ifdef _MSC_VER

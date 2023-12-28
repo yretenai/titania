@@ -23,7 +23,7 @@ void usleep(__int64 usec) {
 #else
 #define __USE_XOPEN_EXTENDED
 #include <unistd.h>
-#define clrscr() printf("\e[1;1H\e[2J")
+#define clrscr() printf("\033[1;1H\033[2J")
 #endif
 
 #include <config.h>
