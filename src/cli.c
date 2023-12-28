@@ -9,6 +9,17 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <conio.h>
+
+// https://stackoverflow.com/questions/5801813/c-usleep-is-obsolete-workarounds-for-windows-mingw
+void usleep(__int64 usec) {
+	HANDLE timer;
+	LARGE_INTEGER ft;
+	ft.QuadPart = -(10*usec);
+	timer = CreateWaitableTimer(NULL, TRUE, NULL);
+	SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+	WaitForSingleObject(timer, INFINITE);
+	CloseHandle(timer);
+}
 #else
 #define __USE_XOPEN_EXTENDED
 #include <unistd.h>
@@ -18,7 +29,6 @@
 #include <config.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 
 #define MAKE_BUTTON(test) data.buttons.test ? "Y" : "N"
 #define MAKE_EDGE_BUTTON(test) data.edge_device.unmapped_buttons.test ? "Y" : "N"
@@ -520,7 +530,6 @@ int main(int argc, const char** argv) {
 		update.color.y = 0.0;
 		update.color.z = 1.0;
 		update.brightness = LIBRESENSE_LEVEL_HIGH;
-		update.mode = LIBRESENSE_LED_MODE_BRIGHTNESS;
 		update.led = LIBRESENSE_LED_NONE;
 		update.effect = LIBRESENSE_LED_EFFECT_OFF;
 		int i = 0;
@@ -586,13 +595,16 @@ int main(int argc, const char** argv) {
 			}
 		}
 
-		reset_led:
-		libresense_errorf(stderr, result, "resetting led");
+	}
+
+	shutdown:
+	reset_led:
+	{
+		libresense_led_update update;
 		update.color.x = 1.0;
 		update.color.y = 0.0;
 		update.color.z = 1.0;
 		update.brightness = LIBRESENSE_LEVEL_HIGH;
-		update.mode = LIBRESENSE_LED_MODE_BRIGHTNESS;
 		update.effect = LIBRESENSE_LED_EFFECT_OFF;
 		for(size_t j = 0; j < connected; ++j) {
 			switch(j) {
@@ -627,10 +639,10 @@ int main(int argc, const char** argv) {
 			libresense_update_led(handles[j], update);
 		}
 		libresense_push(handles, connected);
-		usleep(100000);
 	}
 
-	shutdown:
+	usleep(100000);
+
 	for(size_t i = 0; i < connected; ++i) {
 		libresense_close(handles[i]);
 		if(IS_LIBRESENSE_BAD(result)) {

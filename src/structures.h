@@ -218,8 +218,8 @@ typedef struct PACKED {
 			struct PACKED {
 				bool unknown1 : 1;
 				bool unknown2 : 1;
-				bool led_indicator : 1; // todo: find out how this is updated
-				bool vibrate_indicator: 1; // todo: find out how this is updated
+				bool led_indicator : 1;
+				bool vibrate_indicator: 1;
 				libresense_edge_profile_id id : 3;
 				bool disable_switching : 1;
 			} profile;
@@ -322,7 +322,7 @@ typedef union PACKED {
 		bool haptic_filter : 1;
 		bool motor_power : 1;
 		bool control2 : 1;
-	} bits;
+	};
 
 	uint16_t value;
 } dualsense_mutator_flags;
@@ -409,7 +409,7 @@ typedef struct PACKED {
 	bool advanced_rumble_control : 1;
 	uint8_t reserved2 : 3;
 	bool update_edge_profile : 1;
-	bool update_edge_profile_unknown : 1;
+	bool edge_unknown1 : 1;
 
 	// misc flags
 	bool enable_lowpass_filter : 1;
@@ -417,11 +417,7 @@ typedef struct PACKED {
 
 	// todo: edge flags, something controls brightness
 	// but i can only get it to happen if i set the entire struct to 0xFF
-	bool edge_profile_unknown1 : 1; // sets flag unknown1
-	bool edge_profile_unknown2 : 1; // sets flag unknown2
-	bool edge_profile_unknown3 : 1; // does nothing?
-	bool edge_profile_unknown4 : 1; // does nothing?
-	libresense_edge_profile_id edge_force_profile_id : 3;
+	uint8_t edge_unknown2 : 7;
 	bool edge_disable_switching_profiles : 1;
 } dualsense_control2;
 static_assert(sizeof(dualsense_control2) == 4, "dualsense_control2 is not 4 bytes");
@@ -444,6 +440,25 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_motor_flags) == 1, "dualsense_motor_flags is not 1 byte");
 
 typedef struct PACKED {
+	bool enable_led : 1;
+	bool enable_vibration : 1;
+} dualsense_edge_indicator_update;
+
+typedef union {
+	struct PACKED {
+		bool indicator : 1;
+		uint8_t reserved : 7;
+	};
+	uint8_t value;
+} dualsense_edge_mutator;
+
+typedef struct PACKED {
+	dualsense_edge_mutator flags;
+	dualsense_edge_indicator_update indicator;
+	uint8_t reserved[0xE];
+} dualsense_edge_update;
+
+typedef struct PACKED {
 	dualsense_report_id id;
 	dualsense_mutator_flags flags;
 	uint8_t rumble[2];
@@ -454,9 +469,10 @@ typedef struct PACKED {
 	dualsense_motor_flags motor_flags;
 	dualsense_control2 control2;
 	dualsense_led_output led;
+	dualsense_edge_update edge;
 } dualsense_output_msg;
 
-static_assert(sizeof(dualsense_output_msg) == 0x30, "dualsense_output_msg is not 48 bytes");
+static_assert(sizeof(dualsense_output_msg) == 0x40, "dualsense_output_msg is not 64 bytes");
 
 typedef struct PACKED {
 	dualsense_report_id id;
@@ -466,7 +482,7 @@ typedef struct PACKED {
 		uint8_t buffer[sizeof(dualsense_output_msg)];
 	} msg;
 
-	uint8_t reserved[25];
+	uint8_t reserved[9];
 	uint32_t bt_checksum;
 } dualsense_output_msg_ex;
 

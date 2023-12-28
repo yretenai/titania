@@ -2,7 +2,6 @@
 //  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
 //  SPDX-License-Identifier: MPL-2.0
 
-#include <stdlib.h>
 #include <stdio.h>
 
 #ifdef __WIN32__
@@ -162,9 +161,8 @@ libresense_open(libresense_hid *handle) {
 			state[i].output.data.id = DUALSENSE_REPORT_BLUETOOTH;
 			state[i].output.data.msg.data.id = DUALSENSE_REPORT_OUTPUT;
 
-			// apparently needed, need to check.
 			if(state[i].hid_info.is_bluetooth) { // on linux this also releases control from the kernel driver
-				state[i].output.data.msg.data.flags.bits.reset_led = true;
+				state[i].output.data.msg.data.flags.reset_led = true;
 				libresense_push(&handle->handle, 1);
 			}
 
@@ -334,6 +332,19 @@ libresense_open(libresense_hid *handle) {
 			}
 #endif
 			state[i].hid_info = *handle;
+
+			// this is at the end so it's reasonably late<
+			{
+				libresense_led_update update;
+				update.color.x = 1.0;
+				update.color.y = 0.0;
+				update.color.z = 1.0;
+				update.brightness = LIBRESENSE_LEVEL_HIGH;
+				update.effect = LIBRESENSE_LED_EFFECT_OFF; // RESET;
+				update.led = LIBRESENSE_LED_PLAYER_1;
+				libresense_update_led(handle->handle, update);
+				libresense_push(&handle->handle, 1);
+			}
 			return LIBRESENSE_OK;
 		}
 	}
@@ -407,6 +418,9 @@ libresense_push(const libresense_handle *handle, const size_t handle_count) {
 		if (!hid_state->hid_info.is_bluetooth) {
 			buffer = hid_state->output.data.msg.buffer;
 			size = sizeof(dualsense_output_msg);
+			if(!hid_state->hid_info.is_edge) {
+				size -= 0x10;
+			}
 		} else {
 			hid_state->output.data.bt_checksum = libresense_calc_checksum(crc_seed_output, buffer, size - 4);
 		}
@@ -431,28 +445,28 @@ libresense_update_led(const libresense_handle handle, const libresense_led_updat
 	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
 
 	if(data.color.x >= 0.0f && data.color.y >= 0.0f && data.color.z >= 0.0f) {
-		hid_state->flags.bits.control2 = true;
+		hid_state->flags.control2 = true;
 		hid_state->control2.led_color_control = true;
-		hid_state->flags.bits.led = true;
+		hid_state->flags.led = true;
 		hid_state->led.color.x = NORM_CLAMP_UINT8(data.color.x);
 		hid_state->led.color.y = NORM_CLAMP_UINT8(data.color.y);
 		hid_state->led.color.z = NORM_CLAMP_UINT8(data.color.z);
 	}
 
 	if(data.brightness != hid_state->led.brightness) {
-		hid_state->flags.bits.led = true;
-		hid_state->flags.bits.control2 = true;
+		hid_state->flags.led = true;
+		hid_state->flags.control2 = true;
 		hid_state->control2.led_brightness_control = true;
 		hid_state->led.brightness = data.brightness;
 	}
 
 	if(data.effect != hid_state->led.effect) {
-		hid_state->flags.bits.led = true;
+		hid_state->flags.led = true;
 		hid_state->led.effect = data.effect;
 	}
 
 	if(data.led != hid_state->led.led_id) {
-		hid_state->flags.bits.player_indicator_led = true;
+		hid_state->flags.player_indicator_led = true;
 		hid_state->led.led_id = data.led;
 	}
 
@@ -470,7 +484,7 @@ libresense_update_audio(const libresense_handle handle, const libresense_audio_u
 
 	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
 
-	hid_state->flags.bits.audio_output = true;
+	hid_state->flags.audio_output = true;
 	hid_state->audio.flags.force_external_mic = (data.mic_selection & LIBRESENSE_MIC_EXTERNAL) == LIBRESENSE_MIC_EXTERNAL;
 	hid_state->audio.flags.force_internal_mic = (data.mic_selection & LIBRESENSE_MIC_INTERNAL) == LIBRESENSE_MIC_INTERNAL;
 	hid_state->audio.flags.balance_external_mic = (data.mic_balance & LIBRESENSE_MIC_EXTERNAL) == LIBRESENSE_MIC_EXTERNAL;
@@ -478,10 +492,10 @@ libresense_update_audio(const libresense_handle handle, const libresense_audio_u
 	hid_state->audio.flags.disable_jack = data.disable_audio_jack;
 	hid_state->audio.flags.enable_speaker = data.force_enable_speaker;
 
-	hid_state->flags.bits.mic_led = true;
+	hid_state->flags.mic_led = true;
 	hid_state->audio.mic_led_flags = (dualsense_audio_mic_flags) data.mic_led;
 
-	hid_state->flags.bits.jack = hid_state->flags.bits.speaker = hid_state->flags.bits.mic = true;
+	hid_state->flags.jack = hid_state->flags.speaker = hid_state->flags.mic = true;
 	hid_state->audio.jack = NORM_CLAMP_UINT8(data.jack_volume);
 	hid_state->audio.speaker = NORM_CLAMP_UINT8(data.speaker_volume);
 	hid_state->audio.mic = NORM_CLAMP_UINT8(data.microphone_volume);
@@ -500,7 +514,7 @@ libresense_update_control(const libresense_handle handle, const libresense_contr
 
 	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
 
-	hid_state->flags.bits.control1 = hid_state->flags.bits.control2 = true;
+	hid_state->flags.control1 = hid_state->flags.control2 = true;
 
 	hid_state->led.brightness = 0;
 	hid_state->control1.touch_powersave = data.touch_powersave;
@@ -520,13 +534,16 @@ libresense_update_control(const libresense_handle handle, const libresense_contr
 	hid_state->control2.reserved1 = data.reserved1;
 	hid_state->control2.reserved2 = data.reserved2;
 	hid_state->control2.reserved3 = data.reserved3;
-	hid_state->control2.update_edge_profile = hid_state->control2.update_edge_profile_unknown = IS_EDGE(state[handle].hid_info);
-	hid_state->control2.edge_profile_unknown1 = data.edge_profile_unknown1;
-	hid_state->control2.edge_profile_unknown2 = data.edge_profile_unknown2;
-	hid_state->control2.edge_profile_unknown2 = data.edge_profile_unknown3;
-	hid_state->control2.edge_profile_unknown2 = data.edge_profile_unknown4;
-	hid_state->control2.edge_force_profile_id = data.edge_force_profile_id;
-	hid_state->control2.edge_disable_switching_profiles = data.edge_disable_switching_profiles;
+	if(IS_EDGE(state[handle].hid_info)) {
+		hid_state->control2.edge_unknown1 = data.edge_unknown1;
+		hid_state->control2.edge_unknown2 = data.edge_unknown2;
+		hid_state->control2.update_edge_profile = data.update_edge_profile;
+		hid_state->control2.edge_disable_switching_profiles = data.edge_disable_switching_profiles;
+
+		hid_state->edge.flags.indicator = true;
+		hid_state->edge.indicator.enable_led = data.edge_enable_led_indicators;
+		hid_state->edge.indicator.enable_vibration = data.edge_enable_vibration_indicators;
+	}
 
 	LIBRESENSE_THREAD_UNLOCK();
 
@@ -666,8 +683,8 @@ libresense_update_effect(const libresense_handle handle, const libresense_effect
 	LIBRESENSE_THREAD_LOCK();
 
 	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
-	hid_state->flags.bits.left_trigger_motor = left_trigger.mode != LIBRESENSE_EFFECT_NONE;
-	hid_state->flags.bits.right_trigger_motor = right_trigger.mode != LIBRESENSE_EFFECT_NONE;
+	hid_state->flags.left_trigger_motor = left_trigger.mode != LIBRESENSE_EFFECT_NONE;
+	hid_state->flags.right_trigger_motor = right_trigger.mode != LIBRESENSE_EFFECT_NONE;
 
 	libresense_result result = compute_effect(&hid_state->effects[ADAPTIVE_TRIGGER_LEFT], left_trigger);
 	if(IS_LIBRESENSE_OKAY(result)) {
@@ -676,7 +693,7 @@ libresense_update_effect(const libresense_handle handle, const libresense_effect
 
 	if(IS_LIBRESENSE_BAD(result)) {
 		memset(&hid_state->effects[ADAPTIVE_TRIGGER_RIGHT], 0, sizeof(hid_state->effects[ADAPTIVE_TRIGGER_RIGHT]));
-		hid_state->flags.bits.left_trigger_motor = false;
+		hid_state->flags.left_trigger_motor = false;
 		return result;
 	}
 
@@ -687,7 +704,7 @@ libresense_update_effect(const libresense_handle handle, const libresense_effect
 
 	if(IS_LIBRESENSE_BAD(result)) {
 		memset(&hid_state->effects[ADAPTIVE_TRIGGER_RIGHT], 0, sizeof(hid_state->effects[ADAPTIVE_TRIGGER_RIGHT]));
-		hid_state->flags.bits.right_trigger_motor = false;
+		hid_state->flags.right_trigger_motor = false;
 		return result;
 	}
 
@@ -705,12 +722,12 @@ libresense_update_rumble(const libresense_handle handle, const float large_motor
 
 	const libresense_hid hid = state[handle].hid_info;
 	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
-	hid_state->flags.bits.rumble = hid_state->flags.bits.motor_power = hid_state->flags.bits.control2 = true;
+	hid_state->flags.rumble = hid_state->flags.motor_power = hid_state->flags.control2 = true;
 	if(hid.is_edge || hid.firmware.versions[LIBRESENSE_VERSION_FIRMWARE].major >= 0x224) {
 		hid_state->control2.advanced_rumble_control = true;
-		hid_state->flags.bits.control2 = true;
+		hid_state->flags.control2 = true;
 	} else {
-		hid_state->flags.bits.haptics = true;
+		hid_state->flags.haptics = true;
 	}
 	hid_state->rumble[DUALSENSE_LARGE_MOTOR] = NORM_CLAMP_UINT8(large_motor);
 	hid_state->rumble[DUALSENSE_SMALL_MOTOR] = NORM_CLAMP_UINT8(small_motor);

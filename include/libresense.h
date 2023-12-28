@@ -354,12 +354,6 @@ typedef struct {
 } libresense_data;
 
 typedef enum {
-	LIBRESENSE_LED_MODE_OFF = 0,
-	LIBRESENSE_LED_MODE_BRIGHTNESS = 1,
-	LIBRESENSE_LED_MODE_UNINTERRUPTABLE = 2
-} libresense_led_mode;
-
-typedef enum {
 	LIBRESENSE_LED_EFFECT_OFF = 0,
 	LIBRESENSE_LED_EFFECT_RESET = 1,
 	LIBRESENSE_LED_EFFECT_FADE_OUT = 2
@@ -385,7 +379,6 @@ typedef enum {
 } libresense_led_index;
 
 typedef struct {
-	libresense_led_mode mode;
 	libresense_led_effect effect;
 	libresense_level brightness;
 	libresense_led_index led;
@@ -523,15 +516,16 @@ typedef struct {
 	bool led_brightness_control;
 	bool led_color_control;
 	uint8_t gain;
-	bool edge_disable_switching_profiles;
-	libresense_edge_profile_id edge_force_profile_id;
-	bool edge_profile_unknown1;
-	bool edge_profile_unknown2;
-	bool edge_profile_unknown3;
-	bool edge_profile_unknown4;
 	uint8_t reserved1;
 	uint8_t reserved2;
 	uint8_t reserved3;
+
+	bool edge_unknown1;
+	bool update_edge_profile;
+	uint8_t edge_unknown2;
+	bool edge_disable_switching_profiles;
+	bool edge_enable_led_indicators;
+	bool edge_enable_vibration_indicators;
 } libresense_control_update;
 
 #define libresense_init() libresense_init_checked(sizeof(libresense_hid))
