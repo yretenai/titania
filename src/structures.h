@@ -215,10 +215,14 @@ typedef struct PACKED {
 	dualsense_trigger_state trigger;
 	union {
 		struct PACKED dualsense_device_state_edge {
-			uint8_t unknown : 2;
-			bool edge_profile_indicator : 1; // todo: find out how this is updated
-			bool edge_profile_vibration : 1; // todo: find out how this is updated
-			libresense_edge_profile_id edge_profile_id : 4;
+			struct PACKED {
+				bool unknown1 : 1;
+				bool unknown2 : 1;
+				bool led_indicator : 1; // todo: find out how this is updated
+				bool vibrate_indicator: 1; // todo: find out how this is updated
+				libresense_edge_profile_id id : 3;
+				bool disable_switching : 1;
+			} profile;
 			bool stick_disconnected : 1;
 			bool stick_error : 1;
 			bool stick_calibrating : 1;
@@ -233,8 +237,9 @@ typedef struct PACKED {
 				bool triangle : 1;
 			} unmapped_buttons;
 			struct PACKED {
-				libresense_level brightness_override : 2; // todo: find out how this is updated
-				uint8_t reserved : 2;
+				bool powersave_state : 1; // this is updated with motor power state
+				libresense_level brightness_override : 2; // this is updated *somewhere* -> setting the entire report to 0xFF sets this to 0b11
+				bool unknown3 : 1; // ??
 				bool mute : 1;
 				bool ps : 1;
 				bool share : 1;
@@ -300,8 +305,8 @@ static_assert(sizeof(dualsense_input_msg_ex) == 0x4e, "dualsense_input_msg_ex is
 typedef union PACKED {
 	struct {
 		// byte 0
-		bool gracefully_rumble : 1;
-		bool allow_rumble_timeout : 1;
+		bool haptics : 1;
+		bool rumble : 1;
 		bool right_trigger_motor : 1;
 		bool left_trigger_motor : 1;
 		bool jack : 1;
@@ -310,13 +315,13 @@ typedef union PACKED {
 		bool audio_output : 1;
 		// byte 1
 		bool mic_led : 1;
-		bool mute : 1;
+		bool control1 : 1;
 		bool led : 1;
 		bool reset_led : 1;
 		bool player_indicator_led : 1;
-		bool advanced_rumble : 1; // related to adaptive triggers.
-		bool trigger_rumble : 1;
-		bool reserved : 1; // unused
+		bool haptic_filter : 1;
+		bool motor_power : 1;
+		bool control2 : 1;
 	} bits;
 
 	uint16_t value;
@@ -325,15 +330,13 @@ typedef union PACKED {
 static_assert(sizeof(dualsense_mutator_flags) == 2, "dualsense_mutator_flags is not 2 bytes");
 
 typedef struct PACKED {
-	uint8_t mode;
-	uint16_t unknown;
 	uint8_t effect;
 	uint8_t brightness;
 	uint8_t led_id;
 	dualsense_vector3b color;
 } dualsense_led_output;
 
-static_assert(sizeof(dualsense_led_output) == 9, "dualsense_led_output is not 9 bytes");
+static_assert(sizeof(dualsense_led_output) == 6, "dualsense_led_output is not 6 bytes");
 
 typedef enum ENUM_FORCE_8 {
 	DUALSENSE_EFFECT_MODE_OFF = 0x5,
@@ -365,6 +368,8 @@ static_assert(sizeof(dualsense_effect_output) == 11, "dualsense_effect_output is
 typedef struct PACKED {
 	bool force_internal_mic : 1;
 	bool force_external_mic : 1;
+	bool echo_cancellation : 1;
+	bool noise_cancellation : 1;
 	bool balance_external_mic : 1;
 	bool balance_internal_mic : 1;
 	bool disable_jack : 1;
@@ -377,18 +382,49 @@ typedef enum ENUM_FORCE_8 {
 	DUALSENSE_MIC_OFF = 0,
 	DUALSENSE_MIC_ON = 1,
 	DUALSENSE_MIC_FLASH = 2,
+	DUALSENSE_MIC_FAST_FLASH = 3,
 } dualsense_audio_mic_flags;
 
 typedef struct PACKED {
-	bool unknown1 : 1;
-	bool unknown2 : 1;
-	bool unknown3 : 1;
-	bool unknown4 : 1;
+	bool touch_powersave : 1;
+	bool sensor_powersave : 1;
+	bool rumble_powersave : 1;
+	bool speaker_powersave : 1;
 	bool mute_mic : 1;
-	bool unknown6 : 1;
-	bool mute_audio : 1;
-	bool unknown8 : 1;
-} dualsense_audio_mute_flags;
+	bool mute_speaker : 1;
+	bool mute_jack : 1;
+	bool disable_rumble : 1;
+} dualsense_control1;
+static_assert(sizeof(dualsense_control1) == 1, "dualsense_control1 is not 1 byte");
+
+typedef struct PACKED {
+	// audio control
+	uint8_t gain : 3;
+	bool enable_beamforming : 1;
+	uint8_t reserved1 : 4;
+
+	// interactive flags
+	bool led_brightness_control : 1;
+	bool led_color_control : 1;
+	bool advanced_rumble_control : 1;
+	uint8_t reserved2 : 3;
+	bool update_edge_profile : 1;
+	bool update_edge_profile_unknown : 1;
+
+	// misc flags
+	bool enable_lowpass_filter : 1;
+	uint8_t reserved3 : 7;
+
+	// todo: edge flags, something controls brightness
+	// but i can only get it to happen if i set the entire struct to 0xFF
+	bool edge_profile_unknown1 : 1; // sets flag unknown1
+	bool edge_profile_unknown2 : 1; // sets flag unknown2
+	bool edge_profile_unknown3 : 1; // does nothing?
+	bool edge_profile_unknown4 : 1; // does nothing?
+	libresense_edge_profile_id edge_force_profile_id : 3;
+	bool edge_disable_switching_profiles : 1;
+} dualsense_control2;
+static_assert(sizeof(dualsense_control2) == 4, "dualsense_control2 is not 4 bytes");
 
 typedef struct PACKED {
 	uint8_t jack;
@@ -396,14 +432,13 @@ typedef struct PACKED {
 	uint8_t mic;
 	dualsense_audio_flags flags;
 	dualsense_audio_mic_flags mic_led_flags;
-	dualsense_audio_mute_flags mute_flags;
 } dualsense_audio_output;
 
-static_assert(sizeof(dualsense_audio_output) == 6, "dualsense_audio_output is not 6 bytes");
+static_assert(sizeof(dualsense_audio_output) == 5, "dualsense_audio_output is not 5 bytes");
 
 typedef struct PACKED {
-	uint8_t rumble_power_reduction : 4;
 	uint8_t trigger_power_reduction : 4;
+	uint8_t rumble_power_reduction : 4;
 } dualsense_motor_flags;
 
 static_assert(sizeof(dualsense_motor_flags) == 1, "dualsense_motor_flags is not 1 byte");
@@ -413,10 +448,11 @@ typedef struct PACKED {
 	dualsense_mutator_flags flags;
 	uint8_t rumble[2];
 	dualsense_audio_output audio;
+	dualsense_control1 control1;
 	dualsense_effect_output effects[2];
 	uint32_t state_id;
 	dualsense_motor_flags motor_flags;
-	uint8_t volume_state;
+	dualsense_control2 control2;
 	dualsense_led_output led;
 } dualsense_output_msg;
 

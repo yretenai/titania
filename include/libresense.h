@@ -330,9 +330,13 @@ typedef struct {
 	struct {
 		bool led;
 		bool vibration;
+		bool switching_disabled;
+		bool unknown1;
+		bool unknown2;
 	} profile_indicator;
 	libresense_level brightness;
-	int32_t unknown;
+	bool powersave_state;
+	bool unknown;
 } libresense_edge_state;
 
 typedef struct {
@@ -491,6 +495,7 @@ typedef enum {
 	LIBRESENSE_MIC_LED_OFF = 0,
 	LIBRESENSE_MIC_LED_ON = 1,
 	LIBRESENSE_MIC_LED_FLASH = 2,
+	LIBRESENSE_MIC_LED_FAST_FLASH = 3,
 } libresense_mic_led;
 
 typedef struct {
@@ -502,9 +507,32 @@ typedef struct {
 	libresense_mic_led mic_led;
 	bool disable_audio_jack;
 	bool force_enable_speaker;
-	bool enable_mic;
-	bool enable_audio;
 } libresense_audio_update;
+
+typedef struct {
+	bool touch_powersave;
+	bool sensor_powersave;
+	bool rumble_powersave;
+	bool speaker_powersave;
+	bool mute_mic;
+	bool mute_speaker;
+	bool mute_jack;
+	bool disable_rumble;
+	bool enable_beamforming;
+	bool enable_lowpass_filter;
+	bool led_brightness_control;
+	bool led_color_control;
+	uint8_t gain;
+	bool edge_disable_switching_profiles;
+	libresense_edge_profile_id edge_force_profile_id;
+	bool edge_profile_unknown1;
+	bool edge_profile_unknown2;
+	bool edge_profile_unknown3;
+	bool edge_profile_unknown4;
+	uint8_t reserved1;
+	uint8_t reserved2;
+	uint8_t reserved3;
+} libresense_control_update;
 
 #define libresense_init() libresense_init_checked(sizeof(libresense_hid))
 
@@ -562,6 +590,14 @@ libresense_update_led(const libresense_handle handle, const libresense_led_updat
  */
 libresense_result
 libresense_update_audio(const libresense_handle handle, const libresense_audio_update data);
+
+/**
+ * @brief update control state flags of a controller
+ * @param handle: the controller to update
+ * @param data: control update data
+ */
+libresense_result
+libresense_update_control(const libresense_handle handle, const libresense_control_update data);
 
 /**
  * @brief update effect state of a controller

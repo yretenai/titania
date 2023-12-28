@@ -209,8 +209,7 @@ int main(int argc, const char** argv) {
 			printf("state { headphones = %s, headset = %s, muted = %s, usb data = %s, usb power = %s, external mic = %s, mic filter = %s }\n", MAKE_TEST(data.device.headphones), MAKE_TEST(data.device.headset), MAKE_TEST(data.device.muted), MAKE_TEST(data.device.usb_data), MAKE_TEST(data.device.usb_power), MAKE_TEST(data.device.external_mic), MAKE_TEST(data.device.mic_filter));
 			if (hid->is_edge) {
 				printf("unmapped buttons { dpad_up = %s, dpad_right = %s, dpad_down = %s, dpad_left = %s, square = %s, cross = %s, circle = %s, triangle = %s, l1 = %s, r1 = %s, l2 = %s, r2 = %s, share = %s, option = %s, l3 = %s, r3 = %s, ps = %s, touch = %s, mute = %s, edge_f1 = %s, edge_f2 = %s, edge_lb = %s, edge_rb = %s }\n", MAKE_EDGE_BUTTON(dpad_up), MAKE_EDGE_BUTTON(dpad_right), MAKE_EDGE_BUTTON(dpad_down), MAKE_EDGE_BUTTON(dpad_left), MAKE_EDGE_BUTTON(square), MAKE_EDGE_BUTTON(cross), MAKE_EDGE_BUTTON(circle), MAKE_EDGE_BUTTON(triangle), MAKE_EDGE_BUTTON(l1), MAKE_EDGE_BUTTON(r1), MAKE_EDGE_BUTTON(l2), MAKE_EDGE_BUTTON(r2), MAKE_EDGE_BUTTON(share), MAKE_EDGE_BUTTON(option), MAKE_EDGE_BUTTON(l3), MAKE_EDGE_BUTTON(r3), MAKE_EDGE_BUTTON(ps), MAKE_EDGE_BUTTON(touch), MAKE_EDGE_BUTTON(mute), MAKE_EDGE_BUTTON(edge_f1), MAKE_EDGE_BUTTON(edge_f2), MAKE_EDGE_BUTTON(edge_lb), MAKE_EDGE_BUTTON(edge_rb));
-				printf("edge state { stick { disconnceted = %s, error = %s, calibrating = %s, unknown = %s }, trigger { left = %s, right = %s }, profile = %s, indicator = { led = %s, vibrate = %s }, brightness = %s, unknown = %u }\n", MAKE_TEST(data.edge_device.stick.disconnected), MAKE_TEST(data.edge_device.stick.errored), MAKE_TEST(data.edge_device.stick.calibrating), MAKE_TEST(data.edge_device.stick.unknown), libresense_level_msg[data.edge_device.trigger_levels[0]], libresense_level_msg[data.edge_device.trigger_levels[1]], libresense_edge_profile_id_msg[data.edge_device.current_profile_id], MAKE_TEST(data.edge_device.profile_indicator.led), MAKE_TEST(data.edge_device.profile_indicator.vibration), libresense_level_msg[data.edge_device.brightness], data.edge_device.unknown);
-
+				printf("edge state { stick { disconnceted = %s, error = %s, calibrating = %s, unknown = %s }, trigger { left = %s, right = %s }, profile = %s, indicator = { led = %s, vibrate = %s, switching disabled = %s }, brightness = %s, powersave = %s, unknown1 = %s, unknown2 = %s, unknown3 = %s }\n", MAKE_TEST(data.edge_device.stick.disconnected), MAKE_TEST(data.edge_device.stick.errored), MAKE_TEST(data.edge_device.stick.calibrating), MAKE_TEST(data.edge_device.stick.unknown), libresense_level_msg[data.edge_device.trigger_levels[0]], libresense_level_msg[data.edge_device.trigger_levels[1]], libresense_edge_profile_id_msg[data.edge_device.current_profile_id], MAKE_TEST(data.edge_device.profile_indicator.led), MAKE_TEST(data.edge_device.profile_indicator.vibration), MAKE_TEST(data.edge_device.profile_indicator.switching_disabled), libresense_level_msg[data.edge_device.brightness], MAKE_TEST(data.edge_device.powersave_state), MAKE_TEST(data.edge_device.profile_indicator.unknown1), MAKE_TEST(data.edge_device.profile_indicator.unknown2), MAKE_TEST(data.edge_device.unknown));
 			}
 		}
 
@@ -223,32 +222,6 @@ int main(int argc, const char** argv) {
 
 	if(argc > 1) {
 		goto shutdown;
-	}
-
-	{
-		printf("testing latency, this will take 10 seconds\n");
-		struct timespec max = { INT64_MIN, INT64_MIN };
-		struct timespec min = { INT64_MAX, INT64_MAX };
-		for(int i = 0; i < 1000; ++i) {
-			struct timespec ts1, ts2;
-			timespec_get(&ts1, TIME_UTC);
-			libresense_pull(&handles[0], 1, &datum[0]);
-			timespec_get(&ts2, TIME_UTC);
-			if(ts1.tv_nsec < ts2.tv_sec) {
-				struct timespec delta = { ts2.tv_sec - ts1.tv_sec, ts2.tv_nsec - ts1.tv_nsec };
-				if(delta.tv_sec < min.tv_sec || delta.tv_nsec < min.tv_nsec) {
-					min = delta;
-				}
-				if(delta.tv_sec > max.tv_sec || delta.tv_nsec > max.tv_nsec) {
-					max = delta;
-				}
-			}
-			if(i > 0 && i % 100 == 0) {
-				printf("min: %ld s %ld us, max: %ld s %ld us\n", min.tv_sec, min.tv_nsec, max.tv_sec, max.tv_nsec);
-			}
-			usleep(10000);
-		}
-		printf("min: %ld s %ld us, max: %ld s %ld us\n", min.tv_sec, min.tv_nsec, max.tv_sec, max.tv_nsec);
 	}
 
 	printf("press OPTIONS to skip test\n");
@@ -431,8 +404,6 @@ int main(int argc, const char** argv) {
 		update.mic_balance = LIBRESENSE_MIC_AUTO;
 		update.disable_audio_jack = false;
 		update.force_enable_speaker = false;
-		update.enable_mic = false;
-		update.enable_audio = false;
 		update.mic_led = LIBRESENSE_MIC_LED_ON;
 
 		printf("mic led should be on...\n");
@@ -454,6 +425,16 @@ int main(int argc, const char** argv) {
 			goto reset_mic;
 		}
 
+		update.mic_led = LIBRESENSE_MIC_LED_FAST_FLASH;
+		printf("mic led should be flashing faster (maybe)...\n");
+		for(size_t i = 0; i < connected; ++i) {
+			libresense_update_audio(handles[i], update);
+		}
+		libresense_push(handles, connected);
+		if(report_hid_close(handles, connected, 5000000, 10000)) {
+			goto reset_mic;
+		}
+
 		update.mic_led = LIBRESENSE_MIC_LED_OFF;
 		printf("mic led should be off...\n");
 		for(size_t i = 0; i < connected; ++i) {
@@ -466,7 +447,6 @@ int main(int argc, const char** argv) {
 		printf("restoring mic based on state...\n");
 		for (size_t i = 0; i < connected; ++i) {
 			update.mic_led = datum[i].device.muted ? LIBRESENSE_MIC_LED_ON : LIBRESENSE_MIC_LED_OFF;
-			update.enable_mic = !datum[i].device.muted;
 			libresense_update_audio(handles[i], update);
 		}
 		libresense_push(handles, connected);

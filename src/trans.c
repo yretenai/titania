@@ -97,11 +97,15 @@ libresense_convert_input(libresense_hid hid_info, const dualsense_input_msg inpu
 		data->edge_device.stick.unknown = input.state.edge.stick_unknown;
 		data->edge_device.trigger_levels[LIBRESENSE_LEFT] = input.state.edge.left_trigger_level;
 		data->edge_device.trigger_levels[LIBRESENSE_RIGHT] = input.state.edge.right_trigger_level;
-		data->edge_device.current_profile_id = input.state.edge.edge_profile_id;
-		data->edge_device.profile_indicator.led = input.state.edge.edge_profile_indicator;
-		data->edge_device.profile_indicator.vibration = input.state.edge.edge_profile_vibration;
+		data->edge_device.current_profile_id = input.state.edge.profile.id;
+		data->edge_device.profile_indicator.switching_disabled = input.state.edge.profile.disable_switching;
+		data->edge_device.profile_indicator.led = input.state.edge.profile.led_indicator;
+		data->edge_device.profile_indicator.vibration = input.state.edge.profile.vibrate_indicator;
 		data->edge_device.brightness = input.state.edge.unmapped_peculiar.brightness_override;
-		data->edge_device.unknown = input.state.edge.unknown | (uint8_t) input.state.edge.unmapped_peculiar.reserved << 2;
+		data->edge_device.powersave_state = input.state.edge.unmapped_peculiar.powersave_state;
+		data->edge_device.profile_indicator.unknown1 = input.state.edge.profile.unknown1;
+		data->edge_device.profile_indicator.unknown2 = input.state.edge.profile.unknown2;
+		data->edge_device.unknown = input.state.edge.unmapped_peculiar.unknown3;
 	} else {
 		data->time.battery = input.state.battery_time;
 	}
