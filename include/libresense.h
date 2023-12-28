@@ -8,7 +8,9 @@
 #define LIBRESENSE_H
 
 #include <wchar.h>
+#if __STDC_VERSION__ < 202000L
 #include <stdbool.h>
+#endif
 #include <stdint.h>
 
 #define LIBRESENSE_INVALID_HANDLE_ID (-1)
