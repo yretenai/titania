@@ -176,8 +176,10 @@ int main(int argc, const char** argv) {
 					char report_name[0x30] = { 0 };
 					sprintf(report_name, name, hid[hid_id].report_ids[i].id);
 					FILE* file = fopen(report_name, "w+b");
-					fwrite(buffer, 1, size, file);
-					fclose(file);
+					if(file != NULL) {
+						fwrite(buffer, 1, size, file);
+						fclose(file);
+					}
 				} else {
 					printf("??\n");
 				}
@@ -191,7 +193,7 @@ int main(int argc, const char** argv) {
 		libresense_exit();
 		return 1;
 	}
-	libresense_data datum[LIBRESENSE_MAX_CONTROLLERS];
+	libresense_data datum[libresense_max_controllers];
 
 	bool clr = argc > 1 && strcmp(argv[1], "report") == 0;
 	while(true) {

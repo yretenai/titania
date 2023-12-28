@@ -19,14 +19,18 @@ if host_machine.system() == 'windows'
 endif
 
 compiler = meson.get_compiler('c')
+linker = meson.get_compiler('c')
+
+args = compiler.get_supported_arguments(
+  '-fanalyzer',
+  '-ffast-math'
+)
 
 if get_option('buildtype') == 'custom'
-  opt_args = compiler.get_supported_arguments(
+  args += compiler.get_supported_arguments(
     '-march=knl',
     '-mtune=knl'
   )
-
-  add_global_arguments(opt_args, language: 'c')
 endif
 
 configure_file(
@@ -56,6 +60,7 @@ libresense_lib = library(meson.project_name(), [
     'src/crc.c'
   ],
   dependencies: [hidapi, threads],
+  c_args: args,
   install: true,
   include_directories: libresense_inc
 )
@@ -66,6 +71,7 @@ if get_option('build_test_executable')
   executable('libresense-log', [
       'src/cli.c'
     ],
+    c_args: args,
     dependencies: [libresense_dep, hidapi],
     install: true)
 endif

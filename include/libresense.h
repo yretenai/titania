@@ -9,7 +9,6 @@
 
 #include <wchar.h>
 #include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
 
 #define LIBRESENSE_INVALID_HANDLE_ID (-1)
@@ -520,8 +519,8 @@ typedef struct {
 	uint8_t reserved2;
 	uint8_t reserved3;
 
-	bool edge_unknown1;
-	bool update_edge_profile;
+	bool has_edge_misc;
+	bool has_edge_byte;
 	uint8_t edge_unknown2;
 	bool edge_disable_switching_profiles;
 	bool edge_enable_led_indicators;

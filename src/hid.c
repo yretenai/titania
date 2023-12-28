@@ -535,9 +535,9 @@ libresense_update_control(const libresense_handle handle, const libresense_contr
 	hid_state->control2.reserved2 = data.reserved2;
 	hid_state->control2.reserved3 = data.reserved3;
 	if(IS_EDGE(state[handle].hid_info)) {
-		hid_state->control2.edge_unknown1 = data.edge_unknown1;
+		hid_state->control2.has_edge_misc = data.has_edge_misc;
 		hid_state->control2.edge_unknown2 = data.edge_unknown2;
-		hid_state->control2.update_edge_profile = data.update_edge_profile;
+		hid_state->control2.has_edge_byte = data.has_edge_byte;
 		hid_state->control2.edge_disable_switching_profiles = data.edge_disable_switching_profiles;
 
 		hid_state->edge.flags.indicator = true;

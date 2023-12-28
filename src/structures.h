@@ -207,8 +207,8 @@ static_assert(sizeof(dualsense_battery_state) == 1, "dualsense_battery_state is 
 static_assert(sizeof(libresense_device_state) == 2, "libresense_device_state is not 2 byte");
 
 typedef struct PACKED {
-	libresense_trigger_effect_state right : 4;
-	libresense_trigger_effect_state left : 4;
+	uint8_t right : 4;
+	uint8_t left : 4;
 } dualsense_trigger_state;
 
 typedef struct PACKED {
@@ -408,8 +408,8 @@ typedef struct PACKED {
 	bool led_color_control : 1;
 	bool advanced_rumble_control : 1;
 	uint8_t reserved2 : 3;
-	bool update_edge_profile : 1;
-	bool edge_unknown1 : 1;
+	bool has_edge_byte : 1;
+	bool has_edge_misc : 1;
 
 	// misc flags
 	bool enable_lowpass_filter : 1;
@@ -676,7 +676,7 @@ libresense_convert_input(const libresense_hid hid_info, const dualsense_input_ms
  * @param profile: the profile to convert into
  */
 libresense_result
-libresense_convert_edge_profile_input(const dualsense_profile_data input[3], libresense_edge_profile *profile); // todo
+libresense_convert_edge_profile_input(dualsense_profile_data input[3], libresense_edge_profile *profile); // todo
 
 /**
  * @brief todo
@@ -685,7 +685,7 @@ libresense_convert_edge_profile_input(const dualsense_profile_data input[3], lib
  * @param profile: the profile to convert into
  */
 libresense_result
-libresense_convert_edge_profile_output(const libresense_edge_profile input, dualsense_profile_data profile[3]); // todo
+libresense_convert_edge_profile_output(libresense_edge_profile input, dualsense_profile_data profile[3]); // todo
 
 /**
  * @brief get a HID feature report
