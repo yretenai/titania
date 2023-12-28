@@ -627,6 +627,10 @@ typedef struct PACKED {
 } dualsense_profile_p3;
 static_assert(sizeof(dualsense_profile_p3) == 64, "dualsense_profile_p3 size is not 64");
 
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
+
 // Check if the library is initialized
 #define CHECK_INIT()     \
 	if (!is_initialized) \
