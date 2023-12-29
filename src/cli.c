@@ -692,7 +692,7 @@ main(int argc, const char **argv) {
 		printf("large motor...\n");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for (size_t i = 0; i < connected; ++i) {
-				libresense_update_rumble(handles[i], rumble, 0.0f, 0.5f, false);
+				libresense_update_rumble(handles[i], rumble, 0.0f, 0.0f, false);
 			}
 			libresense_push(handles, connected);
 			if (report_hid_close(handles, connected, 10000, 10000)) {
@@ -703,7 +703,7 @@ main(int argc, const char **argv) {
 		printf("small motor...\n");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for (size_t i = 0; i < connected; ++i) {
-				libresense_update_rumble(handles[i], 0, rumble, 0.5f, false);
+				libresense_update_rumble(handles[i], 0, rumble, 0.0f, false);
 			}
 			libresense_push(handles, connected);
 			if (report_hid_close(handles, connected, 10000, 10000)) {
@@ -714,7 +714,7 @@ main(int argc, const char **argv) {
 		printf("both motors...\n");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for (size_t i = 0; i < connected; ++i) {
-				libresense_update_rumble(handles[i], rumble, rumble, 0.5f, false);
+				libresense_update_rumble(handles[i], rumble, rumble, 0.0f, false);
 			}
 			libresense_push(handles, connected);
 			if (report_hid_close(handles, connected, 10000, 10000)) {
@@ -725,7 +725,7 @@ main(int argc, const char **argv) {
 		printf("rumble feedback test...\n");
 		for (int rumble_test = 0; rumble_test < 8; rumble_test++) {
 			for (size_t i = 0; i < connected; ++i) {
-				libresense_update_rumble(handles[i], rumble_test % 2 == 0 ? 1.0f : 0.1f, rumble_test % 2 == 0 ? 1.0f : 0.1f, 0.5f, false);
+				libresense_update_rumble(handles[i], rumble_test % 2 == 0 ? 1.0f : 0.1f, rumble_test % 2 == 0 ? 1.0f : 0.1f, 0.0f, false);
 			}
 			libresense_push(handles, connected);
 			if (report_hid_close(handles, connected, 250000, 10000)) {
