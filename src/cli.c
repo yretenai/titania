@@ -427,7 +427,7 @@ main(int argc, const char **argv) {
 		goto shutdown;
 	}
 
-	{
+	if (bench) {
 		printf("testing latency, this will take 10 seconds\n");
 		struct timespec max = { INT64_MIN, INT64_MIN };
 		struct timespec min = { INT64_MAX, INT64_MAX };
@@ -450,9 +450,7 @@ main(int argc, const char **argv) {
 			usleep(1000);
 		}
 		printf("min: %ld s %ld us, max: %ld s %ld us\n", min.tv_sec, min.tv_nsec, max.tv_sec, max.tv_nsec);
-	}
 
-	if (argc > 1) {
 		goto shutdown;
 	}
 
