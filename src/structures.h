@@ -216,41 +216,43 @@ typedef struct PACKED {
 } dualsense_trigger_state;
 
 typedef struct PACKED {
+	struct PACKED {
+		bool unknown1 : 1;
+		bool unknown2 : 1;
+		bool led_indicator : 1;
+		bool vibrate_indicator: 1;
+		libresense_edge_profile_id id : 3;
+		bool disable_switching : 1;
+	} profile;
+	bool stick_disconnected : 1;
+	bool stick_error : 1;
+	bool stick_calibrating : 1;
+	bool stick_unknown : 1;
+	libresense_level left_trigger_level : 2;
+	libresense_level right_trigger_level : 2;
+	struct {
+		dualsense_dpad dpad : 4;
+		bool square : 1;
+		bool cross : 1;
+		bool circle : 1;
+		bool triangle : 1;
+	} unmapped_buttons;
+	struct PACKED {
+		bool emulating_rumble : 1; // this is updated with motor power state flag
+		libresense_level brightness_override : 2; // this is updated* somewhere* -> setting the entire report to 0xFF sets this to 0b11
+		bool unknown3 : 1; // ??
+		bool mute : 1;
+		bool ps : 1;
+		bool share : 1;
+		bool option : 1;
+	} unmapped_peculiar;
+} dualsense_device_state_edge;
+static_assert(sizeof(dualsense_device_state_edge) == 4, "dualsense_device_state.edge is not 4 bytes");
+
+typedef struct PACKED {
 	dualsense_trigger_state trigger;
 	union {
-		struct PACKED dualsense_device_state_edge {
-			struct PACKED {
-				bool unknown1 : 1;
-				bool unknown2 : 1;
-				bool led_indicator : 1;
-				bool vibrate_indicator: 1;
-				libresense_edge_profile_id id : 3;
-				bool disable_switching : 1;
-			} profile;
-			bool stick_disconnected : 1;
-			bool stick_error : 1;
-			bool stick_calibrating : 1;
-			bool stick_unknown : 1;
-			libresense_level left_trigger_level : 2;
-			libresense_level right_trigger_level : 2;
-			struct {
-				dualsense_dpad dpad : 4;
-				bool square : 1;
-				bool cross : 1;
-				bool circle : 1;
-				bool triangle : 1;
-			} unmapped_buttons;
-			struct PACKED {
-				bool emulating_rumble : 1; // this is updated with motor power state flag
-				libresense_level brightness_override : 2; // this is updated* somewhere* -> setting the entire report to 0xFF sets this to 0b11
-				bool unknown3 : 1; // ??
-				bool mute : 1;
-				bool ps : 1;
-				bool share : 1;
-				bool option : 1;
-			} unmapped_peculiar;
-		} edge;
-		static_assert(sizeof(struct dualsense_device_state_edge) == 4, "dualsense_device_state.edge is not 4 bytes");
+		dualsense_device_state_edge edge;
 		uint32_t battery_time; // why tf is this not reserved, sony please
 	};
 	dualsense_battery_state battery;

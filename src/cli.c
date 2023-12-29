@@ -27,7 +27,6 @@ usleep(__int64 usec) {
 #define clrscr() printf("\033[1;1H\033[2J")
 #endif
 
-#include <config.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -127,8 +126,6 @@ report_hid_close(libresense_handle* handles, const size_t handle_count, __usecon
 
 void
 wait_until_options_clear(libresense_handle* handles, const size_t handle_count, __useconds_t timeout) {
-	libresense_data data;
-
 	while (true) {
 		libresense_data data[libresense_max_controllers];
 		const libresense_result result = libresense_pull(handles, handle_count, data);
@@ -297,7 +294,9 @@ main(int argc, const char **argv) {
 			LIBREPRINT_BUTTON_TEST(edge_f1); LIBREPRINT_SEP();
 			LIBREPRINT_BUTTON_TEST(edge_f2); LIBREPRINT_SEP();
 			LIBREPRINT_BUTTON_TEST(edge_lb); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(edge_rb);
+			LIBREPRINT_BUTTON_TEST(edge_rb); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.buttons, reserved); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.buttons, edge_reserved);
 			printf(" }\n");
 
 			printf("triggers { left = {");
@@ -373,21 +372,10 @@ main(int argc, const char **argv) {
 				LIBREPRINT_EDGE_BUTTON_TEST(cross); LIBREPRINT_SEP();
 				LIBREPRINT_EDGE_BUTTON_TEST(circle); LIBREPRINT_SEP();
 				LIBREPRINT_EDGE_BUTTON_TEST(triangle); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(l1); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(r1); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(l2); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(r2); LIBREPRINT_SEP();
 				LIBREPRINT_EDGE_BUTTON_TEST(share); LIBREPRINT_SEP();
 				LIBREPRINT_EDGE_BUTTON_TEST(option); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(l3); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(r3); LIBREPRINT_SEP();
 				LIBREPRINT_EDGE_BUTTON_TEST(ps); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(touch); LIBREPRINT_SEP();
 				LIBREPRINT_EDGE_BUTTON_TEST(mute); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(edge_f1); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(edge_f2); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(edge_lb); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(edge_rb);
 				printf(" }\n");
 
 
