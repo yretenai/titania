@@ -159,16 +159,16 @@ main(int argc, const char **argv) {
 		libresense_errorf(stderr, result, "error initializing libresense");
 		return result;
 	}
-	libresense_hid hid[LIBRESENSE_MAX_CONTROLLERS];
-	libresense_handle handles[LIBRESENSE_MAX_CONTROLLERS];
-	result = libresense_get_hids(hid, LIBRESENSE_MAX_CONTROLLERS);
+	libresense_hid hid[libresense_max_controllers];
+	libresense_handle handles[libresense_max_controllers];
+	result = libresense_get_hids(hid, libresense_max_controllers);
 	if (IS_LIBRESENSE_BAD(result)) {
 		libresense_errorf(stderr, result, "error getting hids");
 		libresense_exit();
 		return result;
 	}
 	size_t connected = 0;
-	for (int hid_id = 0; hid_id < LIBRESENSE_MAX_CONTROLLERS; ++hid_id) {
+	for (int hid_id = 0; hid_id < libresense_max_controllers; ++hid_id) {
 		if (hid[hid_id].handle != LIBRESENSE_INVALID_HANDLE_ID) {
 			result = libresense_open(&hid[hid_id]);
 			if (IS_LIBRESENSE_BAD(result)) {

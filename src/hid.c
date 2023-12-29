@@ -371,6 +371,10 @@ libresense_pull(libresense_handle* handle, const size_t handle_count, libresense
 		return LIBRESENSE_OK;
 	}
 
+	if(handle_count > LIBRESENSE_MAX_CONTROLLERS) {
+		return LIBRESENSE_NO_SLOTS;
+	}
+
 	libresense_data invalid = { 0 };
 	invalid.hid.handle = LIBRESENSE_INVALID_HANDLE_ID;
 
@@ -414,6 +418,10 @@ libresense_push(const libresense_handle* handle, const size_t handle_count) {
 
 	if (handle_count <= 0) {
 		return LIBRESENSE_OK;
+	}
+
+	if(handle_count > LIBRESENSE_MAX_CONTROLLERS) {
+		return LIBRESENSE_NO_SLOTS;
 	}
 
 	for (size_t i = 0; i < handle_count; i++) {
