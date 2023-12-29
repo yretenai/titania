@@ -135,37 +135,37 @@ this *report* is *64 bytes*.
  ~ always increments by 1 each time data is sent through the USB cable
 
 **\[bitset_buttons\]** buttons
-~ buttons bitset, see below
+ ~ buttons bitset, see below
 
 **\[int16(3)\]\[snorm(32767)\]** accelerometer
-~ accelerometer force
+ ~ accelerometer force
 
 **\[int16(3)\]\[snorm(32767)\]** gyroscope
-~ gyroscope orientation
+ ~ gyroscope orientation
 
 **\[uint32\]** hr_time
-~ high resolution time
+ ~ high resolution time
 
 **\[uint8\]** temperature
-~ processor temperature in celsius
+ ~ processor temperature in celsius
 
 **\[touchpad(2)\]** touch_points
-~ left and right touch points, see below
+ ~ left and right touch points, see below
 
 **\[uint8\]** last_touch_id
-~ increments by 1 each time a touchpad is touched
+ ~ increments by 1 each time a touchpad is touched
 
 **\[adaptive_trigger(2)\]** adaptive_triggers
-~ right and left triggers, see below
+ ~ right and left triggers, see below
 
 **\[uint32\]** state_id
-~ state_id provided by the output report
+ ~ state_id provided by the output report
 
 **\[device_state\]** state
-~ device state flags, see below
+ ~ device state flags, see below
 
 **\[checksum\]** checksum 
-~ secure signed checksum of the entire message (excluding this field.)
+ ~ secure signed checksum of the entire message (excluding this field.)
 
 STRUCTURES
 ==========
@@ -186,20 +186,20 @@ defines a touch point on the touchpad.
 | x  | x  | x  | x  | y  | y  | y  | y  | y  | y  | y  | y  | y  | y  | y  | y  |
 
 **i: \[uint8\]** id
-~ increments by one each time this touch point is activated
-~ **value & 0x7F**
+ ~ increments by one each time this touch point is activated
+ ~ **value & 0x7F**
 
 **t: \[bool\]** touched
-~ set when the touch point is activated
-~ **(value >> 7) & 1**
+ ~ set when the touch point is activated
+ ~ **(value >> 7) & 1**
 
 **x: \[uint16\]** x position
-~ x coordinate, max is 1920
-~ **(value >> 8) & 0xFFF**
+ ~ x coordinate, max is 1920
+ ~ **(value >> 8) & 0xFFF**
 
 **y: \[uint16\]** y position
-~ y coordinate, max is 1080
-~ **(value >> 20) & 0xFFF**
+ ~ y coordinate, max is 1080
+ ~ **(value >> 20) & 0xFFF**
 
 adaptive_trigger
 ----------------
@@ -213,12 +213,12 @@ defines attributes a given trigger effect is currently in
 | s  | s  | s  | s  | t  | t  | t  | t  |
 
 **s: \[uint8\]** section
-~ determines the section the trigger effect is currently in
-~ **value & 0xF**
+ ~ determines the section the trigger effect is currently in
+ ~ **value & 0xF**
 
 **t: \[uint8\]** state
-~ determines the active state of the trigger effect
-~ **(value >> 4) & 0xF**
+ ~ determines the active state of the trigger effect
+ ~ **(value >> 4) & 0xF**
 
 device_state
 ------------
@@ -229,19 +229,19 @@ defines device state flags
 
 
 **\[device_trigger_state\]** trigger
-~ trigger effect state
+ ~ trigger effect state
 
 **\[dualsense_edge_state\]\[union(4)\]** edge_state
-~ edge device specific state flags, not present on regular controllers.
+ ~ edge device specific state flags, not present on regular controllers.
 
 **\[uint32\]\[union(4)\]** battery_time
-~ battery time, not present on edge controllers.
+ ~ battery time, not present on edge controllers.
 
 **\[device_battery_state\]** battery_state
-~ battery error state and battery level
+ ~ battery error state and battery level
 
 **\[device_controller_state\]** controller_state
-~ controller state flags
+ ~ controller state flags
 
 device_controller_state
 -----------------
@@ -350,52 +350,52 @@ this *bitset* is *4 bytes*.
  ~ **(value >> 14) & 3**
 
 **d: \[enum_dpad\]** dpad
-~ dpad state (bypasses mapped buttons)
-~ **(value >> 16) & 0xF**
+ ~ dpad state (bypasses mapped buttons)
+ ~ **(value >> 16) & 0xF**
 
 **b0: \[bool\]** square
-~ is square pressed (bypasses mapped buttons)
-~ **(value >> 20) & 1**
+ ~ is square pressed (bypasses mapped buttons)
+ ~ **(value >> 20) & 1**
 
 **b1: \[bool\]** cross
-~ is cross pressed (bypasses mapped buttons)
-~ **(value >> 21) & 1**
+ ~ is cross pressed (bypasses mapped buttons)
+ ~ **(value >> 21) & 1**
 
 **b2: \[bool\]** circle
-~ is circle pressed (bypasses mapped buttons)
-~ **(value >> 22) & 1**
+ ~ is circle pressed (bypasses mapped buttons)
+ ~ **(value >> 22) & 1**
 
 **b3: \[bool\]** triangle
-~ is triangle pressed (bypasses mapped buttons)
-~ **(value >> 23) & 1**
+ ~ is triangle pressed (bypasses mapped buttons)
+ ~ **(value >> 23) & 1**
 
 **e: \[bool\]** emulating_rumble
-~ is emulating rumble? will be set when rumble has been performed this connection
-~ **(value >> 24) & 1**
+ ~ is emulating rumble? will be set when rumble has been performed this connection
+ ~ **(value >> 24) & 1**
 
 **o: \[uint8\]** brightness_override
-~ LED brightness override value
-~ **(value >> 25) & 3**
+ ~ LED brightness override value
+ ~ **(value >> 25) & 3**
 
 **b4: \[bool\]** unknown
-~ todo
-~ **(value >> 27) & 1**
+ ~ todo
+ ~ **(value >> 27) & 1**
 
 **b5: \[bool\]** mute
-~ is mute pressed (bypasses mapped buttons)
-~ **(value >> 28) & 1**
+ ~ is mute pressed (bypasses mapped buttons)
+ ~ **(value >> 28) & 1**
 
 **b6: \[bool\]** ps
-~ is ps pressed (bypasses mapped buttons)
-~ **(value >> 29) & 1**
+ ~ is ps pressed (bypasses mapped buttons)
+ ~ **(value >> 29) & 1**
 
 **b7: \[bool\]** share
-~ is share pressed (bypasses mapped buttons)
-~ **(value >> 30) & 1**
+ ~ is share pressed (bypasses mapped buttons)
+ ~ **(value >> 30) & 1**
 
 **b8: \[bool\]** option
-~ is option pressed (bypasses mapped buttons)
-~ **(value >> 31) & 1**
+ ~ is option pressed (bypasses mapped buttons)
+ ~ **(value >> 31) & 1**
 
 device_battery_state
 --------------------
@@ -409,12 +409,12 @@ defines battery error state and battery level
 | l  | l  | l  | l  | s  | s  | s  | s  |
 
 **l: \[uint8\]** right
-~ battery level
-~ **value & 0xF**
+ ~ battery level
+ ~ **value & 0xF**
 
 **s: \[uint8\]** state
-~ status state of the battery
-~ **(value >> 4) & 0xF**
+ ~ status state of the battery
+ ~ **(value >> 4) & 0xF**
 
 device_trigger_state
 --------------------
@@ -428,12 +428,12 @@ defines what effect is applied to each trigger
 | r  | r  | r  | r  | l  | l  | l  | l  |
 
 **r: \[uint8\]** right
-~ effect id of the right trigger
-~ **value & 0xF**
+ ~ effect id of the right trigger
+ ~ **value & 0xF**
 
 **l: \[uint8\]** left
-~ effect id of the left trigger
-~ **(value >> 4) & 0xF**
+ ~ effect id of the left trigger
+ ~ **(value >> 4) & 0xF**
 
 bitset_buttons
 --------------
@@ -450,91 +450,91 @@ this *bitset* is *4 bytes*.
 
 **a: \[enum_dpad\]** dpad
  ~ dpad state
-~ **value & 0xF**
+ ~ **value & 0xF**
 
 **b: \[bool\]** square
-~ is square pressed
-~ **(value >> 4) & 1**
+ ~ is square pressed
+ ~ **(value >> 4) & 1**
 
 **c: \[bool\]** cross
-~ is cross pressed
-~ **(value >> 5) & 1**
+ ~ is cross pressed
+ ~ **(value >> 5) & 1**
 
 **d: \[bool\]** circle
-~ is circle pressed
-~ **(value >> 6) & 1**
+ ~ is circle pressed
+ ~ **(value >> 6) & 1**
 
 **e: \[bool\]** triangle
-~ is triangle pressed
-~ **(value >> 7) & 1**
+ ~ is triangle pressed
+ ~ **(value >> 7) & 1**
 
 **f: \[bool\]** l1 :
-~ is l1 : pressed
-~ **(value >> 8) & 1**
+ ~ is l1 : pressed
+ ~ **(value >> 8) & 1**
 
 **g: \[bool\]** r1
-~ is r1 pressed
-~ **(value >> 9) & 1**
+ ~ is r1 pressed
+ ~ **(value >> 9) & 1**
 
 **h: \[bool\]** l2
-~ is l2 pressed
-~ **(value >> 10) & 1**
+ ~ is l2 pressed
+ ~ **(value >> 10) & 1**
 
 **i: \[bool\]** r2
-~ is r2 pressed
-~ **(value >> 11) & 1**
+ ~ is r2 pressed
+ ~ **(value >> 11) & 1**
 
 **j: \[bool\]** share
-~ is share pressed
-~ **(value >> 12) & 1**
+ ~ is share pressed
+ ~ **(value >> 12) & 1**
 
 **k: \[bool\]** option
-~ is option pressed
-~ **(value >> 13) & 1**
+ ~ is option pressed
+ ~ **(value >> 13) & 1**
 
 **l: \[bool\]** l3
-~ is l3 pressed
-~ **(value >> 14) & 1**
+ ~ is l3 pressed
+ ~ **(value >> 14) & 1**
 
 **m: \[bool\]** r3
-~ is r3 pressed
-~ **(value >> 15) & 1**
+ ~ is r3 pressed
+ ~ **(value >> 15) & 1**
 
 **n: \[bool\]** ps
-~ is ps pressed
-~ **(value >> 16) & 1**
+ ~ is ps pressed
+ ~ **(value >> 16) & 1**
 
 **o: \[bool\]** touch
-~ is touch pressed
-~ **(value >> 17) & 1**
+ ~ is touch pressed
+ ~ **(value >> 17) & 1**
 
 **p: \[bool\]** mute
-~ is mute pressed
-~ **(value >> 18) & 1**
+ ~ is mute pressed
+ ~ **(value >> 18) & 1**
 
 **q: \[bool\]** reserved
-~ reserved value
-~ **(value >> 19) & 1**
+ ~ reserved value
+ ~ **(value >> 19) & 1**
 
 **r: \[bool\]** edge_f1
-~ is edge f1 pressed
-~ **(value >> 20) & 1**
+ ~ is edge f1 pressed
+ ~ **(value >> 20) & 1**
 
 **s: \[bool\]** edge_f2
-~ is edge f2 pressed
-~ **(value >> 21) & 1**
+ ~ is edge f2 pressed
+ ~ **(value >> 21) & 1**
 
 **t: \[bool\]** edge_lb
-~ is edge left paddle pressed
-~ **(value >> 22) & 1**
+ ~ is edge left paddle pressed
+ ~ **(value >> 22) & 1**
 
 **u: \[bool\]** edge_rb
-~ is edge right paddle pressed
-~ **(value >> 23) & 1**
+ ~ is edge right paddle pressed
+ ~ **(value >> 23) & 1**
 
 **v: \[uint8\]** reserved2
-~ reserved values
-~ **(value >> 24) & 0xFF**
+ ~ reserved values
+ ~ **(value >> 24) & 0xFF**
 
 enum_dpad
 ---------

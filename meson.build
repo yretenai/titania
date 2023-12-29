@@ -100,60 +100,48 @@ if get_option('libresense_man')
 		warning('pandoc not found, building man pages will not be possible')
 	else
 		pandoc_commands = [pandoc, '-s', '-t', 'man', '-f', 'gfm+definition_lists', '-o']
-		dualsense_hid_man7 = custom_target(
+		custom_target(
 			'dualsense-hid.7',
-			output: 'dualsense-hid.7',
-			input: 'man/dualsense-hid.7.md',
-			build_always_stale: true,
-			command: [pandoc_commands, '@OUTPUT@', '@INPUT@']
+			output : 'dualsense-hid.7',
+			input : 'man/dualsense-hid.7.md',
+			build_always_stale : true,
+			install : true,
+			install_dir : join_paths(get_option('mandir'), 'man7'),
+			command : [pandoc_commands, '@OUTPUT@', '@INPUT@']
 		)
-		run_command(pandoc_commands,
-					join_paths(meson.current_build_dir(), 'dualsense-hid.7'),
-					join_paths(meson.current_source_dir(), 'man/dualsense-hid.7.md'),
-					check: false)
-		install_man(dualsense_hid_man7.full_path())
 
-		libresense_man1 = custom_target(
+		custom_target(
 			'libresense.1',
-			output: 'libresense.1',
-			input: 'man/libresense.1.md',
-			build_always_stale: true,
-			command: [pandoc_commands, '@OUTPUT@', '@INPUT@']
+			output : 'libresense.1',
+			input : 'man/libresense.1.md',
+			build_always_stale : true,
+			install : true,
+			install_dir : join_paths(get_option('mandir'), 'man1'),
+			command : [pandoc_commands, '@OUTPUT@', '@INPUT@']
 		)
-		run_command(pandoc_commands,
-					join_paths(meson.current_build_dir(), 'libresense.1'),
-					join_paths(meson.current_source_dir(), 'man/libresense.1.md'),
-					check: false)
-		install_man(libresense_man1.full_path())
 
 		if get_option('libresense_log')
-			libresense_log_man1 = custom_target(
+			custom_target(
 				'libresense-log.1',
-				output: 'libresense-log.1',
-				input: 'man/libresense-log.1.md',
-				build_always_stale: true,
-				command: [pandoc_commands, '@OUTPUT@', '@INPUT@']
+				output : 'libresense-log.1',
+				input : 'man/libresense-log.1.md',
+				build_always_stale : true,
+				install : true,
+				install_dir : join_paths(get_option('mandir'), 'man1'),
+				command : [pandoc_commands, '@OUTPUT@', '@INPUT@']
 			)
-			run_command(pandoc_commands,
-						join_paths(meson.current_build_dir(), 'libresense-log.1'),
-						join_paths(meson.current_source_dir(), 'man/libresense-log.1.md'),
-						check: false)
-			install_man(libresense_log_man1.full_path())
 		endif
 
 		if get_option('libresense_ctl')
-			libresense_log_man1 = custom_target(
+			custom_target(
 				'libresensectl.1',
-				output: 'libresensectl.1',
-				input: 'man/libresensectl.1.md',
-				build_always_stale: true,
-				command: [pandoc_commands, '@OUTPUT@', '@INPUT@']
+				output : 'libresensectl.1',
+				input : 'man/libresensectl.1.md',
+				build_always_stale : true,
+				install : true,
+				install_dir : join_paths(get_option('mandir'), 'man1'),
+				command : [pandoc_commands, '@OUTPUT@', '@INPUT@']
 			)
-			run_command(pandoc_commands,
-						join_paths(meson.current_build_dir(), 'libresensectl.1'),
-						join_paths(meson.current_source_dir(), 'man/libresensectl.1.md'),
-						check: false)
-			install_man(libresense_log_man1.full_path())
 		endif
 	endif
 endif
