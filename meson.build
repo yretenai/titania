@@ -36,8 +36,8 @@ args = compiler.get_supported_arguments(
 
 if get_option('buildtype') == 'custom'
   args += compiler.get_supported_arguments(
-    '-march=knl',
-    '-mtune=knl'
+    '-march=native',
+    '-mtune=native'
   )
 endif
 

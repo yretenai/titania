@@ -11,10 +11,11 @@
 #include <conio.h>
 
 // https://stackoverflow.com/questions/5801813/c-usleep-is-obsolete-workarounds-for-windows-mingw
-void usleep(__int64 usec) {
+void
+usleep(__int64 usec) {
 	HANDLE timer;
 	LARGE_INTEGER ft;
-	ft.QuadPart = -(10*usec);
+	ft.QuadPart = -(10 * usec);
 	timer = CreateWaitableTimer(NULL, TRUE, NULL);
 	SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
 	WaitForSingleObject(timer, INFINITE);
@@ -31,34 +32,52 @@ void usleep(__int64 usec) {
 #include <string.h>
 #include <time.h>
 
-#define MAKE_BUTTON(test) data.buttons.test ? "Y" : "N"
-#define MAKE_EDGE_BUTTON(test) data.edge_device.unmapped_buttons.test ? "Y" : "N"
-#define MAKE_TEST(test) test ? "Y" : "N"
+#define LIBREPRINT_SEP() printf(",")
+#define LIBREPRINT_STR(struc, field) printf(" " #field " = %s", struc.field)
+#define LIBREPRINT_FIRMWARE_HW(struc, field) \
+	printf(" " #field " { generation = %d, variation = %d, revision = %d, reserved = %d }", struc.field.generation, struc.field.variation, struc.field.revision, struc.field.reserved)
+#define LIBREPRINT_UPDATE(struc, field) printf(" " #field " = %04x (%d.%d.%d)", struc.field.major, struc.field.major, struc.field.minor, struc.field.revision)
+#define LIBREPRINT_FIRMWARE(struc, field) printf(" " #field " = %d.%d.%d", struc.field.major, struc.field.minor, struc.field.revision)
+#define LIBREPRINT_U32(struc, field) printf(" " #field " = %u", struc.field)
+#define LIBREPRINT_U64(struc, field) printf(" " #field " = %lu", struc.field)
+#define LIBREPRINT_X16(struc, field) printf(" " #field " = 0x%04x", struc.field)
+#define LIBREPRINT_FLOAT(struc, field) printf(" " #field " = %f", struc.field)
+#define LIBREPRINT_PERCENT(struc, field) printf(" " #field " = %f%%", struc.field * 100.0f)
+#define LIBREPRINT_ENUM(struc, field, strs, name) printf(" " name " = %s", strs[struc.field])
+#define LIBREPRINT_TEST(struc, field) printf(" " #field " = %s", struc.field ? "Y" : "N")
+#define LIBREPRINT_BUTTON_TEST(field) printf(" " #field " = %s", data.buttons.field ? "Y" : "N")
+#define LIBREPRINT_EDGE_BUTTON_TEST(field) printf(" " #field " = %s", data.edge_device.raw_buttons.field ? "Y" : "N")
 
 #define libresense_errorf(fp, result, fmt) fprintf(fp, "[libresense] " fmt ": %s\n", libresense_error_msg[result])
 
-bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
+bool
+report_hid_trigger(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
 	bool should_exit = false;
-	while(true) {
-		libresense_data data[LIBRESENSE_MAX_CONTROLLERS];
+	while (true) {
+		libresense_data data[libresense_max_controllers];
 		const libresense_result result = libresense_pull(handles, handle_count, data);
-		if(IS_LIBRESENSE_BAD(result)) {
+		if (IS_LIBRESENSE_BAD(result)) {
 			printf("invalid pull response");
 			return true;
 		}
 		for (size_t i = 0; i < handle_count; ++i) {
-			if(data[i].buttons.option) {
+			if (data[i].buttons.option) {
 				should_exit = true;
 			}
-			if(!data[i].buttons.option && should_exit) {
+			if (!data[i].buttons.option && should_exit) {
 				printf("\n");
 				return true;
 			}
-			if(i == 0) {
+			if (i == 0) {
 				printf("\r");
 			}
-			printf("left = { %06.2f%%, %1X, %1X }, right = { %06.2f%%, %1X, %1X } ", data[i].triggers[0].level * 100, data[i].triggers[0].id, data[i].triggers[0].effect, data[i].triggers[1].level * 100, data[i].triggers[1].id, data[i].triggers[1].effect);
-
+			printf("left = { %06.2f%%, %1X, %1X }, right = { %06.2f%%, %1X, %1X } ",
+				   data[i].triggers[0].level * 100,
+				   data[i].triggers[0].id,
+				   data[i].triggers[0].effect,
+				   data[i].triggers[1].level * 100,
+				   data[i].triggers[1].id,
+				   data[i].triggers[1].effect);
 		}
 		usleep(delay);
 		if (useconds < delay || useconds - delay == 0) { // primary failsafe and conventional loop break
@@ -66,7 +85,7 @@ bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, _
 		}
 		const __useconds_t old = useconds;
 		useconds -= delay;
-		if(useconds > old) { // second failsafe.
+		if (useconds > old) { // second failsafe.
 			break;
 		}
 	}
@@ -74,46 +93,52 @@ bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, _
 	return should_exit;
 }
 
-bool report_hid_close(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
+bool
+report_hid_close(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
 	bool should_exit = false;
-	while(true) {
-		libresense_data data[LIBRESENSE_MAX_CONTROLLERS];
+	while (true) {
+		libresense_data data[libresense_max_controllers];
 		const libresense_result result = libresense_pull(handles, handle_count, data);
-		if(IS_LIBRESENSE_BAD(result)) {
+		if (IS_LIBRESENSE_BAD(result)) {
+			printf("invalid pull response");
 			return true;
 		}
 		for (size_t i = 0; i < handle_count; ++i) {
-			if(data[i].buttons.option && !should_exit) {
+			if (data[i].buttons.option) {
 				should_exit = true;
 			}
-
-			if(!data[i].buttons.option && should_exit) {
+			if (!data[i].buttons.option && should_exit) {
 				return true;
 			}
 		}
+
 		usleep(delay);
 		if (useconds < delay || useconds - delay == 0) { // primary failsafe and conventional loop break
 			break;
 		}
 		const __useconds_t old = useconds;
 		useconds -= delay;
-		if(useconds > old) { // second failsafe.
+		if (useconds > old) { // second failsafe.
 			break;
 		}
 	}
 	return should_exit;
 }
 
-void wait_until_options_clear(libresense_handle handle, __useconds_t timeout) {
+void
+wait_until_options_clear(libresense_handle* handles, const size_t handle_count, __useconds_t timeout) {
 	libresense_data data;
 
-	while(true) {
-		const libresense_result result = libresense_pull(&handle, 1, &data);
-		if(IS_LIBRESENSE_BAD(result)) {
+	while (true) {
+		libresense_data data[libresense_max_controllers];
+		const libresense_result result = libresense_pull(handles, handle_count, data);
+		if (IS_LIBRESENSE_BAD(result)) {
 			return;
 		}
-		if(!data.buttons.option) {
-			return;
+		for (size_t i = 0; i < handle_count; ++i) {
+			if (!data[i].buttons.option) {
+				return;
+			}
 		}
 		usleep(16000);
 		if (timeout < 16000 || timeout - 16000 == 0) { // primary failsafe and conventional loop break
@@ -121,31 +146,32 @@ void wait_until_options_clear(libresense_handle handle, __useconds_t timeout) {
 		}
 		const __useconds_t old = timeout;
 		timeout -= 16000;
-		if(timeout > old) { // second failsafe.
+		if (timeout > old) { // second failsafe.
 			break;
 		}
 	}
 }
 
-int main(int argc, const char** argv) {
+int
+main(int argc, const char **argv) {
 	libresense_result result = libresense_init();
-	if(IS_LIBRESENSE_BAD(result)) {
+	if (IS_LIBRESENSE_BAD(result)) {
 		libresense_errorf(stderr, result, "error initializing libresense");
 		return result;
 	}
 	libresense_hid hid[LIBRESENSE_MAX_CONTROLLERS];
 	libresense_handle handles[LIBRESENSE_MAX_CONTROLLERS];
 	result = libresense_get_hids(hid, LIBRESENSE_MAX_CONTROLLERS);
-	if(IS_LIBRESENSE_BAD(result)) {
+	if (IS_LIBRESENSE_BAD(result)) {
 		libresense_errorf(stderr, result, "error getting hids");
 		libresense_exit();
 		return result;
 	}
 	size_t connected = 0;
-	for(int hid_id = 0; hid_id < LIBRESENSE_MAX_CONTROLLERS; ++hid_id) {
+	for (int hid_id = 0; hid_id < LIBRESENSE_MAX_CONTROLLERS; ++hid_id) {
 		if (hid[hid_id].handle != LIBRESENSE_INVALID_HANDLE_ID) {
 			result = libresense_open(&hid[hid_id]);
-			if(IS_LIBRESENSE_BAD(result)) {
+			if (IS_LIBRESENSE_BAD(result)) {
 				libresense_errorf(stderr, result, "error initializing hid");
 				libresense_exit();
 				return result;
@@ -163,9 +189,15 @@ int main(int argc, const char** argv) {
 				}
 
 				int32_t hid_report_size = hid[hid_id].report_ids[i].size + 1;
-				printf("report %d (%x): reported size is %d, type is %s", hid[hid_id].report_ids[i].id, hid[hid_id].report_ids[i].id, hid_report_size, hid[hid_id].report_ids[i].type == 0 ? "INPUT" : hid[hid_id].report_ids[i].type == 1 ? "OUTPUT": "FEATURE");
+				printf("report %d (%x): reported size is %d, type is %s",
+					   hid[hid_id].report_ids[i].id,
+					   hid[hid_id].report_ids[i].id,
+					   hid_report_size,
+					   hid[hid_id].report_ids[i].type == 0	 ? "INPUT"
+					   : hid[hid_id].report_ids[i].type == 1 ? "OUTPUT"
+															 : "FEATURE");
 
-				if(hid[hid_id].report_ids[i].type < 2) {
+				if (hid[hid_id].report_ids[i].type < 2) {
 					printf("\n");
 					continue;
 				}
@@ -177,7 +209,7 @@ int main(int argc, const char** argv) {
 					char report_name[0x30] = { 0 };
 					sprintf(report_name, name, hid[hid_id].report_ids[i].id);
 					FILE* file = fopen(report_name, "w+b");
-					if(file != NULL) {
+					if (file != NULL) {
 						fwrite(buffer, 1, size, file);
 						fclose(file);
 					}
@@ -189,51 +221,209 @@ int main(int argc, const char** argv) {
 		}
 	}
 
-	if(connected == 0) {
+	if (connected == 0) {
 		fprintf(stderr, "[libresense] no hids... connect a device\n");
 		libresense_exit();
 		return 1;
 	}
-	libresense_data datum[libresense_max_controllers];
 
+	libresense_data datum[libresense_max_controllers];
 	bool clr = argc > 1 && strcmp(argv[1], "report") == 0;
-	while(true) {
-		result = libresense_pull(handles, connected, datum);
-		if(IS_LIBRESENSE_BAD(result)) {
+	bool bench = argc > 1 && strcmp(argv[1], "benchmark") == 0;
+	while (true) {
+		if (IS_LIBRESENSE_BAD(result)) {
 			libresense_errorf(stderr, result, "error getting report");
 			return result;
 		}
 
-		for(size_t i = 0; i < connected; ++i) {
+		result = libresense_pull(handles, connected, datum);
+		for (size_t i = 0; i < connected; ++i) {
 			libresense_data data = datum[i];
-			printf("hid { handle = %d, pid = 0x%04x, vid = 0x%04x, bt = %s, mac = %s, paired mac = %s }\n", data.hid.handle, data.hid.product_id, data.hid.vendor_id, MAKE_TEST(data.hid.is_bluetooth), data.hid.serial.mac, data.hid.serial.paired_mac);
-			printf("firmware { time = %s", hid->firmware.datetime);
-			for(size_t j = 0; j < LIBRESENSE_VERSION_MAX; ++j) {
-				printf(", %s = %04x:%04x", libresense_version_msg[j], hid->firmware.versions[j].major, hid->firmware.versions[j].minjor);
-			}
+			// clang-format off
+			printf("hid {");
+			LIBREPRINT_U32(data.hid, handle); LIBREPRINT_SEP();
+			LIBREPRINT_X16(data.hid, product_id); LIBREPRINT_SEP();
+			LIBREPRINT_X16(data.hid, vendor_id); LIBREPRINT_SEP();
+			LIBREPRINT_STR(data.hid.serial, mac); LIBREPRINT_SEP();
+			LIBREPRINT_STR(data.hid.serial, paired_mac); LIBREPRINT_SEP();
+			LIBREPRINT_TEST(data.hid, is_bluetooth); LIBREPRINT_SEP();
+			LIBREPRINT_TEST(data.hid, is_edge);
 			printf(" }\n");
-			printf("time { sys = %u, sensor = %u, battery = %u, seq = { %u, %u, %u }, check = %lu }\n", data.time.system, data.time.sensor, data.time.battery, data.time.sequence, data.time.touch_sequence, data.time.driver_sequence, data.time.checksum);
-			printf("buttons { dpad_up = %s, dpad_right = %s, dpad_down = %s, dpad_left = %s, square = %s, cross = %s, circle = %s, triangle = %s, l1 = %s, r1 = %s, l2 = %s, r2 = %s, share = %s, option = %s, l3 = %s, r3 = %s, ps = %s, touch = %s, mute = %s, edge_f1 = %s, edge_f2 = %s, edge_lb = %s, edge_rb = %s }\n", MAKE_BUTTON(dpad_up), MAKE_BUTTON(dpad_right), MAKE_BUTTON(dpad_down), MAKE_BUTTON(dpad_left), MAKE_BUTTON(square), MAKE_BUTTON(cross), MAKE_BUTTON(circle), MAKE_BUTTON(triangle), MAKE_BUTTON(l1), MAKE_BUTTON(r1), MAKE_BUTTON(l2), MAKE_BUTTON(r2), MAKE_BUTTON(share), MAKE_BUTTON(option), MAKE_BUTTON(l3), MAKE_BUTTON(r3), MAKE_BUTTON(ps), MAKE_BUTTON(touch), MAKE_BUTTON(mute), MAKE_BUTTON(edge_f1), MAKE_BUTTON(edge_f2), MAKE_BUTTON(edge_lb), MAKE_BUTTON(edge_rb));
-			printf("triggers { left = { %f%%, %u, %u, %s }, right = { %f%%, %u, %u, %s } }\n", data.triggers[0].level * 100, data.triggers[0].id, data.triggers[0].section, libresense_trigger_effect_msg[data.triggers[0].effect], data.triggers[1].level * 100, data.triggers[1].id, data.triggers[1].section, libresense_trigger_effect_msg[data.triggers[1].effect]);
-			printf("sticks { left = { %f, %f }, right = { %f, %f } }\n", data.sticks[0].x, data.sticks[0].y, data.sticks[1].x, data.sticks[1].y);
-			printf("touchpad { left = { active = %s, id = %u, pos = { %u, %u }, right = { active = %s, id = %u, pos = { %u, %u } } }\n", MAKE_TEST(data.touch[0].active), data.touch[0].id, data.touch[0].coords.x, data.touch[0].coords.y, MAKE_TEST(data.touch[1].active), data.touch[1].id, data.touch[1].coords.x, data.touch[1].coords.y);
-			printf("sensors { temp = %d, accel = { %f, %f, %f }, gyro = { %f, %f, %f } }\n", data.sensors.temperature, data.sensors.accelerometer.x, data.sensors.accelerometer.y, data.sensors.accelerometer.z, data.sensors.gyro.x, data.sensors.gyro.y, data.sensors.gyro.z);
-			printf("battery { level = %f%%, state = %s, error = %u }\n", data.battery.level, libresense_battery_state_msg[data.battery.state], data.battery.battery_error);
-			printf("state { headphones = %s, headset = %s, muted = %s, usb data = %s, usb power = %s, external mic = %s, mic filter = %s }\n", MAKE_TEST(data.device.headphones), MAKE_TEST(data.device.headset), MAKE_TEST(data.device.muted), MAKE_TEST(data.device.usb_data), MAKE_TEST(data.device.usb_power), MAKE_TEST(data.device.external_mic), MAKE_TEST(data.device.mic_filter));
+
+			printf("firmware {");
+			LIBREPRINT_X16(hid->firmware, type);
+			LIBREPRINT_X16(hid->firmware, series);
+			LIBREPRINT_FIRMWARE_HW(hid->firmware, hardware); LIBREPRINT_SEP();
+			LIBREPRINT_UPDATE(hid->firmware, update); LIBREPRINT_SEP();
+			LIBREPRINT_FIRMWARE(hid->firmware, firmware); LIBREPRINT_SEP();
+			LIBREPRINT_FIRMWARE(hid->firmware, firmware2); LIBREPRINT_SEP();
+			LIBREPRINT_FIRMWARE(hid->firmware, firmware3); LIBREPRINT_SEP();
+			LIBREPRINT_FIRMWARE(hid->firmware, device); LIBREPRINT_SEP();
+			LIBREPRINT_FIRMWARE(hid->firmware, device2); LIBREPRINT_SEP();
+			LIBREPRINT_FIRMWARE(hid->firmware, device3); LIBREPRINT_SEP();
+			LIBREPRINT_FIRMWARE(hid->firmware, mcu_firmware);
+			printf(" }\n");
+
+			printf("time {");
+			LIBREPRINT_U32(data.time, system); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.time, sensor); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.time, battery); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.time, sequence); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.time, touch_sequence); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.time, driver_sequence); LIBREPRINT_SEP();
+			LIBREPRINT_U64(data.time, checksum);
+			printf(" }\n");
+
+			printf("buttons {");
+			LIBREPRINT_BUTTON_TEST(dpad_up); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(dpad_right); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(dpad_down); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(dpad_left); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(square); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(cross); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(circle); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(triangle); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(l1); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(r1); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(l2); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(r2); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(share); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(option); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(l3); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(r3); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(ps); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(touch); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(mute); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(edge_f1); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(edge_f2); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(edge_lb); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(edge_rb);
+			printf(" }\n");
+
+			printf("triggers { left = {");
+			LIBREPRINT_PERCENT(data.triggers[LIBRESENSE_LEFT], level); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.triggers[LIBRESENSE_LEFT], id); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.triggers[LIBRESENSE_LEFT], section); LIBREPRINT_SEP();
+			LIBREPRINT_ENUM(data.triggers[LIBRESENSE_LEFT], effect, libresense_trigger_effect_msg, "effect");
+			printf(" }, right = {");
+			LIBREPRINT_PERCENT(data.triggers[LIBRESENSE_RIGHT], level); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.triggers[LIBRESENSE_RIGHT], id); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.triggers[LIBRESENSE_RIGHT], section); LIBREPRINT_SEP();
+			LIBREPRINT_ENUM(data.triggers[LIBRESENSE_RIGHT], effect, libresense_trigger_effect_msg, "effect");
+			printf(" } }\n");
+
+			printf("sticks { left = {");
+			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_LEFT], x); LIBREPRINT_SEP();
+			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_LEFT], y);
+			printf(" }, right = {");
+			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_RIGHT], x); LIBREPRINT_SEP();
+			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_RIGHT], y);
+			printf(" } }\n");
+
+			printf("touch { primary = {");
+			LIBREPRINT_TEST(data.touch[LIBRESENSE_PRIMARY], active); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY], id); LIBREPRINT_SEP();
+			printf(" pos = {");
+			LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY].pos, x); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY].pos, y);
+			printf(" } }, secondary = {");
+			LIBREPRINT_TEST(data.touch[LIBRESENSE_SECONDARY], active); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY], id); LIBREPRINT_SEP();
+			printf(" pos = {");
+			LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY].pos, x); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY].pos, y);
+			printf(" } } }\n");
+
+
+			printf("sensors {");
+			LIBREPRINT_U32(data.sensors, temperature); LIBREPRINT_SEP();
+			printf(" accelerometer = {");
+			LIBREPRINT_FLOAT(data.sensors.accelerometer, x); LIBREPRINT_SEP();
+			LIBREPRINT_FLOAT(data.sensors.accelerometer, y); LIBREPRINT_SEP();
+			LIBREPRINT_FLOAT(data.sensors.accelerometer, z);
+			printf(" }, gyro = {");
+			LIBREPRINT_FLOAT(data.sensors.gyro, x); LIBREPRINT_SEP();
+			LIBREPRINT_FLOAT(data.sensors.gyro, y); LIBREPRINT_SEP();
+			LIBREPRINT_FLOAT(data.sensors.gyro, z);
+			printf(" } }\n");
+
+			printf("battery {");
+			LIBREPRINT_PERCENT(data.battery, level); LIBREPRINT_SEP();
+			LIBREPRINT_ENUM(data.battery, state, libresense_battery_state_msg, "state");
+			printf(" }\n");
+
+			printf("state {");
+			LIBREPRINT_TEST(data.device, headphones); LIBREPRINT_SEP();
+			LIBREPRINT_TEST(data.device, headset); LIBREPRINT_SEP();
+			LIBREPRINT_TEST(data.device, muted); LIBREPRINT_SEP();
+			LIBREPRINT_TEST(data.device, usb_data); LIBREPRINT_SEP();
+			LIBREPRINT_TEST(data.device, usb_power); LIBREPRINT_SEP();
+			LIBREPRINT_TEST(data.device, external_mic); LIBREPRINT_SEP();
+			LIBREPRINT_TEST(data.device, haptic_filter); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.device, reserved);
+			printf(" }\n");
+
 			if (hid->is_edge) {
-				printf("unmapped buttons { dpad_up = %s, dpad_right = %s, dpad_down = %s, dpad_left = %s, square = %s, cross = %s, circle = %s, triangle = %s, l1 = %s, r1 = %s, l2 = %s, r2 = %s, share = %s, option = %s, l3 = %s, r3 = %s, ps = %s, touch = %s, mute = %s, edge_f1 = %s, edge_f2 = %s, edge_lb = %s, edge_rb = %s }\n", MAKE_EDGE_BUTTON(dpad_up), MAKE_EDGE_BUTTON(dpad_right), MAKE_EDGE_BUTTON(dpad_down), MAKE_EDGE_BUTTON(dpad_left), MAKE_EDGE_BUTTON(square), MAKE_EDGE_BUTTON(cross), MAKE_EDGE_BUTTON(circle), MAKE_EDGE_BUTTON(triangle), MAKE_EDGE_BUTTON(l1), MAKE_EDGE_BUTTON(r1), MAKE_EDGE_BUTTON(l2), MAKE_EDGE_BUTTON(r2), MAKE_EDGE_BUTTON(share), MAKE_EDGE_BUTTON(option), MAKE_EDGE_BUTTON(l3), MAKE_EDGE_BUTTON(r3), MAKE_EDGE_BUTTON(ps), MAKE_EDGE_BUTTON(touch), MAKE_EDGE_BUTTON(mute), MAKE_EDGE_BUTTON(edge_f1), MAKE_EDGE_BUTTON(edge_f2), MAKE_EDGE_BUTTON(edge_lb), MAKE_EDGE_BUTTON(edge_rb));
-				printf("edge state { stick { disconnceted = %s, error = %s, calibrating = %s, unknown = %s }, trigger { left = %s, right = %s }, profile = %s, indicator = { led = %s, vibrate = %s, switching disabled = %s }, brightness = %s, powersave = %s, unknown1 = %s, unknown2 = %s, unknown3 = %s }\n", MAKE_TEST(data.edge_device.stick.disconnected), MAKE_TEST(data.edge_device.stick.errored), MAKE_TEST(data.edge_device.stick.calibrating), MAKE_TEST(data.edge_device.stick.unknown), libresense_level_msg[data.edge_device.trigger_levels[0]], libresense_level_msg[data.edge_device.trigger_levels[1]], libresense_edge_profile_id_msg[data.edge_device.current_profile_id], MAKE_TEST(data.edge_device.profile_indicator.led), MAKE_TEST(data.edge_device.profile_indicator.vibration), MAKE_TEST(data.edge_device.profile_indicator.switching_disabled), libresense_level_msg[data.edge_device.brightness], MAKE_TEST(data.edge_device.powersave_state), MAKE_TEST(data.edge_device.profile_indicator.unknown1), MAKE_TEST(data.edge_device.profile_indicator.unknown2), MAKE_TEST(data.edge_device.unknown));
+				printf("raw buttons {");
+				LIBREPRINT_EDGE_BUTTON_TEST(dpad_up); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(dpad_right); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(dpad_down); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(dpad_left); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(square); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(cross); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(circle); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(triangle); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(l1); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(r1); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(l2); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(r2); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(share); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(option); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(l3); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(r3); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(ps); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(touch); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(mute); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(edge_f1); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(edge_f2); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(edge_lb); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(edge_rb);
+				printf(" }\n");
+
+
+				printf("edge state { stick {");
+				LIBREPRINT_TEST(data.edge_device.stick, disconnected); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.edge_device.stick, errored); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.edge_device.stick, calibrating); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.edge_device.stick, unknown);
+				printf(" }, trigger {");
+				LIBREPRINT_ENUM(data.edge_device, trigger_levels[LIBRESENSE_LEFT], libresense_level_msg, "left"); LIBREPRINT_SEP();
+				LIBREPRINT_ENUM(data.edge_device, trigger_levels[LIBRESENSE_RIGHT], libresense_level_msg, "right");
+				printf(" },");
+				LIBREPRINT_ENUM(data.edge_device, current_profile_id, libresense_edge_profile_id_msg, "profile"); LIBREPRINT_SEP();
+				printf(" indicator = {");
+				LIBREPRINT_TEST(data.edge_device.profile_indicator, led); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.edge_device.profile_indicator, vibration); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.edge_device.profile_indicator, switching_disabled); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.edge_device.profile_indicator, unknown1); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.edge_device.profile_indicator, unknown2);
+				printf(" },");
+				LIBREPRINT_ENUM(data.edge_device, brightness, libresense_level_msg, "brightness"); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.edge_device, emulating_rumble); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.edge_device, unknown);
+				printf(" }\n");
 			}
+			// clang-format on
 		}
 
-		if(!clr) {
+		if (!clr) {
 			break;
 		}
 
 		clrscr();
 	}
 
-	if(argc > 1) {
+	if (argc > 1 && !bench) {
 		goto shutdown;
 	}
 
@@ -241,32 +431,35 @@ int main(int argc, const char** argv) {
 		printf("testing latency, this will take 10 seconds\n");
 		struct timespec max = { INT64_MIN, INT64_MIN };
 		struct timespec min = { INT64_MAX, INT64_MAX };
-		for(int i = 0; i < 1000; ++i) {
-			struct timespec ts1, ts2;
+		struct timespec ts1, ts2;
+		libresense_data data;
+		libresense_handle handle = handles[0];
+		for (int i = 0; i < 10000; ++i) {
 			timespec_get(&ts1, TIME_UTC);
-			libresense_pull(&handles[0], 1, &datum[0]);
+			libresense_pull(&handle, connected, &data);
 			timespec_get(&ts2, TIME_UTC);
-			if(ts1.tv_nsec < ts2.tv_sec) {
+			if (ts1.tv_nsec < ts2.tv_sec) {
 				struct timespec delta = { ts2.tv_sec - ts1.tv_sec, ts2.tv_nsec - ts1.tv_nsec };
-				if(delta.tv_sec < min.tv_sec || delta.tv_nsec < min.tv_nsec) {
+				if (delta.tv_sec < min.tv_sec || delta.tv_nsec < min.tv_nsec) {
 					min = delta;
 				}
-				if(delta.tv_sec > max.tv_sec || delta.tv_nsec > max.tv_nsec) {
+				if (delta.tv_sec > max.tv_sec || delta.tv_nsec > max.tv_nsec) {
 					max = delta;
 				}
 			}
-			if(i > 0 && i % 100 == 0) {
-				printf("min: %ld s %ld us, max: %ld s %ld us\n", min.tv_sec, min.tv_nsec, max.tv_sec, max.tv_nsec);
-			}
-			usleep(10000);
+			usleep(1000);
 		}
 		printf("min: %ld s %ld us, max: %ld s %ld us\n", min.tv_sec, min.tv_nsec, max.tv_sec, max.tv_nsec);
+	}
+
+	if (argc > 1) {
+		goto shutdown;
 	}
 
 	printf("press OPTIONS to skip test\n");
 
 	{
-		wait_until_options_clear(handles[0], 250000);
+		wait_until_options_clear(handles, connected, 250000);
 		printf("testing adaptive triggers\n");
 		libresense_effect_update update = { 0 };
 
@@ -274,11 +467,11 @@ int main(int argc, const char** argv) {
 		update.effect.uniform.position = 0.5;
 		update.effect.uniform.resistance = 1.0;
 		printf("uniform\n");
-		for(size_t i = 0; i < connected; ++i) {
+		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
-		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
+		if (report_hid_trigger(handles, connected, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
@@ -287,11 +480,11 @@ int main(int argc, const char** argv) {
 		update.effect.section.position.y = 0.75;
 		update.effect.section.resistance = 1.0;
 		printf("section\n");
-		for(size_t i = 0; i < connected; ++i) {
+		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
-		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
+		if (report_hid_trigger(handles, connected, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
@@ -307,11 +500,11 @@ int main(int argc, const char** argv) {
 		update.effect.multiple_sections.resistance[8] = 1.0f;
 		update.effect.multiple_sections.resistance[9] = 1.0f;
 		printf("multiple section\n");
-		for(size_t i = 0; i < connected; ++i) {
+		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
-		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
+		if (report_hid_trigger(handles, connected, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
@@ -320,11 +513,11 @@ int main(int argc, const char** argv) {
 		update.effect.trigger.position.y = 1.00f;
 		update.effect.trigger.resistance = 0.5f;
 		printf("trigger\n");
-		for(size_t i = 0; i < connected; ++i) {
+		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
-		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
+		if (report_hid_trigger(handles, connected, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
@@ -334,11 +527,11 @@ int main(int argc, const char** argv) {
 		update.effect.slope.resistance.x = 0.25f;
 		update.effect.slope.resistance.y = 1.0f;
 		printf("slope\n");
-		for(size_t i = 0; i < connected; ++i) {
+		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
-		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
+		if (report_hid_trigger(handles, connected, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
@@ -347,11 +540,11 @@ int main(int argc, const char** argv) {
 		update.effect.vibrate.amplitude = 0.75;
 		update.effect.vibrate.frequency = 201;
 		printf("vibrate\n");
-		for(size_t i = 0; i < connected; ++i) {
+		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
-		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
+		if (report_hid_trigger(handles, connected, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
@@ -363,11 +556,11 @@ int main(int argc, const char** argv) {
 		update.effect.vibrate_slope.frequency = 201;
 		update.effect.vibrate_slope.period = 4;
 		printf("vibrate slope\n");
-		for(size_t i = 0; i < connected; ++i) {
+		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
-		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
+		if (report_hid_trigger(handles, connected, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
@@ -385,11 +578,11 @@ int main(int argc, const char** argv) {
 		update.effect.multiple_vibrate.frequency = 201;
 		update.effect.multiple_vibrate.period = 4;
 		printf("multiple vibrate\n");
-		for(size_t i = 0; i < connected; ++i) {
+		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
-		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
+		if (report_hid_trigger(handles, connected, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
@@ -415,17 +608,17 @@ int main(int argc, const char** argv) {
 		update.effect.multiple_vibrate_sections.resistance[8] = 1.0f;
 		update.effect.multiple_vibrate_sections.resistance[9] = 1.0f;
 		printf("multiple vibrate sections\n");
-		for(size_t i = 0; i < connected; ++i) {
+		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
-		if(report_hid_trigger(handles, connected, 5000000, 8000)) {
+		if (report_hid_trigger(handles, connected, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		reset_trigger:
+	reset_trigger:
 		update.mode = LIBRESENSE_EFFECT_OFF;
-		for(size_t i = 0; i < connected; ++i) {
+		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
 		libresense_push(handles, connected);
@@ -433,7 +626,7 @@ int main(int argc, const char** argv) {
 	}
 
 	{
-		wait_until_options_clear(handles[0], 250000);
+		wait_until_options_clear(handles, connected, 250000);
 		printf("testing mic led...\n");
 		libresense_audio_update update = { 0 };
 		update.jack_volume = 1.0;
@@ -446,43 +639,43 @@ int main(int argc, const char** argv) {
 		update.mic_led = LIBRESENSE_MIC_LED_ON;
 
 		printf("mic led should be on...\n");
-		for(size_t i = 0; i < connected; ++i) {
+		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_audio(handles[i], update);
 		}
 		libresense_push(handles, connected);
-		if(report_hid_close(handles, connected, 5000000, 10000)) {
+		if (report_hid_close(handles, connected, 5000000, 10000)) {
 			goto reset_mic;
 		}
 
 		update.mic_led = LIBRESENSE_MIC_LED_FLASH;
 		printf("mic led should be flashing...\n");
-		for(size_t i = 0; i < connected; ++i) {
+		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_audio(handles[i], update);
 		}
 		libresense_push(handles, connected);
-		if(report_hid_close(handles, connected, 5000000, 10000)) {
+		if (report_hid_close(handles, connected, 5000000, 10000)) {
 			goto reset_mic;
 		}
 
 		update.mic_led = LIBRESENSE_MIC_LED_FAST_FLASH;
 		printf("mic led should be flashing faster (maybe)...\n");
-		for(size_t i = 0; i < connected; ++i) {
+		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_audio(handles[i], update);
 		}
 		libresense_push(handles, connected);
-		if(report_hid_close(handles, connected, 5000000, 10000)) {
+		if (report_hid_close(handles, connected, 5000000, 10000)) {
 			goto reset_mic;
 		}
 
 		update.mic_led = LIBRESENSE_MIC_LED_OFF;
 		printf("mic led should be off...\n");
-		for(size_t i = 0; i < connected; ++i) {
+		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_audio(handles[i], update);
 		}
 		libresense_push(handles, connected);
 		report_hid_close(handles, connected, 5000000, 10000);
 
-		reset_mic:
+	reset_mic:
 		printf("restoring mic based on state...\n");
 		for (size_t i = 0; i < connected; ++i) {
 			update.mic_led = datum[i].device.muted ? LIBRESENSE_MIC_LED_ON : LIBRESENSE_MIC_LED_OFF;
@@ -493,101 +686,101 @@ int main(int argc, const char** argv) {
 	}
 
 	{
-		wait_until_options_clear(handles[0], 250000);
+		wait_until_options_clear(handles, connected, 250000);
 		printf("testing rumble...\n");
 		float rumble;
 
-		const float ONE_OVER_255 = 1.0f/255.0f;
+		const float ONE_OVER_255 = 1.0f / 255.0f;
 		printf("large motor...\n");
-		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
-			for(size_t i = 0; i < connected; ++i) {
+		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+			for (size_t i = 0; i < connected; ++i) {
 				libresense_update_rumble(handles[i], rumble, 0.0f, 0.5f, false);
 			}
 			libresense_push(handles, connected);
-			if(report_hid_close(handles, connected, 10000, 10000)) {
+			if (report_hid_close(handles, connected, 10000, 10000)) {
 				goto reset_motor;
 			}
 		}
 
 		printf("small motor...\n");
-		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
-			for(size_t i = 0; i < connected; ++i) {
+		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+			for (size_t i = 0; i < connected; ++i) {
 				libresense_update_rumble(handles[i], 0, rumble, 0.5f, false);
 			}
 			libresense_push(handles, connected);
-			if(report_hid_close(handles, connected, 10000, 10000)) {
+			if (report_hid_close(handles, connected, 10000, 10000)) {
 				goto reset_motor;
 			}
 		}
 
 		printf("both motors...\n");
-		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
-			for(size_t i = 0; i < connected; ++i) {
+		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+			for (size_t i = 0; i < connected; ++i) {
 				libresense_update_rumble(handles[i], rumble, rumble, 0.5f, false);
 			}
 			libresense_push(handles, connected);
-			if(report_hid_close(handles, connected, 10000, 10000)) {
+			if (report_hid_close(handles, connected, 10000, 10000)) {
 				goto reset_motor;
 			}
 		}
 
 		printf("rumble feedback test...\n");
-		for(int rumble_test = 0; rumble_test < 8; rumble_test++) {
-			for(size_t i = 0; i < connected; ++i) {
+		for (int rumble_test = 0; rumble_test < 8; rumble_test++) {
+			for (size_t i = 0; i < connected; ++i) {
 				libresense_update_rumble(handles[i], rumble_test % 2 == 0 ? 1.0f : 0.1f, rumble_test % 2 == 0 ? 1.0f : 0.1f, 0.5f, false);
 			}
 			libresense_push(handles, connected);
-			if(report_hid_close(handles, connected, 250000, 10000)) {
+			if (report_hid_close(handles, connected, 250000, 10000)) {
 				goto reset_motor;
 			}
 		}
 
 		printf("large motor (legacy)...\n");
-		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
-			for(size_t i = 0; i < connected; ++i) {
+		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+			for (size_t i = 0; i < connected; ++i) {
 				libresense_update_rumble(handles[i], rumble, 0.0f, 0.0f, true);
 			}
 			libresense_push(handles, connected);
-			if(report_hid_close(handles, connected, 10000, 10000)) {
+			if (report_hid_close(handles, connected, 10000, 10000)) {
 				goto reset_motor;
 			}
 		}
 
 		printf("small motor (legacy)...\n");
-		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
-			for(size_t i = 0; i < connected; ++i) {
+		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+			for (size_t i = 0; i < connected; ++i) {
 				libresense_update_rumble(handles[i], 0, rumble, 0.0f, true);
 			}
 			libresense_push(handles, connected);
-			if(report_hid_close(handles, connected, 10000, 10000)) {
+			if (report_hid_close(handles, connected, 10000, 10000)) {
 				goto reset_motor;
 			}
 		}
 
 		printf("both motors (legacy)...\n");
-		for(rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
-			for(size_t i = 0; i < connected; ++i) {
+		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+			for (size_t i = 0; i < connected; ++i) {
 				libresense_update_rumble(handles[i], rumble, rumble, 0.0f, true);
 			}
 			libresense_push(handles, connected);
-			if(report_hid_close(handles, connected, 10000, 10000)) {
+			if (report_hid_close(handles, connected, 10000, 10000)) {
 				goto reset_motor;
 			}
 		}
 
 		printf("rumble feedback test (legacy)...\n");
-		for(int rumble_test = 0; rumble_test < 8; rumble_test++) {
-			for(size_t i = 0; i < connected; ++i) {
+		for (int rumble_test = 0; rumble_test < 8; rumble_test++) {
+			for (size_t i = 0; i < connected; ++i) {
 				libresense_update_rumble(handles[i], rumble_test % 2 == 0 ? 1.0f : 0.1f, rumble_test % 2 == 0 ? 1.0f : 0.1f, 0.0f, true);
 			}
 			libresense_push(handles, connected);
-			if(report_hid_close(handles, connected, 250000, 10000)) {
+			if (report_hid_close(handles, connected, 250000, 10000)) {
 				goto reset_motor;
 			}
 		}
 
-		reset_motor:
-		for(size_t i = 0; i < connected; ++i) {
+	reset_motor:
+		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_rumble(handles[i], 0, 0, 0.0f, false);
 		}
 		libresense_push(handles, connected);
@@ -595,7 +788,7 @@ int main(int argc, const char** argv) {
 	}
 
 	{
-		wait_until_options_clear(handles[0], 250000);
+		wait_until_options_clear(handles, connected, 250000);
 		printf("testing touchpad leds...\n");
 
 		libresense_led_update update = { 0 };
@@ -606,55 +799,55 @@ int main(int argc, const char** argv) {
 		update.led = LIBRESENSE_LED_NONE;
 		update.effect = LIBRESENSE_LED_EFFECT_OFF;
 		int i = 0;
-		while(true) {
-			if(i++ > 4*30) { // 250 ms per frame, 4 frames per second. 4 * 30 = 30 seconds worth of frames.
+		while (true) {
+			if (i++ > 4 * 30) { // 250 ms per frame, 4 frames per second. 4 * 30 = 30 seconds worth of frames.
 				break;
 			}
 
-			if(i < 10) {
-				if(i == 1) {
+			if (i < 10) {
+				if (i == 1) {
 					update.led = LIBRESENSE_LED_PLAYER_1;
-				} else if(i == 2) {
+				} else if (i == 2) {
 					update.led = LIBRESENSE_LED_PLAYER_2;
-				} else if(i == 3) {
+				} else if (i == 3) {
 					update.led = LIBRESENSE_LED_PLAYER_3;
-				} else if(i == 4) {
+				} else if (i == 4) {
 					update.led = LIBRESENSE_LED_PLAYER_4;
-				} else if(i == 5) {
+				} else if (i == 5) {
 					update.led = LIBRESENSE_LED_PLAYER_5;
-				} else if(i == 6) {
+				} else if (i == 6) {
 					update.led = LIBRESENSE_LED_PLAYER_6;
-				} else if(i == 7) {
+				} else if (i == 7) {
 					update.led = LIBRESENSE_LED_PLAYER_7;
-				} else if(i == 8) {
+				} else if (i == 8) {
 					update.led = LIBRESENSE_LED_PLAYER_8;
-				} else if(i == 9) {
+				} else if (i == 9) {
 					update.led = LIBRESENSE_LED_ALL;
 				}
-			} else if(i < 42) {
+			} else if (i < 42) {
 				update.led = i - 10;
 			} else {
 				const int v = (i - 43) % 8;
-				if(v == 0) {
+				if (v == 0) {
 					update.led = LIBRESENSE_LED_1;
-				} else if(v == 1) {
+				} else if (v == 1) {
 					update.led = LIBRESENSE_LED_2;
-				} else if(v == 2) {
+				} else if (v == 2) {
 					update.led = LIBRESENSE_LED_3;
-				} else if(v == 3) {
+				} else if (v == 3) {
 					update.led = LIBRESENSE_LED_4;
-				} else if(v == 4) {
+				} else if (v == 4) {
 					update.led = LIBRESENSE_LED_5;
-				} else if(v == 5) {
+				} else if (v == 5) {
 					update.led = LIBRESENSE_LED_4;
-				} else if(v == 6) {
+				} else if (v == 6) {
 					update.led = LIBRESENSE_LED_3;
-				} else if(v == 7) {
+				} else if (v == 7) {
 					update.led = LIBRESENSE_LED_2;
 				}
 			}
 
-			for(size_t j = 0; j < connected; ++j) {
+			for (size_t j = 0; j < connected; ++j) {
 				libresense_update_led(handles[j], update);
 			}
 			libresense_push(handles, connected);
@@ -663,15 +856,14 @@ int main(int argc, const char** argv) {
 			update.color.y = color.x;
 			update.color.z = color.y;
 
-			if(report_hid_close(handles, connected, 250000, 10000)) {
+			if (report_hid_close(handles, connected, 250000, 10000)) {
 				goto reset_led;
 			}
 		}
-
 	}
 
-	shutdown:
-	reset_led:
+shutdown:
+reset_led:
 	{
 		libresense_led_update update;
 		update.color.x = 1.0;
@@ -679,35 +871,17 @@ int main(int argc, const char** argv) {
 		update.color.z = 1.0;
 		update.brightness = LIBRESENSE_LEVEL_HIGH;
 		update.effect = LIBRESENSE_LED_EFFECT_OFF;
-		for(size_t j = 0; j < connected; ++j) {
-			switch(j) {
-				case 0:
-					update.led = LIBRESENSE_LED_PLAYER_1;
-				break;
-				case 1:
-					update.led = LIBRESENSE_LED_PLAYER_2;
-				break;
-				case 2:
-					update.led = LIBRESENSE_LED_PLAYER_3;
-				break;
-				case 3:
-					update.led = LIBRESENSE_LED_PLAYER_4;
-				break;
-				case 4:
-					update.led = LIBRESENSE_LED_PLAYER_5;
-				break;
-				case 5:
-					update.led = LIBRESENSE_LED_PLAYER_6;
-				break;
-				case 6:
-					update.led = LIBRESENSE_LED_PLAYER_7;
-				break;
-				case 7:
-					update.led = LIBRESENSE_LED_PLAYER_8;
-				break;
-				default:
-					update.led = LIBRESENSE_LED_PLAYER_1;
-				break;
+		for (size_t j = 0; j < connected; ++j) {
+			switch (j) {
+				case 0: update.led = LIBRESENSE_LED_PLAYER_1; break;
+				case 1: update.led = LIBRESENSE_LED_PLAYER_2; break;
+				case 2: update.led = LIBRESENSE_LED_PLAYER_3; break;
+				case 3: update.led = LIBRESENSE_LED_PLAYER_4; break;
+				case 4: update.led = LIBRESENSE_LED_PLAYER_5; break;
+				case 5: update.led = LIBRESENSE_LED_PLAYER_6; break;
+				case 6: update.led = LIBRESENSE_LED_PLAYER_7; break;
+				case 7: update.led = LIBRESENSE_LED_PLAYER_8; break;
+				default: update.led = LIBRESENSE_LED_PLAYER_1; break;
 			}
 			libresense_update_led(handles[j], update);
 		}
@@ -716,9 +890,9 @@ int main(int argc, const char** argv) {
 
 	usleep(100000);
 
-	for(size_t i = 0; i < connected; ++i) {
+	for (size_t i = 0; i < connected; ++i) {
 		libresense_close(handles[i]);
-		if(IS_LIBRESENSE_BAD(result)) {
+		if (IS_LIBRESENSE_BAD(result)) {
 			libresense_errorf(stderr, result, "error closing hid");
 		}
 	}

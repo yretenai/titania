@@ -6,7 +6,7 @@
 #include "structures.h"
 
 libresense_result
-libresense_convert_edge_profile_input(dualsense_profile_data input[3], libresense_edge_profile *profile) {
+libresense_convert_edge_profile_input(dualsense_profile_data input[3], libresense_edge_profile* profile) {
 	const dualsense_profile_p1* p1 = (const dualsense_profile_p1*) &input[0];
 	const dualsense_profile_p2* p2 = (const dualsense_profile_p2*) &input[1];
 	const dualsense_profile_p3* p3 = (const dualsense_profile_p3*) &input[2];

@@ -15,6 +15,7 @@ static bool is_initialized = false;
 
 static libresense_device_info device_infos[] = {
 	{ 0x054C, 0x0CE6 }, // DualSense
+	{ 0x054C, 0x0CE7 }, // DualSense Prototype (who even has this?)
 	{ 0x054C, 0x0DF2 }, // DualSense Edge
 };
 
@@ -41,7 +42,7 @@ libresense_init_checked(const int size) {
 }
 
 libresense_result
-libresense_get_hids(libresense_hid *hids, const size_t hids_length) {
+libresense_get_hids(libresense_hid* hids, const size_t hids_length) {
 	CHECK_INIT();
 	size_t index = 0;
 
@@ -52,8 +53,8 @@ libresense_get_hids(libresense_hid *hids, const size_t hids_length) {
 
 		const libresense_device_info info = device_infos[i];
 
-		struct hid_device_info *root = hid_enumerate(info.vendor_id, info.product_id);
-		const struct hid_device_info *dev = root;
+		struct hid_device_info* root = hid_enumerate(info.vendor_id, info.product_id);
+		const struct hid_device_info* dev = root;
 		while (dev) {
 			if (wcslen(dev->serial_number) >= 0x100) {
 				hid_free_enumeration(root);
@@ -88,7 +89,7 @@ libresense_get_hids(libresense_hid *hids, const size_t hids_length) {
 }
 
 size_t
-libresense_get_feature_report(hid_device *handle, const int report_id, uint8_t *buffer, const size_t size) {
+libresense_get_feature_report(hid_device* handle, const int report_id, uint8_t* buffer, const size_t size) {
 	if (handle == NULL || buffer == NULL || size < 2) {
 		return 0;
 	}
@@ -98,7 +99,7 @@ libresense_get_feature_report(hid_device *handle, const int report_id, uint8_t *
 }
 
 size_t
-libresense_send_feature_report(hid_device *handle, const int report_id, uint8_t *buffer, const size_t size, const bool preserve) {
+libresense_send_feature_report(hid_device* handle, const int report_id, uint8_t* buffer, const size_t size, const bool preserve) {
 	if (handle == NULL || buffer == NULL || size < 2) {
 		return 0;
 	}
@@ -112,7 +113,7 @@ libresense_send_feature_report(hid_device *handle, const int report_id, uint8_t 
 }
 
 size_t
-libresense_debug_get_feature_report(const libresense_handle handle, const int report_id, uint8_t *buffer, const size_t size) {
+libresense_debug_get_feature_report(const libresense_handle handle, const int report_id, uint8_t* buffer, const size_t size) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
@@ -131,8 +132,24 @@ libresense_debug_get_feature_report(const libresense_handle handle, const int re
 #define MAC6_TO_UINT64(v) \
 	(((uint64_t) v[5] << 40) | ((uint64_t) v[4] << 32) | ((uint64_t) v[3] << 24) | ((uint64_t) v[2] << 16) | ((uint64_t) v[1] << 8) | (uint64_t) v[0])
 
+#define COPY_VERSION_HARDWARE(name) \
+	handle->firmware.name.reserved = firmware.name.hardware.reserved; \
+	handle->firmware.name.variation = firmware.name.hardware.variation; \
+	handle->firmware.name.generation = firmware.name.hardware.generation; \
+	handle->firmware.name.revision = firmware.name.hardware.revision
+
+#define COPY_VERSION_UPDATE(name) \
+	handle->firmware.name.major = firmware.name.update.major; \
+	handle->firmware.name.minor = firmware.name.update.minor; \
+	handle->firmware.name.revision = firmware.name.update.revision
+
+#define COPY_VERSION_FIRMWARE(name) \
+	handle->firmware.name.major = firmware.name.firmware.major; \
+	handle->firmware.name.minor = firmware.name.firmware.minor; \
+	handle->firmware.name.revision = firmware.name.firmware.revision
+
 libresense_result
-libresense_open(libresense_hid *handle) {
+libresense_open(libresense_hid* handle) {
 	CHECK_INIT();
 
 	for (int i = 0; i < LIBRESENSE_MAX_CONTROLLERS; i++) {
@@ -158,9 +175,17 @@ libresense_open(libresense_hid *handle) {
 				memcpy(handle->firmware.datetime + sizeof(firmware.date) + 1, firmware.time, sizeof(firmware.time));
 				handle->firmware.datetime[sizeof(handle->firmware.datetime) - 1] = 0;
 
-				for(int j = 0; j < LIBRESENSE_VERSION_MAX; ++j) {
-					handle->firmware.versions[j] = (libresense_firmware_version) { firmware.versions[j].major, firmware.versions[j].minor };
-				}
+				handle->firmware.type = firmware.type;
+				handle->firmware.series = firmware.series;
+				COPY_VERSION_HARDWARE(hardware);
+				COPY_VERSION_UPDATE(update);
+				COPY_VERSION_FIRMWARE(firmware);
+				COPY_VERSION_FIRMWARE(firmware2);
+				COPY_VERSION_FIRMWARE(firmware3);
+				COPY_VERSION_FIRMWARE(device);
+				COPY_VERSION_FIRMWARE(device2);
+				COPY_VERSION_FIRMWARE(device3);
+				COPY_VERSION_FIRMWARE(mcu_firmware);
 			} else {
 				handle->firmware.datetime[0] = 0;
 			}
@@ -336,7 +361,7 @@ libresense_open(libresense_hid *handle) {
 }
 
 libresense_result
-libresense_pull(libresense_handle *handle, const size_t handle_count, libresense_data *data) {
+libresense_pull(libresense_handle* handle, const size_t handle_count, libresense_data* data) {
 	CHECK_INIT();
 	if (handle == NULL || data == NULL) {
 		return LIBRESENSE_INVALID_DATA;
@@ -351,8 +376,8 @@ libresense_pull(libresense_handle *handle, const size_t handle_count, libresense
 
 	for (size_t i = 0; i < handle_count; i++) {
 		CHECK_HANDLE_VALID(handle[i]);
-		dualsense_state *hid_state = &state[handle[i]];
-		uint8_t *buffer = hid_state->input.buffer;
+		dualsense_state* hid_state = &state[handle[i]];
+		uint8_t* buffer = hid_state->input.buffer;
 		size_t size = sizeof(dualsense_input_msg_ex);
 		if (!hid_state->hid_info.is_bluetooth) {
 			buffer = hid_state->input.data.msg.buffer;
@@ -381,7 +406,7 @@ libresense_pull(libresense_handle *handle, const size_t handle_count, libresense
 }
 
 libresense_result
-libresense_push(const libresense_handle *handle, const size_t handle_count) {
+libresense_push(const libresense_handle* handle, const size_t handle_count) {
 	CHECK_INIT();
 	if (handle == NULL) {
 		return LIBRESENSE_INVALID_DATA;
@@ -393,10 +418,10 @@ libresense_push(const libresense_handle *handle, const size_t handle_count) {
 
 	for (size_t i = 0; i < handle_count; i++) {
 		CHECK_HANDLE_VALID(handle[i]);
-		dualsense_state *hid_state = &state[handle[i]];
+		dualsense_state* hid_state = &state[handle[i]];
 		hid_state->output.data.msg.data.state_id = hid_state->seq;
 
-		const uint8_t *buffer = hid_state->output.buffer;
+		const uint8_t* buffer = hid_state->output.buffer;
 		size_t size = sizeof(dualsense_output_msg_ex);
 		if (!hid_state->hid_info.is_bluetooth) {
 			buffer = hid_state->output.data.msg.buffer;
@@ -423,7 +448,7 @@ libresense_update_led(const libresense_handle handle, const libresense_led_updat
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
-	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
+	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 
 	if(data.color.x >= 0.0f && data.color.y >= 0.0f && data.color.z >= 0.0f) {
 		hid_state->flags.control2 = true;
@@ -459,7 +484,7 @@ libresense_update_audio(const libresense_handle handle, const libresense_audio_u
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
-	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
+	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 
 	hid_state->flags.audio_output = true;
 	hid_state->audio.flags.force_external_mic = (data.mic_selection & LIBRESENSE_MIC_EXTERNAL) == LIBRESENSE_MIC_EXTERNAL;
@@ -485,7 +510,7 @@ libresense_update_control(const libresense_handle handle, const libresense_contr
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
-	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
+	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 
 	hid_state->flags.control1 = hid_state->flags.control2 = true;
 
@@ -523,7 +548,7 @@ libresense_update_control(const libresense_handle handle, const libresense_contr
 
 
 libresense_result
-compute_effect(dualsense_effect_output *effect, dualsense_output_msg *msg, const libresense_effect_update trigger, const float power_reduction) {
+compute_effect(dualsense_effect_output* effect, dualsense_output_msg* msg, const libresense_effect_update trigger, const float power_reduction) {
 	// clear
 	effect->mode = 0;
 	effect->params.multiple.id = 0;
@@ -646,7 +671,7 @@ check_if_trigger_state_bad(const libresense_handle handle, const uint8_t id) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
-	const dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
+	const dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 	if (hid_state->effects[id].mode >= 0xF0) { // these are calibration modes, will temporarily brick the controller!!
 		return LIBRESENSE_INVALID_DATA;
 	}
@@ -659,7 +684,7 @@ libresense_update_effect(const libresense_handle handle, const libresense_effect
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
-	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
+	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 	hid_state->flags.left_trigger_motor = left_trigger.mode != LIBRESENSE_EFFECT_NONE;
 	hid_state->flags.right_trigger_motor = right_trigger.mode != LIBRESENSE_EFFECT_NONE;
 
@@ -694,10 +719,10 @@ libresense_update_rumble(const libresense_handle handle, const float large_motor
 	CHECK_HANDLE_VALID(handle);
 
 	const libresense_hid hid = state[handle].hid_info;
-	dualsense_output_msg *hid_state = &state[handle].output.data.msg.data;
+	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 	hid_state->flags.rumble = hid_state->flags.motor_power = true;
 
-	if(hid.is_edge || hid.firmware.versions[LIBRESENSE_VERSION_FIRMWARE].major >= 0x224) {
+	if(hid.is_edge || hid.firmware.update.major >= 0x224) {
 		hid_state->flags.control2 = true;
 		hid_state->control2.advanced_rumble_control = emulate_legacy_behavior;
 		hid_state->flags.haptics = !emulate_legacy_behavior;

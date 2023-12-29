@@ -172,7 +172,7 @@ typedef struct PACKED {
 		bool idle : 1;
 	} id;
 
-	dualsense_vector2 coord;
+	dualsense_vector2 pos;
 } dualsense_touch;
 
 static_assert(sizeof(dualsense_touch) == 4, "dualsense_touch is not 4 bytes");
@@ -196,7 +196,19 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_battery_state) == 1, "dualsense_battery_state is not 1 byte");
 
-static_assert(sizeof(libresense_device_state) == 2, "libresense_device_state is not 2 byte");
+
+typedef struct {
+	bool headphones : 1;
+	bool headset : 1;
+	bool muted : 1;
+	bool usb_data : 1;
+	bool usb_power : 1;
+	uint8_t reserved1 : 3;
+	bool external_mic : 1;
+	bool haptic_filter : 1;
+	uint8_t reserved2 : 6;
+} dualsense_device_state_flags;
+static_assert(sizeof(dualsense_device_state_flags) == 2, "dualsense_device_state_flags is not 2 byte");
 
 typedef struct PACKED {
 	uint8_t right : 4;
@@ -229,8 +241,8 @@ typedef struct PACKED {
 				bool triangle : 1;
 			} unmapped_buttons;
 			struct PACKED {
-				bool powersave_state : 1; // this is updated with motor power state
-				libresense_level brightness_override : 2; // this is updated *somewhere* -> setting the entire report to 0xFF sets this to 0b11
+				bool emulating_rumble : 1; // this is updated with motor power state flag
+				libresense_level brightness_override : 2; // this is updated* somewhere* -> setting the entire report to 0xFF sets this to 0b11
 				bool unknown3 : 1; // ??
 				bool mute : 1;
 				bool ps : 1;
@@ -242,7 +254,7 @@ typedef struct PACKED {
 		uint32_t battery_time; // why tf is this not reserved, sony please
 	};
 	dualsense_battery_state battery;
-	libresense_device_state device;
+	dualsense_device_state_flags device;
 } dualsense_device_state;
 
 static_assert(sizeof(dualsense_device_state) == 8, "dualsense_device_state is not 8 bytes");
@@ -520,9 +532,23 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_calibration_info) == 41, "dualsense_calibration_info is not 41 bytes");
 
-typedef struct PACKED {
-	uint16_t major;
-	uint16_t minor;
+typedef union {
+	struct PACKED {
+		uint8_t revision;
+		uint8_t generation;
+		uint8_t variation;
+		uint8_t reserved;
+	} hardware;
+	struct PACKED {
+		uint16_t major;
+		uint8_t minor;
+		uint8_t revision;
+	} update;
+	struct PACKED {
+		uint8_t major;
+		uint8_t minor;
+		uint16_t revision;
+	} firmware;
 } dualsense_firmware_version;
 
 static_assert(sizeof(dualsense_firmware_version) == 4, "dualsense_firmware_version is 4 bytes");
@@ -531,7 +557,17 @@ typedef struct PACKED {
 	uint8_t report_id;
 	char date[DUALSENSE_FIRMWARE_VERSION_DATE_LEN];
 	char time[DUALSENSE_FIRMWARE_VERSION_TIME_LEN];
-	dualsense_firmware_version versions[LIBRESENSE_VERSION_MAX];
+	uint16_t type;
+	uint16_t series;
+	dualsense_firmware_version hardware;
+	dualsense_firmware_version firmware;
+	dualsense_firmware_version device;
+	dualsense_firmware_version device2;
+	dualsense_firmware_version device3;
+	dualsense_firmware_version update;
+	dualsense_firmware_version firmware2;
+	dualsense_firmware_version firmware3;
+	dualsense_firmware_version mcu_firmware;
 	uint32_t checksum;
 } dualsense_firmware_info;
 
@@ -556,7 +592,7 @@ typedef struct {
 } libresense_calibration_bit;
 
 typedef struct {
-	hid_device *hid;
+	hid_device* hid;
 	libresense_hid hid_info;
 	libresense_calibration_bit calibration[6];
 	uint32_t seq;
@@ -663,7 +699,7 @@ extern uint32_t crc_seed_feature;
  * @param calibration: calibration data
  */
 void
-libresense_convert_input(const libresense_hid hid_info, const dualsense_input_msg input, libresense_data *data, libresense_calibration_bit calibration[6]);
+libresense_convert_input(const libresense_hid hid_info, const dualsense_input_msg input, libresense_data* data, libresense_calibration_bit calibration[6]);
 
 /**
  * @brief todo
@@ -672,7 +708,7 @@ libresense_convert_input(const libresense_hid hid_info, const dualsense_input_ms
  * @param profile: the profile to convert into
  */
 libresense_result
-libresense_convert_edge_profile_input(dualsense_profile_data input[3], libresense_edge_profile *profile); // todo
+libresense_convert_edge_profile_input(dualsense_profile_data input[3], libresense_edge_profile* profile); // todo
 
 /**
  * @brief todo
@@ -691,7 +727,7 @@ libresense_convert_edge_profile_output(libresense_edge_profile input, dualsense_
  * @param size: the size of the buffer
  */
 size_t
-libresense_get_feature_report(hid_device *handle, const int report_id, uint8_t *buffer, const size_t size);
+libresense_get_feature_report(hid_device* handle, const int report_id, uint8_t* buffer, const size_t size);
 
 /**
  * @brief send a HID feature report
@@ -702,7 +738,7 @@ libresense_get_feature_report(hid_device *handle, const int report_id, uint8_t *
  * @param preserve: preserve byte 0
  */
 size_t
-libresense_send_feature_report(hid_device *handle, const int report_id, uint8_t *buffer, const size_t size, const bool preserve);
+libresense_send_feature_report(hid_device* handle, const int report_id, uint8_t* buffer, const size_t size, const bool preserve);
 
 /**
  * @brief initializes checksum tables
@@ -717,6 +753,6 @@ libresense_init_checksum(void);
  * @param size: sizeof(buffer)
  */
 uint32_t
-libresense_calc_checksum(const uint32_t state, const uint8_t *buffer, const size_t size);
+libresense_calc_checksum(const uint32_t state, const uint8_t* buffer, const size_t size);
 
 #endif

@@ -57,20 +57,6 @@ typedef enum {
 } libresense_edge_profile_id;
 
 typedef enum {
-	LIBRESENSE_VERSION_UNKNOWN0 = 0,
-	LIBRESENSE_VERSION_UNKNOWN1 = 1,
-	LIBRESENSE_VERSION_UNKNOWN2 = 2,
-	LIBRESENSE_VERSION_UNKNOWN3 = 3,
-	LIBRESENSE_VERSION_UNKNOWN4 = 4,
-	LIBRESENSE_VERSION_UNKNOWN5 = 5,
-	LIBRESENSE_VERSION_FIRMWARE = 6,
-	LIBRESENSE_VERSION_UNKNOWN7 = 7,
-	LIBRESENSE_VERSION_UNKNOWN8 = 8,
-	LIBRESENSE_VERSION_UNKNOWN9 = 9,
-	LIBRESENSE_VERSION_MAX
-} libresense_version_id;
-
-typedef enum {
 	LIBRESENSE_LEVEL_HIGH = 0,
 	LIBRESENSE_LEVEL_MEDIUM = 1,
 	LIBRESENSE_LEVEL_LOW = 2
@@ -99,7 +85,6 @@ typedef enum ENUM_FORCE_8 {
 extern const char *libresense_error_msg[LIBRESENSE_ERROR_MAX + 1];
 extern const char *libresense_battery_state_msg[LIBRESENSE_BATTERY_MAX + 1];
 extern const char *libresense_edge_profile_id_msg[LIBRESENSE_PROFILE_MAX + 1];
-extern const char *libresense_version_msg[LIBRESENSE_VERSION_MAX + 1];
 extern const char *libresense_level_msg[LIBRESENSE_LEVEL_LOW + 2];
 extern const char *libresense_trigger_effect_msg[LIBRESENSE_TRIGGER_EFFECT_MAX + 1];
 extern const int libresense_max_controllers;
@@ -133,31 +118,31 @@ typedef struct {
 } libresense_minmax;
 
 typedef struct {
-	bool dpad_up : 1;
-	bool dpad_right : 1;
-	bool dpad_down : 1;
-	bool dpad_left : 1;
-	bool square : 1;
-	bool cross : 1;
-	bool circle : 1;
-	bool triangle : 1;
-	bool l1 : 1;
-	bool r1 : 1;
-	bool l2 : 1;
-	bool r2 : 1;
-	bool share : 1;
-	bool option : 1;
-	bool l3 : 1;
-	bool r3 : 1;
-	bool ps : 1;
-	bool touch : 1;
-	bool mute : 1;
-	bool reserved : 1;
-	bool edge_f1 : 1;
-	bool edge_f2 : 1;
-	bool edge_lb : 1;
-	bool edge_rb : 1;
-	uint8_t edge_reserved : 8;
+	bool dpad_up;
+	bool dpad_right;
+	bool dpad_down;
+	bool dpad_left;
+	bool square;
+	bool cross;
+	bool circle;
+	bool triangle;
+	bool l1;
+	bool r1;
+	bool l2;
+	bool r2;
+	bool share;
+	bool option;
+	bool l3;
+	bool r3;
+	bool ps;
+	bool touch;
+	bool mute;
+	bool edge_f1;
+	bool edge_f2;
+	bool edge_lb;
+	bool edge_rb;
+	bool reserved;
+	uint8_t edge_reserved;
 } libresense_buttons;
 
 typedef struct {
@@ -170,7 +155,7 @@ typedef struct {
 typedef struct {
 	uint32_t id;
 	bool active;
-	libresense_vector2i coords;
+	libresense_vector2i pos;
 } libresense_touchpad;
 
 typedef struct {
@@ -190,31 +175,50 @@ typedef struct {
 } libresense_sensors;
 
 typedef struct {
-	bool headphones : 1;
-	bool headset : 1;
-	bool muted : 1;
-	bool usb_data : 1;
-	bool usb_power : 1;
-	uint8_t reserved1 : 3;
-	bool external_mic : 1;
-	bool mic_filter : 1;
-	uint8_t reserved2 : 6;
+	bool headphones;
+	bool headset;
+	bool muted;
+	bool usb_data;
+	bool usb_power;
+	bool external_mic;
+	bool haptic_filter;
+	uint16_t reserved;
 } libresense_device_state;
 
 typedef struct {
 	float level;
 	libresense_battery_state state;
-	uint8_t battery_error;
 } libresense_battery;
 
 typedef struct {
 	uint16_t major;
-	uint16_t minjor;
+	uint16_t minor;
+	uint16_t revision;
 } libresense_firmware_version;
 
 typedef struct {
+	uint16_t reserved;
+	uint16_t variation;
+	uint16_t generation;
+	uint16_t revision;
+} libresense_firmware_hardware;
+
+typedef struct {
 	char datetime[LIBRESENSE_FIRMWARE_DATE_LEN];
-	libresense_firmware_version versions[LIBRESENSE_VERSION_MAX];
+	uint16_t type;
+	// 0x0004 = DualSense (0xCE6, Bond)
+	// 0x???? = DualSense Prototype (0xCE7, Aston)
+	// 0x0044 = DualSense Edge (0xDF2, ?? pick a bond car lol i'm guessing vanquish or valhalla)
+	uint16_t series;
+	libresense_firmware_hardware hardware;
+	libresense_firmware_version update;
+	libresense_firmware_version firmware;
+	libresense_firmware_version firmware2;
+	libresense_firmware_version firmware3;
+	libresense_firmware_version device;
+	libresense_firmware_version device2;
+	libresense_firmware_version device3;
+	libresense_firmware_version mcu_firmware;
 } libresense_firmware_info;
 
 typedef struct {
@@ -319,7 +323,7 @@ typedef struct {
 } libresense_hid;
 
 typedef struct {
-	libresense_buttons unmapped_buttons;
+	libresense_buttons raw_buttons;
 	struct {
 		bool disconnected;
 		bool errored;
@@ -336,7 +340,7 @@ typedef struct {
 		bool unknown2;
 	} profile_indicator;
 	libresense_level brightness;
-	bool powersave_state;
+	bool emulating_rumble;
 	bool unknown;
 } libresense_edge_state;
 
