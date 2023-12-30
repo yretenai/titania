@@ -253,11 +253,11 @@ libresense_open(libresense_hid* handle) {
 				};
 
 				for (int32_t j = 0; j < LIBRESENSE_PROFILE_MAX; ++j) {
-					dualsense_profile_data profile_data[3];
+					dualsense_profile_msg profile_data[3];
 					bool exit = false;
 					for(int32_t k = 0; k < 3; ++k) {
-						const size_t sz = libresense_get_feature_report(state[i].hid, profile_reports[j] + k, profile_data[i], sizeof(dualsense_profile_data));
-						if(sz != sizeof(dualsense_profile_data)) {
+						const size_t sz = libresense_get_feature_report(state[i].hid, profile_reports[j] + k, (uint8_t*) &profile_data[i], sizeof(dualsense_profile_msg));
+						if(sz != sizeof(dualsense_profile_msg)) {
 							exit = true;
 							break;
 						}

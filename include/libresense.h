@@ -297,10 +297,8 @@ typedef union {
 		libresense_edge_button_id l3;
 		libresense_edge_button_id left_paddle;
 		libresense_edge_button_id right_paddle;
-		libresense_edge_button_id options;
-		libresense_edge_button_id touch;
 	};
-	libresense_edge_button_id buttons[0x12];
+	libresense_edge_button_id buttons[0x10];
 } libresense_edge_button_remap;
 
 typedef struct {

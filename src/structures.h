@@ -165,6 +165,11 @@ typedef struct PACKED {
 	uint16_t y : 12;
 } dualsense_vector2;
 
+typedef struct PACKED {
+	uint8_t x;
+	uint8_t y;
+} dualsense_vector2b;
+
 static_assert(sizeof(dualsense_vector2) == 3, "dualsense_vector2 is not 3 bytes");
 
 typedef struct PACKED {
@@ -634,52 +639,64 @@ typedef struct {
 	uint16_t product_id;
 } libresense_device_info;
 
-typedef uint8_t dualsense_profile_guid[0x10];
-typedef uint8_t dualsense_profile_data[0x40];
+typedef uint8_t dualsense_profile_uuid[0x10];
 
 static_assert(sizeof(libresense_wchar) == 2, "libresense_wchar size is not 2");
 
 typedef struct PACKED {
-	uint8_t id;
-	uint8_t part;
-	uint32_t version;
-	libresense_wchar name[27];
-	uint32_t bt_checksum;
-} dualsense_profile_p1;
-static_assert(sizeof(dualsense_profile_p1) == 64, "dualsense_profile_p1 size is not 64");
+	uint8_t min;
+	uint8_t max;
+} dualsense_profile_deadzone;
+static_assert(sizeof(dualsense_profile_deadzone) == 2, "dualsense_profile_deadzone size is not 2");
+
+typedef struct PACKED {
+	uint8_t unknown;
+	dualsense_profile_deadzone deadzone;
+	dualsense_vector2b coordinates[3];
+} dualsense_profile_stick;
+static_assert(sizeof(dualsense_profile_stick) == 9, "dualsense_profile_stick size is not 9");
+
+typedef struct PACKED {
+	libresense_level brightness : 2;
+	uint8_t todo1 : 7;
+	libresense_level vibration : 2;
+	uint8_t todo2 : 5;
+} dualsense_profile_device_flags;
+static_assert(sizeof(dualsense_profile_device_flags) == 2, "dualsense_profile_device_flags size is not 2");
+
+typedef struct PACKED {
+	uint32_t todo : 32;
+} dualsense_profile_disabled_buttons;
+static_assert(sizeof(dualsense_profile_disabled_buttons) == 4, "dualsense_profile_disabled_buttons size is not 4");
+
+typedef union {
+	struct PACKED {
+		uint8_t id;
+		uint8_t part;
+		libresense_wchar name[13];
+		dualsense_profile_uuid uuid;
+		dualsense_profile_stick sticks[2];
+		dualsense_profile_deadzone triggers[2];
+		dualsense_profile_device_flags device_flags;
+		uint8_t remapped_button[0x10];
+		dualsense_profile_disabled_buttons disabled_buttons;
+		uint16_t stick_profiles[2];
+		uint64_t timestamp;
+		uint8_t reserved[14];
+		uint32_t checksum;
+	} msg;
+
+	uint8_t buffers[0x3a][3];
+} dualsense_profile;
+static_assert(sizeof(dualsense_profile) == 174, "dualsense_profile size is not 174");
 
 typedef struct PACKED {
 	uint8_t id;
 	uint8_t part;
-	libresense_wchar name[13];
-	dualsense_profile_guid guid;
-	uint8_t left_stick_unknown1;
-	uint16_t left_stick_unknown2;
-	uint8_t left_stick_curve[6];
-	uint8_t right_stick_unknown1;
-	uint16_t right_stick_unknown2;
-	uint8_t right_stick_curve[4];
-	uint32_t bt_checksum;
-} dualsense_profile_p2;
-static_assert(sizeof(dualsense_profile_p2) == 64, "dualsense_profile_p2 size is not 64");
-
-typedef struct PACKED {
-	uint8_t id;
-	uint8_t part;
-	uint8_t right_stick_curve[2];
-	uint8_t left_trigger[2];
-	uint8_t right_trigger[2];
-	uint16_t unknown1;
-	uint8_t buttons[0x12];
-	uint16_t unknown2;
-	uint16_t unknown3;
-	uint16_t unknown4;
-	uint64_t timestamp;
-	uint8_t reserved[14];
-	uint32_t full_checksum;
-	uint32_t bt_checksum;
-} dualsense_profile_p3;
-static_assert(sizeof(dualsense_profile_p3) == 64, "dualsense_profile_p3 size is not 64");
+	uint8_t blob[0x3a];
+	uint32_t checksum;
+} dualsense_profile_msg;
+static_assert(sizeof(dualsense_profile_msg) == 64, "dualsense_profile_msg size is not 64");
 
 typedef struct PACKED {
 	dualsense_report_id id;
@@ -735,19 +752,19 @@ libresense_convert_input(const libresense_hid hid_info, const dualsense_input_ms
  * @brief todo
  * convert a dualsense edge profile to libresense's representation
  * @param input: the input to convert
- * @param profile: the profile to convert into
+ * @param output: the profile to convert into
  */
 libresense_result
-libresense_convert_edge_profile_input(dualsense_profile_data input[3], libresense_edge_profile* profile); // todo
+libresense_convert_edge_profile_input(dualsense_profile_msg input[3], libresense_edge_profile* output); // todo
 
 /**
  * @brief todo
  * convert a libresense profile to dualsense edge's representation
  * @param input: the input to convert
- * @param profile: the profile to convert into
+ * @param output: the profile to convert into
  */
 libresense_result
-libresense_convert_edge_profile_output(libresense_edge_profile input, dualsense_profile_data profile[3]); // todo
+libresense_convert_edge_profile_output(libresense_edge_profile input, dualsense_profile_msg output[3]); // todo
 
 /**
  * @brief get a HID feature report
