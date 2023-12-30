@@ -146,6 +146,7 @@ typedef struct {
 	bool l3;
 	bool r3;
 	bool playstation;
+	bool touchpad;
 	bool touch;
 	bool mute;
 	bool edge_f1;
@@ -370,7 +371,7 @@ typedef struct {
 
 	libresense_level brightness;
 	bool emulating_rumble;
-	bool unknown;
+	uint8_t unknown;
 } libresense_edge_state;
 
 typedef struct {

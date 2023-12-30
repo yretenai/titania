@@ -300,6 +300,7 @@ int main(int argc, const char** argv) {
 			LIBREPRINT_BUTTON_TEST(l3); LIBREPRINT_SEP();
 			LIBREPRINT_BUTTON_TEST(r3); LIBREPRINT_SEP();
 			LIBREPRINT_BUTTON_TEST(playstation); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(touchpad); LIBREPRINT_SEP();
 			LIBREPRINT_BUTTON_TEST(touch); LIBREPRINT_SEP();
 			LIBREPRINT_BUTTON_TEST(mute); LIBREPRINT_SEP();
 			LIBREPRINT_BUTTON_TEST(edge_f1); LIBREPRINT_SEP();
@@ -409,7 +410,7 @@ int main(int argc, const char** argv) {
 				printf(" },");
 				LIBREPRINT_ENUM(data.edge_device, brightness, libresense_level_msg, "brightness"); LIBREPRINT_SEP();
 				LIBREPRINT_TEST(data.edge_device, emulating_rumble); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.edge_device, unknown);
+				LIBREPRINT_U32(data.edge_device, unknown);
 				printf(" }\n");
 			}
 			// clang-format on

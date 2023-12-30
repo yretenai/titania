@@ -266,7 +266,7 @@ typedef struct PACKED {
 	bool emulating_rumble : 1;				  // this is updated with motor power state flag
 	libresense_level brightness_override : 2; // this is updated* somewhere* -> setting the entire report to 0xFF sets this to 0b11
 	bool unknown3 : 1;						  // ??
-	bool mute : 1;
+	bool unknown4 : 1;
 	bool playstation : 1;
 	bool share : 1;
 	bool option : 1;
@@ -702,13 +702,42 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_profile_device_flags) == 2, "dualsense_profile_device_flags size is not 2");
 
+// this bitset has no order whatsoever??
 typedef struct PACKED {
-	uint8_t unknown1 : 8;
-	uint8_t unknown2 : 8;
-	uint8_t unknown3 : 6;
+	bool unknown1 : 1;
+	bool unknown2 : 1;
+	bool unknown3 : 1;
+	bool unknown4 : 1;
+	bool share : 1;
+	bool option : 1;
+	bool unknown7 : 1;
+	bool unknown8 : 1;
+
+	bool l3 : 1;
+	bool r3 : 1;
+	bool playstation : 1;
+	bool unknown12 : 1;
+	bool unknown13 : 1;
+	bool touchpad : 1;
+	bool touch : 1;
+	bool unknown16 : 1;
+
+	bool unknown17 : 1;
+	bool unknown18 : 1;
+	bool unknown19 : 1;
+	bool unknown20 : 1;
+	bool unknown21 : 1;
+	bool unknown22 : 1;
 	bool left_paddle : 1;
 	bool right_paddle : 1;
-	uint8_t unknown4 : 7;
+
+	bool unknown25 : 1;
+	bool unknown26 : 1;
+	bool unknown27 : 1;
+	bool unknown28 : 1;
+	bool unknown29 : 1;
+	bool unknown30 : 1;
+	bool unknown31 : 1;
 	bool sticks_swapped : 1;
 } dualsense_profile_disabled_buttons;
 

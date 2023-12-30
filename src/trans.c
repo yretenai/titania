@@ -73,6 +73,7 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 	data->touch[LIBRESENSE_SECONDARY].active = !input.touch[DUALSENSE_RIGHT].id.idle;
 	data->touch[LIBRESENSE_SECONDARY].pos.x = input.touch[DUALSENSE_RIGHT].pos.x;
 	data->touch[LIBRESENSE_SECONDARY].pos.y = input.touch[DUALSENSE_RIGHT].pos.y;
+	data->buttons.touchpad = data->touch[LIBRESENSE_PRIMARY].active || data->touch[LIBRESENSE_SECONDARY].active;
 
 	data->sensors.accelerometer.x = CALIBRATE(input.sensors.accelerometer.x, CALIBRATION_ACCELEROMETER_X) / DUALSENSE_ACCELEROMETER_RESOLUTION / G_CONST;
 	data->sensors.accelerometer.y = CALIBRATE(input.sensors.accelerometer.y, CALIBRATION_ACCELEROMETER_Y) / DUALSENSE_ACCELEROMETER_RESOLUTION / G_CONST;
@@ -112,7 +113,6 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 		data->edge_device.raw_buttons.cross = input.state.edge.override.cross;
 		data->edge_device.raw_buttons.circle = input.state.edge.override.circle;
 		data->edge_device.raw_buttons.triangle = input.state.edge.override.triangle;
-		data->edge_device.raw_buttons.mute = input.state.edge.override.mute;
 		data->edge_device.raw_buttons.playstation = input.state.edge.override.playstation;
 		data->edge_device.raw_buttons.share = input.state.edge.override.share;
 		data->edge_device.raw_buttons.option = input.state.edge.override.option;
@@ -130,6 +130,6 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 		data->edge_device.emulating_rumble = input.state.edge.override.emulating_rumble;
 		data->edge_device.profile_indicator.unknown1 = input.state.edge.profile.unknown1;
 		data->edge_device.profile_indicator.unknown2 = input.state.edge.profile.unknown2;
-		data->edge_device.unknown = input.state.edge.override.unknown3;
+		data->edge_device.unknown = input.state.edge.override.unknown3 | (uint8_t) input.state.edge.override.unknown4 << 1;
 	}
 }

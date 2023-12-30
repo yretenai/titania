@@ -71,6 +71,12 @@ libresense_result libresense_convert_edge_profile_input(dualsense_profile_blob i
 	output->vibration = profile.msg.device_flags.vibration;
 	output->unknown = profile.msg.device_flags.unknown;
 	output->unknown2 = profile.msg.device_flags.unknown2;
+	output->disabled_buttons.share = profile.msg.disabled_buttons.share;
+	output->disabled_buttons.option = profile.msg.disabled_buttons.option;
+	output->disabled_buttons.l3 = profile.msg.disabled_buttons.l3;
+	output->disabled_buttons.playstation = profile.msg.disabled_buttons.playstation;
+	output->disabled_buttons.touchpad = profile.msg.disabled_buttons.touchpad;
+	output->disabled_buttons.touch = profile.msg.disabled_buttons.touch;
 	output->disabled_buttons.edge_left_paddle = profile.msg.disabled_buttons.left_paddle;
 	output->disabled_buttons.edge_right_paddle = profile.msg.disabled_buttons.right_paddle;
 	// output->disabled_buttons = profile.msg.disabled_buttons.todo;
