@@ -111,8 +111,8 @@ These types are intrinsic and built-into most languages.
 REPORTS
 =======
 
-REPORT 0x1
-----------
+REPORT 0x1 INPUT
+----------------
 
 this *report* is an *INPUT DATA* report with *Report ID 1*.
 
@@ -166,6 +166,73 @@ this *report* is *64 bytes*.
 
 **\[checksum\]** checksum 
  ~ secure signed checksum of the entire message (excluding this field.)
+
+REPORT 0x2 OUTPUT
+-----------------
+
+this *report* is an *OUTPUT DATA* report with *Report ID 2*.
+
+this *report* is *64 bytes* for *DualSense Edge, and **48 bytes** for DualSense.
+
+*endianness* is *LITTLE*.
+
+REPORT 0x5 CALIBRATION
+----------------------
+
+REPORT 0x8 CONNECT
+------------------
+
+REPORT 0x9 SERIAL
+-----------------
+
+REPORT 0xA PAIR
+---------------
+
+REPORT 0x20 FIRMWARE
+--------------------
+
+REPORT 0x21 AUDIO
+-----------------
+
+REPORT 0x31 BLUETOOTH
+---------------------
+
+REPORT 0x60, 0x61, 0x63 UPDATE EDGE PROFILE
+--------------------------------------
+
+REPORT 0x63, 0x70, 0x73, 0x76, 0x79 EDGE PROFILE PART 1
+-------------------------------------------------------
+
+REPORT 0x64, 0x71, 0x74, 0x77, 0x7A EDGE PROFILE PART 2
+-------------------------------------------------------
+
+REPORT 0x65, 0x72, 0x75, 0x78, 0x7B EDGE PROFILE PART 3
+-------------------------------------------------------
+
+CHECKSUM
+--------
+
+Reports **must have** a valid checksum if transmitted with Bluetooth.
+
+:   The checksum algorithm is CRC32
+
+:   The initial state is *0xFFFFFFFF*
+
+:   The output state is XORed with `0xFFFFFFFF` (or otherwise: `~value`)
+
+:   The polynomial is 0xEDB88320
+
+:   Input Report buffers are prefixed with *0xA1*
+~   e.g 0xA1 0x01 0x80 0x80...
+
+:   Output Report buffers are prefixed with *0xA2*
+~   e.g 0xA2 0x02 0xFF 0xFF...
+
+:   Feature Report buffers are prefixed with *0xA3*
+~   e.g 0xA3 0x05 0x30 0x30...
+
+:   DualSense Edge Feature Report buffers are prefixed with *0x53*
+~   e.g 0x53 0x05 0x30 0x30...
 
 STRUCTURES
 ==========

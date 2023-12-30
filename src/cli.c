@@ -31,6 +31,8 @@ usleep(__int64 usec) {
 #include <string.h>
 #include <time.h>
 
+#include <config.h>
+
 #define LIBREPRINT_SEP() printf(",")
 #define LIBREPRINT_STR(struc, field) printf(" " #field " = %s", struc.field)
 #define LIBREPRINT_FIRMWARE_HW(struc, field) \
@@ -47,7 +49,9 @@ usleep(__int64 usec) {
 #define LIBREPRINT_BUTTON_TEST(field) printf(" " #field " = %s", data.buttons.field ? "Y" : "N")
 #define LIBREPRINT_EDGE_BUTTON_TEST(field) printf(" " #field " = %s", data.edge_device.raw_buttons.field ? "Y" : "N")
 
-#define libresense_errorf(fp, result, fmt) fprintf(fp, "[libresense] " fmt ": %s\n", libresense_error_msg[result])
+#define libresense_errorf(fp, result, fmt) fprintf(fp, "[" LIBRESENSE_PROJECT_NAME "] " fmt ": %s\n", libresense_error_msg[result])
+#define libresense_printf(fmt, ...) printf("[" LIBRESENSE_PROJECT_NAME "] " fmt "\n", __VA_ARGS__)
+#define libresense_print(fmt) printf("[" LIBRESENSE_PROJECT_NAME "] " fmt "\n")
 
 bool
 report_hid_trigger(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
@@ -151,9 +155,11 @@ wait_until_options_clear(libresense_handle* handles, const size_t handle_count, 
 
 int
 main(int argc, const char **argv) {
+	libresense_printf("version %s", LIBRESENSE_PROJECT_VERSION);
+
 	libresense_result result = libresense_init();
 	if (IS_LIBRESENSE_BAD(result)) {
-		libresense_errorf(stderr, result, "error initializing libresense");
+		libresense_errorf(stderr, result, "error initializing " LIBRESENSE_PROJECT_NAME);
 		return result;
 	}
 	libresense_hid hid[libresense_max_controllers];
@@ -173,7 +179,7 @@ main(int argc, const char **argv) {
 				libresense_exit();
 				return result;
 			}
-			printf("connected to hid %s\n", hid[hid_id].serial.mac);
+			libresense_printf("connected to hid %s", hid[hid_id].serial.mac);
 			handles[connected++] = hid[hid_id].handle;
 #ifdef LIBRESENSE_DEBUG
 			char name[0x30] = { 0 };
@@ -219,7 +225,7 @@ main(int argc, const char **argv) {
 	}
 
 	if (connected == 0) {
-		fprintf(stderr, "[libresense] no hids... connect a device\n");
+		fprintf(stderr, "[" LIBRESENSE_PROJECT_NAME "] no hids... connect a device\n");
 		libresense_exit();
 		return 1;
 	}
@@ -246,6 +252,16 @@ main(int argc, const char **argv) {
 			LIBREPRINT_TEST(data.hid, is_bluetooth); LIBREPRINT_SEP();
 			LIBREPRINT_TEST(data.hid, is_edge);
 			printf(" }\n");
+
+			if(data.hid.is_bluetooth) {
+				printf("bt {");
+				LIBREPRINT_TEST(data.bt, has_hid); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.bt, unknown); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.bt, unknown2); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.bt, unknown3); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.bt, seq);
+				printf(" }\n");
+			}
 
 			printf("firmware {");
 			LIBREPRINT_X16(hid->firmware, type);
@@ -416,7 +432,7 @@ main(int argc, const char **argv) {
 	}
 
 	if (bench) {
-		printf("testing latency, this will take 10 seconds\n");
+		libresense_print("testing latency, this will take 10 seconds");
 		struct timespec max = { INT64_MIN, INT64_MIN };
 		struct timespec min = { INT64_MAX, INT64_MAX };
 		struct timespec ts1, ts2;
@@ -437,22 +453,22 @@ main(int argc, const char **argv) {
 			}
 			usleep(1000);
 		}
-		printf("min: %ld s %ld us, max: %ld s %ld us\n", min.tv_sec, min.tv_nsec, max.tv_sec, max.tv_nsec);
+		libresense_printf("min: %ld s %ld us, max: %ld s %ld us", min.tv_sec, min.tv_nsec, max.tv_sec, max.tv_nsec);
 
 		goto shutdown;
 	}
 
-	printf("press OPTIONS to skip test\n");
+	libresense_print("press OPTIONS to skip test");
 
 	{
 		wait_until_options_clear(handles, connected, 250000);
-		printf("testing adaptive triggers\n");
+		libresense_print("testing adaptive triggers");
 		libresense_effect_update update = { 0 };
 
 		update.mode = LIBRESENSE_EFFECT_UNIFORM;
 		update.effect.uniform.position = 0.5;
 		update.effect.uniform.resistance = 1.0;
-		printf("uniform\n");
+		libresense_print("uniform");
 		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
@@ -465,7 +481,7 @@ main(int argc, const char **argv) {
 		update.effect.section.position.x = 0.25;
 		update.effect.section.position.y = 0.75;
 		update.effect.section.resistance = 1.0;
-		printf("section\n");
+		libresense_print("section");
 		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
@@ -485,7 +501,7 @@ main(int argc, const char **argv) {
 		update.effect.multiple_sections.resistance[7] = 0.3f;
 		update.effect.multiple_sections.resistance[8] = 1.0f;
 		update.effect.multiple_sections.resistance[9] = 1.0f;
-		printf("multiple section\n");
+		libresense_print("multiple section");
 		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
@@ -498,7 +514,7 @@ main(int argc, const char **argv) {
 		update.effect.trigger.position.x = 0.50f;
 		update.effect.trigger.position.y = 1.00f;
 		update.effect.trigger.resistance = 0.5f;
-		printf("trigger\n");
+		libresense_print("trigger");
 		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
@@ -512,7 +528,7 @@ main(int argc, const char **argv) {
 		update.effect.slope.position.y = 1.00;
 		update.effect.slope.resistance.x = 0.25f;
 		update.effect.slope.resistance.y = 1.0f;
-		printf("slope\n");
+		libresense_print("slope");
 		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
@@ -525,7 +541,7 @@ main(int argc, const char **argv) {
 		update.effect.vibrate.position = 0.33;
 		update.effect.vibrate.amplitude = 0.75;
 		update.effect.vibrate.frequency = 201;
-		printf("vibrate\n");
+		libresense_print("vibrate");
 		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
@@ -541,7 +557,7 @@ main(int argc, const char **argv) {
 		update.effect.vibrate_slope.amplitude.y = 1.0f;
 		update.effect.vibrate_slope.frequency = 201;
 		update.effect.vibrate_slope.period = 4;
-		printf("vibrate slope\n");
+		libresense_print("vibrate slope");
 		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
@@ -563,7 +579,7 @@ main(int argc, const char **argv) {
 		update.effect.multiple_vibrate.amplitude[9] = 1.0f;
 		update.effect.multiple_vibrate.frequency = 201;
 		update.effect.multiple_vibrate.period = 4;
-		printf("multiple vibrate\n");
+		libresense_print("multiple vibrate");
 		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
@@ -593,7 +609,7 @@ main(int argc, const char **argv) {
 		update.effect.multiple_vibrate_sections.resistance[7] = 0.3f;
 		update.effect.multiple_vibrate_sections.resistance[8] = 1.0f;
 		update.effect.multiple_vibrate_sections.resistance[9] = 1.0f;
-		printf("multiple vibrate sections\n");
+		libresense_print("multiple vibrate sections");
 		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_effect(handles[i], update, update, 0.0f);
 		}
@@ -613,7 +629,7 @@ main(int argc, const char **argv) {
 
 	{
 		wait_until_options_clear(handles, connected, 250000);
-		printf("testing mic led...\n");
+		libresense_print("testing mic led...");
 		libresense_audio_update update = { 0 };
 		update.jack_volume = 1.0;
 		update.speaker_volume = 1.0;
@@ -624,7 +640,7 @@ main(int argc, const char **argv) {
 		update.force_enable_speaker = false;
 		update.mic_led = LIBRESENSE_MIC_LED_ON;
 
-		printf("mic led should be on...\n");
+		libresense_print("mic led should be on...");
 		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_audio(handles[i], update);
 		}
@@ -634,7 +650,7 @@ main(int argc, const char **argv) {
 		}
 
 		update.mic_led = LIBRESENSE_MIC_LED_FLASH;
-		printf("mic led should be flashing...\n");
+		libresense_print("mic led should be flashing...");
 		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_audio(handles[i], update);
 		}
@@ -644,7 +660,7 @@ main(int argc, const char **argv) {
 		}
 
 		update.mic_led = LIBRESENSE_MIC_LED_FAST_FLASH;
-		printf("mic led should be flashing faster (maybe)...\n");
+		libresense_print("mic led should be flashing faster (maybe)...");
 		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_audio(handles[i], update);
 		}
@@ -654,7 +670,7 @@ main(int argc, const char **argv) {
 		}
 
 		update.mic_led = LIBRESENSE_MIC_LED_OFF;
-		printf("mic led should be off...\n");
+		libresense_print("mic led should be off...");
 		for (size_t i = 0; i < connected; ++i) {
 			libresense_update_audio(handles[i], update);
 		}
@@ -662,7 +678,7 @@ main(int argc, const char **argv) {
 		report_hid_close(handles, connected, 5000000, 10000);
 
 	reset_mic:
-		printf("restoring mic based on state...\n");
+		libresense_print("restoring mic based on state...");
 		for (size_t i = 0; i < connected; ++i) {
 			update.mic_led = datum[i].device.muted ? LIBRESENSE_MIC_LED_ON : LIBRESENSE_MIC_LED_OFF;
 			libresense_update_audio(handles[i], update);
@@ -673,11 +689,11 @@ main(int argc, const char **argv) {
 
 	{
 		wait_until_options_clear(handles, connected, 250000);
-		printf("testing rumble...\n");
+		libresense_print("testing rumble...");
 		float rumble;
 
 		const float ONE_OVER_255 = 1.0f / 255.0f;
-		printf("large motor...\n");
+		libresense_print("large motor...");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for (size_t i = 0; i < connected; ++i) {
 				libresense_update_rumble(handles[i], rumble, 0.0f, 0.0f, false);
@@ -688,7 +704,7 @@ main(int argc, const char **argv) {
 			}
 		}
 
-		printf("small motor...\n");
+		libresense_print("small motor...");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for (size_t i = 0; i < connected; ++i) {
 				libresense_update_rumble(handles[i], 0, rumble, 0.0f, false);
@@ -699,7 +715,7 @@ main(int argc, const char **argv) {
 			}
 		}
 
-		printf("both motors...\n");
+		libresense_print("both motors...");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for (size_t i = 0; i < connected; ++i) {
 				libresense_update_rumble(handles[i], rumble, rumble, 0.0f, false);
@@ -710,7 +726,7 @@ main(int argc, const char **argv) {
 			}
 		}
 
-		printf("rumble feedback test...\n");
+		libresense_print("rumble feedback test...");
 		for (int rumble_test = 0; rumble_test < 8; rumble_test++) {
 			for (size_t i = 0; i < connected; ++i) {
 				libresense_update_rumble(handles[i], rumble_test % 2 == 0 ? 1.0f : 0.1f, rumble_test % 2 == 0 ? 1.0f : 0.1f, 0.0f, false);
@@ -721,7 +737,7 @@ main(int argc, const char **argv) {
 			}
 		}
 
-		printf("large motor (legacy)...\n");
+		libresense_print("large motor (legacy)...");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for (size_t i = 0; i < connected; ++i) {
 				libresense_update_rumble(handles[i], rumble, 0.0f, 0.0f, true);
@@ -732,7 +748,7 @@ main(int argc, const char **argv) {
 			}
 		}
 
-		printf("small motor (legacy)...\n");
+		libresense_print("small motor (legacy)...");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for (size_t i = 0; i < connected; ++i) {
 				libresense_update_rumble(handles[i], 0, rumble, 0.0f, true);
@@ -743,7 +759,7 @@ main(int argc, const char **argv) {
 			}
 		}
 
-		printf("both motors (legacy)...\n");
+		libresense_print("both motors (legacy)...");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for (size_t i = 0; i < connected; ++i) {
 				libresense_update_rumble(handles[i], rumble, rumble, 0.0f, true);
@@ -754,7 +770,7 @@ main(int argc, const char **argv) {
 			}
 		}
 
-		printf("rumble feedback test (legacy)...\n");
+		libresense_print("rumble feedback test (legacy)...");
 		for (int rumble_test = 0; rumble_test < 8; rumble_test++) {
 			for (size_t i = 0; i < connected; ++i) {
 				libresense_update_rumble(handles[i], rumble_test % 2 == 0 ? 1.0f : 0.1f, rumble_test % 2 == 0 ? 1.0f : 0.1f, 0.0f, true);
@@ -775,7 +791,7 @@ main(int argc, const char **argv) {
 
 	{
 		wait_until_options_clear(handles, connected, 250000);
-		printf("testing touchpad leds...\n");
+		libresense_print("testing touchpad leds...");
 
 		libresense_led_update update = { 0 };
 		update.color.x = 1.0;

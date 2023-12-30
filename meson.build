@@ -9,14 +9,8 @@ project(
 	],
 	license : 'MPL-2',
 	meson_version : '>=1.2.0',
-	version : '0.0.1'
+	version : '0.9.0'
 )
-
-res_path = get_option('datadir') + '/libresense'
-
-if host_machine.system() == 'windows'
-	res_path = './res'
-endif
 
 compiler = meson.get_compiler('c')
 linker = meson.get_compiler('c')
@@ -30,8 +24,7 @@ args = compiler.get_supported_arguments(
 	'-Werror',
 	'-Wno-unused-variable',
 	'-Wno-unused-parameter',
-	'-Wno-microsoft-fixed-enum',
-	'-ffast-math'
+	'-Wno-microsoft-fixed-enum'
 )
 
 if get_option('buildtype') == 'custom'
@@ -47,7 +40,6 @@ configure_file(
 										   'LIBRESENSE_MAX_CONTROLLERS' : get_option('libresense_max_controllers'),
 										   'LIBRESENSE_PROJECT_NAME' : '"' + meson.project_name() + '"',
 										   'LIBRESENSE_PROJECT_VERSION' : '"' + meson.project_version() + '"',
-										   'LIBRESENSE_DATA_DIR' : '"' + res_path + '"'
 									   })
 )
 
@@ -67,7 +59,8 @@ libresense_lib = library(meson.project_name(), [
 							 'src/crc.c'
 						 ],
 						 dependencies : [hidapi],
-						 c_args : args,
+						 gnu_symbol_visibility: 'hidden',
+						 c_args : [args, '-DLIBRESENSE_EXPORTING'],
 						 install : true,
 						 include_directories : libresense_inc
 )

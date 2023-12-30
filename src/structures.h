@@ -36,6 +36,7 @@ static_assert(__STDC_VERSION__ >= 202000L, "a c2x compiler is required");
 #define DUALSENSE_CRC_INPUT (0xA1)
 #define DUALSENSE_CRC_OUTPUT (0xA2)
 #define DUALSENSE_CRC_FEATURE (0xA3)
+#define DUALSENSE_CRC_FEATURE_EDGE (0x53)
 #define DUALSENSE_TRIGGER_MAX (0xEE)
 #define DUALSENSE_TRIGGER_AMPLITUDE_MAX (0x3F)
 #define DUALSENSE_TRIGGER_VIBRATION_MAX (0xA8)
@@ -60,7 +61,7 @@ typedef enum _dualsense_report_id : uint8_t {
 	DUALSENSE_REPORT_HARDWARE = 0x22,
 	DUALSENSE_REPORT_SET_TEST = 0x80,
 	DUALSENSE_REPORT_GET_TEST = 0x81,
-	DUALSENSE_REPORT_RECALIBRATE = 0x83,
+	DUALSENSE_REPORT_RECALIBRATE = 0x82,
 	DUALSENSE_REPORT_CALIBRATION_STATUS = 0x83,
 	DUALSENSE_REPORT_SET_DATA = 0x84,
 	DUALSENSE_REPORT_GET_DATA = 0x85,
@@ -276,7 +277,16 @@ typedef struct PACKED {
 } dualsense_adaptive_trigger;
 
 typedef struct PACKED {
-	dualsense_report_id id;
+	union {
+		struct {
+			bool has_hid : 1;
+			bool unknown : 1;
+			bool unknown2 : 1;
+			bool unknown3 : 1;
+			uint8_t seq : 4;
+		} bt;
+		dualsense_report_id id;
+	};
 	dualsense_stick sticks[2];
 	uint8_t triggers[2];
 	uint8_t sequence;
@@ -465,7 +475,16 @@ typedef struct PACKED {
 } dualsense_edge_update;
 
 typedef struct PACKED {
-	dualsense_report_id id;
+	union {
+		struct {
+			bool unknown : 1;
+			bool enable_hid : 1;
+			bool unknown2 : 1;
+			bool unknown3 : 1;
+			uint8_t seq : 4;
+		} bt;
+		dualsense_report_id id;
+	};
 	dualsense_mutator_flags flags;
 	uint8_t rumble[2];
 	dualsense_audio_output audio;
@@ -625,7 +644,7 @@ typedef struct PACKED {
 	uint8_t part;
 	uint32_t version;
 	libresense_wchar name[27];
-	uint32_t checksum;
+	uint32_t bt_checksum;
 } dualsense_profile_p1;
 static_assert(sizeof(dualsense_profile_p1) == 64, "dualsense_profile_p1 size is not 64");
 
@@ -640,7 +659,7 @@ typedef struct PACKED {
 	uint8_t right_stick_unknown1;
 	uint16_t right_stick_unknown2;
 	uint8_t right_stick_curve[4];
-	uint32_t checksum;
+	uint32_t bt_checksum;
 } dualsense_profile_p2;
 static_assert(sizeof(dualsense_profile_p2) == 64, "dualsense_profile_p2 size is not 64");
 
@@ -658,9 +677,17 @@ typedef struct PACKED {
 	uint64_t timestamp;
 	uint8_t reserved[14];
 	uint32_t full_checksum;
-	uint32_t checksum;
+	uint32_t bt_checksum;
 } dualsense_profile_p3;
 static_assert(sizeof(dualsense_profile_p3) == 64, "dualsense_profile_p3 size is not 64");
+
+typedef struct PACKED {
+	dualsense_report_id id;
+	uint8_t profile_id;
+	uint8_t reserved[58];
+	uint32_t checksum;
+} dualsense_profile_delete;
+static_assert(sizeof(dualsense_profile_delete) == 64, "dualsense_profile_delete size is not 64");
 
 #ifdef _MSC_VER
 #pragma pack(pop)
@@ -692,6 +719,7 @@ static_assert(sizeof(dualsense_profile_p3) == 64, "dualsense_profile_p3 size is 
 extern uint32_t crc_seed_input;
 extern uint32_t crc_seed_output;
 extern uint32_t crc_seed_feature;
+extern uint32_t crc_seed_feature_edge;
 
 /**
  * @brief convert dualsense input report to libresense's representation

@@ -396,10 +396,9 @@ libresense_pull(libresense_handle* handle, const size_t handle_count, libresense
 		const int count = hid_read(hid_state->hid, buffer, size);
 
 		if (count != (int) size) {
+			libresense_close(handle[i]);
 			handle[i] = LIBRESENSE_INVALID_HANDLE_ID;
 			data[i] = invalid;
-
-			libresense_close(handle[i]);
 			continue; // invalid!
 		}
 
@@ -410,7 +409,7 @@ libresense_pull(libresense_handle* handle, const size_t handle_count, libresense
 }
 
 libresense_result
-libresense_push(const libresense_handle* handle, const size_t handle_count) {
+libresense_push(libresense_handle* handle, const size_t handle_count) {
 	CHECK_INIT();
 	if (handle == NULL) {
 		return LIBRESENSE_INVALID_DATA;
@@ -427,7 +426,7 @@ libresense_push(const libresense_handle* handle, const size_t handle_count) {
 	for (size_t i = 0; i < handle_count; i++) {
 		CHECK_HANDLE_VALID(handle[i]);
 		dualsense_state* hid_state = &state[handle[i]];
-		hid_state->output.data.msg.data.state_id = hid_state->seq;
+		hid_state->output.data.msg.data.state_id = ++hid_state->seq;
 
 		const uint8_t* buffer = hid_state->output.buffer;
 		size_t size = sizeof(dualsense_output_msg_ex);
@@ -438,14 +437,22 @@ libresense_push(const libresense_handle* handle, const size_t handle_count) {
 				size -= 0x10;
 			}
 		} else {
+			hid_state->output.data.msg.data.id = 0;
+			hid_state->output.data.msg.data.bt.enable_hid = true;
+			hid_state->output.data.msg.data.bt.seq = hid_state->seq & 0xF;
 			hid_state->output.data.bt_checksum = libresense_calc_checksum(crc_seed_output, buffer, size - 4);
 		}
 
-		hid_write(hid_state->hid, buffer, size);
+		if(hid_write(hid_state->hid, buffer, size) == -1) {
+			libresense_close(handle[i]);
+			handle[i] = LIBRESENSE_INVALID_HANDLE_ID;
+			continue; // invalid!
+		}
 
 		hid_state->output.data.id = DUALSENSE_REPORT_BLUETOOTH;
 		hid_state->output.data.msg.data.id = DUALSENSE_REPORT_OUTPUT;
 		hid_state->output.data.msg.data.flags.value = 0;
+		hid_state->output.data.bt_checksum = 0;
 	}
 
 	return LIBRESENSE_OK;
@@ -750,6 +757,10 @@ libresense_update_profile(const libresense_handle handle, const libresense_edge_
 	CHECK_HANDLE_VALID(handle);
 	CHECK_EDGE(handle);
 
+	if(id <= LIBRESENSE_PROFILE_TRIANGLE || id > LIBRESENSE_PROFILE_CIRCLE) {
+		return LIBRESENSE_INVALID_DATA;
+	}
+
 	return LIBRESENSE_NOT_IMPLEMENTED;
 }
 
@@ -759,7 +770,19 @@ libresense_delete_profile(const libresense_handle handle, const libresense_edge_
 	CHECK_HANDLE_VALID(handle);
 	CHECK_EDGE(handle);
 
-	return LIBRESENSE_NOT_IMPLEMENTED;
+	if(id <= LIBRESENSE_PROFILE_TRIANGLE || id > LIBRESENSE_PROFILE_CIRCLE) {
+		return LIBRESENSE_INVALID_DATA;
+	}
+
+	dualsense_profile_delete del = {0};
+	del.id = DUALSENSE_DELETE_PROFILE;
+	del.profile_id = id;
+	del.checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t *) &del, sizeof(del) - 4);
+	const size_t size = hid_send_feature_report(state[handle].hid, (uint8_t *) &del, sizeof(del));
+	if (size != 0x40) {
+		return LIBRESENSE_INVALID_DATA;
+	}
+	return LIBRESENSE_OK;
 }
 
 libresense_result

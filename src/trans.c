@@ -14,7 +14,7 @@
 #define CALIBRATE_BIAS(value, slot) CALIBRATE(value - calibration[slot].bias, slot)
 
 void
-libresense_convert_input(libresense_hid hid_info, const dualsense_input_msg input, libresense_data* data, libresense_calibration_bit calibration[6]) {
+libresense_convert_input(const libresense_hid hid_info, const dualsense_input_msg input, libresense_data* data, libresense_calibration_bit calibration[6]) {
 	*data = (libresense_data) { 0 };
 	data->hid = hid_info;
 
@@ -24,6 +24,7 @@ libresense_convert_input(libresense_hid hid_info, const dualsense_input_msg inpu
 	data->time.sensor = input.sensors.time;
 	data->time.checksum = input.checksum;
 	data->time.driver_sequence = input.state_id;
+	data->time.battery = input.state.battery_time;
 
 	data->buttons.dpad_up = CHECK_DPAD(input.buttons, U, UR, UL);
 	data->buttons.dpad_down = CHECK_DPAD(input.buttons, D, DR, DL);
@@ -92,12 +93,18 @@ libresense_convert_input(libresense_hid hid_info, const dualsense_input_msg inpu
 	data->device.reserved = input.state.device.reserved1 | input.state.device.reserved2 << 3;
 
 	data->state_id = input.state_id;
-	data->time.battery = input.state.battery_time;
 
 	data->battery.level = input.state.battery.level * 0.1 + 0.10;
 	data->battery.state = input.state.battery.state + 1;
 
+	data->bt.has_hid = input.bt.has_hid;
+	data->bt.unknown = input.bt.unknown;
+	data->bt.unknown2 = input.bt.unknown2;
+	data->bt.unknown3 = input.bt.unknown3;
+	data->bt.seq = input.bt.seq;
+
 	if(IS_EDGE(hid_info)) {
+		data->time.battery = 0;
 		data->edge_device.raw_buttons.dpad_up = CHECK_DPAD(input.state.edge.unmapped_buttons, U, UR, UL);
 		data->edge_device.raw_buttons.dpad_down = CHECK_DPAD(input.state.edge.unmapped_buttons, D, DR, DL);
 		data->edge_device.raw_buttons.dpad_left = CHECK_DPAD(input.state.edge.unmapped_buttons, L, UL, DL);
