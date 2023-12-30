@@ -7,12 +7,11 @@
 
 #ifdef __WIN32__
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #include <conio.h>
+#include <windows.h>
 
 // https://stackoverflow.com/questions/5801813/c-usleep-is-obsolete-workarounds-for-windows-mingw
-void
-usleep(__int64 usec) {
+void usleep(__int64 usec) {
 	HANDLE timer;
 	LARGE_INTEGER ft;
 	ft.QuadPart = -(10 * usec);
@@ -53,8 +52,7 @@ usleep(__int64 usec) {
 #define libresense_printf(fmt, ...) printf("[" LIBRESENSE_PROJECT_NAME "] " fmt "\n", __VA_ARGS__)
 #define libresense_print(fmt) printf("[" LIBRESENSE_PROJECT_NAME "] " fmt "\n")
 
-bool
-report_hid_trigger(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
+bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
 	bool should_exit = false;
 	while (true) {
 		libresense_data data[libresense_max_controllers];
@@ -96,8 +94,7 @@ report_hid_trigger(libresense_handle* handles, const size_t handle_count, __usec
 	return should_exit;
 }
 
-bool
-report_hid_close(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
+bool report_hid_close(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
 	bool should_exit = false;
 	while (true) {
 		libresense_data data[libresense_max_controllers];
@@ -128,8 +125,7 @@ report_hid_close(libresense_handle* handles, const size_t handle_count, __usecon
 	return should_exit;
 }
 
-void
-wait_until_options_clear(libresense_handle* handles, const size_t handle_count, __useconds_t timeout) {
+void wait_until_options_clear(libresense_handle* handles, const size_t handle_count, __useconds_t timeout) {
 	while (true) {
 		libresense_data data[libresense_max_controllers];
 		const libresense_result result = libresense_pull(handles, handle_count, data);
@@ -153,8 +149,7 @@ wait_until_options_clear(libresense_handle* handles, const size_t handle_count, 
 	}
 }
 
-int
-main(int argc, const char **argv) {
+int main(int argc, const char** argv) {
 	libresense_printf("version %s", LIBRESENSE_PROJECT_VERSION);
 
 	libresense_result result = libresense_init();
@@ -304,13 +299,13 @@ main(int argc, const char **argv) {
 			LIBREPRINT_BUTTON_TEST(option); LIBREPRINT_SEP();
 			LIBREPRINT_BUTTON_TEST(l3); LIBREPRINT_SEP();
 			LIBREPRINT_BUTTON_TEST(r3); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(ps); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(playstation); LIBREPRINT_SEP();
 			LIBREPRINT_BUTTON_TEST(touch); LIBREPRINT_SEP();
 			LIBREPRINT_BUTTON_TEST(mute); LIBREPRINT_SEP();
 			LIBREPRINT_BUTTON_TEST(edge_f1); LIBREPRINT_SEP();
 			LIBREPRINT_BUTTON_TEST(edge_f2); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(edge_lb); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(edge_rb); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(edge_left_paddle); LIBREPRINT_SEP();
+			LIBREPRINT_BUTTON_TEST(edge_right_paddle); LIBREPRINT_SEP();
 			LIBREPRINT_U32(data.buttons, reserved); LIBREPRINT_SEP();
 			LIBREPRINT_U32(data.buttons, edge_reserved);
 			printf(" }\n");
@@ -390,7 +385,7 @@ main(int argc, const char **argv) {
 				LIBREPRINT_EDGE_BUTTON_TEST(triangle); LIBREPRINT_SEP();
 				LIBREPRINT_EDGE_BUTTON_TEST(share); LIBREPRINT_SEP();
 				LIBREPRINT_EDGE_BUTTON_TEST(option); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(ps); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(playstation); LIBREPRINT_SEP();
 				LIBREPRINT_EDGE_BUTTON_TEST(mute); LIBREPRINT_SEP();
 				printf(" }\n");
 

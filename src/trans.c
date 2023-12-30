@@ -13,8 +13,7 @@
 
 #define CALIBRATE_BIAS(value, slot) CALIBRATE(value - calibration[slot].bias, slot)
 
-void
-libresense_convert_input(const libresense_hid hid_info, const dualsense_input_msg input, libresense_data* data, libresense_calibration_bit calibration[6]) {
+void libresense_convert_input(const libresense_hid hid_info, const dualsense_input_msg input, libresense_data* data, libresense_calibration_bit calibration[6]) {
 	*data = (libresense_data) { 0 };
 	data->hid = hid_info;
 
@@ -42,13 +41,13 @@ libresense_convert_input(const libresense_hid hid_info, const dualsense_input_ms
 	data->buttons.option = input.buttons.option;
 	data->buttons.l3 = input.buttons.l3;
 	data->buttons.r3 = input.buttons.r3;
-	data->buttons.ps = input.buttons.ps;
+	data->buttons.playstation = input.buttons.playstation;
 	data->buttons.touch = input.buttons.touch;
 	data->buttons.mute = input.buttons.mute;
 	data->buttons.edge_f1 = input.buttons.edge_f1;
 	data->buttons.edge_f2 = input.buttons.edge_f2;
-	data->buttons.edge_lb = input.buttons.edge_lb;
-	data->buttons.edge_rb = input.buttons.edge_rb;
+	data->buttons.edge_left_paddle = input.buttons.edge_left_paddle;
+	data->buttons.edge_right_paddle = input.buttons.edge_right_paddle;
 	data->buttons.reserved = input.buttons.reserved;
 	data->buttons.edge_reserved = input.buttons.edge_reserved;
 
@@ -103,34 +102,34 @@ libresense_convert_input(const libresense_hid hid_info, const dualsense_input_ms
 	data->bt.unknown3 = input.bt.unknown3;
 	data->bt.seq = input.bt.seq;
 
-	if(IS_EDGE(hid_info)) {
+	if (IS_EDGE(hid_info)) {
 		data->time.battery = 0;
-		data->edge_device.raw_buttons.dpad_up = CHECK_DPAD(input.state.edge.unmapped_buttons, U, UR, UL);
-		data->edge_device.raw_buttons.dpad_down = CHECK_DPAD(input.state.edge.unmapped_buttons, D, DR, DL);
-		data->edge_device.raw_buttons.dpad_left = CHECK_DPAD(input.state.edge.unmapped_buttons, L, UL, DL);
-		data->edge_device.raw_buttons.dpad_right = CHECK_DPAD(input.state.edge.unmapped_buttons, R, UR, DR);
-		data->edge_device.raw_buttons.square = input.state.edge.unmapped_buttons.square;
-		data->edge_device.raw_buttons.cross = input.state.edge.unmapped_buttons.cross;
-		data->edge_device.raw_buttons.circle = input.state.edge.unmapped_buttons.circle;
-		data->edge_device.raw_buttons.triangle = input.state.edge.unmapped_buttons.triangle;
-		data->edge_device.raw_buttons.mute = input.state.edge.unmapped_peculiar.mute;
-		data->edge_device.raw_buttons.ps = input.state.edge.unmapped_peculiar.ps;
-		data->edge_device.raw_buttons.share = input.state.edge.unmapped_peculiar.share;
-		data->edge_device.raw_buttons.option = input.state.edge.unmapped_peculiar.option;
-		data->edge_device.stick.disconnected = input.state.edge.stick_disconnected;
-		data->edge_device.stick.errored = input.state.edge.stick_error;
-		data->edge_device.stick.calibrating = input.state.edge.stick_calibrating;
-		data->edge_device.stick.unknown = input.state.edge.stick_unknown;
-		data->edge_device.trigger_levels[LIBRESENSE_LEFT] = input.state.edge.left_trigger_level;
-		data->edge_device.trigger_levels[LIBRESENSE_RIGHT] = input.state.edge.right_trigger_level;
+		data->edge_device.raw_buttons.dpad_up = CHECK_DPAD(input.state.edge.override, U, UR, UL);
+		data->edge_device.raw_buttons.dpad_down = CHECK_DPAD(input.state.edge.override, D, DR, DL);
+		data->edge_device.raw_buttons.dpad_left = CHECK_DPAD(input.state.edge.override, L, UL, DL);
+		data->edge_device.raw_buttons.dpad_right = CHECK_DPAD(input.state.edge.override, R, UR, DR);
+		data->edge_device.raw_buttons.square = input.state.edge.override.square;
+		data->edge_device.raw_buttons.cross = input.state.edge.override.cross;
+		data->edge_device.raw_buttons.circle = input.state.edge.override.circle;
+		data->edge_device.raw_buttons.triangle = input.state.edge.override.triangle;
+		data->edge_device.raw_buttons.mute = input.state.edge.override.mute;
+		data->edge_device.raw_buttons.playstation = input.state.edge.override.playstation;
+		data->edge_device.raw_buttons.share = input.state.edge.override.share;
+		data->edge_device.raw_buttons.option = input.state.edge.override.option;
+		data->edge_device.stick.disconnected = input.state.edge.input.stick_disconnected;
+		data->edge_device.stick.errored = input.state.edge.input.stick_error;
+		data->edge_device.stick.calibrating = input.state.edge.input.stick_calibrating;
+		data->edge_device.stick.unknown = input.state.edge.input.stick_unknown;
+		data->edge_device.trigger_levels[LIBRESENSE_LEFT] = input.state.edge.input.left_trigger_level;
+		data->edge_device.trigger_levels[LIBRESENSE_RIGHT] = input.state.edge.input.right_trigger_level;
 		data->edge_device.current_profile_id = input.state.edge.profile.id;
 		data->edge_device.profile_indicator.switching_disabled = input.state.edge.profile.disable_switching;
 		data->edge_device.profile_indicator.led = input.state.edge.profile.led_indicator;
 		data->edge_device.profile_indicator.vibration = input.state.edge.profile.vibrate_indicator;
-		data->edge_device.brightness = input.state.edge.unmapped_peculiar.brightness_override;
-		data->edge_device.emulating_rumble = input.state.edge.unmapped_peculiar.emulating_rumble;
+		data->edge_device.brightness = input.state.edge.override.brightness_override;
+		data->edge_device.emulating_rumble = input.state.edge.override.emulating_rumble;
 		data->edge_device.profile_indicator.unknown1 = input.state.edge.profile.unknown1;
 		data->edge_device.profile_indicator.unknown2 = input.state.edge.profile.unknown2;
-		data->edge_device.unknown = input.state.edge.unmapped_peculiar.unknown3;
+		data->edge_device.unknown = input.state.edge.override.unknown3;
 	}
 }

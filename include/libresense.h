@@ -14,13 +14,13 @@
 #include <stdint.h>
 
 #ifdef __WIN32
-	#ifdef LIBRESENSE_EXPORTING
-		#define LIBRESENSE_EXPORT __declspec(dllexport)
-	#else
-		#define LIBRESENSE_EXPORT __declspec(dllimport)
-	#endif
+#ifdef LIBRESENSE_EXPORTING
+#define LIBRESENSE_EXPORT __declspec(dllexport)
 #else
-	#define LIBRESENSE_EXPORT __attribute__((visibility("default")))
+#define LIBRESENSE_EXPORT __declspec(dllimport)
+#endif
+#else
+#define LIBRESENSE_EXPORT __attribute__((visibility("default")))
 #endif
 
 #define LIBRESENSE_INVALID_HANDLE_ID (-1)
@@ -63,7 +63,8 @@ typedef enum {
 	LIBRESENSE_PROFILE_SQUARE,
 	LIBRESENSE_PROFILE_CROSS,
 	LIBRESENSE_PROFILE_CIRCLE,
-	LIBRESENSE_PROFILE_MAX
+	LIBRESENSE_PROFILE_MAX,
+	LIBRESENSE_PROFILE_MAX_MINUS_ONE = LIBRESENSE_PROFILE_MAX - 1
 } libresense_edge_profile_id;
 
 typedef enum {
@@ -72,7 +73,7 @@ typedef enum {
 	LIBRESENSE_LEVEL_LOW = 2
 } libresense_level;
 
-typedef enum ENUM_FORCE_8 {
+typedef enum {
 	LIBRESENSE_TRIGGER_EFFECT_OFF = 0,
 	LIBRESENSE_TRIGGER_EFFECT_UNIFORM = 1,
 	LIBRESENSE_TRIGGER_EFFECT_TRIGGER = 2,
@@ -92,11 +93,11 @@ typedef enum ENUM_FORCE_8 {
 	LIBRESENSE_TRIGGER_EFFECT_MAX
 } libresense_trigger_effect_state;
 
-LIBRESENSE_EXPORT extern const char *libresense_error_msg[LIBRESENSE_ERROR_MAX + 1];
-LIBRESENSE_EXPORT extern const char *libresense_battery_state_msg[LIBRESENSE_BATTERY_MAX + 1];
-LIBRESENSE_EXPORT extern const char *libresense_edge_profile_id_msg[LIBRESENSE_PROFILE_MAX + 1];
-LIBRESENSE_EXPORT extern const char *libresense_level_msg[LIBRESENSE_LEVEL_LOW + 2];
-LIBRESENSE_EXPORT extern const char *libresense_trigger_effect_msg[LIBRESENSE_TRIGGER_EFFECT_MAX + 1];
+LIBRESENSE_EXPORT extern const char* libresense_error_msg[LIBRESENSE_ERROR_MAX + 1];
+LIBRESENSE_EXPORT extern const char* libresense_battery_state_msg[LIBRESENSE_BATTERY_MAX + 1];
+LIBRESENSE_EXPORT extern const char* libresense_edge_profile_id_msg[LIBRESENSE_PROFILE_MAX + 1];
+LIBRESENSE_EXPORT extern const char* libresense_level_msg[LIBRESENSE_LEVEL_LOW + 2];
+LIBRESENSE_EXPORT extern const char* libresense_trigger_effect_msg[LIBRESENSE_TRIGGER_EFFECT_MAX + 1];
 LIBRESENSE_EXPORT extern const int libresense_max_controllers;
 
 #define IS_LIBRESENSE_OKAY(result) (result == LIBRESENSE_OK)
@@ -144,13 +145,13 @@ typedef struct {
 	bool option;
 	bool l3;
 	bool r3;
-	bool ps;
+	bool playstation;
 	bool touch;
 	bool mute;
 	bool edge_f1;
 	bool edge_f2;
-	bool edge_lb;
-	bool edge_rb;
+	bool edge_left_paddle;
+	bool edge_right_paddle;
 	bool reserved;
 	uint8_t edge_reserved;
 } libresense_buttons;
@@ -248,14 +249,14 @@ typedef enum {
 
 typedef struct {
 	libresense_edge_stick_template id;
-	uint8_t unknown1;
+	libresense_vector2 deadzone;
+	libresense_vector2 curve_points[3];
+	uint8_t unknown;
 	uint16_t unknown2;
-	float curve_points[6];
 } libresense_edge_stick;
 
 typedef struct {
-	float min;
-	float max;
+	libresense_vector2 deadzone;
 } libresense_edge_trigger;
 
 typedef enum {
@@ -298,16 +299,24 @@ typedef union {
 		libresense_edge_button_id left_paddle;
 		libresense_edge_button_id right_paddle;
 	};
+
 	libresense_edge_button_id buttons[0x10];
 } libresense_edge_button_remap;
 
 typedef struct {
-	char name[0x80];
+	bool valid;
+	uint32_t version;
+	char name[0x81];
 	uint8_t id[0x10];
 	libresense_edge_stick sticks[2];
 	libresense_edge_trigger triggers[2];
 	libresense_edge_button_remap buttons;
-	uint64_t unknown;
+	libresense_level brightness;
+	libresense_level vibration;
+	bool sticks_swapped;
+	libresense_buttons disabled_buttons;
+	uint8_t unknown;
+	uint8_t unknown2;
 	uint64_t timestamp;
 } libresense_edge_profile;
 
@@ -320,7 +329,7 @@ typedef struct {
 	libresense_serial hid_serial;
 	libresense_serial_info serial;
 	libresense_firmware_info firmware;
-	libresense_edge_profile edge_profiles[LIBRESENSE_PROFILE_MAX];
+	libresense_edge_profile edge_profiles[LIBRESENSE_PROFILE_MAX_MINUS_ONE];
 #ifdef LIBRESENSE_DEBUG
 	struct libresense_report_id {
 		uint8_t id;
@@ -340,14 +349,17 @@ typedef struct {
 
 typedef struct {
 	libresense_buttons raw_buttons;
+
 	struct {
 		bool disconnected;
 		bool errored;
 		bool calibrating;
 		bool unknown;
 	} stick;
+
 	libresense_level trigger_levels[2];
 	libresense_edge_profile_id current_profile_id;
+
 	struct {
 		bool led;
 		bool vibration;
@@ -355,6 +367,7 @@ typedef struct {
 		bool unknown1;
 		bool unknown2;
 	} profile_indicator;
+
 	libresense_level brightness;
 	bool emulating_rumble;
 	bool unknown;
@@ -483,6 +496,7 @@ typedef struct {
 
 typedef struct {
 	libresense_effect_mode mode;
+
 	union {
 		libresense_effect_update_none none;
 		libresense_effect_update_off off;
@@ -556,23 +570,20 @@ typedef struct {
  * @brief initialize the library, this is mandatory.
  * @param size: sizeof(libresense_hid)
  */
-LIBRESENSE_EXPORT libresense_result
-libresense_init_checked(const int size);
+LIBRESENSE_EXPORT libresense_result libresense_init_checked(const int size);
 
 /**
  * @brief scan and return all HIDs that this library supports.
  * @param hids: pointer to where HID data should be stored
  * @param hids_length: array size of hids
  */
-LIBRESENSE_EXPORT libresense_result
-libresense_get_hids(libresense_hid *hids, const size_t hids_length);
+LIBRESENSE_EXPORT libresense_result libresense_get_hids(libresense_hid* hids, const size_t hids_length);
 
 /**
  * @brief open a HID handle for processing
  * @param handle: pointer to the libresense HID handle, this value will hold the libresense_handle value when the function returns
  */
-LIBRESENSE_EXPORT libresense_result
-libresense_open(libresense_hid *handle);
+LIBRESENSE_EXPORT libresense_result libresense_open(libresense_hid* handle);
 
 /**
  * @brief poll controllers for input data
@@ -580,40 +591,35 @@ libresense_open(libresense_hid *handle);
  * @param handle_count: number of handles to process
  * @param data: pointer to an array of data storage
  */
-LIBRESENSE_EXPORT libresense_result
-libresense_pull(libresense_handle *handle, const size_t handle_count, libresense_data *data);
+LIBRESENSE_EXPORT libresense_result libresense_pull(libresense_handle* handle, const size_t handle_count, libresense_data* data);
 
 /**
  * @brief push output data to controllers
  * @param handle: pointer to an array of handles, values will be set to LIBRESENSE_INVALID_HANDLE if they are invalid.
  * @param handle_count: number of handles to process
  */
-LIBRESENSE_EXPORT libresense_result
-libresense_push(libresense_handle *handle, const size_t handle_count);
+LIBRESENSE_EXPORT libresense_result libresense_push(libresense_handle* handle, const size_t handle_count);
 
 /**
  * @brief update LED state of a controller
  * @param handle: the controller to update
  * @param data: led update data
  */
-LIBRESENSE_EXPORT libresense_result
-libresense_update_led(const libresense_handle handle, const libresense_led_update data);
+LIBRESENSE_EXPORT libresense_result libresense_update_led(const libresense_handle handle, const libresense_led_update data);
 
 /**
  * @brief update audio state of a controller
  * @param handle: the controller to update
  * @param data: audio update data
  */
-LIBRESENSE_EXPORT libresense_result
-libresense_update_audio(const libresense_handle handle, const libresense_audio_update data);
+LIBRESENSE_EXPORT libresense_result libresense_update_audio(const libresense_handle handle, const libresense_audio_update data);
 
 /**
  * @brief update control state flags of a controller
  * @param handle: the controller to update
  * @param data: control update data
  */
-LIBRESENSE_EXPORT libresense_result
-libresense_update_control(const libresense_handle handle, const libresense_control_update data);
+LIBRESENSE_EXPORT libresense_result libresense_update_control(const libresense_handle handle, const libresense_control_update data);
 
 /**
  * @brief update effect state of a controller
@@ -622,8 +628,8 @@ libresense_update_control(const libresense_handle handle, const libresense_contr
  * @param right_trigger: effect data for RT
  * @param power_reduction: power reduction amount for trigger motors
  */
-LIBRESENSE_EXPORT libresense_result
-libresense_update_effect(const libresense_handle handle, const libresense_effect_update left_trigger, const libresense_effect_update right_trigger, const float power_reduction);
+LIBRESENSE_EXPORT libresense_result libresense_update_effect(const libresense_handle handle, const libresense_effect_update left_trigger, const libresense_effect_update right_trigger,
+															 const float power_reduction);
 
 /**
  * @brief update rumble state of a controller
@@ -633,8 +639,8 @@ libresense_update_effect(const libresense_handle handle, const libresense_effect
  * @param power_reduction: power reduction amount for haptic motors
  * @param emulate_legacy_behavior: instructs the dualsense to emulate how rumble motors used to work
  */
-LIBRESENSE_EXPORT libresense_result
-libresense_update_rumble(const libresense_handle handle, const float large_motor, const float small_motor, const float power_reduction, const bool emulate_legacy_behavior);
+LIBRESENSE_EXPORT libresense_result libresense_update_rumble(const libresense_handle handle, const float large_motor, const float small_motor, const float power_reduction,
+															 const bool emulate_legacy_behavior);
 
 /**
  * @brief update a dualsense edge profile
@@ -642,29 +648,25 @@ libresense_update_rumble(const libresense_handle handle, const float large_motor
  * @param id: the profile id to store the profile into
  * @param profile: the profile data to store
  */
-LIBRESENSE_EXPORT libresense_result
-libresense_update_profile(const libresense_handle handle, const libresense_edge_profile_id id, const libresense_edge_profile profile);
+LIBRESENSE_EXPORT libresense_result libresense_update_profile(const libresense_handle handle, const libresense_edge_profile_id id, const libresense_edge_profile profile);
 
 /**
  * @brief delete a dualsense edge profile
  * @param handle: the controller to update
  * @param id: the profile id to delete
  */
-LIBRESENSE_EXPORT libresense_result
-libresense_delete_profile(const libresense_handle handle, const libresense_edge_profile_id id);
+LIBRESENSE_EXPORT libresense_result libresense_delete_profile(const libresense_handle handle, const libresense_edge_profile_id id);
 
 /**
  * @brief close a controller device handle
  * @param handle: the controller to close
  */
-LIBRESENSE_EXPORT libresense_result
-libresense_close(const libresense_handle handle);
+LIBRESENSE_EXPORT libresense_result libresense_close(const libresense_handle handle);
 
 /**
  * @brief cleans up library internals for exit
  */
-LIBRESENSE_EXPORT void
-libresense_exit(void);
+LIBRESENSE_EXPORT void libresense_exit(void);
 
 #ifdef LIBRESENSE_DEBUG
 /**
@@ -674,7 +676,6 @@ libresense_exit(void);
  * @param buffer: where to store the buffer
  * @param size: the size of the buffer
  */
-LIBRESENSE_EXPORT size_t
-libresense_debug_get_feature_report(const libresense_handle handle, const int report_id, uint8_t *buffer, const size_t size);
+LIBRESENSE_EXPORT size_t libresense_debug_get_feature_report(const libresense_handle handle, const int report_id, uint8_t* buffer, const size_t size);
 #endif
 #endif

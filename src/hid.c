@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 #include "structures.h"
 
 const int32_t libresense_max_controllers = LIBRESENSE_MAX_CONTROLLERS;
@@ -19,8 +18,7 @@ static libresense_device_info device_infos[] = {
 	{ 0x054C, 0x0DF2 }, // DualSense Edge
 };
 
-libresense_result
-libresense_init_checked(const int size) {
+libresense_result libresense_init_checked(const int size) {
 	if (size != sizeof(libresense_hid)) {
 		return LIBRESENSE_INVALID_LIBRARY;
 	}
@@ -41,8 +39,7 @@ libresense_init_checked(const int size) {
 	return LIBRESENSE_OK;
 }
 
-libresense_result
-libresense_get_hids(libresense_hid* hids, const size_t hids_length) {
+libresense_result libresense_get_hids(libresense_hid* hids, const size_t hids_length) {
 	CHECK_INIT();
 	size_t index = 0;
 
@@ -88,8 +85,7 @@ libresense_get_hids(libresense_hid* hids, const size_t hids_length) {
 	return LIBRESENSE_OK;
 }
 
-size_t
-libresense_get_feature_report(hid_device* handle, const int report_id, uint8_t* buffer, const size_t size) {
+size_t libresense_get_feature_report(hid_device* handle, const int report_id, uint8_t* buffer, const size_t size) {
 	if (handle == NULL || buffer == NULL || size < 2) {
 		return 0;
 	}
@@ -98,8 +94,7 @@ libresense_get_feature_report(hid_device* handle, const int report_id, uint8_t* 
 	return ret;
 }
 
-size_t
-libresense_send_feature_report(hid_device* handle, const int report_id, uint8_t* buffer, const size_t size, const bool preserve) {
+size_t libresense_send_feature_report(hid_device* handle, const int report_id, uint8_t* buffer, const size_t size, const bool preserve) {
 	if (handle == NULL || buffer == NULL || size < 2) {
 		return 0;
 	}
@@ -112,44 +107,38 @@ libresense_send_feature_report(hid_device* handle, const int report_id, uint8_t*
 	return ret;
 }
 
-size_t
-libresense_debug_get_feature_report(const libresense_handle handle, const int report_id, uint8_t* buffer, const size_t size) {
+size_t libresense_debug_get_feature_report(const libresense_handle handle, const int report_id, uint8_t* buffer, const size_t size) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
 	return libresense_get_feature_report(state[handle].hid, report_id, buffer, size);
 }
 
-#define CALIBRATION_GYRO(slot, type) \
-	(calibration.gyro[slot].type * calibration.gyro_speed.type / (float) DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX)
+#define CALIBRATION_GYRO(slot, type) (calibration.gyro[slot].type * calibration.gyro_speed.type / (float) DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX)
 
-#define CALIBRATION_ACCELEROMETER(slot, type) \
-	(calibration.accelerometer[slot].type / 8192.0f * (float) DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX)
+#define CALIBRATION_ACCELEROMETER(slot, type) (calibration.accelerometer[slot].type / 8192.0f * (float) DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX)
 
-#define CALIBRATION_ACCELEROMETER_BIAS(slot) \
-	calibration.accelerometer[slot].max - (calibration.accelerometer[slot].max - calibration.accelerometer[slot].min) / 2
+#define CALIBRATION_ACCELEROMETER_BIAS(slot) calibration.accelerometer[slot].max - (calibration.accelerometer[slot].max - calibration.accelerometer[slot].min) / 2
 
-#define MAC6_TO_UINT64(v) \
-	(((uint64_t) v[5] << 40) | ((uint64_t) v[4] << 32) | ((uint64_t) v[3] << 24) | ((uint64_t) v[2] << 16) | ((uint64_t) v[1] << 8) | (uint64_t) v[0])
+#define MAC6_TO_UINT64(v) (((uint64_t) v[5] << 40) | ((uint64_t) v[4] << 32) | ((uint64_t) v[3] << 24) | ((uint64_t) v[2] << 16) | ((uint64_t) v[1] << 8) | (uint64_t) v[0])
 
-#define COPY_VERSION_HARDWARE(name) \
-	handle->firmware.name.reserved = firmware.name.hardware.reserved; \
-	handle->firmware.name.variation = firmware.name.hardware.variation; \
+#define COPY_VERSION_HARDWARE(name)                                       \
+	handle->firmware.name.reserved = firmware.name.hardware.reserved;     \
+	handle->firmware.name.variation = firmware.name.hardware.variation;   \
 	handle->firmware.name.generation = firmware.name.hardware.generation; \
 	handle->firmware.name.revision = firmware.name.hardware.revision
 
-#define COPY_VERSION_UPDATE(name) \
+#define COPY_VERSION_UPDATE(name)                             \
 	handle->firmware.name.major = firmware.name.update.major; \
 	handle->firmware.name.minor = firmware.name.update.minor; \
 	handle->firmware.name.revision = firmware.name.update.revision
 
-#define COPY_VERSION_FIRMWARE(name) \
+#define COPY_VERSION_FIRMWARE(name)                             \
 	handle->firmware.name.major = firmware.name.firmware.major; \
 	handle->firmware.name.minor = firmware.name.firmware.minor; \
 	handle->firmware.name.revision = firmware.name.firmware.revision
 
-libresense_result
-libresense_open(libresense_hid* handle) {
+libresense_result libresense_open(libresense_hid* handle) {
 	CHECK_INIT();
 
 	for (int i = 0; i < LIBRESENSE_MAX_CONTROLLERS; i++) {
@@ -161,14 +150,14 @@ libresense_open(libresense_hid* handle) {
 			state[i].output.data.id = DUALSENSE_REPORT_BLUETOOTH;
 			state[i].output.data.msg.data.id = DUALSENSE_REPORT_OUTPUT;
 
-			if(state[i].hid_info.is_bluetooth) { // on linux this also releases control from the kernel driver
+			if (state[i].hid_info.is_bluetooth) { // on linux this also releases control from the kernel driver
 				state[i].output.data.msg.data.flags.reset_led = true;
 				libresense_push(&handle->handle, 1);
 			}
 
 			dualsense_firmware_info firmware;
-			const size_t firmware_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_FIRMWARE, (uint8_t *) &firmware, sizeof(dualsense_firmware_info));
-			if(firmware_report_sz == 64) {
+			const size_t firmware_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_FIRMWARE, (uint8_t*) &firmware, sizeof(dualsense_firmware_info));
+			if (firmware_report_sz == 64) {
 				memset(handle->firmware.datetime, 0, sizeof(handle->firmware.datetime));
 				memcpy(handle->firmware.datetime, firmware.date, sizeof(firmware.date));
 				handle->firmware.datetime[sizeof(firmware.date)] = ' ';
@@ -191,10 +180,24 @@ libresense_open(libresense_hid* handle) {
 			}
 
 			dualsense_serial_info serial;
-			const size_t serial_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_SERIAL, (uint8_t *) &serial, sizeof(dualsense_serial_info));
-			if(serial_report_sz == 20) {
-				sprintf(handle->serial.mac, "%02x:%02x:%02x:%02x:%02x:%02x", serial.device_mac[5], serial.device_mac[4], serial.device_mac[3], serial.device_mac[2], serial.device_mac[1], serial.device_mac[0]);
-				sprintf(handle->serial.paired_mac, "%02x:%02x:%02x:%02x:%02x:%02x", serial.pair_mac[5], serial.pair_mac[4], serial.pair_mac[3], serial.pair_mac[2], serial.pair_mac[1], serial.pair_mac[0]);
+			const size_t serial_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_SERIAL, (uint8_t*) &serial, sizeof(dualsense_serial_info));
+			if (serial_report_sz == 20) {
+				sprintf(handle->serial.mac,
+						"%02x:%02x:%02x:%02x:%02x:%02x",
+						serial.device_mac[5],
+						serial.device_mac[4],
+						serial.device_mac[3],
+						serial.device_mac[2],
+						serial.device_mac[1],
+						serial.device_mac[0]);
+				sprintf(handle->serial.paired_mac,
+						"%02x:%02x:%02x:%02x:%02x:%02x",
+						serial.pair_mac[5],
+						serial.pair_mac[4],
+						serial.pair_mac[3],
+						serial.pair_mac[2],
+						serial.pair_mac[1],
+						serial.pair_mac[0]);
 				handle->serial.mac[sizeof(handle->serial.mac) - 1] = 0;
 				handle->serial.paired_mac[sizeof(handle->serial.paired_mac) - 1] = 0;
 				handle->serial.unknown = (uint64_t) serial.unknown[0] << 16 | (uint64_t) serial.unknown[1] << 8 | (uint64_t) serial.unknown[2];
@@ -203,10 +206,9 @@ libresense_open(libresense_hid* handle) {
 				handle->serial.paired_mac[0] = 0;
 			}
 
-
 			dualsense_calibration_info calibration;
-			const size_t calibration_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_CALIBRATION, (uint8_t *) &calibration, sizeof(dualsense_calibration_info));
-			if(calibration_report_sz == 41) {
+			const size_t calibration_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_CALIBRATION, (uint8_t*) &calibration, sizeof(dualsense_calibration_info));
+			if (calibration_report_sz == 41) {
 				state[i].calibration[CALIBRATION_GYRO_X].max = CALIBRATION_GYRO(CALIBRATION_RAW_X, max);
 				state[i].calibration[CALIBRATION_GYRO_Y].max = CALIBRATION_GYRO(CALIBRATION_RAW_Y, max);
 				state[i].calibration[CALIBRATION_GYRO_Z].max = CALIBRATION_GYRO(CALIBRATION_RAW_Z, max);
@@ -238,26 +240,26 @@ libresense_open(libresense_hid* handle) {
 				state[i].calibration[CALIBRATION_GYRO_X] = (libresense_calibration_bit) { DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, 0, 540 };
 				state[i].calibration[CALIBRATION_GYRO_Y] = (libresense_calibration_bit) { DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, 0, 540 };
 				state[i].calibration[CALIBRATION_GYRO_Z] = (libresense_calibration_bit) { DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, 0, 540 };
-				state[i].calibration[CALIBRATION_ACCELEROMETER_X] = (libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0, 1 };
-				state[i].calibration[CALIBRATION_ACCELEROMETER_Y] = (libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0, 1 };
-				state[i].calibration[CALIBRATION_ACCELEROMETER_Z] = (libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0, 1 };
+				state[i].calibration[CALIBRATION_ACCELEROMETER_X] =
+					(libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0, 1 };
+				state[i].calibration[CALIBRATION_ACCELEROMETER_Y] =
+					(libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0, 1 };
+				state[i].calibration[CALIBRATION_ACCELEROMETER_Z] =
+					(libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0, 1 };
 			}
 
 			if (IS_EDGE(state[i].hid_info)) {
-				const uint8_t profile_reports[LIBRESENSE_PROFILE_MAX] = {
-					DUALSENSE_EDGE_REPORT_PROFILE_99_P1,
-					DUALSENSE_EDGE_REPORT_PROFILE_TRIANGLE_P1,
-					DUALSENSE_EDGE_REPORT_PROFILE_SQUARE_P1,
-					DUALSENSE_EDGE_REPORT_PROFILE_CROSS_P1,
-					DUALSENSE_EDGE_REPORT_PROFILE_CIRCLE_P1
-				};
+				const uint8_t profile_reports[LIBRESENSE_PROFILE_MAX] = { DUALSENSE_EDGE_REPORT_PROFILE_TRIANGLE_P1,
+																		  DUALSENSE_EDGE_REPORT_PROFILE_SQUARE_P1,
+																		  DUALSENSE_EDGE_REPORT_PROFILE_CROSS_P1,
+																		  DUALSENSE_EDGE_REPORT_PROFILE_CIRCLE_P1 };
 
 				for (int32_t j = 0; j < LIBRESENSE_PROFILE_MAX; ++j) {
-					dualsense_profile_msg profile_data[3];
+					dualsense_profile_blob profile_data[3];
 					bool exit = false;
-					for(int32_t k = 0; k < 3; ++k) {
-						const size_t sz = libresense_get_feature_report(state[i].hid, profile_reports[j] + k, (uint8_t*) &profile_data[i], sizeof(dualsense_profile_msg));
-						if(sz != sizeof(dualsense_profile_msg)) {
+					for (int32_t k = 0; k < 3; ++k) {
+						const size_t sz = libresense_get_feature_report(state[i].hid, profile_reports[j] + k, (uint8_t*) &profile_data[k], sizeof(dualsense_profile_blob));
+						if (sz != sizeof(dualsense_profile_blob)) {
 							exit = true;
 							break;
 						}
@@ -265,7 +267,10 @@ libresense_open(libresense_hid* handle) {
 					if (exit) {
 						break;
 					}
-					libresense_convert_edge_profile_input(profile_data, &handle->edge_profiles[j]);
+
+					if (IS_LIBRESENSE_BAD(libresense_convert_edge_profile_input(profile_data, &handle->edge_profiles[j]))) {
+						memset(&handle->edge_profiles[j], 0, sizeof(libresense_edge_profile));
+					}
 				}
 			}
 
@@ -299,7 +304,7 @@ libresense_open(libresense_hid* handle) {
 								j += 2;
 								break;
 							}
-							value = *(uint16_t *) (report + j);
+							value = *(uint16_t*) (report + j);
 							j += 2;
 							break;
 						case 3:
@@ -307,7 +312,7 @@ libresense_open(libresense_hid* handle) {
 								j += 4;
 								break;
 							}
-							value = *(uint32_t *) (report + j);
+							value = *(uint32_t*) (report + j);
 							j += 4;
 							break;
 						default: continue;
@@ -325,7 +330,7 @@ libresense_open(libresense_hid* handle) {
 
 						handle->report_ids[report_id++].id = (uint8_t) value;
 						handle->report_ids[report_id - 1].size = 1;
-					} else if(report_id > 0) {
+					} else if (report_id > 0) {
 						if (op_value == 37) { // REPORT COUNT
 							handle->report_ids[report_id - 1].size = value;
 						} else if (op_value == 32) { // INPUT
@@ -360,8 +365,7 @@ libresense_open(libresense_hid* handle) {
 	return LIBRESENSE_NO_SLOTS;
 }
 
-libresense_result
-libresense_pull(libresense_handle* handle, const size_t handle_count, libresense_data* data) {
+libresense_result libresense_pull(libresense_handle* handle, const size_t handle_count, libresense_data* data) {
 	CHECK_INIT();
 	if (handle == NULL || data == NULL) {
 		return LIBRESENSE_INVALID_DATA;
@@ -371,7 +375,7 @@ libresense_pull(libresense_handle* handle, const size_t handle_count, libresense
 		return LIBRESENSE_OK;
 	}
 
-	if(handle_count > LIBRESENSE_MAX_CONTROLLERS) {
+	if (handle_count > LIBRESENSE_MAX_CONTROLLERS) {
 		return LIBRESENSE_NO_SLOTS;
 	}
 
@@ -408,8 +412,7 @@ libresense_pull(libresense_handle* handle, const size_t handle_count, libresense
 	return LIBRESENSE_OK;
 }
 
-libresense_result
-libresense_push(libresense_handle* handle, const size_t handle_count) {
+libresense_result libresense_push(libresense_handle* handle, const size_t handle_count) {
 	CHECK_INIT();
 	if (handle == NULL) {
 		return LIBRESENSE_INVALID_DATA;
@@ -419,7 +422,7 @@ libresense_push(libresense_handle* handle, const size_t handle_count) {
 		return LIBRESENSE_OK;
 	}
 
-	if(handle_count > LIBRESENSE_MAX_CONTROLLERS) {
+	if (handle_count > LIBRESENSE_MAX_CONTROLLERS) {
 		return LIBRESENSE_NO_SLOTS;
 	}
 
@@ -433,7 +436,7 @@ libresense_push(libresense_handle* handle, const size_t handle_count) {
 		if (!hid_state->hid_info.is_bluetooth) {
 			buffer = hid_state->output.data.msg.buffer;
 			size = sizeof(dualsense_output_msg);
-			if(!hid_state->hid_info.is_edge) {
+			if (!hid_state->hid_info.is_edge) {
 				size -= 0x10;
 			}
 		} else {
@@ -443,7 +446,7 @@ libresense_push(libresense_handle* handle, const size_t handle_count) {
 			hid_state->output.data.bt_checksum = libresense_calc_checksum(crc_seed_output, buffer, size - 4);
 		}
 
-		if(hid_write(hid_state->hid, buffer, size) == -1) {
+		if (hid_write(hid_state->hid, buffer, size) == -1) {
 			libresense_close(handle[i]);
 			handle[i] = LIBRESENSE_INVALID_HANDLE_ID;
 			continue; // invalid!
@@ -458,14 +461,13 @@ libresense_push(libresense_handle* handle, const size_t handle_count) {
 	return LIBRESENSE_OK;
 }
 
-libresense_result
-libresense_update_led(const libresense_handle handle, const libresense_led_update data) {
+libresense_result libresense_update_led(const libresense_handle handle, const libresense_led_update data) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 
-	if(data.color.x >= 0.0f && data.color.y >= 0.0f && data.color.z >= 0.0f) {
+	if (data.color.x >= 0.0f && data.color.y >= 0.0f && data.color.z >= 0.0f) {
 		hid_state->flags.control2 = true;
 		hid_state->control2.led_color_control = true;
 		hid_state->flags.led = true;
@@ -474,19 +476,19 @@ libresense_update_led(const libresense_handle handle, const libresense_led_updat
 		hid_state->led.color.z = NORM_CLAMP_UINT8(data.color.z);
 	}
 
-	if(data.brightness != hid_state->led.brightness) {
+	if (data.brightness != hid_state->led.brightness) {
 		hid_state->flags.led = true;
 		hid_state->flags.control2 = true;
 		hid_state->control2.led_brightness_control = true;
 		hid_state->led.brightness = data.brightness;
 	}
 
-	if(data.effect != hid_state->led.effect) {
+	if (data.effect != hid_state->led.effect) {
 		hid_state->flags.led = true;
 		hid_state->led.effect = data.effect;
 	}
 
-	if(data.led != hid_state->led.led_id) {
+	if (data.led != hid_state->led.led_id) {
 		hid_state->flags.player_indicator_led = true;
 		hid_state->led.led_id = data.led;
 	}
@@ -494,8 +496,7 @@ libresense_update_led(const libresense_handle handle, const libresense_led_updat
 	return LIBRESENSE_OK;
 }
 
-libresense_result
-libresense_update_audio(const libresense_handle handle, const libresense_audio_update data) {
+libresense_result libresense_update_audio(const libresense_handle handle, const libresense_audio_update data) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
@@ -510,7 +511,7 @@ libresense_update_audio(const libresense_handle handle, const libresense_audio_u
 	hid_state->audio.flags.enable_speaker = data.force_enable_speaker;
 
 	hid_state->flags.mic_led = true;
-	hid_state->audio.mic_led_flags = (dualsense_audio_mic_flags) data.mic_led;
+	hid_state->audio.mic_led_flags = data.mic_led;
 
 	hid_state->flags.jack = hid_state->flags.speaker = hid_state->flags.mic = true;
 	hid_state->audio.jack = NORM_CLAMP_UINT8(data.jack_volume);
@@ -520,8 +521,7 @@ libresense_update_audio(const libresense_handle handle, const libresense_audio_u
 	return LIBRESENSE_OK;
 }
 
-libresense_result
-libresense_update_control(const libresense_handle handle, const libresense_control_update data) {
+libresense_result libresense_update_control(const libresense_handle handle, const libresense_control_update data) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
@@ -547,7 +547,7 @@ libresense_update_control(const libresense_handle handle, const libresense_contr
 	hid_state->control2.reserved1 = data.reserved1;
 	hid_state->control2.reserved2 = data.reserved2;
 	hid_state->control2.reserved3 = data.reserved3;
-	if(IS_EDGE(state[handle].hid_info)) {
+	if (IS_EDGE(state[handle].hid_info)) {
 		hid_state->control2.has_edge_misc = data.has_edge_misc;
 		hid_state->control2.edge_unknown2 = data.edge_unknown2;
 		hid_state->control2.has_edge_byte = data.has_edge_byte;
@@ -561,22 +561,16 @@ libresense_update_control(const libresense_handle handle, const libresense_contr
 	return LIBRESENSE_OK;
 }
 
-
-libresense_result
-compute_effect(dualsense_effect_output* effect, dualsense_output_msg* msg, const libresense_effect_update trigger, const float power_reduction) {
+libresense_result compute_effect(dualsense_effect_output* effect, dualsense_output_msg* msg, const libresense_effect_update trigger, const float power_reduction) {
 	// clear
 	effect->mode = 0;
 	effect->params.multiple.id = 0;
 	effect->params.multiple.value = 0;
 
-	switch(trigger.mode) {
+	switch (trigger.mode) {
 		case LIBRESENSE_EFFECT_NONE: break;
-		case LIBRESENSE_EFFECT_OFF:
-			effect->mode = DUALSENSE_EFFECT_MODE_OFF;
-			break;
-		case LIBRESENSE_EFFECT_STOP_VIBRATING:
-			effect->mode = DUALSENSE_EFFECT_MODE_STOP;
-			break;
+		case LIBRESENSE_EFFECT_OFF: effect->mode = DUALSENSE_EFFECT_MODE_OFF; break;
+		case LIBRESENSE_EFFECT_STOP_VIBRATING: effect->mode = DUALSENSE_EFFECT_MODE_STOP; break;
 		case LIBRESENSE_EFFECT_UNIFORM:
 			effect->mode = DUALSENSE_EFFECT_MODE_UNIFORM;
 			effect->params.value[0] = NORM_CLAMP(trigger.effect.uniform.position, DUALSENSE_TRIGGER_MAX);
@@ -597,92 +591,96 @@ compute_effect(dualsense_effect_output* effect, dualsense_output_msg* msg, const
 			msg->motor_flags.trigger_power_reduction = NORM_CLAMP(power_reduction, 7);
 			break;
 		// ReSharper disable CppRedundantParentheses
-		case LIBRESENSE_EFFECT_SLOPE: {
-			effect->mode = DUALSENSE_EFFECT_MODE_SLOPE;
-			const uint8_t slope_start = NORM_CLAMP(trigger.effect.slope.position.x, LIBRESENSE_TRIGGER_GRANULARITY);
-			const uint8_t slope_end = NORM_CLAMP(trigger.effect.slope.position.y, LIBRESENSE_TRIGGER_GRANULARITY);
-			const uint8_t res_start = NORM_CLAMP(trigger.effect.slope.resistance.x, DUALSENSE_TRIGGER_STEP);
-			const uint8_t res_end = NORM_CLAMP(trigger.effect.slope.resistance.y, DUALSENSE_TRIGGER_STEP);
-			effect->params.multiple.id = (1 << (slope_start - 1)) | (1 << (slope_end - 1));
-			effect->params.value[2] = res_start | res_end << DUALSENSE_TRIGGER_SHIFT;
-			break;
-		}
-		case LIBRESENSE_EFFECT_TRIGGER: {
-			effect->mode = DUALSENSE_EFFECT_MODE_TRIGGER;
-			const uint8_t slope_start = NORM_CLAMP(trigger.effect.trigger.position.x, LIBRESENSE_TRIGGER_GRANULARITY);
-			const uint8_t slope_end = NORM_CLAMP(trigger.effect.trigger.position.y, LIBRESENSE_TRIGGER_GRANULARITY);
-			effect->params.multiple.id = (1 << (slope_start - 1)) | (1 << (slope_end - 1));
-			effect->params.value[2] = NORM_CLAMP(trigger.effect.trigger.resistance, DUALSENSE_TRIGGER_STEP);
-			break;
-		}
-		case LIBRESENSE_EFFECT_VIBRATE_SLOPE: {
-			effect->mode = DUALSENSE_EFFECT_MODE_VIBRATE_SLOPE;
-			const uint8_t slope_start = NORM_CLAMP(trigger.effect.vibrate_slope.position.x, LIBRESENSE_TRIGGER_GRANULARITY);
-			const uint8_t slope_end = NORM_CLAMP(trigger.effect.vibrate_slope.position.y, LIBRESENSE_TRIGGER_GRANULARITY);
-			const uint8_t res_start = NORM_CLAMP(trigger.effect.vibrate_slope.amplitude.x, DUALSENSE_TRIGGER_STEP);
-			const uint8_t res_end = NORM_CLAMP(trigger.effect.vibrate_slope.amplitude.y, DUALSENSE_TRIGGER_STEP);
-			effect->params.multiple.id = (1 << (slope_start - 1)) | (1 << (slope_end - 1));
-			effect->params.value[2] = res_start | res_end << DUALSENSE_TRIGGER_SHIFT;
-			effect->params.value[3] = trigger.effect.vibrate_slope.frequency & UINT8_MAX;
-			effect->params.value[4] = trigger.effect.vibrate_slope.period & UINT8_MAX;
-			msg->flags.motor_power = true;
-			msg->motor_flags.trigger_power_reduction = NORM_CLAMP(power_reduction, 7);
-			break;
-		}
-		case LIBRESENSE_EFFECT_MUTIPLE_SECTIONS: {
-			effect->mode = DUALSENSE_EFFECT_MODE_MUTIPLE_SECTIONS;
-			for(int i = 0; i < LIBRESENSE_TRIGGER_GRANULARITY; ++i) {
-				if(trigger.effect.multiple_sections.resistance[i] >= 0.01f) {
-					effect->params.multiple.id |= 1 << i;
-					effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_sections.resistance[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * i);
-				}
+		case LIBRESENSE_EFFECT_SLOPE:
+			{
+				effect->mode = DUALSENSE_EFFECT_MODE_SLOPE;
+				const uint8_t slope_start = NORM_CLAMP(trigger.effect.slope.position.x, LIBRESENSE_TRIGGER_GRANULARITY);
+				const uint8_t slope_end = NORM_CLAMP(trigger.effect.slope.position.y, LIBRESENSE_TRIGGER_GRANULARITY);
+				const uint8_t res_start = NORM_CLAMP(trigger.effect.slope.resistance.x, DUALSENSE_TRIGGER_STEP);
+				const uint8_t res_end = NORM_CLAMP(trigger.effect.slope.resistance.y, DUALSENSE_TRIGGER_STEP);
+				effect->params.multiple.id = (1 << (slope_start - 1)) | (1 << (slope_end - 1));
+				effect->params.value[2] = res_start | res_end << DUALSENSE_TRIGGER_SHIFT;
+				break;
 			}
-			break;
-		}
-		case LIBRESENSE_EFFECT_MUTIPLE_VIBRATE: {
-			effect->mode = DUALSENSE_EFFECT_MODE_MUTIPLE_VIBRATE;
-			for(int i = 0; i < LIBRESENSE_TRIGGER_GRANULARITY; ++i) {
-				if(trigger.effect.multiple_vibrate.amplitude[i] >= 0.01f) {
-					effect->params.multiple.id |= 1 << i;
-					effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_vibrate.amplitude[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * i);
-				}
+		case LIBRESENSE_EFFECT_TRIGGER:
+			{
+				effect->mode = DUALSENSE_EFFECT_MODE_TRIGGER;
+				const uint8_t slope_start = NORM_CLAMP(trigger.effect.trigger.position.x, LIBRESENSE_TRIGGER_GRANULARITY);
+				const uint8_t slope_end = NORM_CLAMP(trigger.effect.trigger.position.y, LIBRESENSE_TRIGGER_GRANULARITY);
+				effect->params.multiple.id = (1 << (slope_start - 1)) | (1 << (slope_end - 1));
+				effect->params.value[2] = NORM_CLAMP(trigger.effect.trigger.resistance, DUALSENSE_TRIGGER_STEP);
+				break;
 			}
-			effect->params.multiple.value |= ((uint64_t)(trigger.effect.multiple_vibrate.frequency & UINT8_MAX)) << DUALSENSE_TRIGGER_FREQ_BITS;
-			effect->params.multiple.value |= ((uint64_t)(trigger.effect.multiple_vibrate.period & UINT8_MAX)) << DUALSENSE_TRIGGER_PERD_BITS;
-			msg->flags.motor_power = true;
-			msg->motor_flags.trigger_power_reduction = NORM_CLAMP(power_reduction, 7);
-			break;
-		}
-		case LIBRESENSE_EFFECT_MUTIPLE_VIBRATE_SECTIONS: {
-			effect->mode = DUALSENSE_EFFECT_MODE_MUTIPLE_VIBRATE_SECTIONS;
-			// 9 and 10 run into the 7 and 8th bytes, which are used for freq and period which are... not used? setup from previous frames?
-			// freq seems to be based off the speed the trigger is going.
-			for(int i = 0; i < LIBRESENSE_TRIGGER_GRANULARITY; ++i) {
-				// this is likely incorrect, have yet to find a real user of this
-				if(trigger.effect.multiple_vibrate_sections.resistance[i] >= 0.01f) {
-					effect->params.multiple.id |= 1 << i;
-					effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_vibrate_sections.resistance[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * (i * 2));
-				}
-				if(trigger.effect.multiple_vibrate_sections.amplitude[i] >= 0.01f) {
-					effect->params.multiple.id |= 1 << i;
-					effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_vibrate_sections.amplitude[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * (i * 2 + 1));
-				}
+		case LIBRESENSE_EFFECT_VIBRATE_SLOPE:
+			{
+				effect->mode = DUALSENSE_EFFECT_MODE_VIBRATE_SLOPE;
+				const uint8_t slope_start = NORM_CLAMP(trigger.effect.vibrate_slope.position.x, LIBRESENSE_TRIGGER_GRANULARITY);
+				const uint8_t slope_end = NORM_CLAMP(trigger.effect.vibrate_slope.position.y, LIBRESENSE_TRIGGER_GRANULARITY);
+				const uint8_t res_start = NORM_CLAMP(trigger.effect.vibrate_slope.amplitude.x, DUALSENSE_TRIGGER_STEP);
+				const uint8_t res_end = NORM_CLAMP(trigger.effect.vibrate_slope.amplitude.y, DUALSENSE_TRIGGER_STEP);
+				effect->params.multiple.id = (1 << (slope_start - 1)) | (1 << (slope_end - 1));
+				effect->params.value[2] = res_start | res_end << DUALSENSE_TRIGGER_SHIFT;
+				effect->params.value[3] = trigger.effect.vibrate_slope.frequency & UINT8_MAX;
+				effect->params.value[4] = trigger.effect.vibrate_slope.period & UINT8_MAX;
+				msg->flags.motor_power = true;
+				msg->motor_flags.trigger_power_reduction = NORM_CLAMP(power_reduction, 7);
+				break;
 			}
-			msg->flags.motor_power = true;
-			msg->motor_flags.trigger_power_reduction = NORM_CLAMP(power_reduction, 7);
-			break;
-		}
+		case LIBRESENSE_EFFECT_MUTIPLE_SECTIONS:
+			{
+				effect->mode = DUALSENSE_EFFECT_MODE_MUTIPLE_SECTIONS;
+				for (int i = 0; i < LIBRESENSE_TRIGGER_GRANULARITY; ++i) {
+					if (trigger.effect.multiple_sections.resistance[i] >= 0.01f) {
+						effect->params.multiple.id |= 1 << i;
+						effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_sections.resistance[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * i);
+					}
+				}
+				break;
+			}
+		case LIBRESENSE_EFFECT_MUTIPLE_VIBRATE:
+			{
+				effect->mode = DUALSENSE_EFFECT_MODE_MUTIPLE_VIBRATE;
+				for (int i = 0; i < LIBRESENSE_TRIGGER_GRANULARITY; ++i) {
+					if (trigger.effect.multiple_vibrate.amplitude[i] >= 0.01f) {
+						effect->params.multiple.id |= 1 << i;
+						effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_vibrate.amplitude[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * i);
+					}
+				}
+				effect->params.multiple.value |= ((uint64_t) (trigger.effect.multiple_vibrate.frequency & UINT8_MAX)) << DUALSENSE_TRIGGER_FREQ_BITS;
+				effect->params.multiple.value |= ((uint64_t) (trigger.effect.multiple_vibrate.period & UINT8_MAX)) << DUALSENSE_TRIGGER_PERD_BITS;
+				msg->flags.motor_power = true;
+				msg->motor_flags.trigger_power_reduction = NORM_CLAMP(power_reduction, 7);
+				break;
+			}
+		case LIBRESENSE_EFFECT_MUTIPLE_VIBRATE_SECTIONS:
+			{
+				effect->mode = DUALSENSE_EFFECT_MODE_MUTIPLE_VIBRATE_SECTIONS;
+				// 9 and 10 run into the 7 and 8th bytes, which are used for freq and period which are... not used? setup from previous frames?
+				// freq seems to be based off the speed the trigger is going.
+				for (int i = 0; i < LIBRESENSE_TRIGGER_GRANULARITY; ++i) {
+					// this is likely incorrect, have yet to find a real user of this
+					if (trigger.effect.multiple_vibrate_sections.resistance[i] >= 0.01f) {
+						effect->params.multiple.id |= 1 << i;
+						effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_vibrate_sections.resistance[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * (i * 2));
+					}
+					if (trigger.effect.multiple_vibrate_sections.amplitude[i] >= 0.01f) {
+						effect->params.multiple.id |= 1 << i;
+						effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_vibrate_sections.amplitude[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * (i * 2 + 1));
+					}
+				}
+				msg->flags.motor_power = true;
+				msg->motor_flags.trigger_power_reduction = NORM_CLAMP(power_reduction, 7);
+				break;
+			}
 		// ReSharper restore CppRedundantParentheses
-		default:
-			return LIBRESENSE_NOT_IMPLEMENTED;
+		default: return LIBRESENSE_NOT_IMPLEMENTED;
 	}
 
 	return LIBRESENSE_OK;
 }
 
 // sanity check to make sure we don't (temporarily) brick the controller
-libresense_result
-check_if_trigger_state_bad(const libresense_handle handle, const uint8_t id) {
+libresense_result check_if_trigger_state_bad(const libresense_handle handle, const uint8_t id) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
@@ -694,8 +692,7 @@ check_if_trigger_state_bad(const libresense_handle handle, const uint8_t id) {
 	return LIBRESENSE_OK;
 }
 
-libresense_result
-libresense_update_effect(const libresense_handle handle, const libresense_effect_update left_trigger, const libresense_effect_update right_trigger, const float power_reduction) {
+libresense_result libresense_update_effect(const libresense_handle handle, const libresense_effect_update left_trigger, const libresense_effect_update right_trigger, const float power_reduction) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
@@ -704,22 +701,22 @@ libresense_update_effect(const libresense_handle handle, const libresense_effect
 	hid_state->flags.right_trigger_motor = right_trigger.mode != LIBRESENSE_EFFECT_NONE;
 
 	libresense_result result = compute_effect(&hid_state->effects[ADAPTIVE_TRIGGER_LEFT], hid_state, left_trigger, power_reduction);
-	if(IS_LIBRESENSE_OKAY(result)) {
+	if (IS_LIBRESENSE_OKAY(result)) {
 		result = check_if_trigger_state_bad(handle, ADAPTIVE_TRIGGER_LEFT);
 	}
 
-	if(IS_LIBRESENSE_BAD(result)) {
+	if (IS_LIBRESENSE_BAD(result)) {
 		memset(&hid_state->effects[ADAPTIVE_TRIGGER_RIGHT], 0, sizeof(hid_state->effects[ADAPTIVE_TRIGGER_RIGHT]));
 		hid_state->flags.left_trigger_motor = false;
 		return result;
 	}
 
 	result = compute_effect(&hid_state->effects[ADAPTIVE_TRIGGER_RIGHT], hid_state, right_trigger, power_reduction);
-	if(IS_LIBRESENSE_OKAY(result)) {
+	if (IS_LIBRESENSE_OKAY(result)) {
 		result = check_if_trigger_state_bad(handle, ADAPTIVE_TRIGGER_RIGHT);
 	}
 
-	if(IS_LIBRESENSE_BAD(result)) {
+	if (IS_LIBRESENSE_BAD(result)) {
 		memset(&hid_state->effects[ADAPTIVE_TRIGGER_RIGHT], 0, sizeof(hid_state->effects[ADAPTIVE_TRIGGER_RIGHT]));
 		hid_state->flags.right_trigger_motor = false;
 		return result;
@@ -728,8 +725,7 @@ libresense_update_effect(const libresense_handle handle, const libresense_effect
 	return result;
 }
 
-libresense_result
-libresense_update_rumble(const libresense_handle handle, const float large_motor, const float small_motor, const float power_reduction, const bool emulate_legacy_behavior) {
+libresense_result libresense_update_rumble(const libresense_handle handle, const float large_motor, const float small_motor, const float power_reduction, const bool emulate_legacy_behavior) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
@@ -737,7 +733,7 @@ libresense_update_rumble(const libresense_handle handle, const float large_motor
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 	hid_state->flags.rumble = hid_state->flags.motor_power = true;
 
-	if(hid.is_edge || hid.firmware.update.major >= 0x224) {
+	if (hid.is_edge || hid.firmware.update.major >= 0x224) {
 		hid_state->flags.control2 = true;
 		hid_state->control2.advanced_rumble_control = emulate_legacy_behavior;
 		hid_state->flags.haptics = !emulate_legacy_behavior;
@@ -751,42 +747,39 @@ libresense_update_rumble(const libresense_handle handle, const float large_motor
 	return LIBRESENSE_NOT_IMPLEMENTED;
 }
 
-libresense_result
-libresense_update_profile(const libresense_handle handle, const libresense_edge_profile_id id, const libresense_edge_profile profile) {
+libresense_result libresense_update_profile(const libresense_handle handle, const libresense_edge_profile_id id, const libresense_edge_profile profile) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 	CHECK_EDGE(handle);
 
-	if(id <= LIBRESENSE_PROFILE_TRIANGLE || id > LIBRESENSE_PROFILE_CIRCLE) {
+	if (id <= LIBRESENSE_PROFILE_TRIANGLE || id > LIBRESENSE_PROFILE_CIRCLE) {
 		return LIBRESENSE_INVALID_DATA;
 	}
 
 	return LIBRESENSE_NOT_IMPLEMENTED;
 }
 
-libresense_result
-libresense_delete_profile(const libresense_handle handle, const libresense_edge_profile_id id) {
+libresense_result libresense_delete_profile(const libresense_handle handle, const libresense_edge_profile_id id) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 	CHECK_EDGE(handle);
 
-	if(id <= LIBRESENSE_PROFILE_TRIANGLE || id > LIBRESENSE_PROFILE_CIRCLE) {
+	if (id <= LIBRESENSE_PROFILE_TRIANGLE || id > LIBRESENSE_PROFILE_CIRCLE) {
 		return LIBRESENSE_INVALID_DATA;
 	}
 
-	dualsense_profile_delete del = {0};
+	dualsense_profile_delete del = { 0 };
 	del.id = DUALSENSE_DELETE_PROFILE;
 	del.profile_id = id;
-	del.checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t *) &del, sizeof(del) - 4);
-	const size_t size = hid_send_feature_report(state[handle].hid, (uint8_t *) &del, sizeof(del));
+	del.checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t*) &del, sizeof(del) - 4);
+	const size_t size = hid_send_feature_report(state[handle].hid, (uint8_t*) &del, sizeof(del));
 	if (size != 0x40) {
 		return LIBRESENSE_INVALID_DATA;
 	}
 	return LIBRESENSE_OK;
 }
 
-libresense_result
-libresense_close(const libresense_handle handle) {
+libresense_result libresense_close(const libresense_handle handle) {
 	CHECK_INIT();
 	CHECK_HANDLE(handle);
 
@@ -796,8 +789,7 @@ libresense_close(const libresense_handle handle) {
 	return LIBRESENSE_OK;
 }
 
-void
-libresense_exit(void) {
+void libresense_exit(void) {
 	if (!is_initialized) {
 		return;
 	}

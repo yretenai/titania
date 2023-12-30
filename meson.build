@@ -44,6 +44,7 @@ configure_file(
 )
 
 hidapi = dependency('hidapi', version : '>=0.13.0')
+icu = dependency('icu-uc', version : '>=73.2')
 
 libresense_inc = include_directories('include/')
 
@@ -58,7 +59,7 @@ libresense_lib = library(meson.project_name(), [
 							 'src/trans.c',
 							 'src/crc.c'
 						 ],
-						 dependencies : [hidapi],
+						 dependencies : [hidapi, icu],
 						 gnu_symbol_visibility: 'hidden',
 						 c_args : [args, '-DLIBRESENSE_EXPORTING'],
 						 install : true,
