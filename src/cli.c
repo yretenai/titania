@@ -415,8 +415,8 @@ int main(int argc, const char** argv) {
 			}
 
 			printf("firmware {");
-			LIBREPRINT_X16(hid->firmware, type);
-			LIBREPRINT_X16(hid->firmware, series);
+			LIBREPRINT_X16(hid->firmware, type); LIBREPRINT_SEP();
+			LIBREPRINT_X16(hid->firmware, series); LIBREPRINT_SEP();
 			LIBREPRINT_FIRMWARE_HW(hid->firmware, hardware); LIBREPRINT_SEP();
 			LIBREPRINT_UPDATE(hid->firmware, update); LIBREPRINT_SEP();
 			LIBREPRINT_FIRMWARE(hid->firmware, firmware); LIBREPRINT_SEP();
