@@ -333,7 +333,7 @@ int main(int argc, const char** argv) {
 			handles[connected++] = hid[hid_id].handle;
 #ifdef LIBRESENSE_DEBUG
 			char name[0x30] = { 0 };
-			sprintf(name, "report_%s_%%d.bin", hid[hid_id].serial.paired_mac);
+			sprintf(name, "report_%s_%%d.bin", hid[hid_id].serial.mac);
 
 			for (int i = 0; i < 0xFF; i++) {
 				uint8_t buffer[0x4096];
