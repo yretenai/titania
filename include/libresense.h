@@ -74,6 +74,15 @@ typedef enum {
 } libresense_level;
 
 typedef enum {
+	LIBRESENSE_EDGE_LEVEL_HIGH = 0,
+	LIBRESENSE_EDGE_VIBRATION_LEVEL_MEDIUM = 2,
+	LIBRESENSE_EDGE_VIBRATION_LEVEL_LOW = 3,
+	LIBRESENSE_EDGE_EFFECT_LEVEL_MEDIUM = 6,
+	LIBRESENSE_EDGE_EFFECT_LEVEL_LOW = 9,
+	LIBRESENSE_EDGE_LEVEL_OFF = 255
+} libresense_edge_power_level;
+
+typedef enum {
 	LIBRESENSE_TRIGGER_EFFECT_OFF = 0,
 	LIBRESENSE_TRIGGER_EFFECT_UNIFORM = 1,
 	LIBRESENSE_TRIGGER_EFFECT_TRIGGER = 2,
@@ -248,12 +257,19 @@ typedef enum {
 	LIBRESENSE_EDGE_STICK_TEMPLATE_DYNAMIC,
 } libresense_edge_stick_template;
 
+typedef enum {
+	LIBRESENSE_EDGE_INTERPOLATION_TYPE_LINEAR = 0,
+	LIBRESENSE_EDGE_INTERPOLATION_TYPE_CUBIC = 3,
+	LIBRESENSE_EDGE_INTERPOLATION_TYPE_SMOOTHSTEP = 4,
+} libresense_edge_interpolation_type;
+
 typedef struct {
 	libresense_edge_stick_template id;
 	libresense_vector2 deadzone;
 	libresense_vector2 curve_points[3];
+	libresense_edge_interpolation_type interpolation_type;
 	uint8_t unknown;
-	uint16_t unknown2;
+	bool disabled;
 } libresense_edge_stick;
 
 typedef struct {
@@ -312,12 +328,12 @@ typedef struct {
 	libresense_edge_stick sticks[2];
 	libresense_edge_trigger triggers[2];
 	libresense_edge_button_remap buttons;
-	libresense_level brightness;
-	libresense_level vibration;
+	libresense_edge_power_level vibration;
+	libresense_edge_power_level trigger_effect;
 	bool sticks_swapped;
+	bool trigger_deadzone_mirrored;
 	libresense_buttons disabled_buttons;
-	uint8_t unknown;
-	uint8_t unknown2;
+	uint32_t unknown;
 	uint64_t timestamp;
 } libresense_edge_profile;
 

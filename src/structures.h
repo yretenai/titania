@@ -686,69 +686,57 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_profile_deadzone) == 2, "dualsense_profile_deadzone size is not 2");
 
 typedef struct PACKED {
-	uint8_t unknown;
-	dualsense_profile_deadzone deadzone;
+	uint8_t interpolation_type; // 3 for everything, except precise which is 4. interpolation type?
+	uint8_t deadzone;
+	uint8_t unknown; // deadzone max? always zero.
 	dualsense_vector2b coordinates[3];
 } dualsense_profile_stick;
 
 static_assert(sizeof(dualsense_profile_stick) == 9, "dualsense_profile_stick size is not 9");
 
-typedef struct PACKED {
-	libresense_level brightness : 2;
-	uint8_t unknown : 7;
-	libresense_level vibration : 2;
-	uint8_t unknown2 : 5;
-} dualsense_profile_device_flags;
-
-static_assert(sizeof(dualsense_profile_device_flags) == 2, "dualsense_profile_device_flags size is not 2");
-
 // this bitset has no order whatsoever??
 typedef struct PACKED {
-	bool unknown1 : 1;
-	bool unknown2 : 1;
-	bool unknown3 : 1;
-	bool unknown4 : 1;
+	bool dpad_up : 1;
+	bool dpad_left : 1;
+	bool dpad_down : 1;
+	bool dpad_right : 1;
 	bool share : 1;
 	bool option : 1;
-	bool unknown7 : 1;
-	bool unknown8 : 1;
-
-	bool l3 : 1;
-	bool r3 : 1;
+	bool square : 1;
+	bool triangle : 1;
+	bool left_stick : 1;
+	bool right_stick : 1;
 	bool playstation : 1;
-	bool unknown12 : 1;
-	bool unknown13 : 1;
+	bool f1 : 1; // guess
+	bool f2 : 1; // guess
 	bool touchpad : 1;
 	bool touch : 1;
-	bool unknown16 : 1;
-
-	bool unknown17 : 1;
-	bool unknown18 : 1;
-	bool unknown19 : 1;
-	bool unknown20 : 1;
-	bool unknown21 : 1;
-	bool unknown22 : 1;
+	bool mute : 1; // guess
+	bool r1 : 1;
+	bool r2 : 1;
+	bool r3 : 1;
+	bool l1 : 1;
+	bool l2 : 1;
+	bool l3 : 1;
 	bool left_paddle : 1;
 	bool right_paddle : 1;
-
-	bool unknown25 : 1;
-	bool unknown26 : 1;
-	bool unknown27 : 1;
-	bool unknown28 : 1;
-	bool unknown29 : 1;
-	bool unknown30 : 1;
-	bool unknown31 : 1;
+	bool cross : 1;
+	bool circle : 1;
+	uint8_t reserved : 5;
 	bool sticks_swapped : 1;
 } dualsense_profile_disabled_buttons;
 
 static_assert(sizeof(dualsense_profile_disabled_buttons) == 4, "dualsense_profile_disabled_buttons size is not 4");
 
 typedef struct PACKED {
-	uint8_t profile : 4;
-	uint16_t reserved : 12;
-} dualsense_profile_stick_flags;
+	uint8_t left_stick_profile : 4;
+	uint16_t unknown : 11;
+	bool triggers_mirrored : 1;
+	uint8_t right_stick_profile : 4;
+	uint16_t unknown2 : 12;
+} dualsense_profile_flags;
 
-static_assert(sizeof(dualsense_profile_stick_flags) == 2, "dualsense_profile_stick_flags size is not 2");
+static_assert(sizeof(dualsense_profile_flags) == 4, "dualsense_profile_stick_flags size is not 4");
 
 typedef struct PACKED {
 	uint32_t version;
@@ -756,10 +744,11 @@ typedef struct PACKED {
 	dualsense_profile_uuid uuid;
 	dualsense_profile_stick sticks[2];
 	dualsense_profile_deadzone triggers[2];
-	dualsense_profile_device_flags device_flags;
+	uint8_t vibration_reduction; // Off = 0xFF, Weak = 0x3, Medium = 0x2
+	uint8_t trigger_reduction;	 // Off = 0xFF, Weak = 0x9, Medium = 0x6
 	uint8_t remapped_button[0x10];
 	dualsense_profile_disabled_buttons disabled_buttons;
-	dualsense_profile_stick_flags stick_profiles[2];
+	dualsense_profile_flags flags;
 	uint64_t timestamp;
 	uint8_t reserved[14];
 	uint32_t checksum;

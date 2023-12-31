@@ -284,6 +284,7 @@ libresense_result libresense_open(libresense_hid* handle) {
 				report[2] == 0x09 && report[3] == 0x05 &&																		 // USAGE Game Pad
 				report[4] == 0xA1 && report[5] == 0x01) {
 				int report_id = 0;
+				int last_size = 0;
 				// COLLECTION Application
 				for (int j = 6; j < report_size;) {
 					const uint8_t op = report[j++];
@@ -329,9 +330,10 @@ libresense_result libresense_open(libresense_hid* handle) {
 						}
 
 						handle->report_ids[report_id++].id = (uint8_t) value;
-						handle->report_ids[report_id - 1].size = 1;
+						handle->report_ids[report_id - 1].size = last_size;
 					} else if (report_id > 0) {
 						if (op_value == 37) { // REPORT COUNT
+							last_size = value;
 							handle->report_ids[report_id - 1].size = value;
 						} else if (op_value == 32) { // INPUT
 							handle->report_ids[report_id - 1].type = 0;

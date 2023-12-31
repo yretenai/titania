@@ -90,7 +90,7 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 	data->device.usb_power = input.state.device.usb_power;
 	data->device.external_mic = input.state.device.external_mic;
 	data->device.haptic_filter = input.state.device.haptic_filter;
-	data->device.reserved = input.state.device.reserved1 | input.state.device.reserved2 << 3;
+	data->device.reserved = (uint16_t) input.state.device.reserved1 | (uint16_t) input.state.device.reserved2 << 3;
 
 	data->state_id = input.state_id;
 
@@ -130,6 +130,6 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 		data->edge_device.emulating_rumble = input.state.edge.override.emulating_rumble;
 		data->edge_device.profile_indicator.unknown1 = input.state.edge.profile.unknown1;
 		data->edge_device.profile_indicator.unknown2 = input.state.edge.profile.unknown2;
-		data->edge_device.unknown = input.state.edge.override.unknown3 | (uint8_t) input.state.edge.override.unknown4 << 1;
+		data->edge_device.unknown = (uint8_t) input.state.edge.override.unknown3 | (uint8_t) input.state.edge.override.unknown4 << 1;
 	}
 }

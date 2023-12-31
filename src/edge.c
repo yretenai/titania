@@ -49,11 +49,10 @@ libresense_result libresense_convert_edge_profile_input(dualsense_profile_blob i
 	for (uint8_t i = 0; i < sizeof(left_right); i += 2) {
 		const uint8_t libre = left_right[i];
 		const uint8_t dual = left_right[i + 1];
+		output->sticks[libre].interpolation_type = profile.msg.sticks[dual].interpolation_type;
+		output->sticks[libre].deadzone.x = NORM_CLAMP_UINT8(profile.msg.sticks[dual].deadzone);
+		output->sticks[libre].deadzone.y = 1.0f;
 		output->sticks[libre].unknown = profile.msg.sticks[dual].unknown;
-		output->sticks[libre].id = profile.msg.stick_profiles[dual].profile;
-		output->sticks[libre].unknown2 = profile.msg.stick_profiles[dual].reserved;
-		output->sticks[libre].deadzone.x = NORM_CLAMP_UINT8(profile.msg.sticks[dual].deadzone.min);
-		output->sticks[libre].deadzone.y = NORM_CLAMP_UINT8(profile.msg.sticks[dual].deadzone.max);
 		for (uint8_t j = 0; j < 3; ++j) {
 			output->sticks[libre].curve_points[j].x = NORM_CLAMP_UINT8(profile.msg.sticks[dual].coordinates[j].x);
 			output->sticks[libre].curve_points[j].y = NORM_CLAMP_UINT8(profile.msg.sticks[dual].coordinates[j].y);
@@ -67,21 +66,41 @@ libresense_result libresense_convert_edge_profile_input(dualsense_profile_blob i
 		output->buttons.buttons[i] = profile.msg.remapped_button[i];
 	}
 
-	output->brightness = profile.msg.device_flags.brightness;
-	output->vibration = profile.msg.device_flags.vibration;
-	output->unknown = profile.msg.device_flags.unknown;
-	output->unknown2 = profile.msg.device_flags.unknown2;
+	output->sticks[LIBRESENSE_LEFT].id = profile.msg.flags.left_stick_profile;
+	output->sticks[LIBRESENSE_RIGHT].id = profile.msg.flags.right_stick_profile;
+	output->sticks[LIBRESENSE_LEFT].disabled = profile.msg.disabled_buttons.left_stick;
+	output->sticks[LIBRESENSE_RIGHT].disabled = profile.msg.disabled_buttons.right_stick;
+	output->trigger_deadzone_mirrored = profile.msg.flags.triggers_mirrored;
+	output->trigger_effect = profile.msg.trigger_reduction;
+	output->vibration = profile.msg.vibration_reduction;
+	output->disabled_buttons.dpad_up = profile.msg.disabled_buttons.dpad_up;
+	output->disabled_buttons.dpad_left = profile.msg.disabled_buttons.dpad_left;
+	output->disabled_buttons.dpad_down = profile.msg.disabled_buttons.dpad_down;
+	output->disabled_buttons.dpad_right = profile.msg.disabled_buttons.dpad_right;
 	output->disabled_buttons.share = profile.msg.disabled_buttons.share;
 	output->disabled_buttons.option = profile.msg.disabled_buttons.option;
+	output->disabled_buttons.square = profile.msg.disabled_buttons.square;
+	output->disabled_buttons.triangle = profile.msg.disabled_buttons.triangle;
+	output->disabled_buttons.cross = profile.msg.disabled_buttons.cross;
+	output->disabled_buttons.circle = profile.msg.disabled_buttons.circle;
+	output->disabled_buttons.edge_f1 = profile.msg.disabled_buttons.f1;
+	output->disabled_buttons.edge_f2 = profile.msg.disabled_buttons.f2;
+	output->disabled_buttons.mute = profile.msg.disabled_buttons.mute;
+	output->disabled_buttons.r1 = profile.msg.disabled_buttons.r1;
+	output->disabled_buttons.l1 = profile.msg.disabled_buttons.l1;
+	output->disabled_buttons.r2 = profile.msg.disabled_buttons.r2;
+	output->disabled_buttons.l2 = profile.msg.disabled_buttons.l2;
+	output->disabled_buttons.r3 = profile.msg.disabled_buttons.r3;
 	output->disabled_buttons.l3 = profile.msg.disabled_buttons.l3;
 	output->disabled_buttons.playstation = profile.msg.disabled_buttons.playstation;
 	output->disabled_buttons.touchpad = profile.msg.disabled_buttons.touchpad;
 	output->disabled_buttons.touch = profile.msg.disabled_buttons.touch;
 	output->disabled_buttons.edge_left_paddle = profile.msg.disabled_buttons.left_paddle;
 	output->disabled_buttons.edge_right_paddle = profile.msg.disabled_buttons.right_paddle;
-	// output->disabled_buttons = profile.msg.disabled_buttons.todo;
+	output->disabled_buttons.edge_reserved = profile.msg.disabled_buttons.reserved;
 	output->sticks_swapped = profile.msg.disabled_buttons.sticks_swapped;
 	output->timestamp = profile.msg.timestamp;
+	output->unknown = (uint32_t) profile.msg.flags.unknown | (uint32_t) profile.msg.flags.unknown2 << 11;
 
 	output->valid = true;
 
