@@ -685,7 +685,6 @@ LIBRESENSE_EXPORT libresense_result libresense_close(const libresense_handle han
  */
 LIBRESENSE_EXPORT void libresense_exit(void);
 
-#ifdef LIBRESENSE_DEBUG
 /**
  * @brief (debug) get a feature report
  * @param handle: the device to query
@@ -694,5 +693,12 @@ LIBRESENSE_EXPORT void libresense_exit(void);
  * @param size: the size of the buffer
  */
 LIBRESENSE_EXPORT size_t libresense_debug_get_feature_report(const libresense_handle handle, const int report_id, uint8_t* buffer, const size_t size);
-#endif
+
+/**
+ * @brief (debug) convert a merged dualsense profile to libresense's representation
+ * @note merged dualsense profiles are made using the merge-edge-profile.py script
+ * @param input: data to convert from
+ * @param output: the profile to convert into
+ */
+LIBRESENSE_EXPORT libresense_result libresense_debug_convert_edge_profile(uint8_t input[174], libresense_edge_profile* output);
 #endif

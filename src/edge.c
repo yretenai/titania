@@ -121,3 +121,13 @@ libresense_result libresense_convert_edge_profile_output(libresense_edge_profile
 
 	return LIBRESENSE_NOT_IMPLEMENTED;
 }
+
+libresense_result libresense_debug_convert_edge_profile(uint8_t input[174], libresense_edge_profile* output) {
+	dualsense_profile_blob report[3];
+
+	memcpy(&report[0].blob, &input[0], sizeof(report[0].blob));
+	memcpy(&report[1].blob, &input[sizeof(report[0].blob)], sizeof(report[1].blob));
+	memcpy(&report[2].blob, &input[sizeof(report[0].blob) + sizeof(report[1].blob)], sizeof(report[2].blob));
+
+	return libresense_convert_edge_profile_input(report, output);
+}
