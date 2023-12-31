@@ -444,7 +444,6 @@ typedef enum {
 
 typedef struct {
 	libresense_led_effect effect;
-	libresense_level brightness;
 	libresense_led_index led;
 	libresense_vector3 color;
 } libresense_led_update;

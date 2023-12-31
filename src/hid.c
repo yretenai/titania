@@ -286,7 +286,6 @@ libresense_result libresense_open(libresense_hid* handle, bool use_calibration) 
 				update.color.x = 1.0;
 				update.color.y = 0.0;
 				update.color.z = 1.0;
-				update.brightness = LIBRESENSE_LEVEL_HIGH;
 				update.effect = LIBRESENSE_LED_EFFECT_OFF; // RESET;
 				update.led = LIBRESENSE_LED_PLAYER_1;
 				libresense_update_led(handle->handle, update);
@@ -413,13 +412,6 @@ libresense_result libresense_update_led(const libresense_handle handle, const li
 		hid_state->led.color.x = NORM_CLAMP_UINT8(data.color.x);
 		hid_state->led.color.y = NORM_CLAMP_UINT8(data.color.y);
 		hid_state->led.color.z = NORM_CLAMP_UINT8(data.color.z);
-	}
-
-	if (data.brightness != hid_state->led.brightness) {
-		hid_state->flags.led = true;
-		hid_state->flags.control2 = true;
-		hid_state->control2.led_brightness_control = true;
-		hid_state->led.brightness = data.brightness;
 	}
 
 	if (data.effect != hid_state->led.effect) {
