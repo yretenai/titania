@@ -466,7 +466,7 @@ typedef struct PACKED {
 
 	// interactive flags
 	bool led_brightness_control : 1;
-	bool led_color_control : 1;
+	bool led_effect_control : 1;
 	bool advanced_rumble_control : 1;
 	uint8_t reserved2 : 4;
 	bool has_edge_flag : 1;

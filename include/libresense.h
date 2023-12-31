@@ -443,7 +443,6 @@ typedef enum {
 } libresense_led_index;
 
 typedef struct {
-	libresense_led_effect effect;
 	libresense_led_index led;
 	libresense_vector3 color;
 } libresense_led_update;
@@ -578,10 +577,11 @@ typedef struct {
 	bool disable_beamforming;
 	bool enable_lowpass_filter;
 	bool disable_led_brightness_control;
-	bool disable_led_color_control;
+	bool disable_led_effect_control;
 	bool disable_rumble_emulation;
 	uint8_t gain;
 	libresense_level led_brightness;
+	libresense_led_effect led_effect;
 	uint8_t reserved1;
 	uint8_t reserved2;
 	uint16_t reserved3;

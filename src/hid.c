@@ -286,7 +286,6 @@ libresense_result libresense_open(libresense_hid* handle, bool use_calibration) 
 				update.color.x = 1.0;
 				update.color.y = 0.0;
 				update.color.z = 1.0;
-				update.effect = LIBRESENSE_LED_EFFECT_OFF; // RESET;
 				update.led = LIBRESENSE_LED_PLAYER_1;
 				libresense_update_led(handle->handle, update);
 				libresense_push(&handle->handle, 1);
@@ -406,17 +405,10 @@ libresense_result libresense_update_led(const libresense_handle handle, const li
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 
 	if (data.color.x >= 0.0f && data.color.y >= 0.0f && data.color.z >= 0.0f) {
-		hid_state->flags.control2 = true;
-		hid_state->control2.led_color_control = true;
 		hid_state->flags.led = true;
 		hid_state->led.color.x = NORM_CLAMP_UINT8(data.color.x);
 		hid_state->led.color.y = NORM_CLAMP_UINT8(data.color.y);
 		hid_state->led.color.z = NORM_CLAMP_UINT8(data.color.z);
-	}
-
-	if (data.effect != hid_state->led.effect) {
-		hid_state->flags.led = true;
-		hid_state->led.effect = data.effect;
 	}
 
 	if (data.led != hid_state->led.led_id) {
@@ -472,10 +464,13 @@ libresense_result libresense_update_control(const libresense_handle handle, cons
 	hid_state->control2.enable_beamforming = !data.disable_beamforming;
 	hid_state->control2.enable_lowpass_filter = data.enable_lowpass_filter;
 	hid_state->control2.gain = data.gain;
-	hid_state->control2.led_brightness_control = !data.disable_led_brightness_control;
-	hid_state->control2.led_color_control = !data.disable_led_color_control;
 	hid_state->control2.advanced_rumble_control = !data.disable_rumble_emulation;
+
+	hid_state->control2.led_effect_control = !data.disable_led_effect_control;
+	hid_state->control2.led_brightness_control = !data.disable_led_brightness_control;
 	hid_state->led.brightness = data.led_brightness;
+	hid_state->led.effect = data.led_effect;
+
 	hid_state->control2.reserved1 = data.reserved1;
 	hid_state->control2.reserved2 = data.reserved2;
 	hid_state->control2.reserved3 = data.reserved3;
