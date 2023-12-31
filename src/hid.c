@@ -268,7 +268,7 @@ libresense_result libresense_open(libresense_hid* handle) {
 						break;
 					}
 
-					if (IS_LIBRESENSE_BAD(libresense_convert_edge_profile_input(profile_data, &handle->edge_profiles[j]))) {
+					if (IS_LIBRESENSE_BAD(libresense_convert_edge_profile_input(profile_data, &handle->edge_profiles[j + 1]))) {
 						memset(&handle->edge_profiles[j], 0, sizeof(libresense_edge_profile));
 					}
 				}

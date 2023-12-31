@@ -43,10 +43,12 @@ void usleep(__int64 usec) {
 #define LIBREPRINT_X16(struc, field) printf(" " #field " = 0x%04x", struc.field)
 #define LIBREPRINT_FLOAT(struc, field) printf(" " #field " = %f", struc.field)
 #define LIBREPRINT_PERCENT(struc, field) printf(" " #field " = %f%%", struc.field * 100.0f)
+#define LIBREPRINT_PERCENT_LABEL(struc, field, name) printf(" " name " = %f%%", struc.field * 100.0f)
 #define LIBREPRINT_ENUM(struc, field, strs, name) printf(" " name " = %s", strs[struc.field])
 #define LIBREPRINT_TEST(struc, field) printf(" " #field " = %s", struc.field ? "Y" : "N")
 #define LIBREPRINT_BUTTON_TEST(field) printf(" " #field " = %s", data.buttons.field ? "Y" : "N")
 #define LIBREPRINT_EDGE_BUTTON_TEST(field) printf(" " #field " = %s", data.edge_device.raw_buttons.field ? "Y" : "N")
+#define LIBREPRINT_PROFILE_BUTTON_TEST(field) printf(" " #field " = %s", profile.disabled_buttons.field ? "Y" : "N")
 
 #define libresense_errorf(fp, result, fmt) fprintf(fp, "[" LIBRESENSE_PROJECT_NAME "] " fmt ": %s\n", libresense_error_msg[result])
 #define libresense_printf(fmt, ...) printf("[" LIBRESENSE_PROJECT_NAME "] " fmt "\n", __VA_ARGS__)
@@ -149,8 +151,137 @@ void wait_until_options_clear(libresense_handle* handles, const size_t handle_co
 	}
 }
 
+void print_profile(libresense_edge_profile_id profile_id, libresense_edge_profile profile) {
+	if (!profile.valid) {
+		return;
+	}
+
+	printf("profile %s:\n", libresense_edge_profile_id_msg[profile_id]);
+
+	// clang-format off
+	LIBREPRINT_TEST(profile, valid); printf("\n");
+	LIBREPRINT_STR(profile, name); printf("\n");
+	// clang-format on
+
+	printf(" id = ");
+	for (int i = 0; i < 0x10; ++i) {
+		printf("%02x", profile.id[i]);
+	}
+
+	// clang-format off
+	printf("\n");
+	LIBREPRINT_TEST(profile, sticks_swapped); printf("\n");
+	LIBREPRINT_TEST(profile, trigger_deadzone_mirrored); printf("\n");
+	LIBREPRINT_U32(profile, vibration); printf("\n");
+	LIBREPRINT_U32(profile, trigger_effect); printf("\n");
+	LIBREPRINT_U64(profile, timestamp); printf("\n");
+	LIBREPRINT_U32(profile, unknown); printf("\n");
+
+	printf(" left stick =\n\t");
+	LIBREPRINT_TEST(profile.sticks[0], disabled); printf("\n\t");
+	LIBREPRINT_U32(profile.sticks[0], template_id); printf("\n\t");
+	LIBREPRINT_PERCENT_LABEL(profile.sticks[0], deadzone.x, "deadzone"); printf("\n\t");
+	LIBREPRINT_U32(profile.sticks[0], interpolation_type); printf("\n\t");
+	LIBREPRINT_PERCENT(profile.sticks[0], unknown); printf("\n\t");
+	// clang-format on
+
+	printf(" curve = [");
+	for (int i = 0; i < 3; ++i) {
+		printf("{ x = %f%%, y = %f%% }", profile.sticks[0].curve_points[i].x * 100, profile.sticks[0].curve_points[i].y * 100);
+		if (i < 2) {
+			printf(", ");
+		}
+	}
+	printf("]\n");
+
+	// clang-format off
+	printf(" right stick =\n\t");
+	LIBREPRINT_TEST(profile.sticks[1], disabled); printf("\n\t");
+	LIBREPRINT_U32(profile.sticks[1], template_id); printf("\n\t");
+	LIBREPRINT_PERCENT_LABEL(profile.sticks[1], deadzone.x, "deadzone"); printf("\n\t");
+	LIBREPRINT_U32(profile.sticks[1], interpolation_type); printf("\n\t");
+	LIBREPRINT_PERCENT(profile.sticks[1], unknown); printf("\n\t");
+	// clang-format on
+
+	printf(" curve = [");
+	for (int i = 0; i < 3; ++i) {
+		printf("{ x = %f%%, y = %f%% }", profile.sticks[1].curve_points[i].x * 100, profile.sticks[1].curve_points[i].y * 100);
+		if (i < 2) {
+			printf(", ");
+		}
+	}
+	printf("]\n");
+
+	printf(" trigger deadzones = [[ %f%%, %f%% ], [ %f%%, %f%% ]]\n", profile.triggers[0].deadzone.x, profile.triggers[0].deadzone.y, profile.triggers[1].deadzone.x, profile.triggers[1].deadzone.y);
+
+	// clang-format off
+	printf(" disabled =");
+	LIBREPRINT_PROFILE_BUTTON_TEST(dpad_up); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(dpad_right); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(dpad_down); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(dpad_left); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(square); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(cross); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(circle); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(triangle); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(l1); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(r1); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(l2); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(r2); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(share); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(option); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(l3); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(r3); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(playstation); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(touchpad); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(touch); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(mute); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(edge_f1); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(edge_f2); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(edge_left_paddle); LIBREPRINT_SEP();
+	LIBREPRINT_PROFILE_BUTTON_TEST(edge_right_paddle); printf("\n");
+	// clang-format on
+
+	printf(" remapped =");
+
+	for (int i = 0; i < 0x10; ++i) {
+		printf(" %s = %s", libresense_edge_button_id_msg[i], libresense_edge_button_id_msg[profile.buttons.values[i]]);
+		if (i < 0xF) {
+			printf(",");
+		}
+	}
+
+	printf("\n\n");
+}
+
+// todo: move benchmark, profile, and test to libresensectl
 int main(int argc, const char** argv) {
 	libresense_printf("version %s", LIBRESENSE_PROJECT_VERSION);
+	if (argc > 2 && strcmp(argv[1], "profile") == 0) {
+		for (int i = 2; i < argc; ++i) {
+			FILE* file = fopen(argv[i], "r+b");
+			uint8_t buffer[174];
+			if (file == NULL) {
+				continue;
+			}
+			size_t n = fread(buffer, 1, sizeof(buffer), file);
+			fclose(file);
+			if (n != sizeof(buffer)) {
+				continue;
+			}
+
+			libresense_edge_profile profile;
+			libresense_debug_convert_edge_profile(buffer, &profile);
+			printf("%s: \n", argv[i]);
+			print_profile(LIBRESENSE_PROFILE_NONE, profile);
+		}
+
+		return 0;
+	}
+
+	if (argc > 1 && (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "version") == 0)) {
+		return 0;
+	}
 
 	libresense_result result = libresense_init();
 	if (IS_LIBRESENSE_BAD(result)) {
@@ -412,6 +543,10 @@ int main(int argc, const char** argv) {
 				LIBREPRINT_TEST(data.edge_device, emulating_rumble); LIBREPRINT_SEP();
 				LIBREPRINT_U32(data.edge_device, unknown);
 				printf(" }\n");
+
+				for (libresense_edge_profile_id j = 1; j < LIBRESENSE_PROFILE_MAX; ++j) {
+					print_profile(j, hid->edge_profiles[j]);
+				}
 			}
 			// clang-format on
 		}

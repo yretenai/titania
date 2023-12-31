@@ -63,8 +63,7 @@ typedef enum {
 	LIBRESENSE_PROFILE_SQUARE,
 	LIBRESENSE_PROFILE_CROSS,
 	LIBRESENSE_PROFILE_CIRCLE,
-	LIBRESENSE_PROFILE_MAX,
-	LIBRESENSE_PROFILE_MAX_MINUS_ONE = LIBRESENSE_PROFILE_MAX - 1
+	LIBRESENSE_PROFILE_MAX
 } libresense_edge_profile_id;
 
 typedef enum {
@@ -102,11 +101,34 @@ typedef enum {
 	LIBRESENSE_TRIGGER_EFFECT_MAX
 } libresense_trigger_effect_state;
 
+typedef enum {
+	LIBRESENSE_BUTTON_ID_UP,
+	LIBRESENSE_BUTTON_ID_LEFT,
+	LIBRESENSE_BUTTON_ID_DOWN,
+	LIBRESENSE_BUTTON_ID_RIGHT,
+	LIBRESENSE_BUTTON_ID_CIRCLE,
+	LIBRESENSE_BUTTON_ID_CROSS,
+	LIBRESENSE_BUTTON_ID_SQUARE,
+	LIBRESENSE_BUTTON_ID_TRIANGLE,
+	LIBRESENSE_BUTTON_ID_R1,
+	LIBRESENSE_BUTTON_ID_R2,
+	LIBRESENSE_BUTTON_ID_R3,
+	LIBRESENSE_BUTTON_ID_L1,
+	LIBRESENSE_BUTTON_ID_L2,
+	LIBRESENSE_BUTTON_ID_L3,
+	LIBRESENSE_BUTTON_ID_LEFT_PADDLE,
+	LIBRESENSE_BUTTON_ID_RIGHT_PADDLE,
+	LIBRESENSE_BUTTON_ID_OPTION,
+	LIBRESENSE_BUTTON_ID_TOUCH,
+	LIBRESENSE_BUTTON_ID_MAX
+} libresense_edge_button_id;
+
 LIBRESENSE_EXPORT extern const char* const libresense_error_msg[LIBRESENSE_ERROR_MAX + 1];
 LIBRESENSE_EXPORT extern const char* const libresense_battery_state_msg[LIBRESENSE_BATTERY_MAX + 1];
 LIBRESENSE_EXPORT extern const char* const libresense_edge_profile_id_msg[LIBRESENSE_PROFILE_MAX + 1];
 LIBRESENSE_EXPORT extern const char* const libresense_level_msg[LIBRESENSE_LEVEL_LOW + 2];
 LIBRESENSE_EXPORT extern const char* const libresense_trigger_effect_msg[LIBRESENSE_TRIGGER_EFFECT_MAX + 1];
+LIBRESENSE_EXPORT extern const char* const libresense_edge_button_id_msg[LIBRESENSE_BUTTON_ID_MAX + 1];
 LIBRESENSE_EXPORT extern const int libresense_max_controllers;
 
 #define IS_LIBRESENSE_OKAY(result) (result == LIBRESENSE_OK)
@@ -264,7 +286,7 @@ typedef enum {
 } libresense_edge_interpolation_type;
 
 typedef struct {
-	libresense_edge_stick_template id;
+	libresense_edge_stick_template template_id;
 	libresense_vector2 deadzone;
 	libresense_vector2 curve_points[3];
 	libresense_edge_interpolation_type interpolation_type;
@@ -275,27 +297,6 @@ typedef struct {
 typedef struct {
 	libresense_vector2 deadzone;
 } libresense_edge_trigger;
-
-typedef enum {
-	LIBRESENSE_BUTTON_UP,
-	LIBRESENSE_BUTTON_LEFT,
-	LIBRESENSE_BUTTON_DOWN,
-	LIBRESENSE_BUTTON_RIGHT,
-	LIBRESENSE_BUTTON_CIRCLE,
-	LIBRESENSE_BUTTON_CROSS,
-	LIBRESENSE_BUTTON_SQUARE,
-	LIBRESENSE_BUTTON_TRIANGLE,
-	LIBRESENSE_BUTTON_R1,
-	LIBRESENSE_BUTTON_R2,
-	LIBRESENSE_BUTTON_R3,
-	LIBRESENSE_BUTTON_L1,
-	LIBRESENSE_BUTTON_L2,
-	LIBRESENSE_BUTTON_L3,
-	LIBRESENSE_BUTTON_LP,
-	LIBRESENSE_BUTTON_RP,
-	LIBRESENSE_BUTTON_OPT,
-	LIBRESENSE_BUTTON_TOUCH,
-} libresense_edge_button_id;
 
 typedef union {
 	struct {
@@ -317,7 +318,7 @@ typedef union {
 		libresense_edge_button_id right_paddle;
 	};
 
-	libresense_edge_button_id buttons[0x10];
+	libresense_edge_button_id values[0x10];
 } libresense_edge_button_remap;
 
 typedef struct {
@@ -346,7 +347,7 @@ typedef struct {
 	libresense_serial hid_serial;
 	libresense_serial_info serial;
 	libresense_firmware_info firmware;
-	libresense_edge_profile edge_profiles[LIBRESENSE_PROFILE_MAX_MINUS_ONE];
+	libresense_edge_profile edge_profiles[LIBRESENSE_PROFILE_MAX];
 #ifdef LIBRESENSE_DEBUG
 	struct libresense_report_id {
 		uint8_t id;

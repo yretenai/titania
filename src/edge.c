@@ -14,7 +14,7 @@ libresense_result libresense_convert_edge_profile_input(dualsense_profile_blob i
 		return LIBRESENSE_OK;
 	}
 
-	if(input[0].version != 1) {
+	if (input[0].version != 1) {
 		return LIBRESENSE_NOT_IMPLEMENTED;
 	}
 
@@ -54,24 +54,24 @@ libresense_result libresense_convert_edge_profile_input(dualsense_profile_blob i
 		const uint8_t libre = left_right[i];
 		const uint8_t dual = left_right[i + 1];
 		output->sticks[libre].interpolation_type = profile.msg.sticks[dual].interpolation_type;
-		output->sticks[libre].deadzone.x = NORM_CLAMP_UINT8(profile.msg.sticks[dual].deadzone);
+		output->sticks[libre].deadzone.x = profile.msg.sticks[dual].deadzone / (float) UINT8_MAX;
 		output->sticks[libre].deadzone.y = 1.0f;
 		output->sticks[libre].unknown = profile.msg.sticks[dual].unknown;
 		for (uint8_t j = 0; j < 3; ++j) {
-			output->sticks[libre].curve_points[j].x = NORM_CLAMP_UINT8(profile.msg.sticks[dual].coordinates[j].x);
-			output->sticks[libre].curve_points[j].y = NORM_CLAMP_UINT8(profile.msg.sticks[dual].coordinates[j].y);
+			output->sticks[libre].curve_points[j].x = profile.msg.sticks[dual].coordinates[j].x / (float) UINT8_MAX;
+			output->sticks[libre].curve_points[j].y = profile.msg.sticks[dual].coordinates[j].y / (float) UINT8_MAX;
 		}
 
-		output->triggers[libre].deadzone.x = NORM_CLAMP_UINT8(profile.msg.triggers[dual].min);
-		output->triggers[libre].deadzone.y = NORM_CLAMP_UINT8(profile.msg.triggers[dual].max);
+		output->triggers[libre].deadzone.x = profile.msg.triggers[dual].min / (float) UINT8_MAX;
+		output->triggers[libre].deadzone.y = profile.msg.triggers[dual].max / (float) UINT8_MAX;
 	}
 
 	for (uint8_t i = 0; i < 0x10; ++i) {
-		output->buttons.buttons[i] = profile.msg.remapped_button[i];
+		output->buttons.values[i] = profile.msg.remapped_button[i];
 	}
 
-	output->sticks[LIBRESENSE_LEFT].id = profile.msg.flags.left_stick_profile;
-	output->sticks[LIBRESENSE_RIGHT].id = profile.msg.flags.right_stick_profile;
+	output->sticks[LIBRESENSE_LEFT].template_id = profile.msg.flags.left_stick_profile;
+	output->sticks[LIBRESENSE_RIGHT].template_id = profile.msg.flags.right_stick_profile;
 	output->sticks[LIBRESENSE_LEFT].disabled = profile.msg.disabled_buttons.left_stick;
 	output->sticks[LIBRESENSE_RIGHT].disabled = profile.msg.disabled_buttons.right_stick;
 	output->trigger_deadzone_mirrored = profile.msg.flags.triggers_mirrored;
