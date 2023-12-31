@@ -261,7 +261,7 @@ typedef struct {
 	// 0x0004 = DualSense (0xCE6, Bond)
 	// 0x???? = DualSense Prototype (0xCE7, Aston)
 	// 0x0044 = DualSense Edge (0xDF2, ?? pick a bond car lol i'm guessing vanquish or valhalla)
-	// 0x0060 = DualSense Edge (0xE5F, Leonardo)
+	// 0x0060 = Playstation Access (0xE5F, Leonardo)
 	uint16_t series;
 	libresense_firmware_hardware hardware;
 	libresense_firmware_version update;
