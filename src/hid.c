@@ -475,13 +475,13 @@ libresense_result libresense_update_control(const libresense_handle handle, cons
 	hid_state->control2.led_brightness_control = !data.disable_led_brightness_control;
 	hid_state->control2.led_color_control = !data.disable_led_color_control;
 	hid_state->control2.advanced_rumble_control = !data.disable_rumble_emulation;
-	hid_state->control2.save_state = data.save_state;
 	hid_state->led.brightness = data.led_brightness;
 	hid_state->control2.reserved1 = data.reserved1;
 	hid_state->control2.reserved2 = data.reserved2;
 	hid_state->control2.reserved3 = data.reserved3;
 
 	if (IS_EDGE(state[handle].hid_info)) {
+		hid_state->control2.has_edge_flag = true;
 		hid_state->control2.edge_extension = true;
 		hid_state->edge.flags.enable_switching = !data.edge_disable_switching_profiles;
 

@@ -469,7 +469,7 @@ typedef struct PACKED {
 	bool led_color_control : 1;
 	bool advanced_rumble_control : 1;
 	uint8_t reserved2 : 4;
-	bool save_state : 1; // always set?
+	bool has_edge_flag : 1;
 
 	// misc flags
 	bool enable_lowpass_filter : 1;

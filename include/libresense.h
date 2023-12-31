@@ -581,7 +581,6 @@ typedef struct {
 	bool disable_led_color_control;
 	bool disable_rumble_emulation;
 	uint8_t gain;
-	bool save_state;
 	libresense_level led_brightness;
 	uint8_t reserved1;
 	uint8_t reserved2;
