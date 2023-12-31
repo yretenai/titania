@@ -17,13 +17,9 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 	*data = (libresense_data) { 0 };
 	data->hid = hid_info;
 
-	data->time.sequence = input.sequence;
-	data->time.touch_sequence = input.touch_sequence;
-	data->time.system = input.firmware_time;
-	data->time.sensor = input.sensors.time;
 	data->time.checksum = input.checksum;
-	data->time.driver_sequence = input.state_id;
-	data->time.battery = input.state.battery_time;
+	data->time.sequence = input.sequence;
+	data->time.system = input.firmware_time;
 
 	data->buttons.dpad_up = CHECK_DPAD(input.buttons, U, UR, UL);
 	data->buttons.dpad_down = CHECK_DPAD(input.buttons, D, DR, DL);
@@ -51,6 +47,22 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 	data->buttons.reserved = input.buttons.reserved;
 	data->buttons.edge_reserved = input.buttons.edge_reserved;
 
+	data->sticks[LIBRESENSE_LEFT].x = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_LEFT].x);
+	data->sticks[LIBRESENSE_LEFT].y = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_LEFT].y);
+	data->sticks[LIBRESENSE_RIGHT].x = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_RIGHT].x);
+	data->sticks[LIBRESENSE_RIGHT].y = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_RIGHT].y);
+
+	if (IS_ACCESS(hid_info)) {
+		return; // todo.
+	}
+
+	data->time.touch_sequence = input.touch_sequence;
+	data->time.sensor = input.sensors.time;
+	data->time.driver_sequence = input.state_id;
+	data->time.battery = input.state.battery_time;
+
+	data->state_id = input.state_id;
+
 	data->triggers[LIBRESENSE_LEFT].level = DENORM_CLAMP_UINT8(input.triggers[DUALSENSE_LEFT]);
 	data->triggers[LIBRESENSE_LEFT].id = input.adaptive_triggers[ADAPTIVE_TRIGGER_LEFT].id;
 	data->triggers[LIBRESENSE_LEFT].section = input.adaptive_triggers[ADAPTIVE_TRIGGER_LEFT].level;
@@ -59,11 +71,6 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 	data->triggers[LIBRESENSE_RIGHT].id = input.adaptive_triggers[ADAPTIVE_TRIGGER_RIGHT].id;
 	data->triggers[LIBRESENSE_RIGHT].section = input.adaptive_triggers[ADAPTIVE_TRIGGER_RIGHT].level;
 	data->triggers[LIBRESENSE_RIGHT].effect = input.state.trigger.right;
-
-	data->sticks[LIBRESENSE_LEFT].x = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_LEFT].x);
-	data->sticks[LIBRESENSE_LEFT].y = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_LEFT].y);
-	data->sticks[LIBRESENSE_RIGHT].x = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_RIGHT].x);
-	data->sticks[LIBRESENSE_RIGHT].y = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_RIGHT].y);
 
 	data->touch[LIBRESENSE_PRIMARY].id = input.touch[DUALSENSE_LEFT].id.value;
 	data->touch[LIBRESENSE_PRIMARY].active = !input.touch[DUALSENSE_LEFT].id.idle;
@@ -91,8 +98,6 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 	data->device.external_mic = input.state.device.external_mic;
 	data->device.haptic_filter = input.state.device.haptic_filter;
 	data->device.reserved = (uint16_t) input.state.device.reserved1 | (uint16_t) input.state.device.reserved2 << 3;
-
-	data->state_id = input.state_id;
 
 	data->battery.level = input.state.battery.level * 0.1 + 0.10;
 	data->battery.state = input.state.battery.state + 1;

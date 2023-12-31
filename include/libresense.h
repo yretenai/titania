@@ -54,6 +54,7 @@ typedef enum {
 	LIBRESENSE_NOT_IMPLEMENTED,
 	LIBRESENSE_NO_SLOTS,
 	LIBRESENSE_NOT_EDGE,
+	LIBRESENSE_NOT_ACCESS,
 	LIBRESENSE_ERROR_MAX
 } libresense_result;
 
@@ -260,6 +261,7 @@ typedef struct {
 	// 0x0004 = DualSense (0xCE6, Bond)
 	// 0x???? = DualSense Prototype (0xCE7, Aston)
 	// 0x0044 = DualSense Edge (0xDF2, ?? pick a bond car lol i'm guessing vanquish or valhalla)
+	// 0x0060 = DualSense Edge (0xE5F, Leonardo)
 	uint16_t series;
 	libresense_firmware_hardware hardware;
 	libresense_firmware_version update;
@@ -353,6 +355,7 @@ typedef struct {
 	uint16_t vendor_id;
 	bool is_bluetooth;
 	bool is_edge;
+	bool is_access;
 	libresense_serial hid_serial;
 	libresense_serial_info serial;
 	libresense_firmware_info firmware;

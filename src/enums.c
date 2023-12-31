@@ -19,6 +19,7 @@ const char* const libresense_error_msg[LIBRESENSE_ERROR_MAX + 1] = {
 	"not implemented",
 	"no available slots",
 	"not an edge controller",
+	"not an access controller",
 	NULL
 };
 

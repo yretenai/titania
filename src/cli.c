@@ -400,10 +400,11 @@ int main(int argc, const char** argv) {
 			LIBREPRINT_STR(data.hid.serial, mac); LIBREPRINT_SEP();
 			LIBREPRINT_STR(data.hid.serial, paired_mac); LIBREPRINT_SEP();
 			LIBREPRINT_TEST(data.hid, is_bluetooth); LIBREPRINT_SEP();
-			LIBREPRINT_TEST(data.hid, is_edge);
+			LIBREPRINT_TEST(data.hid, is_edge); LIBREPRINT_SEP();
+			LIBREPRINT_TEST(data.hid, is_access);
 			printf(" }\n");
 
-			if(data.hid.is_bluetooth) {
+			if(data.hid.is_bluetooth && !data.hid.is_access) {
 				printf("bt {");
 				LIBREPRINT_TEST(data.bt, has_hid); LIBREPRINT_SEP();
 				LIBREPRINT_TEST(data.bt, unknown); LIBREPRINT_SEP();
@@ -466,6 +467,18 @@ int main(int argc, const char** argv) {
 			LIBREPRINT_U32(data.buttons, edge_reserved);
 			printf(" }\n");
 
+			printf("sticks { left = {");
+			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_LEFT], x); LIBREPRINT_SEP();
+			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_LEFT], y);
+			printf(" }, right = {");
+			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_RIGHT], x); LIBREPRINT_SEP();
+			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_RIGHT], y);
+			printf(" } }\n");
+
+			if(data.hid.is_access) {
+				continue;
+			}
+
 			printf("triggers { left = {");
 			LIBREPRINT_PERCENT(data.triggers[LIBRESENSE_LEFT], level); LIBREPRINT_SEP();
 			LIBREPRINT_U32(data.triggers[LIBRESENSE_LEFT], id); LIBREPRINT_SEP();
@@ -476,14 +489,6 @@ int main(int argc, const char** argv) {
 			LIBREPRINT_U32(data.triggers[LIBRESENSE_RIGHT], id); LIBREPRINT_SEP();
 			LIBREPRINT_U32(data.triggers[LIBRESENSE_RIGHT], section); LIBREPRINT_SEP();
 			LIBREPRINT_ENUM(data.triggers[LIBRESENSE_RIGHT], effect, libresense_trigger_effect_msg, "effect");
-			printf(" } }\n");
-
-			printf("sticks { left = {");
-			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_LEFT], x); LIBREPRINT_SEP();
-			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_LEFT], y);
-			printf(" }, right = {");
-			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_RIGHT], x); LIBREPRINT_SEP();
-			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_RIGHT], y);
 			printf(" } }\n");
 
 			printf("touch { primary = {");

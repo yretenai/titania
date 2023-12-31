@@ -62,13 +62,13 @@ static_assert(__STDC_VERSION__ >= 202000L, "a c2x compiler is required");
 #define DUALSENSE_FIRMWARE_VERSION_DATE_LEN 0xB
 #define DUALSENSE_FIRMWARE_VERSION_TIME_LEN 0x8
 
-#define NORM_CLAMP(value, max) (value >= 1.0f ? max : value <= 0.0f ? 0 : (uint8_t) (value * max))
+#define NORM_CLAMP(value, max) ((value) >= 1.0f ? (max) : (value) <= 0.0f ? 0 : (uint8_t) ((value) * (max)))
 #define NORM_CLAMP_UINT8(value) NORM_CLAMP(value, UINT8_MAX)
 #define NORM_CLAMP_INT8(value) NORM_CLAMP_UINT8(((uint8_t) value))
 
-#define DENORM_CLAMP(value, max) (value / (float) max)
+#define DENORM_CLAMP(value, max) ((value) / ((float) max))
 #define DENORM_CLAMP_UINT8(value) DENORM_CLAMP(value, UINT8_MAX)
-#define DENORM_CLAMP_INT8(value) (DENORM_CLAMP(value, INT8_MAX) / 2.0f)
+#define DENORM_CLAMP_INT8(value) (DENORM_CLAMP(value, INT8_MAX + 1) / 2.0f)
 
 typedef enum _dualsense_report_id : uint8_t {
 	// usb:
@@ -812,10 +812,15 @@ static_assert(sizeof(dualsense_profile_delete) == 64, "dualsense_profile_delete 
 	return LIBRESENSE_INVALID_HANDLE
 
 #define IS_EDGE(h) (h.vendor_id == 0x054C && h.product_id == 0x0DF2)
+#define IS_ACCESS(h) (h.vendor_id == 0x054C && h.product_id == 0x0E5F)
 
 #define CHECK_EDGE(h)                \
 	if (!IS_EDGE(state[h].hid_info)) \
 	return LIBRESENSE_NOT_EDGE
+
+#define CHECK_ACCESS(h)                \
+	if (!IS_ACCESS(state[h].hid_info)) \
+	return LIBRESENSE_NOT_ACCESS
 
 extern uint32_t crc_seed_input;
 extern uint32_t crc_seed_output;

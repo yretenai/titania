@@ -16,6 +16,7 @@ static libresense_device_info device_infos[] = {
 	{ 0x054C, 0x0CE6 }, // DualSense
 	{ 0x054C, 0x0CE7 }, // DualSense Prototype (who even has this?)
 	{ 0x054C, 0x0DF2 }, // DualSense Edge
+	{ 0x054C, 0x0E5F }, // Access
 };
 
 #define CALIBRATION_GYRO(slot, type) (calibration.gyro[slot].type * calibration.gyro_speed.type / (float) DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX)
@@ -86,6 +87,7 @@ libresense_result libresense_get_hids(libresense_hid* hids, const size_t hids_le
 				hids[index].vendor_id = dev->vendor_id;
 				hids[index].is_bluetooth = dev->bus_type == HID_API_BUS_BLUETOOTH;
 				hids[index].is_edge = IS_EDGE(hids[index]);
+				hids[index].is_access = IS_ACCESS(hids[index]);
 				wcscpy(hids[index].hid_serial, dev->serial_number);
 
 				index += 1;
@@ -433,6 +435,10 @@ libresense_result libresense_push(libresense_handle* handle, const size_t handle
 	for (size_t i = 0; i < handle_count; i++) {
 		CHECK_HANDLE_VALID(handle[i]);
 		dualsense_state* hid_state = &state[handle[i]];
+		if(IS_ACCESS(hid_state->hid_info)) {
+			continue; // todo.
+		}
+
 		hid_state->output.data.msg.data.state_id = ++hid_state->seq;
 
 		const uint8_t* buffer = hid_state->output.buffer;

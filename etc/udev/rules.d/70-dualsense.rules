@@ -9,3 +9,9 @@ KERNEL=="hidraw*", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0df2", TAG+="uacc
 
 # PS5 DualSense Edge controller over bluetooth hidraw
 KERNEL=="hidraw*", KERNELS=="*054C:0DF2*", TAG+="uaccess"
+
+# PS5 Access controller over USB hidraw
+KERNEL=="hidraw*", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0e5f", TAG+="uaccess"
+
+# PS5 Access controller over bluetooth hidraw
+KERNEL=="hidraw*", KERNELS=="*054C:0E5F*", TAG+="uaccess"
