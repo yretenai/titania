@@ -794,7 +794,7 @@ libresense_result libresense_update_profile(const libresense_handle handle, cons
 		}
 	}
 
-	return LIBRESENSE_NOT_IMPLEMENTED;
+	return LIBRESENSE_OK;
 }
 
 libresense_result libresense_helper_stick_template(libresense_edge_profile* profile, const libresense_edge_stick_template template_id, const int32_t offset) {
