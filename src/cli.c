@@ -973,9 +973,7 @@ int main(int argc, const char** argv) {
 		update.color.x = 1.0;
 		update.color.y = 0.0;
 		update.color.z = 1.0;
-		update.brightness = LIBRESENSE_LEVEL_HIGH;
 		update.led = LIBRESENSE_LED_NONE;
-		update.effect = LIBRESENSE_LED_EFFECT_OFF;
 		int i = 0;
 		while (true) {
 			if (i++ > 4 * 30) { // 250 ms per frame, 4 frames per second. 4 * 30 = 30 seconds worth of frames.
@@ -1047,8 +1045,6 @@ reset_led:
 		update.color.x = 1.0;
 		update.color.y = 0.0;
 		update.color.z = 1.0;
-		update.brightness = LIBRESENSE_LEVEL_HIGH;
-		update.effect = LIBRESENSE_LED_EFFECT_OFF;
 		for (size_t j = 0; j < connected; ++j) {
 			switch (j) {
 				case 0: update.led = LIBRESENSE_LED_PLAYER_1; break;

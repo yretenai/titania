@@ -391,7 +391,9 @@ libresense_result libresense_push(libresense_handle* handle, const size_t handle
 		hid_state->output.data.id = DUALSENSE_REPORT_BLUETOOTH;
 		hid_state->output.data.msg.data.id = DUALSENSE_REPORT_OUTPUT;
 		hid_state->output.data.msg.data.flags.value = 0;
+		const bool edge_enable = hid_state->output.data.msg.data.edge.flags.enable_switching;
 		hid_state->output.data.msg.data.edge.flags.value = 0;
+		hid_state->output.data.msg.data.edge.flags.enable_switching = edge_enable;
 		hid_state->output.data.bt_checksum = 0;
 	}
 
@@ -483,6 +485,44 @@ libresense_result libresense_update_control(const libresense_handle handle, cons
 		hid_state->edge.flags.indicator = true;
 		hid_state->edge.indicator.enable_led = !data.edge_disable_led_indicators;
 		hid_state->edge.indicator.enable_vibration = !data.edge_disable_vibration_indicators;
+	}
+
+	return LIBRESENSE_OK;
+}
+
+libresense_result libresense_get_control(const libresense_handle handle, libresense_control_update* control) {
+	CHECK_INIT();
+	CHECK_HANDLE_VALID(handle);
+
+	const dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
+
+	control->touch_powersave = hid_state->control1.touch_powersave;
+	control->sensor_powersave = hid_state->control1.sensor_powersave;
+	control->rumble_powersave = hid_state->control1.rumble_powersave;
+	control->speaker_powersave = hid_state->control1.speaker_powersave;
+	control->mute_jack = hid_state->control1.mute_jack;
+	control->mute_speaker = hid_state->control1.mute_speaker;
+	control->mute_mic = hid_state->control1.mute_mic;
+	control->disable_rumble = hid_state->control1.disable_rumble;
+
+	control->disable_beamforming = !hid_state->control2.enable_beamforming;
+	control->enable_lowpass_filter = hid_state->control2.enable_lowpass_filter;
+	control->gain = hid_state->control2.gain;
+	control->disable_rumble_emulation = !hid_state->control2.advanced_rumble_control;
+
+	control->disable_led_effect_control = !hid_state->control2.led_effect_control;
+	control->disable_led_brightness_control = !hid_state->control2.led_brightness_control;
+	control->led_brightness = hid_state->led.brightness;
+	control->led_effect = hid_state->led.effect;
+
+	control->reserved1 = hid_state->control2.reserved1;
+	control->reserved2 = hid_state->control2.reserved2;
+	control->reserved3 = hid_state->control2.reserved3;
+
+	if (IS_EDGE(state[handle].hid_info)) {
+		control->edge_disable_switching_profiles = !hid_state->edge.flags.enable_switching;
+		control->edge_disable_led_indicators = !hid_state->edge.indicator.enable_led;
+		control->edge_disable_vibration_indicators = !hid_state->edge.indicator.enable_vibration;
 	}
 
 	return LIBRESENSE_OK;

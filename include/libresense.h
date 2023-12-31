@@ -644,10 +644,18 @@ LIBRESENSE_EXPORT libresense_result libresense_update_audio(const libresense_han
 
 /**
  * @brief update control state flags of a controller
+ * @note these are controller settings, some of these options persist through device restarts
  * @param handle: the controller to update
  * @param data: control update data
  */
 LIBRESENSE_EXPORT libresense_result libresense_update_control(const libresense_handle handle, const libresense_control_update data);
+
+/**
+ * @brief get control state flags of a controller (if we've sent them this session.)
+ * @param handle: the controller to update
+ * @param control: control update data
+ */
+LIBRESENSE_EXPORT libresense_result libresense_get_control(const libresense_handle handle, libresense_control_update* control);
 
 /**
  * @brief update effect state of a controller
