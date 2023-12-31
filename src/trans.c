@@ -51,19 +51,19 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 	data->buttons.reserved = input.buttons.reserved;
 	data->buttons.edge_reserved = input.buttons.edge_reserved;
 
-	data->triggers[LIBRESENSE_LEFT].level = input.triggers[DUALSENSE_LEFT] / (float) UINT8_MAX;
+	data->triggers[LIBRESENSE_LEFT].level = DENORM_CLAMP_UINT8(input.triggers[DUALSENSE_LEFT]);
 	data->triggers[LIBRESENSE_LEFT].id = input.adaptive_triggers[ADAPTIVE_TRIGGER_LEFT].id;
 	data->triggers[LIBRESENSE_LEFT].section = input.adaptive_triggers[ADAPTIVE_TRIGGER_LEFT].level;
 	data->triggers[LIBRESENSE_LEFT].effect = input.state.trigger.left;
-	data->triggers[LIBRESENSE_RIGHT].level = input.triggers[DUALSENSE_RIGHT] / (float) UINT8_MAX;
+	data->triggers[LIBRESENSE_RIGHT].level = DENORM_CLAMP_UINT8(input.triggers[DUALSENSE_RIGHT]);
 	data->triggers[LIBRESENSE_RIGHT].id = input.adaptive_triggers[ADAPTIVE_TRIGGER_RIGHT].id;
 	data->triggers[LIBRESENSE_RIGHT].section = input.adaptive_triggers[ADAPTIVE_TRIGGER_RIGHT].level;
 	data->triggers[LIBRESENSE_RIGHT].effect = input.state.trigger.right;
 
-	data->sticks[LIBRESENSE_LEFT].x = input.sticks[DUALSENSE_LEFT].x / (float) INT8_MAX / 2.0f;
-	data->sticks[LIBRESENSE_LEFT].y = input.sticks[DUALSENSE_LEFT].y / (float) INT8_MAX / 2.0f;
-	data->sticks[LIBRESENSE_RIGHT].x = input.sticks[DUALSENSE_RIGHT].x / (float) INT8_MAX / 2.0f;
-	data->sticks[LIBRESENSE_RIGHT].y = input.sticks[DUALSENSE_RIGHT].y / (float) INT8_MAX / 2.0f;
+	data->sticks[LIBRESENSE_LEFT].x = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_LEFT].x);
+	data->sticks[LIBRESENSE_LEFT].y = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_LEFT].y);
+	data->sticks[LIBRESENSE_RIGHT].x = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_RIGHT].x);
+	data->sticks[LIBRESENSE_RIGHT].y = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_RIGHT].y);
 
 	data->touch[LIBRESENSE_PRIMARY].id = input.touch[DUALSENSE_LEFT].id.value;
 	data->touch[LIBRESENSE_PRIMARY].active = !input.touch[DUALSENSE_LEFT].id.idle;

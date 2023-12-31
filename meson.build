@@ -9,7 +9,7 @@ project(
 	],
 	license : 'MPL-2',
 	meson_version : '>=1.2.0',
-	version : '0.9.0'
+	version : '0.9.5'
 )
 
 compiler = meson.get_compiler('c')

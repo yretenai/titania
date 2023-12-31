@@ -18,7 +18,29 @@ static libresense_device_info device_infos[] = {
 	{ 0x054C, 0x0DF2 }, // DualSense Edge
 };
 
-libresense_result libresense_init_checked(const int size) {
+#define CALIBRATION_GYRO(slot, type) (calibration.gyro[slot].type * calibration.gyro_speed.type / (float) DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX)
+
+#define CALIBRATION_ACCELEROMETER(slot, type) (calibration.accelerometer[slot].type / 8192.0f * (float) DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX)
+
+#define CALIBRATION_ACCELEROMETER_BIAS(slot) calibration.accelerometer[slot].max - (calibration.accelerometer[slot].max - calibration.accelerometer[slot].min) / 2
+
+#define COPY_VERSION_HARDWARE(name)                                       \
+	handle->firmware.name.reserved = firmware.name.hardware.reserved;     \
+	handle->firmware.name.variation = firmware.name.hardware.variation;   \
+	handle->firmware.name.generation = firmware.name.hardware.generation; \
+	handle->firmware.name.revision = firmware.name.hardware.revision
+
+#define COPY_VERSION_UPDATE(name)                             \
+	handle->firmware.name.major = firmware.name.update.major; \
+	handle->firmware.name.minor = firmware.name.update.minor; \
+	handle->firmware.name.revision = firmware.name.update.revision
+
+#define COPY_VERSION_FIRMWARE(name)                             \
+	handle->firmware.name.major = firmware.name.firmware.major; \
+	handle->firmware.name.minor = firmware.name.firmware.minor; \
+	handle->firmware.name.revision = firmware.name.firmware.revision
+
+libresense_result libresense_init_checked(const size_t size) {
 	if (size != sizeof(libresense_hid)) {
 		return LIBRESENSE_INVALID_LIBRARY;
 	}
@@ -55,7 +77,7 @@ libresense_result libresense_get_hids(libresense_hid* hids, const size_t hids_le
 		while (dev) {
 			if (wcslen(dev->serial_number) >= 0x100) {
 				hid_free_enumeration(root);
-				return LIBRESENSE_NOT_IMPLEMENTED;
+				return LIBRESENSE_INVALID_DATA;
 			}
 
 			if (dev->bus_type == HID_API_BUS_USB || dev->bus_type == HID_API_BUS_BLUETOOTH) {
@@ -114,31 +136,7 @@ size_t libresense_debug_get_feature_report(const libresense_handle handle, const
 	return libresense_get_feature_report(state[handle].hid, report_id, buffer, size);
 }
 
-#define CALIBRATION_GYRO(slot, type) (calibration.gyro[slot].type * calibration.gyro_speed.type / (float) DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX)
-
-#define CALIBRATION_ACCELEROMETER(slot, type) (calibration.accelerometer[slot].type / 8192.0f * (float) DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX)
-
-#define CALIBRATION_ACCELEROMETER_BIAS(slot) calibration.accelerometer[slot].max - (calibration.accelerometer[slot].max - calibration.accelerometer[slot].min) / 2
-
-#define MAC6_TO_UINT64(v) (((uint64_t) v[5] << 40) | ((uint64_t) v[4] << 32) | ((uint64_t) v[3] << 24) | ((uint64_t) v[2] << 16) | ((uint64_t) v[1] << 8) | (uint64_t) v[0])
-
-#define COPY_VERSION_HARDWARE(name)                                       \
-	handle->firmware.name.reserved = firmware.name.hardware.reserved;     \
-	handle->firmware.name.variation = firmware.name.hardware.variation;   \
-	handle->firmware.name.generation = firmware.name.hardware.generation; \
-	handle->firmware.name.revision = firmware.name.hardware.revision
-
-#define COPY_VERSION_UPDATE(name)                             \
-	handle->firmware.name.major = firmware.name.update.major; \
-	handle->firmware.name.minor = firmware.name.update.minor; \
-	handle->firmware.name.revision = firmware.name.update.revision
-
-#define COPY_VERSION_FIRMWARE(name)                             \
-	handle->firmware.name.major = firmware.name.firmware.major; \
-	handle->firmware.name.minor = firmware.name.firmware.minor; \
-	handle->firmware.name.revision = firmware.name.firmware.revision
-
-libresense_result libresense_open(libresense_hid* handle) {
+libresense_result libresense_open(libresense_hid* handle, bool use_calibration) {
 	CHECK_INIT();
 
 	for (int i = 0; i < LIBRESENSE_MAX_CONTROLLERS; i++) {
@@ -207,7 +205,7 @@ libresense_result libresense_open(libresense_hid* handle) {
 			}
 
 			dualsense_calibration_info calibration;
-			const size_t calibration_report_sz = libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_CALIBRATION, (uint8_t*) &calibration, sizeof(dualsense_calibration_info));
+			const size_t calibration_report_sz = use_calibration ? libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_CALIBRATION, (uint8_t*) &calibration, sizeof(dualsense_calibration_info)) : 0;
 			if (calibration_report_sz == 41) {
 				state[i].calibration[CALIBRATION_GYRO_X].max = CALIBRATION_GYRO(CALIBRATION_RAW_X, max);
 				state[i].calibration[CALIBRATION_GYRO_Y].max = CALIBRATION_GYRO(CALIBRATION_RAW_Y, max);
@@ -237,15 +235,15 @@ libresense_result libresense_open(libresense_hid* handle) {
 				state[i].calibration[CALIBRATION_ACCELEROMETER_Y].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_Y);
 				state[i].calibration[CALIBRATION_ACCELEROMETER_Z].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_Z);
 			} else {
-				state[i].calibration[CALIBRATION_GYRO_X] = (libresense_calibration_bit) { DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, 0, 540 };
-				state[i].calibration[CALIBRATION_GYRO_Y] = (libresense_calibration_bit) { DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, 0, 540 };
-				state[i].calibration[CALIBRATION_GYRO_Z] = (libresense_calibration_bit) { DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX, 0, 540 };
+				state[i].calibration[CALIBRATION_GYRO_X] = (libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
+				state[i].calibration[CALIBRATION_GYRO_Y] = (libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
+				state[i].calibration[CALIBRATION_GYRO_Z] = (libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
 				state[i].calibration[CALIBRATION_ACCELEROMETER_X] =
-					(libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0, 1 };
+					(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), 0, 1 };
 				state[i].calibration[CALIBRATION_ACCELEROMETER_Y] =
-					(libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0, 1 };
+					(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), 0, 1 };
 				state[i].calibration[CALIBRATION_ACCELEROMETER_Z] =
-					(libresense_calibration_bit) { DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX, 0, 1 };
+					(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), 0, 1 };
 			}
 
 			if (IS_EDGE(state[i].hid_info)) {
@@ -370,7 +368,7 @@ libresense_result libresense_open(libresense_hid* handle) {
 libresense_result libresense_pull(libresense_handle* handle, const size_t handle_count, libresense_data* data) {
 	CHECK_INIT();
 	if (handle == NULL || data == NULL) {
-		return LIBRESENSE_INVALID_DATA;
+		return LIBRESENSE_INVALID_ARGUMENT;
 	}
 
 	if (handle_count <= 0) {
@@ -417,7 +415,7 @@ libresense_result libresense_pull(libresense_handle* handle, const size_t handle
 libresense_result libresense_push(libresense_handle* handle, const size_t handle_count) {
 	CHECK_INIT();
 	if (handle == NULL) {
-		return LIBRESENSE_INVALID_DATA;
+		return LIBRESENSE_INVALID_HANDLE;
 	}
 
 	if (handle_count <= 0) {
@@ -746,7 +744,7 @@ libresense_result libresense_update_rumble(const libresense_handle handle, const
 	hid_state->rumble[DUALSENSE_LARGE_MOTOR] = NORM_CLAMP_UINT8(large_motor);
 	hid_state->rumble[DUALSENSE_SMALL_MOTOR] = NORM_CLAMP_UINT8(small_motor);
 
-	return LIBRESENSE_NOT_IMPLEMENTED;
+	return LIBRESENSE_OK;
 }
 
 libresense_result libresense_update_profile(const libresense_handle handle, const libresense_edge_profile_id id, const libresense_edge_profile profile) {
@@ -755,7 +753,19 @@ libresense_result libresense_update_profile(const libresense_handle handle, cons
 	CHECK_EDGE(handle);
 
 	if (id <= LIBRESENSE_PROFILE_TRIANGLE || id > LIBRESENSE_PROFILE_CIRCLE) {
-		return LIBRESENSE_INVALID_DATA;
+		return LIBRESENSE_INVALID_PROFILE;
+	}
+
+	return LIBRESENSE_NOT_IMPLEMENTED;
+}
+
+libresense_result libresense_helper_stick_template(libresense_edge_profile* profile, const libresense_edge_stick_template template_id, const int32_t offset) {
+	if (template_id >= LIBRESENSE_EDGE_STICK_TEMPLATE_MAX) {
+		return LIBRESENSE_NOT_IMPLEMENTED;
+	}
+
+	if (offset > 5 || offset < -5) {
+		return LIBRESENSE_INVALID_ARGUMENT;
 	}
 
 	return LIBRESENSE_NOT_IMPLEMENTED;
@@ -767,7 +777,7 @@ libresense_result libresense_delete_profile(const libresense_handle handle, cons
 	CHECK_EDGE(handle);
 
 	if (id <= LIBRESENSE_PROFILE_TRIANGLE || id > LIBRESENSE_PROFILE_CIRCLE) {
-		return LIBRESENSE_INVALID_DATA;
+		return LIBRESENSE_INVALID_PROFILE;
 	}
 
 	dualsense_profile_delete del = { 0 };
@@ -775,9 +785,10 @@ libresense_result libresense_delete_profile(const libresense_handle handle, cons
 	del.profile_id = id;
 	del.checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t*) &del, sizeof(del) - 4);
 	const size_t size = hid_send_feature_report(state[handle].hid, (uint8_t*) &del, sizeof(del));
-	if (size != 0x40) {
-		return LIBRESENSE_INVALID_DATA;
+	if (size == SIZE_MAX) {
+		return LIBRESENSE_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
 	}
+
 	return LIBRESENSE_OK;
 }
 

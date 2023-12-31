@@ -6,10 +6,15 @@
 
 #ifndef LIBRESENSE_H
 #define LIBRESENSE_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <wchar.h>
+#ifndef __cplusplus
 #if __STDC_VERSION__ < 202000L
 #include <stdbool.h>
+#endif
 #endif
 #include <stdint.h>
 
@@ -41,7 +46,10 @@ typedef enum {
 	LIBRESENSE_INVALID_LIBRARY,
 	LIBRESENSE_INVALID_HANDLE,
 	LIBRESENSE_INVALID_DATA,
+	LIBRESENSE_INVALID_PROFILE,
+	LIBRESENSE_INVALID_ARGUMENT,
 	LIBRESENSE_HIDAPI_FAIL,
+	LIBRESENSE_ICU_FAIL,
 	LIBRESENSE_OUT_OF_RANGE,
 	LIBRESENSE_NOT_IMPLEMENTED,
 	LIBRESENSE_NO_SLOTS,
@@ -277,6 +285,7 @@ typedef enum {
 	LIBRESENSE_EDGE_STICK_TEMPLATE_STEADY,
 	LIBRESENSE_EDGE_STICK_TEMPLATE_DIGITAL,
 	LIBRESENSE_EDGE_STICK_TEMPLATE_DYNAMIC,
+	LIBRESENSE_EDGE_STICK_TEMPLATE_MAX
 } libresense_edge_stick_template;
 
 typedef enum {
@@ -588,7 +597,7 @@ typedef struct {
  * @brief initialize the library, this is mandatory.
  * @param size: sizeof(libresense_hid)
  */
-LIBRESENSE_EXPORT libresense_result libresense_init_checked(const int size);
+LIBRESENSE_EXPORT libresense_result libresense_init_checked(const size_t size);
 
 /**
  * @brief scan and return all HIDs that this library supports.
@@ -600,8 +609,9 @@ LIBRESENSE_EXPORT libresense_result libresense_get_hids(libresense_hid* hids, co
 /**
  * @brief open a HID handle for processing
  * @param handle: pointer to the libresense HID handle, this value will hold the libresense_handle value when the function returns
+ * @param use_calibration: whether or not to use calibration data for the gyroscope and accelerometer
  */
-LIBRESENSE_EXPORT libresense_result libresense_open(libresense_hid* handle);
+LIBRESENSE_EXPORT libresense_result libresense_open(libresense_hid* handle, bool use_calibration);
 
 /**
  * @brief poll controllers for input data
@@ -669,6 +679,14 @@ LIBRESENSE_EXPORT libresense_result libresense_update_rumble(const libresense_ha
 LIBRESENSE_EXPORT libresense_result libresense_update_profile(const libresense_handle handle, const libresense_edge_profile_id id, const libresense_edge_profile profile);
 
 /**
+ * @brief reset a stick template to a specific template
+ * @param profile: the profile data to update
+ * @param template_id: the stick template to apply
+ * @param offset: range between -5 and 5 to offset the sticks
+ */
+LIBRESENSE_EXPORT libresense_result libresense_helper_stick_template(libresense_edge_profile* profile, const libresense_edge_stick_template template_id, const int32_t offset);
+
+/**
  * @brief delete a dualsense edge profile
  * @param handle: the controller to update
  * @param id: the profile id to delete
@@ -702,4 +720,7 @@ LIBRESENSE_EXPORT size_t libresense_debug_get_feature_report(const libresense_ha
  * @param output: the profile to convert into
  */
 LIBRESENSE_EXPORT libresense_result libresense_debug_convert_edge_profile(uint8_t input[174], libresense_edge_profile* output);
+#ifdef __cplusplu
+}
+#endif
 #endif

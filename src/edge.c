@@ -27,13 +27,13 @@ libresense_result libresense_convert_edge_profile_input(dualsense_profile_blob i
 
 	UConverter* utf16leConverter = ucnv_open("UTF-16LE", &err);
 	if (U_FAILURE(err)) {
-		return LIBRESENSE_INVALID_DATA;
+		return LIBRESENSE_ICU_FAIL;
 	}
 
 	UConverter* utf8Converter = ucnv_open("UTF-8", &err);
 	if (U_FAILURE(err)) {
 		ucnv_close(utf16leConverter);
-		return LIBRESENSE_INVALID_DATA;
+		return LIBRESENSE_ICU_FAIL;
 	}
 
 	ucnv_convert("UTF-8", "UTF-16-LE", (char*) &output->name, sizeof(output->name), (const char*) &profile.msg.name, sizeof(profile.msg.name), &err);
@@ -42,7 +42,7 @@ libresense_result libresense_convert_edge_profile_input(dualsense_profile_blob i
 	ucnv_close(utf8Converter);
 
 	if (U_FAILURE(err)) {
-		return LIBRESENSE_INVALID_DATA;
+		return LIBRESENSE_ICU_FAIL;
 	}
 
 	output->version = profile.msg.version;
@@ -54,16 +54,16 @@ libresense_result libresense_convert_edge_profile_input(dualsense_profile_blob i
 		const uint8_t libre = left_right[i];
 		const uint8_t dual = left_right[i + 1];
 		output->sticks[libre].interpolation_type = profile.msg.sticks[dual].interpolation_type;
-		output->sticks[libre].deadzone.x = profile.msg.sticks[dual].deadzone / (float) UINT8_MAX;
+		output->sticks[libre].deadzone.x = DENORM_CLAMP_UINT8(profile.msg.sticks[dual].deadzone);
 		output->sticks[libre].deadzone.y = 1.0f;
 		output->sticks[libre].unknown = profile.msg.sticks[dual].unknown;
 		for (uint8_t j = 0; j < 3; ++j) {
-			output->sticks[libre].curve_points[j].x = profile.msg.sticks[dual].coordinates[j].x / (float) UINT8_MAX;
-			output->sticks[libre].curve_points[j].y = profile.msg.sticks[dual].coordinates[j].y / (float) UINT8_MAX;
+			output->sticks[libre].curve_points[j].x = DENORM_CLAMP_UINT8(profile.msg.sticks[dual].coordinates[j].x);
+			output->sticks[libre].curve_points[j].y = DENORM_CLAMP_UINT8(profile.msg.sticks[dual].coordinates[j].y);
 		}
 
-		output->triggers[libre].deadzone.x = profile.msg.triggers[dual].min / (float) UINT8_MAX;
-		output->triggers[libre].deadzone.y = profile.msg.triggers[dual].max / (float) UINT8_MAX;
+		output->triggers[libre].deadzone.x = DENORM_CLAMP_UINT8(profile.msg.triggers[dual].min);
+		output->triggers[libre].deadzone.y = DENORM_CLAMP_UINT8(profile.msg.triggers[dual].max);
 	}
 
 	for (uint8_t i = 0; i < 0x10; ++i) {

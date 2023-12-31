@@ -299,7 +299,7 @@ int main(int argc, const char** argv) {
 	size_t connected = 0;
 	for (int hid_id = 0; hid_id < libresense_max_controllers; ++hid_id) {
 		if (hid[hid_id].handle != LIBRESENSE_INVALID_HANDLE_ID) {
-			result = libresense_open(&hid[hid_id]);
+			result = libresense_open(&hid[hid_id], true);
 			if (IS_LIBRESENSE_BAD(result)) {
 				libresense_errorf(stderr, result, "error initializing hid");
 				libresense_exit();
