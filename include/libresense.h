@@ -576,21 +576,21 @@ typedef struct {
 	bool mute_speaker;
 	bool mute_jack;
 	bool disable_rumble;
-	bool enable_beamforming;
+	bool disable_beamforming;
 	bool enable_lowpass_filter;
-	bool led_brightness_control;
-	bool led_color_control;
+	bool disable_led_brightness_control;
+	bool disable_led_color_control;
+	bool disable_rumble_emulation;
 	uint8_t gain;
+	bool save_state;
+	libresense_level led_brightness;
 	uint8_t reserved1;
 	uint8_t reserved2;
-	uint8_t reserved3;
+	uint16_t reserved3;
 
-	bool has_edge_misc;
-	bool has_edge_byte;
-	uint8_t edge_unknown2;
 	bool edge_disable_switching_profiles;
-	bool edge_enable_led_indicators;
-	bool edge_enable_vibration_indicators;
+	bool edge_disable_led_indicators;
+	bool edge_disable_vibration_indicators;
 } libresense_control_update;
 
 #define libresense_init() libresense_init_checked(sizeof(libresense_hid))

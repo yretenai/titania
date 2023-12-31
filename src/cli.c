@@ -574,15 +574,17 @@ int main(int argc, const char** argv) {
 				LIBREPRINT_TEST(data.edge_device, emulating_rumble); LIBREPRINT_SEP();
 				LIBREPRINT_U32(data.edge_device, unknown);
 				printf(" }\n");
-
-				for (libresense_edge_profile_id j = 1; j < LIBRESENSE_PROFILE_MAX; ++j) {
-					print_profile(j, hid->edge_profiles[j]);
-				}
 			}
 			// clang-format on
 		}
 
 		if (!clr) {
+			for (size_t i = 0; i < connected; ++i) {
+				for (libresense_edge_profile_id j = 1; j < LIBRESENSE_PROFILE_MAX; ++j) {
+					print_profile(j, hid->edge_profiles[j]);
+				}
+			}
+
 			break;
 		}
 

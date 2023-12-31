@@ -393,6 +393,7 @@ libresense_result libresense_push(libresense_handle* handle, const size_t handle
 		hid_state->output.data.id = DUALSENSE_REPORT_BLUETOOTH;
 		hid_state->output.data.msg.data.id = DUALSENSE_REPORT_OUTPUT;
 		hid_state->output.data.msg.data.flags.value = 0;
+		hid_state->output.data.msg.data.edge.flags.value = 0;
 		hid_state->output.data.bt_checksum = 0;
 	}
 
@@ -467,7 +468,6 @@ libresense_result libresense_update_control(const libresense_handle handle, cons
 
 	hid_state->flags.control1 = hid_state->flags.control2 = true;
 
-	hid_state->led.brightness = 0;
 	hid_state->control1.touch_powersave = data.touch_powersave;
 	hid_state->control1.sensor_powersave = data.sensor_powersave;
 	hid_state->control1.rumble_powersave = data.rumble_powersave;
@@ -477,23 +477,25 @@ libresense_result libresense_update_control(const libresense_handle handle, cons
 	hid_state->control1.mute_mic = data.mute_mic;
 	hid_state->control1.disable_rumble = data.disable_rumble;
 
-	hid_state->control2.enable_beamforming = data.enable_beamforming;
+	hid_state->control2.enable_beamforming = !data.disable_beamforming;
 	hid_state->control2.enable_lowpass_filter = data.enable_lowpass_filter;
 	hid_state->control2.gain = data.gain;
-	hid_state->control2.led_brightness_control = data.led_brightness_control;
-	hid_state->control2.led_color_control = data.led_color_control;
+	hid_state->control2.led_brightness_control = !data.disable_led_brightness_control;
+	hid_state->control2.led_color_control = !data.disable_led_color_control;
+	hid_state->control2.advanced_rumble_control = !data.disable_rumble_emulation;
+	hid_state->control2.save_state = data.save_state;
+	hid_state->led.brightness = data.led_brightness;
 	hid_state->control2.reserved1 = data.reserved1;
 	hid_state->control2.reserved2 = data.reserved2;
 	hid_state->control2.reserved3 = data.reserved3;
+
 	if (IS_EDGE(state[handle].hid_info)) {
-		hid_state->control2.has_edge_misc = data.has_edge_misc;
-		hid_state->control2.edge_unknown2 = data.edge_unknown2;
-		hid_state->control2.has_edge_byte = data.has_edge_byte;
-		hid_state->control2.edge_disable_switching_profiles = data.edge_disable_switching_profiles;
+		hid_state->control2.edge_extension = true;
+		hid_state->edge.flags.enable_switching = !data.edge_disable_switching_profiles;
 
 		hid_state->edge.flags.indicator = true;
-		hid_state->edge.indicator.enable_led = data.edge_enable_led_indicators;
-		hid_state->edge.indicator.enable_vibration = data.edge_enable_vibration_indicators;
+		hid_state->edge.indicator.enable_led = !data.edge_disable_led_indicators;
+		hid_state->edge.indicator.enable_vibration = !data.edge_disable_vibration_indicators;
 	}
 
 	return LIBRESENSE_OK;

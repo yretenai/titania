@@ -468,18 +468,14 @@ typedef struct PACKED {
 	bool led_brightness_control : 1;
 	bool led_color_control : 1;
 	bool advanced_rumble_control : 1;
-	uint8_t reserved2 : 3;
-	bool has_edge_byte : 1;
-	bool has_edge_misc : 1;
+	uint8_t reserved2 : 4;
+	bool save_state : 1; // always set?
 
 	// misc flags
 	bool enable_lowpass_filter : 1;
-	uint8_t reserved3 : 7;
+	uint16_t reserved3 : 14;
 
-	// todo: edge flags, something controls brightness
-	// but i can only get it to happen if i set the entire struct to 0xFF
-	uint8_t edge_unknown2 : 7;
-	bool edge_disable_switching_profiles : 1;
+	bool edge_extension : 1;
 } dualsense_control2;
 
 static_assert(sizeof(dualsense_control2) == 4, "dualsense_control2 is not 4 bytes");
@@ -511,7 +507,8 @@ static_assert(sizeof(dualsense_edge_indicator_update) == 1, "dualsense_edge_indi
 typedef union {
 	struct PACKED {
 		bool indicator : 1;
-		uint8_t reserved : 7;
+		bool enable_switching : 1;
+		uint8_t reserved : 6;
 	};
 
 	uint8_t value;
