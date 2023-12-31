@@ -257,26 +257,50 @@ void print_profile(libresense_edge_profile_id profile_id, libresense_edge_profil
 // todo: move benchmark, profile, and test to libresensectl
 int main(int argc, const char** argv) {
 	libresense_printf("version %s", LIBRESENSE_PROJECT_VERSION);
-	if (argc > 2 && strcmp(argv[1], "profile") == 0) {
-		for (int i = 2; i < argc; ++i) {
-			FILE* file = fopen(argv[i], "r+b");
-			uint8_t buffer[174];
-			if (file == NULL) {
-				continue;
-			}
-			size_t n = fread(buffer, 1, sizeof(buffer), file);
-			fclose(file);
-			if (n != sizeof(buffer)) {
-				continue;
+
+	libresense_edge_profile_id update_id;
+	libresense_edge_profile update_profile;
+	if (argc > 2) {
+		if (strcmp(argv[1], "profile") == 0) {
+			for (int i = 2; i < argc; ++i) {
+				FILE* file = fopen(argv[i], "r+b");
+				uint8_t buffer[174];
+				if (file == NULL) {
+					continue;
+				}
+				size_t n = fread(buffer, 1, sizeof(buffer), file);
+				fclose(file);
+				if (n != sizeof(buffer)) {
+					continue;
+				}
+
+				libresense_edge_profile profile;
+				libresense_debug_convert_edge_profile(buffer, &profile);
+				printf("%s: \n", argv[i]);
+				print_profile(LIBRESENSE_PROFILE_NONE, profile);
 			}
 
-			libresense_edge_profile profile;
-			libresense_debug_convert_edge_profile(buffer, &profile);
-			printf("%s: \n", argv[i]);
-			print_profile(LIBRESENSE_PROFILE_NONE, profile);
+			return 0;
 		}
 
-		return 0;
+		if (argc > 3 && strcmp(argv[1], "update") == 0) {
+			switch (argv[2][0]) {
+				case 'x': update_id = LIBRESENSE_PROFILE_CROSS; break;
+				case 's': update_id = LIBRESENSE_PROFILE_SQUARE; break;
+				case 'c': update_id = LIBRESENSE_PROFILE_CIRCLE; break;
+				default: update_id = LIBRESENSE_PROFILE_NONE; break;
+			}
+
+			FILE* file = fopen(argv[3], "r+b");
+			if (file != NULL) {
+				uint8_t buffer[174];
+				size_t n = fread(buffer, 1, sizeof(buffer), file);
+				fclose(file);
+				if (n == sizeof(buffer)) {
+					libresense_debug_convert_edge_profile(buffer, &update_profile);
+				}
+			}
+		}
 	}
 
 	if (argc > 1 && (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "version") == 0)) {
@@ -558,7 +582,7 @@ int main(int argc, const char** argv) {
 		clrscr();
 	}
 
-	if (argc > 1 && !bench) {
+	if (argc > 1 && !bench && update_id == LIBRESENSE_PROFILE_NONE) {
 		goto shutdown;
 	}
 
@@ -585,6 +609,18 @@ int main(int argc, const char** argv) {
 			usleep(1000);
 		}
 		libresense_printf("min: %ld s %ld us, max: %ld s %ld us", min.tv_sec, min.tv_nsec, max.tv_sec, max.tv_nsec);
+
+		goto shutdown;
+	}
+
+	if (update_id != LIBRESENSE_PROFILE_NONE) {
+		for (size_t i = 0; i < connected; ++i) {
+			if (!hid[i].is_edge) {
+				continue;
+			}
+
+			libresense_update_profile(handles[i], update_id, update_profile);
+		}
 
 		goto shutdown;
 	}
