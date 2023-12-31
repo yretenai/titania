@@ -10,14 +10,18 @@
 
 libresense_result libresense_convert_edge_profile_input(dualsense_profile_blob input[3], libresense_edge_profile* output) {
 	memset(output, 0, sizeof(libresense_edge_profile));
-	if (*(uint32_t*) &input[0].blob == 0) {
+	if (input[0].version == 0) {
 		return LIBRESENSE_OK;
 	}
 
+	if(input[0].version != 1) {
+		return LIBRESENSE_NOT_IMPLEMENTED;
+	}
+
 	dualsense_profile profile = { 0 };
-	memcpy(profile.buffers[0], input[0].blob, sizeof(input[0].blob));
-	memcpy(profile.buffers[1], input[1].blob, sizeof(input[1].blob));
-	memcpy(profile.buffers[2], input[2].blob, sizeof(input[2].blob));
+	memcpy(profile.buffers[0], &input[0].blob, sizeof(input[0].blob));
+	memcpy(profile.buffers[1], &input[1].blob, sizeof(input[1].blob));
+	memcpy(profile.buffers[2], &input[2].blob, sizeof(input[2].blob));
 
 	UErrorCode err = U_ZERO_ERROR;
 
@@ -113,11 +117,11 @@ libresense_result libresense_convert_edge_profile_output(libresense_edge_profile
 	profile.msg.checksum = libresense_calc_checksum(UINT32_MAX, (uint8_t*) &profile, sizeof(profile));
 
 	output[0].part = 0;
-	memcpy(output[0].blob, profile.buffers[0], sizeof(profile.buffers));
+	memcpy(output[0].blob, profile.buffers[0], sizeof(profile.buffers[0]));
 	output[1].part = 1;
-	memcpy(output[1].blob, profile.buffers[1], sizeof(profile.buffers));
+	memcpy(output[1].blob, profile.buffers[1], sizeof(profile.buffers[1]));
 	output[2].part = 2;
-	memcpy(output[2].blob, profile.buffers[2], sizeof(profile.buffers));
+	memcpy(output[2].blob, profile.buffers[2], sizeof(profile.buffers[2]));
 
 	return LIBRESENSE_NOT_IMPLEMENTED;
 }

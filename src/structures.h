@@ -766,7 +766,12 @@ static_assert(sizeof(dualsense_profile) == 174, "dualsense_profile size is not 1
 typedef struct PACKED {
 	uint8_t id;
 	uint8_t part;
-	uint8_t blob[0x3a];
+
+	union PACKED {
+		uint32_t version;
+		uint8_t blob[0x3a];
+	};
+
 	uint32_t checksum;
 } dualsense_profile_blob;
 

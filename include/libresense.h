@@ -102,11 +102,11 @@ typedef enum {
 	LIBRESENSE_TRIGGER_EFFECT_MAX
 } libresense_trigger_effect_state;
 
-LIBRESENSE_EXPORT extern const char* libresense_error_msg[LIBRESENSE_ERROR_MAX + 1];
-LIBRESENSE_EXPORT extern const char* libresense_battery_state_msg[LIBRESENSE_BATTERY_MAX + 1];
-LIBRESENSE_EXPORT extern const char* libresense_edge_profile_id_msg[LIBRESENSE_PROFILE_MAX + 1];
-LIBRESENSE_EXPORT extern const char* libresense_level_msg[LIBRESENSE_LEVEL_LOW + 2];
-LIBRESENSE_EXPORT extern const char* libresense_trigger_effect_msg[LIBRESENSE_TRIGGER_EFFECT_MAX + 1];
+LIBRESENSE_EXPORT extern const char* const libresense_error_msg[LIBRESENSE_ERROR_MAX + 1];
+LIBRESENSE_EXPORT extern const char* const libresense_battery_state_msg[LIBRESENSE_BATTERY_MAX + 1];
+LIBRESENSE_EXPORT extern const char* const libresense_edge_profile_id_msg[LIBRESENSE_PROFILE_MAX + 1];
+LIBRESENSE_EXPORT extern const char* const libresense_level_msg[LIBRESENSE_LEVEL_LOW + 2];
+LIBRESENSE_EXPORT extern const char* const libresense_trigger_effect_msg[LIBRESENSE_TRIGGER_EFFECT_MAX + 1];
 LIBRESENSE_EXPORT extern const int libresense_max_controllers;
 
 #define IS_LIBRESENSE_OKAY(result) (result == LIBRESENSE_OK)
