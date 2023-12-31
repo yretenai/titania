@@ -205,7 +205,8 @@ libresense_result libresense_open(libresense_hid* handle, bool use_calibration) 
 			}
 
 			dualsense_calibration_info calibration;
-			const size_t calibration_report_sz = use_calibration ? libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_CALIBRATION, (uint8_t*) &calibration, sizeof(dualsense_calibration_info)) : 0;
+			const size_t calibration_report_sz =
+				use_calibration ? libresense_get_feature_report(state[i].hid, DUALSENSE_REPORT_CALIBRATION, (uint8_t*) &calibration, sizeof(dualsense_calibration_info)) : 0;
 			if (calibration_report_sz == 41) {
 				state[i].calibration[CALIBRATION_GYRO_X].max = CALIBRATION_GYRO(CALIBRATION_RAW_X, max);
 				state[i].calibration[CALIBRATION_GYRO_Y].max = CALIBRATION_GYRO(CALIBRATION_RAW_Y, max);
@@ -235,9 +236,12 @@ libresense_result libresense_open(libresense_hid* handle, bool use_calibration) 
 				state[i].calibration[CALIBRATION_ACCELEROMETER_Y].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_Y);
 				state[i].calibration[CALIBRATION_ACCELEROMETER_Z].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_Z);
 			} else {
-				state[i].calibration[CALIBRATION_GYRO_X] = (libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
-				state[i].calibration[CALIBRATION_GYRO_Y] = (libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
-				state[i].calibration[CALIBRATION_GYRO_Z] = (libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
+				state[i].calibration[CALIBRATION_GYRO_X] =
+					(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
+				state[i].calibration[CALIBRATION_GYRO_Y] =
+					(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
+				state[i].calibration[CALIBRATION_GYRO_Z] =
+					(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
 				state[i].calibration[CALIBRATION_ACCELEROMETER_X] =
 					(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), 0, 1 };
 				state[i].calibration[CALIBRATION_ACCELEROMETER_Y] =
@@ -754,6 +758,40 @@ libresense_result libresense_update_profile(const libresense_handle handle, cons
 
 	if (id <= LIBRESENSE_PROFILE_TRIANGLE || id > LIBRESENSE_PROFILE_CIRCLE) {
 		return LIBRESENSE_INVALID_PROFILE;
+	}
+
+	dualsense_profile_blob output[3];
+	const libresense_result result = libresense_convert_edge_profile_output(profile, output);
+	if (IS_LIBRESENSE_BAD(result)) {
+		return result;
+	}
+
+	output[0].part = 0;
+	output[1].part = 1;
+	output[2].part = 2;
+
+	switch (id) {
+		case LIBRESENSE_PROFILE_CIRCLE:
+			output[0].id = output[1].id = output[2].id = DUALSENSE_UPDATE_PROFILE_CIRCLE;
+			break;
+		case LIBRESENSE_PROFILE_SQUARE:
+			output[0].id = output[1].id = output[2].id = DUALSENSE_UPDATE_PROFILE_SQUARE;
+			break;
+		case LIBRESENSE_PROFILE_CROSS:
+			output[0].id = output[1].id = output[2].id = DUALSENSE_UPDATE_PROFILE_CROSS;
+			break;
+		default: return LIBRESENSE_INVALID_PROFILE;
+	}
+
+	output[0].checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t*) &output[0], sizeof(output[0]) - 4);
+	output[1].checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t*) &output[1], sizeof(output[1]) - 4);
+	output[2].checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t*) &output[2], sizeof(output[2]) - 4);
+
+	for (int i = 0; i < 3; ++i) {
+		const size_t size = hid_send_feature_report(state[handle].hid, (uint8_t*) &output[i], sizeof(dualsense_profile_blob));
+		if (size == SIZE_MAX) {
+			return LIBRESENSE_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
+		}
 	}
 
 	return LIBRESENSE_NOT_IMPLEMENTED;
