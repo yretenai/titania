@@ -360,14 +360,13 @@ typedef struct {
 	libresense_serial_info serial;
 	libresense_firmware_info firmware;
 	libresense_edge_profile edge_profiles[LIBRESENSE_PROFILE_MAX];
-#ifdef LIBRESENSE_DEBUG
-	struct libresense_report_id {
-		uint8_t id;
-		uint8_t type;
-		uint32_t size;
-	} report_ids[0xFF];
-#endif
 } libresense_hid;
+
+typedef struct {
+	uint8_t id;
+	uint8_t type;
+	uint32_t size;
+} libresense_report_id;
 
 typedef struct {
 	bool has_hid;
@@ -723,7 +722,21 @@ LIBRESENSE_EXPORT size_t libresense_debug_get_feature_report(const libresense_ha
  * @param output: the profile to convert into
  */
 LIBRESENSE_EXPORT libresense_result libresense_debug_convert_edge_profile(uint8_t input[174], libresense_edge_profile* output);
-#ifdef __cplusplu
+
+/**
+ * @brief (debug) get the underlying hid device
+ * @param handle: the device to query
+ * @param hid: where to store the hid device pointer
+ */
+LIBRESENSE_EXPORT libresense_result libresense_debug_get_hid(const libresense_handle handle, intptr_t* hid);
+
+/**
+ * @brief (debug) get hid report ids
+ * @param handle: the device to query
+ * @param report_ids: where to store the hid report info
+ */
+LIBRESENSE_EXPORT libresense_result libresense_debug_get_hid_report_ids(const libresense_handle handle, libresense_report_id report_ids[0xFF]);
+#ifdef __cplusplus
 }
 #endif
 #endif

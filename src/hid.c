@@ -278,78 +278,6 @@ libresense_result libresense_open(libresense_hid* handle, bool use_calibration) 
 				}
 			}
 
-#ifdef LIBRESENSE_DEBUG
-			uint8_t report[HID_API_MAX_REPORT_DESCRIPTOR_SIZE];
-			const int report_size = hid_get_report_descriptor(state[i].hid, report, HID_API_MAX_REPORT_DESCRIPTOR_SIZE);
-
-			memset(handle->report_ids, 0, sizeof(handle->report_ids));
-
-			if (report_size > 7 && report_size < HID_API_MAX_REPORT_DESCRIPTOR_SIZE && report[0] == 0x05 && report[1] == 0x01 && // USAGE PAGE Generic Desktop
-				report[2] == 0x09 && report[3] == 0x05 &&																		 // USAGE Game Pad
-				report[4] == 0xA1 && report[5] == 0x01) {
-				int report_id = 0;
-				int last_size = 0;
-				// COLLECTION Application
-				for (int j = 6; j < report_size;) {
-					const uint8_t op = report[j++];
-					uint32_t value = 0;
-					const uint8_t size = op & 0x3;
-					switch (size) {
-						case 0: continue;
-						case 1:
-							if (j > report_size) {
-								j += 1;
-								break;
-							}
-							value = report[j];
-							j += 1;
-							break;
-						case 2:
-							if (j + 2 > report_size) {
-								j += 2;
-								break;
-							}
-							value = *(uint16_t*) (report + j);
-							j += 2;
-							break;
-						case 3:
-							if (j + 4 > report_size) {
-								j += 4;
-								break;
-							}
-							value = *(uint32_t*) (report + j);
-							j += 4;
-							break;
-						default: continue;
-					}
-
-					const uint8_t op_value = op >> 2;
-					if (op_value == 48) { // END COLLECTION
-						break;
-					}
-
-					if (op_value == 33) { // REPORT ID
-						if (report_id == UINT8_MAX) {
-							break;
-						}
-
-						handle->report_ids[report_id++].id = (uint8_t) value;
-						handle->report_ids[report_id - 1].size = last_size;
-					} else if (report_id > 0) {
-						if (op_value == 37) { // REPORT COUNT
-							last_size = value;
-							handle->report_ids[report_id - 1].size = value;
-						} else if (op_value == 32) { // INPUT
-							handle->report_ids[report_id - 1].type = 0;
-						} else if (op_value == 36) { // OUTPUT
-							handle->report_ids[report_id - 1].type = 1;
-						} else if (op_value == 44) { // FEATURE
-							handle->report_ids[report_id - 1].type = 2;
-						}
-					}
-				}
-			}
-#endif
 			state[i].hid_info = *handle;
 
 			// this is at the end so it's reasonably late<
@@ -435,7 +363,7 @@ libresense_result libresense_push(libresense_handle* handle, const size_t handle
 	for (size_t i = 0; i < handle_count; i++) {
 		CHECK_HANDLE_VALID(handle[i]);
 		dualsense_state* hid_state = &state[handle[i]];
-		if(IS_ACCESS(hid_state->hid_info)) {
+		if (IS_ACCESS(hid_state->hid_info)) {
 			continue; // todo.
 		}
 
@@ -777,15 +705,9 @@ libresense_result libresense_update_profile(const libresense_handle handle, cons
 	output[2].part = 2;
 
 	switch (id) {
-		case LIBRESENSE_PROFILE_CIRCLE:
-			output[0].id = output[1].id = output[2].id = DUALSENSE_UPDATE_PROFILE_CIRCLE;
-			break;
-		case LIBRESENSE_PROFILE_SQUARE:
-			output[0].id = output[1].id = output[2].id = DUALSENSE_UPDATE_PROFILE_SQUARE;
-			break;
-		case LIBRESENSE_PROFILE_CROSS:
-			output[0].id = output[1].id = output[2].id = DUALSENSE_UPDATE_PROFILE_CROSS;
-			break;
+		case LIBRESENSE_PROFILE_CIRCLE: output[0].id = output[1].id = output[2].id = DUALSENSE_UPDATE_PROFILE_CIRCLE; break;
+		case LIBRESENSE_PROFILE_SQUARE: output[0].id = output[1].id = output[2].id = DUALSENSE_UPDATE_PROFILE_SQUARE; break;
+		case LIBRESENSE_PROFILE_CROSS: output[0].id = output[1].id = output[2].id = DUALSENSE_UPDATE_PROFILE_CROSS; break;
 		default: return LIBRESENSE_INVALID_PROFILE;
 	}
 
@@ -856,4 +778,91 @@ void libresense_exit(void) {
 	}
 
 	is_initialized = false;
+}
+
+libresense_result libresense_debug_get_hid(const libresense_handle handle, intptr_t* hid) {
+	CHECK_INIT();
+	CHECK_HANDLE(handle);
+
+	*hid = (intptr_t) state[handle].hid;
+
+	return LIBRESENSE_OK;
+}
+
+libresense_result libresense_debug_get_hid_report_ids(const libresense_handle handle, libresense_report_id report_ids[0xFF]) {
+	CHECK_INIT();
+	CHECK_HANDLE(handle);
+
+	uint8_t report[HID_API_MAX_REPORT_DESCRIPTOR_SIZE];
+	const int report_size = hid_get_report_descriptor(state[handle].hid, report, HID_API_MAX_REPORT_DESCRIPTOR_SIZE);
+
+	memset(report_ids, 0, sizeof(libresense_report_id) * 0xFF);
+
+	if (report_size > 7 && report_size < HID_API_MAX_REPORT_DESCRIPTOR_SIZE && report[0] == 0x05 && report[1] == 0x01 && // USAGE PAGE Generic Desktop
+		report[2] == 0x09 && report[3] == 0x05 &&																		 // USAGE Game Pad
+		report[4] == 0xA1 && report[5] == 0x01) {
+		int report_id = 0;
+		int last_size = 0;
+		// COLLECTION Application
+		for (int j = 6; j < report_size;) {
+			const uint8_t op = report[j++];
+			uint32_t value = 0;
+			const uint8_t size = op & 0x3;
+			switch (size) {
+				case 0: continue;
+				case 1:
+					if (j > report_size) {
+						j += 1;
+						break;
+					}
+					value = report[j];
+					j += 1;
+					break;
+				case 2:
+					if (j + 2 > report_size) {
+						j += 2;
+						break;
+					}
+					value = *(uint16_t*) (report + j);
+					j += 2;
+					break;
+				case 3:
+					if (j + 4 > report_size) {
+						j += 4;
+						break;
+					}
+					value = *(uint32_t*) (report + j);
+					j += 4;
+					break;
+				default: continue;
+			}
+
+			const uint8_t op_value = op >> 2;
+			if (op_value == 48) { // END COLLECTION
+				break;
+			}
+
+			if (op_value == 33) { // REPORT ID
+				if (report_id == UINT8_MAX) {
+					break;
+				}
+
+				report_ids[report_id++].id = (uint8_t) value;
+				report_ids[report_id - 1].size = last_size;
+			} else if (report_id > 0) {
+				if (op_value == 37) { // REPORT COUNT
+					last_size = value;
+					report_ids[report_id - 1].size = value;
+				} else if (op_value == 32) { // INPUT
+					report_ids[report_id - 1].type = 0;
+				} else if (op_value == 36) { // OUTPUT
+					report_ids[report_id - 1].type = 1;
+				} else if (op_value == 44) { // FEATURE
+					report_ids[report_id - 1].type = 2;
+				}
+			}
+		}
+	}
+
+	return LIBRESENSE_OK;
 }

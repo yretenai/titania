@@ -334,40 +334,42 @@ int main(int argc, const char** argv) {
 #ifdef LIBRESENSE_DEBUG
 			char name[0x30] = { 0 };
 			sprintf(name, "report_%s_%%d.bin", hid[hid_id].serial.mac);
-
-			for (int i = 0; i < 0xFF; i++) {
-				uint8_t buffer[0x4096];
-				if (hid[hid_id].report_ids[i].id == 0) {
-					break;
-				}
-
-				int32_t hid_report_size = hid[hid_id].report_ids[i].size + 1;
-				printf("report %d (%x): reported size is %d, type is %s",
-					   hid[hid_id].report_ids[i].id,
-					   hid[hid_id].report_ids[i].id,
-					   hid_report_size,
-					   hid[hid_id].report_ids[i].type == 0	 ? "INPUT"
-					   : hid[hid_id].report_ids[i].type == 1 ? "OUTPUT"
-															 : "FEATURE");
-
-				if (hid[hid_id].report_ids[i].type < 2) {
-					printf("\n");
-					continue;
-				}
-
-				printf(", actual size is ");
-				size_t size = libresense_debug_get_feature_report(hid[hid_id].handle, hid[hid_id].report_ids[i].id, buffer, hid_report_size);
-				if (size > 1 && size <= 0x4096) {
-					printf("%ld\n", size);
-					char report_name[0x30] = { 0 };
-					sprintf(report_name, name, hid[hid_id].report_ids[i].id);
-					FILE* file = fopen(report_name, "w+b");
-					if (file != NULL) {
-						fwrite(buffer, 1, size, file);
-						fclose(file);
+			libresense_report_id report_ids[0xFF];
+			if (IS_LIBRESENSE_OKAY(libresense_debug_get_hid_report_ids(hid[hid_id].handle, report_ids))) {
+				for (int i = 0; i < 0xFF; i++) {
+					uint8_t buffer[0x4096];
+					if (report_ids[i].id == 0) {
+						break;
 					}
-				} else {
-					printf("??\n");
+
+					int32_t hid_report_size = report_ids[i].size + 1;
+					printf("report %d (%x): reported size is %d, type is %s",
+						   report_ids[i].id,
+						   report_ids[i].id,
+						   hid_report_size,
+						   report_ids[i].type == 0	 ? "INPUT"
+						   : report_ids[i].type == 1 ? "OUTPUT"
+													 : "FEATURE");
+
+					if (report_ids[i].type < 2) {
+						printf("\n");
+						continue;
+					}
+
+					printf(", actual size is ");
+					size_t size = libresense_debug_get_feature_report(hid[hid_id].handle, report_ids[i].id, buffer, hid_report_size);
+					if (size > 1 && size <= 0x4096) {
+						printf("%ld\n", size);
+						char report_name[0x30] = { 0 };
+						sprintf(report_name, name, report_ids[i].id);
+						FILE* file = fopen(report_name, "w+b");
+						if (file != NULL) {
+							fwrite(buffer, 1, size, file);
+							fclose(file);
+						}
+					} else {
+						printf("??\n");
+					}
 				}
 			}
 #endif
