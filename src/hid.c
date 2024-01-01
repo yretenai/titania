@@ -825,6 +825,8 @@ void libresense_exit(void) {
 		libresense_close(i);
 	}
 
+	hid_exit();
+
 	is_initialized = false;
 }
 
