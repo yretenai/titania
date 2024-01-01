@@ -6,7 +6,12 @@
 #include <string.h>
 
 #include "structures.h"
+
 #include "config.h"
+
+#ifdef __APPLE__
+#include <hidapi/hidapi_darwin.h>
+#endif
 
 const int32_t libresense_max_controllers = LIBRESENSE_MAX_CONTROLLERS;
 
@@ -54,6 +59,10 @@ libresense_result libresense_init_checked(const size_t size) {
 	if (hid_init() != 0) {
 		return LIBRESENSE_HIDAPI_FAIL;
 	}
+
+#ifdef __APPLE__
+	hid_darwin_set_open_exclusive(0);
+#endif
 
 	memset(&state, 0, sizeof(state));
 
@@ -244,7 +253,7 @@ libresense_result libresense_open(libresense_hid* handle, const bool use_calibra
 					if (IS_LIBRESENSE_BAD(libresense_convert_edge_profile_input(profile_data, &handle->edge_profiles[j + 1]))) {
 						memset(&handle->edge_profiles[j], 0, sizeof(libresense_edge_profile));
 					}
-					skip_profile:
+				skip_profile:
 				}
 			}
 
