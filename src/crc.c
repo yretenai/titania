@@ -19,9 +19,9 @@ uint32_t checksum(uint32_t crc, const uint8_t* buffer, const size_t size) {
 }
 
 void libresense_init_checksum(void) {
-	for (int32_t i = 1; i < 256; ++i) {
+	for (int i = 1; i < 256; ++i) {
 		uint32_t crc = i;
-		for (int32_t j = 8; j; --j) {
+		for (int j = 8; j; --j) {
 			crc = crc & 1 ? crc >> 1 ^ 0xedb88320 : crc >> 1;
 		}
 		crc_table[i] = crc;

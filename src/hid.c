@@ -259,10 +259,10 @@ libresense_result libresense_open(libresense_hid* handle, bool use_calibration) 
 																		  DUALSENSE_REPORT_EDGE_QUERY_PROFILE_CROSS_P1,
 																		  DUALSENSE_REPORT_EDGE_QUERY_PROFILE_CIRCLE_P1 };
 
-				for (int32_t j = 0; j < LIBRESENSE_PROFILE_MAX; ++j) {
+				for (int j = 0; j < LIBRESENSE_PROFILE_MAX; ++j) {
 					dualsense_edge_profile_blob profile_data[3];
 					bool exit = false;
-					for (int32_t k = 0; k < 3; ++k) {
+					for (int k = 0; k < 3; ++k) {
 						const size_t sz = libresense_get_feature_report(state[i].hid, profile_reports[j] + k, (uint8_t*) &profile_data[k], sizeof(dualsense_edge_profile_blob));
 						if (sz != sizeof(dualsense_edge_profile_blob)) {
 							exit = true;

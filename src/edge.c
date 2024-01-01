@@ -50,14 +50,14 @@ libresense_result libresense_convert_edge_profile_input(dualsense_edge_profile_b
 
 	const uint8_t left_right[4] = { LIBRESENSE_LEFT, DUALSENSE_LEFT, LIBRESENSE_RIGHT, LIBRESENSE_RIGHT };
 
-	for (uint8_t i = 0; i < sizeof(left_right); i += 2) {
+	for (size_t i = 0; i < sizeof(left_right); i += 2) {
 		const uint8_t libre = left_right[i];
 		const uint8_t dual = left_right[i + 1];
 		output->sticks[libre].interpolation_type = profile.msg.sticks[dual].interpolation_type;
 		output->sticks[libre].deadzone.x = DENORM_CLAMP_UINT8(profile.msg.sticks[dual].deadzone);
 		output->sticks[libre].deadzone.y = 1.0f;
 		output->sticks[libre].unknown = profile.msg.sticks[dual].unknown;
-		for (uint8_t j = 0; j < 3; ++j) {
+		for (int j = 0; j < 3; ++j) {
 			output->sticks[libre].curve_points[j].x = DENORM_CLAMP_UINT8(profile.msg.sticks[dual].coordinates[j].x);
 			output->sticks[libre].curve_points[j].y = DENORM_CLAMP_UINT8(profile.msg.sticks[dual].coordinates[j].y);
 		}
@@ -66,7 +66,7 @@ libresense_result libresense_convert_edge_profile_input(dualsense_edge_profile_b
 		output->triggers[libre].deadzone.y = DENORM_CLAMP_UINT8(profile.msg.triggers[dual].max);
 	}
 
-	for (uint8_t i = 0; i < 0x10; ++i) {
+	for (int i = 0; i < 0x10; ++i) {
 		output->buttons.values[i] = profile.msg.remapped_button[i];
 	}
 
@@ -142,13 +142,13 @@ libresense_result libresense_convert_edge_profile_output(libresense_edge_profile
 
 	const uint8_t left_right[4] = { LIBRESENSE_LEFT, DUALSENSE_LEFT, LIBRESENSE_RIGHT, LIBRESENSE_RIGHT };
 
-	for (uint8_t i = 0; i < sizeof(left_right); i += 2) {
+	for (size_t i = 0; i < sizeof(left_right); i += 2) {
 		const uint8_t libre = left_right[i];
 		const uint8_t dual = left_right[i + 1];
 		profile.msg.sticks[dual].interpolation_type = input.sticks[libre].interpolation_type;
 		profile.msg.sticks[dual].deadzone = NORM_CLAMP_UINT8(input.sticks[libre].deadzone.x);
 		profile.msg.sticks[dual].unknown = input.sticks[libre].unknown;
-		for (uint8_t j = 0; j < 3; ++j) {
+		for (int j = 0; j < 3; ++j) {
 			profile.msg.sticks[dual].coordinates[j].x = NORM_CLAMP_UINT8(input.sticks[libre].curve_points[j].x);
 			profile.msg.sticks[dual].coordinates[j].y = NORM_CLAMP_UINT8(input.sticks[libre].curve_points[j].y);
 		}
@@ -157,7 +157,7 @@ libresense_result libresense_convert_edge_profile_output(libresense_edge_profile
 		profile.msg.triggers[dual].max = NORM_CLAMP_UINT8(input.triggers[libre].deadzone.y);
 	}
 
-	for (uint8_t i = 0; i < 0x10; ++i) {
+	for (int i = 0; i < 0x10; ++i) {
 		profile.msg.remapped_button[i] = input.buttons.values[i];
 	}
 
