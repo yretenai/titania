@@ -254,10 +254,10 @@ libresense_result libresense_open(libresense_hid* handle, bool use_calibration) 
 			}
 
 			if (IS_EDGE(state[i].hid_info)) {
-				const uint8_t profile_reports[LIBRESENSE_PROFILE_MAX] = { DUALSENSE_REPORT_EDGE_PROFILE_TRIANGLE_P1,
-																		  DUALSENSE_REPORT_EDGE_PROFILE_SQUARE_P1,
-																		  DUALSENSE_REPORT_EDGE_PROFILE_CROSS_P1,
-																		  DUALSENSE_REPORT_EDGE_PROFILE_CIRCLE_P1 };
+				const uint8_t profile_reports[LIBRESENSE_PROFILE_MAX] = { DUALSENSE_REPORT_EDGE_QUERY_PROFILE_TRIANGLE_P1,
+																		  DUALSENSE_REPORT_EDGE_QUERY_PROFILE_SQUARE_P1,
+																		  DUALSENSE_REPORT_EDGE_QUERY_PROFILE_CROSS_P1,
+																		  DUALSENSE_REPORT_EDGE_QUERY_PROFILE_CIRCLE_P1 };
 
 				for (int32_t j = 0; j < LIBRESENSE_PROFILE_MAX; ++j) {
 					dualsense_edge_profile_blob profile_data[3];
@@ -735,9 +735,9 @@ libresense_result libresense_update_profile(const libresense_handle handle, cons
 	output[2].part = 2;
 
 	switch (id) {
-		case LIBRESENSE_PROFILE_CIRCLE: output[0].id = output[1].id = output[2].id = DUALSENSE_REPORT_EDGE_PROFILE_CIRCLE; break;
-		case LIBRESENSE_PROFILE_SQUARE: output[0].id = output[1].id = output[2].id = DUALSENSE_REPORT_EDGE_PROFILE_SQUARE; break;
-		case LIBRESENSE_PROFILE_CROSS: output[0].id = output[1].id = output[2].id = DUALSENSE_REPORT_EDGE_PROFILE_CROSS; break;
+		case LIBRESENSE_PROFILE_CIRCLE: output[0].id = output[1].id = output[2].id = DUALSENSE_REPORT_EDGE_UPDATE_PROFILE_CIRCLE; break;
+		case LIBRESENSE_PROFILE_SQUARE: output[0].id = output[1].id = output[2].id = DUALSENSE_REPORT_EDGE_UPDATE_PROFILE_SQUARE; break;
+		case LIBRESENSE_PROFILE_CROSS: output[0].id = output[1].id = output[2].id = DUALSENSE_REPORT_EDGE_UPDATE_PROFILE_CROSS; break;
 		default: return LIBRESENSE_INVALID_PROFILE;
 	}
 

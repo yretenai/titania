@@ -17,7 +17,7 @@
 #define PACKED __attribute__((__packed__))
 #endif
 
-#define MAKE_EDGE_PROFILE_REPORT(id, name) DUALSENSE_REPORT_EDGE_##name##_P1 = id, DUALSENSE_REPORT_EDGE_##name##_P2 = id + 1, DUALSENSE_REPORT_EDGE_##name##_P3 = id + 2
+#define MAKE_EDGE_PROFILE_REPORT(id, name) DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P1 = id, DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P2 = id + 1, DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P3 = id + 2
 
 typedef enum _dualsense_report_id : uint8_t {
 	// usb:
@@ -43,15 +43,15 @@ typedef enum _dualsense_report_id : uint8_t {
 	DUALSENSE_REPORT_SET_USER = 0xf4,
 	DUALSENSE_REPORT_GET_USER = 0xf5,
 	// edge:
-	DUALSENSE_REPORT_EDGE_PROFILE_SQUARE = 0x60,
-	DUALSENSE_REPORT_EDGE_PROFILE_CROSS = 0x61,
-	DUALSENSE_REPORT_EDGE_PROFILE_CIRCLE = 0x62,
-	MAKE_EDGE_PROFILE_REPORT(0x63, PROFILE_99), // base profile, maybe? empty
+	DUALSENSE_REPORT_EDGE_UPDATE_PROFILE_SQUARE = 0x60,
+	DUALSENSE_REPORT_EDGE_UPDATE_PROFILE_CROSS = 0x61,
+	DUALSENSE_REPORT_EDGE_UPDATE_PROFILE_CIRCLE = 0x62,
+	MAKE_EDGE_PROFILE_REPORT(0x63, 99), // base profile, maybe? empty
 	DUALSENSE_REPORT_EDGE_DELETE_PROFILE = 0x68,
-	MAKE_EDGE_PROFILE_REPORT(0x70, PROFILE_TRIANGLE),
-	MAKE_EDGE_PROFILE_REPORT(0x73, PROFILE_SQUARE),
-	MAKE_EDGE_PROFILE_REPORT(0x76, PROFILE_CROSS),
-	MAKE_EDGE_PROFILE_REPORT(0x79, PROFILE_CIRCLE),
+	MAKE_EDGE_PROFILE_REPORT(0x70, TRIANGLE),
+	MAKE_EDGE_PROFILE_REPORT(0x73, SQUARE),
+	MAKE_EDGE_PROFILE_REPORT(0x76, CROSS),
+	MAKE_EDGE_PROFILE_REPORT(0x79, CIRCLE),
 	// bluetooth:
 	DUALSENSE_REPORT_BLUETOOTH = 0x31,
 	DUALSENSE_REPORT_BLUETOOTH_OUTPUT1 = 0x32,
@@ -67,7 +67,9 @@ typedef enum _dualsense_report_id : uint8_t {
 	DUALSENSE_REPORT_BLUETOOTH_EDGE_GET_DATA = 0xf7,
 	// access:
 	DUALSENSE_REPORT_ACCESS_SET_PROFILE = 0x60, // [1] = dualsense_access_page_id
-	DUALSENSE_REPORT_ACCESS_GET_PROFILE = 0x61, // each time this report is requested, the page id goes up by 1 (up to page 17) this means the max size is about 1024
+	DUALSENSE_REPORT_ACCESS_GET_PROFILE = 0x61, // each time this report is requested
+												// the page id goes up by 1 (up to page 18)
+												// this means the max size is about 1200~
 } dualsense_report_id;
 
 static_assert(sizeof(dualsense_report_id) == 1, "dualsense_report_id is not 1 byte");
