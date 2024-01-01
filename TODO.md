@@ -8,7 +8,6 @@
 - [x] rumble
 - [x] touchpad
 - [x] sensors
-- [ ] gyro orientation calculation
 - [x] device flags
 - [x] bluetooth
 - [ ] force bluetooth pairing
