@@ -19,6 +19,8 @@ this project is not authorized, affiliated or endorsed by sony interactive enter
 ## build requirements
 
 - hidapi 0.14 or newer (meson wrap subproject, will compile if system is missing)
+- icu 73.2 or newer (meson wrap subproject, will compile if system is missing)
+- pandoc 3.0.0 or newer (optional, only used for man page generation)
 - a C2x capable compiler (GCC 13 or newer, Clang 16 or newer, Visual Studio 2022 or newer)
 - meson 1.2.0 or newer
 - ninja 1.10.0 or newer
