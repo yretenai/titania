@@ -10,7 +10,7 @@
 - [x] sensors
 - [x] device flags
 - [x] bluetooth
-- [ ] force bluetooth pairing
+- [x] force bluetooth pairing
 - [x] MMU calibration
 - [x] firmware version reading
 - [x] serial number reading
