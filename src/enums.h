@@ -24,7 +24,7 @@ typedef enum _dualsense_report_id : uint8_t {
 	DUALSENSE_REPORT_INPUT = 0x1,
 	DUALSENSE_REPORT_OUTPUT = 0x2,
 	DUALSENSE_REPORT_CALIBRATION = 0x5,
-	DUALSENSE_REPORT_CONNECT = 0x8,
+	DUALSENSE_REPORT_COMMAND_BT = 0x8,
 	DUALSENSE_REPORT_SERIAL = 0x9,
 	DUALSENSE_REPORT_PAIR = 0x0A,
 	DUALSENSE_REPORT_FIRMWARE = 0x20,
@@ -116,6 +116,14 @@ typedef enum _dualsense_effect_mode : uint8_t {
 } dualsense_effect_mode;
 
 static_assert(sizeof(dualsense_effect_mode) == 1, "dualsense_effect_mode is not 1 byte");
+
+typedef enum _dualsense_bt_command : uint8_t {
+	DUALSENSE_BT_COMMAND_NONE = 0,
+	DUALSENSE_BT_COMMAND_CONNECT = 0,
+	DUALSENSE_BT_COMMAND_DISCONNECT = 0,
+} dualsense_bt_command;
+
+static_assert(sizeof(dualsense_bt_command) == 1, "dualsense_bt_command is not 1 byte");
 
 #ifdef _MSC_VER
 #pragma pack(pop)

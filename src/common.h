@@ -76,6 +76,8 @@
 	if (state[h].hid == NULL) \
 	return LIBRESENSE_INVALID_HANDLE
 
+#define HID_FAIL(s) (s == -1)
+
 #define IS_EDGE(h) (h.vendor_id == 0x054C && h.product_id == 0x0DF2)
 #define IS_ACCESS(h) (h.vendor_id == 0x054C && h.product_id == 0x0E5F)
 

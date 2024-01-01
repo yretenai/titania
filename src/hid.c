@@ -715,7 +715,63 @@ libresense_result libresense_update_rumble(const libresense_handle handle, const
 	return LIBRESENSE_OK;
 }
 
-libresense_result libresense_update_profile(const libresense_handle handle, const libresense_edge_profile_id id, const libresense_edge_profile profile) {
+libresense_result libresense_bt_pair(const libresense_handle handle, const libresense_mac mac, const libresense_link_key link_key) {
+	CHECK_INIT();
+	CHECK_HANDLE_VALID(handle);
+
+	dualsense_bt_pair_msg msg = {0};
+	memcpy(&msg.link_key, link_key, sizeof(libresense_link_key));
+	int32_t pair_mac[6];
+	sscanf(mac, "%02x:%02x:%02x:%02x:%02x:%02x", &pair_mac[0], &pair_mac[1], &pair_mac[2], &pair_mac[3], &pair_mac[4], &pair_mac[5]);
+	msg.pair_mac[0] = pair_mac[0] & 0xFF;
+	msg.pair_mac[1] = pair_mac[1] & 0xFF;
+	msg.pair_mac[2] = pair_mac[2] & 0xFF;
+	msg.pair_mac[3] = pair_mac[3] & 0xFF;
+	msg.pair_mac[4] = pair_mac[4] & 0xFF;
+	msg.pair_mac[5] = pair_mac[5] & 0xFF;
+	msg.id = DUALSENSE_REPORT_PAIR;
+	msg.checksum = libresense_calc_checksum(crc_seed_feature, (uint8_t*) &msg, sizeof(dualsense_bt_pair_msg) - 4);
+
+	if(HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &msg, sizeof(dualsense_bt_pair_msg)))) {
+		return LIBRESENSE_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
+	}
+
+	return LIBRESENSE_OK;
+}
+
+libresense_result libresense_bt_connect(const libresense_handle handle) {
+	CHECK_INIT();
+	CHECK_HANDLE_VALID(handle);
+
+	dualsense_bt_command_msg msg = {0};
+	msg.id = DUALSENSE_REPORT_COMMAND_BT;
+	msg.command = DUALSENSE_BT_COMMAND_CONNECT;
+	msg.checksum = libresense_calc_checksum(crc_seed_feature, (uint8_t*) &msg, sizeof(dualsense_bt_command_msg) - 4);
+
+	if(HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &msg, sizeof(dualsense_bt_command_msg)))) {
+		return LIBRESENSE_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
+	}
+
+	return LIBRESENSE_OK;
+}
+
+libresense_result libresense_bt_disconnect(const libresense_handle handle) {
+	CHECK_INIT();
+	CHECK_HANDLE_VALID(handle);
+
+	dualsense_bt_command_msg msg = {0};
+	msg.id = DUALSENSE_REPORT_COMMAND_BT;
+	msg.command = DUALSENSE_BT_COMMAND_DISCONNECT;
+	msg.checksum = libresense_calc_checksum(crc_seed_feature, (uint8_t*) &msg, sizeof(dualsense_bt_command_msg) - 4);
+
+	if(HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &msg, sizeof(dualsense_bt_command_msg)))) {
+		return LIBRESENSE_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
+	}
+
+	return LIBRESENSE_OK;
+}
+
+libresense_result libresense_update_profile(const libresense_handle handle, const libresense_profile_id id, const libresense_edge_profile profile) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 	CHECK_EDGE(handle);
@@ -746,8 +802,7 @@ libresense_result libresense_update_profile(const libresense_handle handle, cons
 	output[2].checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t*) &output[2], sizeof(output[2]) - 4);
 
 	for (int i = 0; i < 3; ++i) {
-		const size_t size = hid_send_feature_report(state[handle].hid, (uint8_t*) &output[i], sizeof(dualsense_edge_profile_blob));
-		if (size == SIZE_MAX) {
+		if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &output[i], sizeof(dualsense_edge_profile_blob)))) {
 			return LIBRESENSE_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
 		}
 	}
@@ -755,7 +810,7 @@ libresense_result libresense_update_profile(const libresense_handle handle, cons
 	return LIBRESENSE_OK;
 }
 
-libresense_result libresense_delete_profile(const libresense_handle handle, const libresense_edge_profile_id id) {
+libresense_result libresense_delete_profile(const libresense_handle handle, const libresense_profile_id id) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 	CHECK_EDGE(handle);
@@ -768,8 +823,7 @@ libresense_result libresense_delete_profile(const libresense_handle handle, cons
 	del.id = DUALSENSE_REPORT_EDGE_DELETE_PROFILE;
 	del.profile_id = id;
 	del.checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t*) &del, sizeof(del) - 4);
-	const size_t size = hid_send_feature_report(state[handle].hid, (uint8_t*) &del, sizeof(del));
-	if (size == SIZE_MAX) {
+	if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &del, sizeof(del)))) {
 		return LIBRESENSE_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
 	}
 

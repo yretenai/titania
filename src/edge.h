@@ -23,7 +23,7 @@ typedef struct PACKED {
 	bool unknown2 : 1;
 	bool led_indicator : 1;
 	bool vibrate_indicator : 1;
-	libresense_edge_profile_id id : 3;
+	libresense_profile_id id : 3;
 	bool disable_switching : 1;
 } dualsense_device_state_edge_profile;
 

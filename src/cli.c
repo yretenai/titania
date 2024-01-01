@@ -151,7 +151,7 @@ void wait_until_options_clear(libresense_handle* handles, const size_t handle_co
 	}
 }
 
-void print_profile(libresense_edge_profile_id profile_id, libresense_edge_profile profile) {
+void print_profile(libresense_profile_id profile_id, libresense_edge_profile profile) {
 	if (!profile.valid) {
 		return;
 	}
@@ -258,7 +258,7 @@ void print_profile(libresense_edge_profile_id profile_id, libresense_edge_profil
 int main(int argc, const char** argv) {
 	libresense_printf("version %s", LIBRESENSE_PROJECT_VERSION);
 
-	libresense_edge_profile_id update_id;
+	libresense_profile_id update_id;
 	libresense_edge_profile update_profile;
 	if (argc > 2) {
 		if (strcmp(argv[1], "profile") == 0) {
@@ -580,7 +580,7 @@ int main(int argc, const char** argv) {
 
 		if (!clr) {
 			for (size_t i = 0; i < connected; ++i) {
-				for (libresense_edge_profile_id j = 1; j < LIBRESENSE_PROFILE_MAX; ++j) {
+				for (libresense_profile_id j = LIBRESENSE_PROFILE_1; j < LIBRESENSE_PROFILE_MAX; ++j) {
 					print_profile(j, hid->edge_profiles[j]);
 				}
 			}

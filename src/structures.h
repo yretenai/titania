@@ -430,6 +430,24 @@ typedef struct {
 	} output;
 } dualsense_state;
 
+typedef struct PACKED {
+	dualsense_report_id id;
+	uint8_t pair_mac[6];
+	uint8_t link_key[0x10];
+	uint32_t checksum;
+} dualsense_bt_pair_msg;
+
+static_assert(sizeof(dualsense_bt_pair_msg) == 0x1b, "dualsense_bt_pair_msg is not 27 bytes");
+
+typedef struct PACKED {
+	dualsense_report_id id;
+	dualsense_bt_command command;
+	uint8_t reserved[0x2a];
+	uint32_t checksum;
+} dualsense_bt_command_msg;
+
+static_assert(sizeof(dualsense_bt_command_msg) == 0x30, "dualsense_bt_command_msg is not 48 bytes");
+
 #ifdef _MSC_VER
 #pragma pack(pop)
 #endif

@@ -99,8 +99,12 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 	data->device.haptic_filter = input.state.device.haptic_filter;
 	data->device.reserved = (uint16_t) input.state.device.reserved1 | (uint16_t) input.state.device.reserved2 << 3;
 
-	data->battery.level = input.state.battery.level * 0.1 + 0.10;
 	data->battery.state = input.state.battery.state + 1;
+	if(data->battery.state == LIBRESENSE_BATTERY_FULL) {
+		data->battery.level = 1.0f;
+	} else {
+		data->battery.level = input.state.battery.level * 0.1 + 0.10;
+	}
 
 	data->bt.has_hid = input.bt.has_hid;
 	data->bt.unknown = input.bt.unknown;

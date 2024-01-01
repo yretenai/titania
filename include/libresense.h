@@ -68,12 +68,17 @@ typedef enum {
 
 typedef enum {
 	LIBRESENSE_PROFILE_NONE,
-	LIBRESENSE_PROFILE_TRIANGLE,
+	LIBRESENSE_PROFILE_DEFAULT,
 	LIBRESENSE_PROFILE_SQUARE,
 	LIBRESENSE_PROFILE_CROSS,
 	LIBRESENSE_PROFILE_CIRCLE,
-	LIBRESENSE_PROFILE_MAX
-} libresense_edge_profile_id;
+	LIBRESENSE_PROFILE_MAX,
+
+	LIBRESENSE_PROFILE_TRIANGLE = LIBRESENSE_PROFILE_DEFAULT,
+	LIBRESENSE_PROFILE_1 = LIBRESENSE_PROFILE_SQUARE,
+	LIBRESENSE_PROFILE_2 = LIBRESENSE_PROFILE_CROSS,
+	LIBRESENSE_PROFILE_3 = LIBRESENSE_PROFILE_CIRCLE,
+} libresense_profile_id;
 
 typedef enum {
 	LIBRESENSE_LEVEL_HIGH = 0,
@@ -146,6 +151,9 @@ typedef uint16_t libresense_wchar;
 
 typedef signed int libresense_handle;
 typedef wchar_t libresense_serial[0x100]; // Max HID Parameter length is 256 on USB, 512 on BT. HID serials are wide-chars, which are 2 bytes.
+
+typedef char libresense_mac[0x12];
+typedef char libresense_link_key[0x10];
 
 typedef struct {
 	float x;
@@ -275,8 +283,8 @@ typedef struct {
 } libresense_firmware_info;
 
 typedef struct {
-	char mac[0x12];
-	char paired_mac[0x12];
+	libresense_mac mac;
+	libresense_mac paired_mac;
 	uint32_t unknown;
 } libresense_serial_info;
 
@@ -388,7 +396,7 @@ typedef struct {
 	} stick;
 
 	libresense_level trigger_levels[2];
-	libresense_edge_profile_id current_profile_id;
+	libresense_profile_id current_profile_id;
 
 	struct {
 		bool led;
@@ -680,12 +688,32 @@ LIBRESENSE_EXPORT libresense_result libresense_update_rumble(const libresense_ha
 															 const bool emulate_legacy_behavior);
 
 /**
+ * @brief pair a controller with a bluetooth adapter
+ * @param handle: the controller to update
+ * @param mac: mac address of the host bluetooth adapter
+ * @param link_key: bluetooth link key
+ */
+LIBRESENSE_EXPORT libresense_result libresense_bt_pair(const libresense_handle handle, const libresense_mac mac, const libresense_link_key link_key);
+
+/**
+ * @brief tell a controller to connect with bluetooth
+ * @param handle: the controller to update
+ */
+LIBRESENSE_EXPORT libresense_result libresense_bt_connect(const libresense_handle handle);
+
+/**
+ * @brief tell a controller to connect with usb
+ * @param handle: the controller to update
+ */
+LIBRESENSE_EXPORT libresense_result libresense_bt_disconnect(const libresense_handle handle);
+
+/**
  * @brief update a dualsense edge profile
  * @param handle: the controller to update
  * @param id: the profile id to store the profile into
  * @param profile: the profile data to store
  */
-LIBRESENSE_EXPORT libresense_result libresense_update_profile(const libresense_handle handle, const libresense_edge_profile_id id, const libresense_edge_profile profile);
+LIBRESENSE_EXPORT libresense_result libresense_update_profile(const libresense_handle handle, const libresense_profile_id id, const libresense_edge_profile profile);
 
 /**
  * @brief reset a stick template to a specific template
@@ -700,7 +728,7 @@ LIBRESENSE_EXPORT libresense_result libresense_helper_stick_template(libresense_
  * @param handle: the controller to update
  * @param id: the profile id to delete
  */
-LIBRESENSE_EXPORT libresense_result libresense_delete_profile(const libresense_handle handle, const libresense_edge_profile_id id);
+LIBRESENSE_EXPORT libresense_result libresense_delete_profile(const libresense_handle handle, const libresense_profile_id id);
 
 /**
  * @brief close a controller device handle
