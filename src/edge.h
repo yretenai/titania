@@ -178,8 +178,8 @@ typedef union {
 static_assert(sizeof(dualsense_edge_profile) == 174, "dualsense_edge_profile size is not 174");
 
 typedef struct PACKED {
-	uint8_t id;
-	uint8_t part;
+	uint8_t report_id;
+	uint8_t profile_part;
 
 	union PACKED {
 		uint32_t version;

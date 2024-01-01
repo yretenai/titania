@@ -15,8 +15,8 @@ void usleep(__int64 usec) {
 	HANDLE timer;
 	LARGE_INTEGER ft;
 	ft.QuadPart = -(10 * usec);
-	timer = CreateWaitableTimer(NULL, TRUE, NULL);
-	SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+	timer = CreateWaitableTimer(nullptr, TRUE, nullptr);
+	SetWaitableTimer(timer, &ft, 0, nullptr, nullptr, 0);
 	WaitForSingleObject(timer, INFINITE);
 	CloseHandle(timer);
 }
@@ -30,7 +30,7 @@ void usleep(__int64 usec) {
 #include <string.h>
 #include <time.h>
 
-#include <config.h>
+#include "config.h"
 
 #define LIBREPRINT_SEP() printf(",")
 #define LIBREPRINT_STR(struc, field) printf(" " #field " = %s", struc.field)
@@ -265,7 +265,7 @@ int main(int argc, const char** argv) {
 			for (int i = 2; i < argc; ++i) {
 				FILE* file = fopen(argv[i], "r+b");
 				uint8_t buffer[174];
-				if (file == NULL) {
+				if (file == nullptr) {
 					continue;
 				}
 				size_t n = fread(buffer, 1, sizeof(buffer), file);
@@ -292,7 +292,7 @@ int main(int argc, const char** argv) {
 			}
 
 			FILE* file = fopen(argv[3], "r+b");
-			if (file != NULL) {
+			if (file != nullptr) {
 				uint8_t buffer[174];
 				size_t n = fread(buffer, 1, sizeof(buffer), file);
 				fclose(file);
@@ -335,7 +335,8 @@ int main(int argc, const char** argv) {
 			char name[0x30] = { 0 };
 			sprintf(name, "report_%s_%%d.bin", hid[hid_id].serial.mac);
 			libresense_report_id report_ids[0xFF];
-			if (IS_LIBRESENSE_OKAY(libresense_debug_get_hid_report_ids(hid[hid_id].handle, report_ids))) {
+			hid_device* device;
+			if (IS_LIBRESENSE_OKAY(libresense_debug_get_hid(hid[hid_id].handle, (intptr_t*) &device)) && IS_LIBRESENSE_OKAY(libresense_debug_get_hid_report_ids(hid[hid_id].handle, report_ids))) {
 				for (int i = 0; i < 0xFF; i++) {
 					uint8_t buffer[0x4096];
 					if (report_ids[i].id == 0) {
@@ -357,13 +358,14 @@ int main(int argc, const char** argv) {
 					}
 
 					printf(", actual size is ");
-					size_t size = libresense_debug_get_feature_report(hid[hid_id].handle, report_ids[i].id, buffer, hid_report_size);
+					buffer[0] = report_ids[i].id;
+					size_t size = hid_get_feature_report(device, buffer, hid_report_size);
 					if (size > 1 && size <= 0x4096) {
 						printf("%ld\n", size);
 						char report_name[0x30] = { 0 };
 						sprintf(report_name, name, report_ids[i].id);
 						FILE* file = fopen(report_name, "w+b");
-						if (file != NULL) {
+						if (file != nullptr) {
 							fwrite(buffer, 1, size, file);
 							fclose(file);
 						}

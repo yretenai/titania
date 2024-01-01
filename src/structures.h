@@ -341,7 +341,7 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_output_msg_ex) == 0x4e, "dualsense_output_msg_ex is not 78 bytes");
 
 typedef struct PACKED {
-	uint8_t op;
+	uint8_t report_id;
 	dualsense_vector3s gyro_bias;
 	dualsense_minmax gyro[3];
 	dualsense_minmax gyro_speed;
@@ -481,25 +481,6 @@ libresense_result libresense_convert_edge_profile_input(dualsense_edge_profile_b
  * @param output: the profile to convert into
  */
 libresense_result libresense_convert_edge_profile_output(libresense_edge_profile input, dualsense_edge_profile_blob output[3]); // todo
-
-/**
- * @brief get a HID feature report
- * @param handle: the device to query
- * @param report_id: the report to fetch
- * @param buffer: where to store the buffer
- * @param size: the size of the buffer
- */
-size_t libresense_get_feature_report(hid_device* handle, const int report_id, uint8_t* buffer, const size_t size);
-
-/**
- * @brief send a HID feature report
- * @param handle: the device to update
- * @param report_id: the report to send
- * @param buffer: where the buffer is
- * @param size: the size of the buffer
- * @param preserve: preserve byte 0
- */
-size_t libresense_send_feature_report(hid_device* handle, const int report_id, uint8_t* buffer, const size_t size, const bool preserve);
 
 /**
  * @brief initializes checksum tables

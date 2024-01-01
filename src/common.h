@@ -71,12 +71,13 @@
 	return LIBRESENSE_INVALID_HANDLE
 
 // Check if a handle is a valid number, and that it has been initialized.
-#define CHECK_HANDLE_VALID(h) \
-	CHECK_HANDLE(h);          \
-	if (state[h].hid == NULL) \
+#define CHECK_HANDLE_VALID(h)    \
+	CHECK_HANDLE(h);             \
+	if (state[h].hid == nullptr) \
 	return LIBRESENSE_INVALID_HANDLE
 
 #define HID_FAIL(s) (s == -1)
+#define HID_PASS(s) (s != -1)
 
 #define IS_EDGE(h) (h.vendor_id == 0x054C && h.product_id == 0x0DF2)
 #define IS_ACCESS(h) (h.vendor_id == 0x054C && h.product_id == 0x0E5F)
