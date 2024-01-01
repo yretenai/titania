@@ -208,6 +208,97 @@ libresense_result libresense_convert_edge_profile_output(libresense_edge_profile
 	return LIBRESENSE_OK;
 }
 
+const libresense_edge_template template_vectors[LIBRESENSE_EDGE_STICK_TEMPLATE_MAX] = {
+	{ // Default
+		.interpolation_type = LIBRESENSE_EDGE_INTERPOLATION_TYPE_LINEAR,
+		.vectors = {
+			.min = {{ .x = 0.501961f, .y = 0.501961f }, { .x = 0.768627f, .y = 0.768627f }, { .x = 0.882353f, .y = 0.882353f }},
+			.median = {{ .x = 0.501961f, .y = 0.501961f }, { .x = 0.768627f, .y = 0.768627f }, { .x = 0.882353f, .y = 0.882353f }},
+			.max = {{ .x = 0.501961f, .y = 0.501961f }, { .x = 0.768627f, .y = 0.768627f }, { .x = 0.882353f, .y = 0.882353f }},
+		}
+	},
+	{ // Quick
+		.interpolation_type = LIBRESENSE_EDGE_INTERPOLATION_TYPE_LINEAR,
+		.vectors = {
+			.min = {{ .x = 0.149020f, .y = 0.149020f }, { .x = 0.478431f, .y = 0.545098f }, { .x = 1.000000f, .y = 1.000000f }},
+			.median = {{ .x = 0.149020f, .y = 0.149020f }, { .x = 0.419608f, .y = 0.654902f }, { .x = 1.000000f, .y = 1.000000f }},
+			.max = {{ .x = 0.149020f, .y = 0.149020f }, { .x = 0.360784f, .y = 0.760784f }, { .x = 1.000000f, .y = 1.000000f }},
+		}
+	},
+	{ // Precise
+		.interpolation_type = LIBRESENSE_EDGE_INTERPOLATION_TYPE_SMOOTH,
+		.vectors = {
+			.min = {{ .x = 0.274510f, .y = 0.223529f }, { .x = 0.525490f, .y = 0.450980f }, { .x = 0.768627f, .y = 0.694118f }},
+			.median = {{ .x = 0.333333f, .y = 0.156863f }, { .x = 0.584314f, .y = 0.325490f }, { .x = 0.807843f, .y = 0.549020f }},
+			.max = {{ .x = 0.392157f, .y = 0.086275f }, { .x = 0.643137f, .y = 0.196078f }, { .x = 0.847059f, .y = 0.400000f }},
+		}
+	},
+	{ // Steady
+		.interpolation_type = LIBRESENSE_EDGE_INTERPOLATION_TYPE_SMOOTH,
+		.vectors = {
+			.min = {{ .x = 0.243137f, .y = 0.243137f }, { .x = 0.470588f, .y = 0.505882f }, { .x = 0.772549f, .y = 0.701961f }},
+			.median = {{ .x = 0.223529f, .y = 0.223529f }, { .x = 0.392157f, .y = 0.498039f }, { .x = 0.823529f, .y = 0.596078f }},
+			.max = {{ .x = 0.203922f, .y = 0.203922f }, { .x = 0.313726f, .y = 0.486275f }, { .x = 0.870588f, .y = 0.486275f }},
+		}
+	},
+	{ // Digital
+		.interpolation_type = LIBRESENSE_EDGE_INTERPOLATION_TYPE_LINEAR,
+		.vectors = {
+			.min = {{ .x = 0.149020f, .y = 0.149020f }, { .x = 0.149020f, .y = 0.294118f }, { .x = 1.000000f, .y = 1.000000f }},
+			.median = {{ .x = 0.149020f, .y = 0.149020f }, { .x = 0.149020f, .y = 0.647059f }, { .x = 1.000000f, .y = 1.000000f }},
+			.max = {{ .x = 0.149020f, .y = 0.149020f }, { .x = 0.149020f, .y = 1.000000f }, { .x = 1.000000f, .y = 1.000000f }},
+		}
+	},
+	{ // Dynamic
+		.interpolation_type = LIBRESENSE_EDGE_INTERPOLATION_TYPE_LINEAR,
+		.vectors = {
+			.min = {{ .x = 0.270588f, .y = 0.223529f }, { .x = 0.717647f, .y = 0.776471f }, { .x = 1.000000f, .y = 1.000000f }},
+			.median = {{ .x = 0.321569f, .y = 0.156863f }, { .x = 0.631373f, .y = 0.835294f }, { .x = 1.000000f, .y = 1.000000f }},
+			.max = {{ .x = 0.368627f, .y = 0.086275f }, { .x = 0.541176f, .y = 0.894118f }, { .x = 1.000000f, .y = 1.000000f }},
+		}
+	},
+};
+
+#define LERP(from, to, factor) ((float) from * (1.0f - factor)) + ((float) to * factor)
+
+libresense_result libresense_helper_stick_template(libresense_edge_stick* stick, const libresense_edge_stick_template template_id, int32_t offset) {
+	if (template_id >= LIBRESENSE_EDGE_STICK_TEMPLATE_MAX) {
+		return LIBRESENSE_NOT_IMPLEMENTED;
+	}
+
+	const libresense_edge_template stick_template = template_vectors[template_id];
+
+	if (template_id == LIBRESENSE_EDGE_STICK_TEMPLATE_DEFAULT) {
+		offset = 0;
+	}
+
+	stick->interpolation_type = stick_template.interpolation_type;
+	stick->template_id = template_id;
+
+	float factor = offset / 5;
+	if (offset < 0) {
+		factor = -factor;
+	}
+
+	for (int i = 0; i < 3; ++i) {
+		if (offset == 0) {
+			stick->curve_points[i] = stick_template.vectors.median[i];
+		} else if (offset <= -5) {
+			stick->curve_points[i] = stick_template.vectors.min[i];
+		} else if (offset >= 5) {
+			stick->curve_points[i] = stick_template.vectors.max[i];
+		} else if (offset < 0) {
+			stick->curve_points[i].x = LERP(stick_template.vectors.min[i].x, stick_template.vectors.median[i].x, factor);
+			stick->curve_points[i].y = LERP(stick_template.vectors.min[i].y, stick_template.vectors.median[i].y, factor);
+		} else {
+			stick->curve_points[i].x = LERP(stick_template.vectors.median[i].x, stick_template.vectors.max[i].x, factor);
+			stick->curve_points[i].y = LERP(stick_template.vectors.median[i].y, stick_template.vectors.max[i].y, factor);
+		}
+	}
+
+	return LIBRESENSE_OK;
+}
+
 libresense_result libresense_debug_convert_edge_profile(uint8_t input[174], libresense_edge_profile* output) {
 	dualsense_edge_profile_blob report[3];
 

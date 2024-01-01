@@ -8,7 +8,6 @@
 #define LIBRESENSE_STRUCTURES_H
 
 #include <assert.h>
-#include <stddef.h>
 #include <stdint.h>
 
 #include <hidapi/hidapi.h>

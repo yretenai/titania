@@ -755,18 +755,6 @@ libresense_result libresense_update_profile(const libresense_handle handle, cons
 	return LIBRESENSE_OK;
 }
 
-libresense_result libresense_helper_stick_template(libresense_edge_profile* profile, const libresense_edge_stick_template template_id, const int32_t offset) {
-	if (template_id >= LIBRESENSE_EDGE_STICK_TEMPLATE_MAX) {
-		return LIBRESENSE_NOT_IMPLEMENTED;
-	}
-
-	if (offset > 5 || offset < -5) {
-		return LIBRESENSE_INVALID_ARGUMENT;
-	}
-
-	return LIBRESENSE_NOT_IMPLEMENTED;
-}
-
 libresense_result libresense_delete_profile(const libresense_handle handle, const libresense_edge_profile_id id) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);

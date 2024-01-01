@@ -290,10 +290,11 @@ typedef enum {
 	LIBRESENSE_EDGE_STICK_TEMPLATE_MAX
 } libresense_edge_stick_template;
 
+// NOTE: 1 and 2 may be valid, but it is untested!
 typedef enum {
-	LIBRESENSE_EDGE_INTERPOLATION_TYPE_LINEAR = 0,
-	LIBRESENSE_EDGE_INTERPOLATION_TYPE_CUBIC = 3,
-	LIBRESENSE_EDGE_INTERPOLATION_TYPE_SMOOTHSTEP = 4,
+	LIBRESENSE_EDGE_INTERPOLATION_TYPE_NONE = 0,
+	LIBRESENSE_EDGE_INTERPOLATION_TYPE_LINEAR = 3,
+	LIBRESENSE_EDGE_INTERPOLATION_TYPE_SMOOTH = 4,
 } libresense_edge_interpolation_type;
 
 typedef struct {
@@ -688,11 +689,11 @@ LIBRESENSE_EXPORT libresense_result libresense_update_profile(const libresense_h
 
 /**
  * @brief reset a stick template to a specific template
- * @param profile: the profile data to update
+ * @param stick: the stick to update
  * @param template_id: the stick template to apply
  * @param offset: range between -5 and 5 to offset the sticks
  */
-LIBRESENSE_EXPORT libresense_result libresense_helper_stick_template(libresense_edge_profile* profile, const libresense_edge_stick_template template_id, const int32_t offset);
+LIBRESENSE_EXPORT libresense_result libresense_helper_stick_template(libresense_edge_stick* stick, const libresense_edge_stick_template template_id, int32_t offset);
 
 /**
  * @brief delete a dualsense edge profile

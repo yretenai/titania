@@ -251,7 +251,7 @@ void print_profile(libresense_edge_profile_id profile_id, libresense_edge_profil
 		}
 	}
 
-	printf("\n\n");
+	printf("\n");
 }
 
 // todo: move benchmark, profile, and test to libresensectl

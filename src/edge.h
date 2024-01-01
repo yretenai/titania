@@ -92,8 +92,6 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_edge_update) == 16, "dualsense_edge_update is not 16 bytes");
 
-
-
 typedef struct PACKED {
 	uint8_t min;
 	uint8_t max;
@@ -201,6 +199,17 @@ typedef struct PACKED {
 } dualsense_edge_profile_delete;
 
 static_assert(sizeof(dualsense_edge_profile_delete) == 64, "dualsense_edge_profile_delete size is not 64");
+
+typedef struct {
+	libresense_vector2 min[3];
+	libresense_vector2 median[3];
+	libresense_vector2 max[3];
+} libresense_edge_template_vector;
+
+typedef struct {
+	uint8_t interpolation_type;
+	libresense_edge_template_vector vectors;
+} libresense_edge_template;
 
 #ifdef _MSC_VER
 #pragma pack(pop)
