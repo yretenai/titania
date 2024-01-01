@@ -9,7 +9,7 @@
 #include <string.h>
 #include <unicode/ucnv.h>
 
-libresense_result libresense_convert_edge_profile_input(dualsense_profile_blob input[3], libresense_edge_profile* output) {
+libresense_result libresense_convert_edge_profile_input(dualsense_edge_profile_blob input[3], libresense_edge_profile* output) {
 	memset(output, 0, sizeof(libresense_edge_profile));
 	if (input[0].version == 0) {
 		return LIBRESENSE_OK;
@@ -19,7 +19,7 @@ libresense_result libresense_convert_edge_profile_input(dualsense_profile_blob i
 		return LIBRESENSE_NOT_IMPLEMENTED;
 	}
 
-	dualsense_profile profile = { 0 };
+	dualsense_edge_profile profile = { 0 };
 	memcpy(profile.buffers[0], &input[0].blob, sizeof(input[0].blob));
 	memcpy(profile.buffers[1], &input[1].blob, sizeof(input[1].blob));
 	memcpy(profile.buffers[2], &input[2].blob, sizeof(input[2].blob));
@@ -112,8 +112,8 @@ libresense_result libresense_convert_edge_profile_input(dualsense_profile_blob i
 	return LIBRESENSE_OK;
 }
 
-libresense_result libresense_convert_edge_profile_output(libresense_edge_profile input, dualsense_profile_blob output[3]) {
-	dualsense_profile profile = { 0 };
+libresense_result libresense_convert_edge_profile_output(libresense_edge_profile input, dualsense_edge_profile_blob output[3]) {
+	dualsense_edge_profile profile = { 0 };
 
 	profile.msg.version = 1;
 
@@ -210,7 +210,7 @@ libresense_result libresense_convert_edge_profile_output(libresense_edge_profile
 }
 
 libresense_result libresense_debug_convert_edge_profile(uint8_t input[174], libresense_edge_profile* output) {
-	dualsense_profile_blob report[3];
+	dualsense_edge_profile_blob report[3];
 
 	memcpy(&report[0].blob, &input[0], sizeof(report[0].blob));
 	memcpy(&report[1].blob, &input[sizeof(report[0].blob)], sizeof(report[1].blob));

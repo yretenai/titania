@@ -53,11 +53,12 @@ if get_option('libresense_debug')
 endif
 
 libresense_lib = library(meson.project_name(), [
-							 'src/hid.c',
+							 'src/access.c',
+							 'src/crc.c',
 							 'src/enums.c',
 							 'src/edge.c',
-							 'src/trans.c',
-							 'src/crc.c'
+							 'src/hid.c',
+							 'src/trans.c'
 						 ],
 						 dependencies : [hidapi, icu],
 						 gnu_symbol_visibility: 'hidden',

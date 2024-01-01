@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "structures.h"
+#include "config.h"
 
 const int32_t libresense_max_controllers = LIBRESENSE_MAX_CONTROLLERS;
 
@@ -253,17 +254,17 @@ libresense_result libresense_open(libresense_hid* handle, bool use_calibration) 
 			}
 
 			if (IS_EDGE(state[i].hid_info)) {
-				const uint8_t profile_reports[LIBRESENSE_PROFILE_MAX] = { DUALSENSE_EDGE_REPORT_PROFILE_TRIANGLE_P1,
-																		  DUALSENSE_EDGE_REPORT_PROFILE_SQUARE_P1,
-																		  DUALSENSE_EDGE_REPORT_PROFILE_CROSS_P1,
-																		  DUALSENSE_EDGE_REPORT_PROFILE_CIRCLE_P1 };
+				const uint8_t profile_reports[LIBRESENSE_PROFILE_MAX] = { DUALSENSE_REPORT_EDGE_PROFILE_TRIANGLE_P1,
+																		  DUALSENSE_REPORT_EDGE_PROFILE_SQUARE_P1,
+																		  DUALSENSE_REPORT_EDGE_PROFILE_CROSS_P1,
+																		  DUALSENSE_REPORT_EDGE_PROFILE_CIRCLE_P1 };
 
 				for (int32_t j = 0; j < LIBRESENSE_PROFILE_MAX; ++j) {
-					dualsense_profile_blob profile_data[3];
+					dualsense_edge_profile_blob profile_data[3];
 					bool exit = false;
 					for (int32_t k = 0; k < 3; ++k) {
-						const size_t sz = libresense_get_feature_report(state[i].hid, profile_reports[j] + k, (uint8_t*) &profile_data[k], sizeof(dualsense_profile_blob));
-						if (sz != sizeof(dualsense_profile_blob)) {
+						const size_t sz = libresense_get_feature_report(state[i].hid, profile_reports[j] + k, (uint8_t*) &profile_data[k], sizeof(dualsense_edge_profile_blob));
+						if (sz != sizeof(dualsense_edge_profile_blob)) {
 							exit = true;
 							break;
 						}
@@ -723,7 +724,7 @@ libresense_result libresense_update_profile(const libresense_handle handle, cons
 		return LIBRESENSE_INVALID_PROFILE;
 	}
 
-	dualsense_profile_blob output[3];
+	dualsense_edge_profile_blob output[3];
 	const libresense_result result = libresense_convert_edge_profile_output(profile, output);
 	if (IS_LIBRESENSE_BAD(result)) {
 		return result;
@@ -734,9 +735,9 @@ libresense_result libresense_update_profile(const libresense_handle handle, cons
 	output[2].part = 2;
 
 	switch (id) {
-		case LIBRESENSE_PROFILE_CIRCLE: output[0].id = output[1].id = output[2].id = DUALSENSE_UPDATE_PROFILE_CIRCLE; break;
-		case LIBRESENSE_PROFILE_SQUARE: output[0].id = output[1].id = output[2].id = DUALSENSE_UPDATE_PROFILE_SQUARE; break;
-		case LIBRESENSE_PROFILE_CROSS: output[0].id = output[1].id = output[2].id = DUALSENSE_UPDATE_PROFILE_CROSS; break;
+		case LIBRESENSE_PROFILE_CIRCLE: output[0].id = output[1].id = output[2].id = DUALSENSE_REPORT_EDGE_PROFILE_CIRCLE; break;
+		case LIBRESENSE_PROFILE_SQUARE: output[0].id = output[1].id = output[2].id = DUALSENSE_REPORT_EDGE_PROFILE_SQUARE; break;
+		case LIBRESENSE_PROFILE_CROSS: output[0].id = output[1].id = output[2].id = DUALSENSE_REPORT_EDGE_PROFILE_CROSS; break;
 		default: return LIBRESENSE_INVALID_PROFILE;
 	}
 
@@ -745,7 +746,7 @@ libresense_result libresense_update_profile(const libresense_handle handle, cons
 	output[2].checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t*) &output[2], sizeof(output[2]) - 4);
 
 	for (int i = 0; i < 3; ++i) {
-		const size_t size = hid_send_feature_report(state[handle].hid, (uint8_t*) &output[i], sizeof(dualsense_profile_blob));
+		const size_t size = hid_send_feature_report(state[handle].hid, (uint8_t*) &output[i], sizeof(dualsense_edge_profile_blob));
 		if (size == SIZE_MAX) {
 			return LIBRESENSE_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
 		}
@@ -775,8 +776,8 @@ libresense_result libresense_delete_profile(const libresense_handle handle, cons
 		return LIBRESENSE_INVALID_PROFILE;
 	}
 
-	dualsense_profile_delete del = { 0 };
-	del.id = DUALSENSE_DELETE_PROFILE;
+	dualsense_edge_profile_delete del = { 0 };
+	del.id = DUALSENSE_REPORT_EDGE_DELETE_PROFILE;
 	del.profile_id = id;
 	del.checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t*) &del, sizeof(del) - 4);
 	const size_t size = hid_send_feature_report(state[handle].hid, (uint8_t*) &del, sizeof(del));
