@@ -39,6 +39,7 @@ int main(const int argc, const char** const argv) {
 	bool disable_edge = false;
 	bool disable_access = false;
 	bool disable_bt = false;
+	bool disable_usb = false;
 
 	if (argc > 1) {
 		for (int i = 1; i < argc; ++i) {
@@ -65,6 +66,7 @@ int main(const int argc, const char** const argv) {
 				printf("\t-e, --no-edge: disable edge controllers from being considered\n");
 				printf("\t-a, --no-access: disable access controllers from being considered\n");
 				printf("\t-b, --no-bt: disable bluetooth controllers from being considered\n");
+				printf("\t-u, --no-usb: disable usb controllers from being considered\n");
 				printf("\n");
 				printf("available modes:\n");
 				printf("\tlist: list every controller\n");
@@ -111,6 +113,8 @@ int main(const int argc, const char** const argv) {
 				disable_access = true;
 			} else if (strcmp(text, "-b") == 0 || strcmp(text, "--no-bt") == 0 || strcmp(text, "--no-bluetooth") == 0) {
 				disable_bt = true;
+			} else if (strcmp(text, "-u") == 0 || strcmp(text, "--no-usb") == 0 || strcmp(text, "--only-bt") == 0 || strcmp(text, "--only-bluetooth") == 0) {
+				disable_usb = true;
 			} else if (strcmp(text, "-c") == 0 || strcmp(text, "--no-calibration") == 0) {
 				calibrate = false;
 			} else if (text[0] != '-') {
@@ -155,6 +159,10 @@ int main(const int argc, const char** const argv) {
 		}
 
 		if (disable_bt && hids[hid_id].is_bluetooth) {
+			break;
+		}
+
+		if (disable_usb && !hids[hid_id].is_bluetooth) {
 			break;
 		}
 
