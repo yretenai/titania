@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+
 #include "common.h"
 
 #ifdef _MSC_VER

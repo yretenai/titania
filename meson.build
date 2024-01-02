@@ -81,7 +81,16 @@ endif
 
 if get_option('libresense_ctl')
 	executable('libresensectl', [
-			'src/ctl/main.c'
+			'src/ctl/main.c',
+			'src/ctl/modes/access.c',
+			'src/ctl/modes/bench.c',
+			'src/ctl/modes/bt.c',
+			'src/ctl/modes/dump.c',
+			'src/ctl/modes/edge.c',
+			'src/ctl/modes/led.c',
+			'src/ctl/modes/profile.c',
+			'src/ctl/modes/report.c',
+			'src/ctl/modes/test.c'
 		],
 		c_args : args,
 		dependencies : [libresense_dep, hidapi],

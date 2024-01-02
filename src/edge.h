@@ -6,10 +6,11 @@
 
 #ifndef LIBRESENSE_EDGE_H
 #define LIBRESENSE_EDGE_H
-
 #include <assert.h>
 #include <stdint.h>
+
 #include "common.h"
+#include "enums.h"
 
 #ifdef _MSC_VER
 #define PACKED
