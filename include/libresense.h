@@ -87,17 +87,9 @@ typedef enum {
 typedef enum {
 	LIBRESENSE_LEVEL_HIGH = 0,
 	LIBRESENSE_LEVEL_MEDIUM = 1,
-	LIBRESENSE_LEVEL_LOW = 2
+	LIBRESENSE_LEVEL_LOW = 2,
+	LIBRESENSE_LEVEL_OFF = 3,
 } libresense_level;
-
-typedef enum {
-	LIBRESENSE_EDGE_LEVEL_HIGH = 0,
-	LIBRESENSE_EDGE_VIBRATION_LEVEL_MEDIUM = 2,
-	LIBRESENSE_EDGE_VIBRATION_LEVEL_LOW = 3,
-	LIBRESENSE_EDGE_EFFECT_LEVEL_MEDIUM = 6,
-	LIBRESENSE_EDGE_EFFECT_LEVEL_LOW = 9,
-	LIBRESENSE_EDGE_LEVEL_OFF = 255
-} libresense_edge_power_level;
 
 typedef enum {
 	LIBRESENSE_TRIGGER_EFFECT_OFF = 0,
@@ -303,8 +295,12 @@ typedef enum {
 } libresense_edge_stick_template;
 
 // NOTE: 1 and 2 may be valid, but it is untested!
+// Also I don't know if this is actually interpolation!
+// Only two templates that have this is Precise and Steady
 typedef enum {
 	LIBRESENSE_EDGE_INTERPOLATION_TYPE_NONE = 0,
+	LIBRESENSE_EDGE_INTERPOLATION_TYPE_UNKNOWN1 = 1,
+	LIBRESENSE_EDGE_INTERPOLATION_TYPE_UNKNOWN2 = 2,
 	LIBRESENSE_EDGE_INTERPOLATION_TYPE_LINEAR = 3,
 	LIBRESENSE_EDGE_INTERPOLATION_TYPE_SMOOTH = 4,
 } libresense_edge_interpolation_type;
@@ -353,8 +349,8 @@ typedef struct {
 	libresense_edge_stick sticks[2];
 	libresense_edge_trigger triggers[2];
 	libresense_edge_button_remap buttons;
-	libresense_edge_power_level vibration;
-	libresense_edge_power_level trigger_effect;
+	libresense_level vibration;
+	libresense_level trigger_effect;
 	bool sticks_swapped;
 	bool trigger_deadzone_mirrored;
 	libresense_buttons disabled_buttons;

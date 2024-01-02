@@ -70,13 +70,24 @@ libresense_result libresense_convert_edge_profile_input(dualsense_edge_profile_b
 		output->buttons.values[i] = profile.msg.remapped_button[i];
 	}
 
+	switch (profile.msg.trigger_reduction) {
+		case 6: output->trigger_effect = LIBRESENSE_LEVEL_MEDIUM; break;
+		case 9: output->trigger_effect = LIBRESENSE_LEVEL_LOW; break;
+		case 0xFF: output->trigger_effect = LIBRESENSE_LEVEL_OFF; break;
+		default: output->trigger_effect = LIBRESENSE_LEVEL_HIGH; break;
+	}
+	switch (profile.msg.vibration_reduction) {
+		case 2: output->vibration = LIBRESENSE_LEVEL_MEDIUM; break;
+		case 3: output->vibration = LIBRESENSE_LEVEL_LOW; break;
+		case 0xFF: output->vibration = LIBRESENSE_LEVEL_OFF; break;
+		default: output->vibration = LIBRESENSE_LEVEL_HIGH; break;
+	}
+
 	output->sticks[LIBRESENSE_LEFT].template_id = profile.msg.flags.left_stick_profile;
 	output->sticks[LIBRESENSE_RIGHT].template_id = profile.msg.flags.right_stick_profile;
 	output->sticks[LIBRESENSE_LEFT].disabled = profile.msg.disabled_buttons.left_stick;
 	output->sticks[LIBRESENSE_RIGHT].disabled = profile.msg.disabled_buttons.right_stick;
 	output->trigger_deadzone_mirrored = profile.msg.flags.triggers_mirrored;
-	output->trigger_effect = profile.msg.trigger_reduction;
-	output->vibration = profile.msg.vibration_reduction;
 	output->disabled_buttons.dpad_up = profile.msg.disabled_buttons.dpad_up;
 	output->disabled_buttons.dpad_left = profile.msg.disabled_buttons.dpad_left;
 	output->disabled_buttons.dpad_down = profile.msg.disabled_buttons.dpad_down;
@@ -161,12 +172,24 @@ libresense_result libresense_convert_edge_profile_output(libresense_edge_profile
 		profile.msg.remapped_button[i] = input.buttons.values[i];
 	}
 
+	switch (input.trigger_effect) {
+		case LIBRESENSE_LEVEL_MEDIUM: profile.msg.trigger_reduction = 6; break;
+		case LIBRESENSE_LEVEL_LOW: profile.msg.trigger_reduction = 9; break;
+		case LIBRESENSE_LEVEL_OFF: profile.msg.trigger_reduction = 0xFF; break;
+		default: profile.msg.trigger_reduction = 0; break;
+	}
+	switch (input.vibration) {
+		case LIBRESENSE_LEVEL_MEDIUM: profile.msg.vibration_reduction = 6; break;
+		case LIBRESENSE_LEVEL_LOW: profile.msg.vibration_reduction = 9; break;
+		case LIBRESENSE_LEVEL_OFF: profile.msg.vibration_reduction = 0xFF; break;
+		default: profile.msg.vibration_reduction = 0; break;
+	}
+
 	profile.msg.flags.left_stick_profile = input.sticks[LIBRESENSE_LEFT].template_id;
 	profile.msg.flags.right_stick_profile = input.sticks[LIBRESENSE_RIGHT].template_id;
 	profile.msg.disabled_buttons.left_stick = input.sticks[LIBRESENSE_LEFT].disabled;
 	profile.msg.disabled_buttons.right_stick = input.sticks[LIBRESENSE_RIGHT].disabled;
 	profile.msg.flags.triggers_mirrored = input.trigger_deadzone_mirrored;
-	profile.msg.trigger_reduction = input.trigger_effect;
 	profile.msg.vibration_reduction = input.vibration;
 	profile.msg.disabled_buttons.dpad_up = input.disabled_buttons.dpad_up;
 	profile.msg.disabled_buttons.dpad_left = input.disabled_buttons.dpad_left;
