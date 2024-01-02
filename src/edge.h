@@ -48,8 +48,7 @@ typedef struct PACKED {
 	bool triangle : 1;
 	bool emulating_rumble : 1;				  // this is updated with motor power state flag
 	libresense_level brightness_override : 2; // this is updated* somewhere* -> setting the entire report to 0xFF sets this to 0b11
-	bool unknown3 : 1;						  // ??
-	bool unknown4 : 1;
+	uint8_t unknown : 2;
 	bool playstation : 1;
 	bool share : 1;
 	bool option : 1;

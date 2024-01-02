@@ -40,11 +40,11 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 	data->buttons.playstation = input.buttons.playstation;
 	data->buttons.touch = input.buttons.touch;
 	data->buttons.mute = input.buttons.mute;
+	data->buttons.reserved = input.buttons.reserved;
 	data->buttons.edge_f1 = input.buttons.edge_f1;
 	data->buttons.edge_f2 = input.buttons.edge_f2;
 	data->buttons.edge_left_paddle = input.buttons.edge_left_paddle;
 	data->buttons.edge_right_paddle = input.buttons.edge_right_paddle;
-	data->buttons.reserved = input.buttons.reserved;
 	data->buttons.edge_reserved = input.buttons.edge_reserved;
 
 	data->sticks[LIBRESENSE_LEFT].x = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_LEFT].x);
@@ -122,9 +122,13 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 		data->edge_device.raw_buttons.cross = input.state.edge.override.cross;
 		data->edge_device.raw_buttons.circle = input.state.edge.override.circle;
 		data->edge_device.raw_buttons.triangle = input.state.edge.override.triangle;
+		data->edge_device.emulating_rumble = input.state.edge.override.emulating_rumble;
+		data->edge_device.brightness = input.state.edge.override.brightness_override;
+		data->edge_device.unknown = input.state.edge.override.unknown;
 		data->edge_device.raw_buttons.playstation = input.state.edge.override.playstation;
 		data->edge_device.raw_buttons.share = input.state.edge.override.share;
 		data->edge_device.raw_buttons.option = input.state.edge.override.option;
+
 		data->edge_device.stick.disconnected = input.state.edge.input.stick_disconnected;
 		data->edge_device.stick.errored = input.state.edge.input.stick_error;
 		data->edge_device.stick.calibrating = input.state.edge.input.stick_calibrating;
@@ -135,10 +139,7 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 		data->edge_device.profile_indicator.switching_disabled = input.state.edge.profile.disable_switching;
 		data->edge_device.profile_indicator.led = input.state.edge.profile.led_indicator;
 		data->edge_device.profile_indicator.vibration = input.state.edge.profile.vibrate_indicator;
-		data->edge_device.brightness = input.state.edge.override.brightness_override;
-		data->edge_device.emulating_rumble = input.state.edge.override.emulating_rumble;
 		data->edge_device.profile_indicator.unknown1 = input.state.edge.profile.unknown1;
 		data->edge_device.profile_indicator.unknown2 = input.state.edge.profile.unknown2;
-		data->edge_device.unknown = (uint8_t) input.state.edge.override.unknown3 | (uint8_t) input.state.edge.override.unknown4 << 1;
 	}
 }

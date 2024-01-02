@@ -194,15 +194,15 @@ typedef struct {
 	bool l3;
 	bool r3;
 	bool playstation;
-	bool touchpad;
 	bool touch;
 	bool mute;
+	bool reserved;
 	bool edge_f1;
 	bool edge_f2;
 	bool edge_left_paddle;
 	bool edge_right_paddle;
-	bool reserved;
 	uint8_t edge_reserved;
+	bool touchpad;
 } libresense_buttons;
 
 typedef struct {
