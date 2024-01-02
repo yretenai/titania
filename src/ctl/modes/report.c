@@ -6,18 +6,18 @@
 
 #include <stdio.h>
 
-void libresensectl_mode_report_inner(libresensectl_context context, const bool loop) {
+libresensectl_error libresensectl_mode_report_inner(libresensectl_context* context, const bool loop) {
 	do {
 		libresense_data datum[31];
-		const libresense_result result = libresense_pull(context.handles, context.connected_controllers, datum);
+		const libresense_result result = libresense_pull(context->handles, context->connected_controllers, datum);
 		if (IS_LIBRESENSE_BAD(result)) {
 			errorf(stderr, result, "error getting report");
-			return;
+			return LIBRESENSECTL_HID_ERROR;
 		}
 
-		for (int i = 0; i < context.connected_controllers; ++i) {
+		for (int i = 0; i < context->connected_controllers; ++i) {
 			const libresense_data data = datum[i];
-			const libresense_hid hid = context.hids[i];
+			const libresense_hid hid = context->hids[i];
 			// clang-format off
 			printf("hid {");
 			LIBREPRINT_U32(data.hid, handle); LIBREPRINT_SEP();
@@ -186,7 +186,7 @@ void libresensectl_mode_report_inner(libresensectl_context context, const bool l
 				LIBREPRINT_ENUM(data.edge_device, trigger_levels[LIBRESENSE_LEFT], libresense_level_msg, "left"); LIBREPRINT_SEP();
 				LIBREPRINT_ENUM(data.edge_device, trigger_levels[LIBRESENSE_RIGHT], libresense_level_msg, "right");
 				printf(" },");
-				LIBREPRINT_ENUM(data.edge_device, current_profile_id, libresense_edge_profile_id_msg, "profile"); LIBREPRINT_SEP();
+				LIBREPRINT_ENUM(data.edge_device, current_profile_id, libresense_profile_id_msg, "profile"); LIBREPRINT_SEP();
 				printf(" indicator = {");
 				LIBREPRINT_TEST(data.edge_device.profile_indicator, led); LIBREPRINT_SEP();
 				LIBREPRINT_TEST(data.edge_device.profile_indicator, vibration); LIBREPRINT_SEP();
@@ -205,16 +205,18 @@ void libresensectl_mode_report_inner(libresensectl_context context, const bool l
 		if (loop) {
 			clrscr();
 		}
-	} while (loop);
+	} while (loop && !should_stop);
+
+	return LIBRESENSECTL_OK;
 }
 
-void libresensectl_mode_report(libresensectl_context context) { libresensectl_mode_report_inner(context, false); }
+libresensectl_error libresensectl_mode_report(libresensectl_context* context) { return libresensectl_mode_report_inner(context, false); }
 
-void libresensectl_mode_report_loop(libresensectl_context context) { libresensectl_mode_report_inner(context, true); }
+libresensectl_error libresensectl_mode_report_loop(libresensectl_context* context) { return libresensectl_mode_report_inner(context, true); }
 
-void libresensectl_mode_list(libresensectl_context context) {
-	for (int i = 0; i < context.connected_controllers; ++i) {
-		libresense_hid hid = context.hids[i];
+libresensectl_error libresensectl_mode_list(libresensectl_context* context) {
+	for (int i = 0; i < context->connected_controllers; ++i) {
+		libresense_hid hid = context->hids[i];
 		if (hid.is_edge) {
 			printf("DualSense Edge Controller (");
 		} else if (hid.is_access) {
@@ -231,4 +233,6 @@ void libresensectl_mode_list(libresensectl_context context) {
 
 		printf("Version %04x (VID 0x%04x, PID 0x%04x, %s)\n", hid.firmware.update.major, hid.vendor_id, hid.product_id, hid.serial.mac);
 	}
+
+	return LIBRESENSECTL_OK;
 }

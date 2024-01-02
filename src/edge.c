@@ -284,7 +284,7 @@ const libresense_edge_template template_vectors[LIBRESENSE_EDGE_STICK_TEMPLATE_M
 
 #define LERP(from, to, factor) ((float) from * (1.0f - factor)) + ((float) to * factor)
 
-libresense_result libresense_helper_stick_template(libresense_edge_stick* stick, const libresense_edge_stick_template template_id, int32_t offset) {
+libresense_result libresense_helper_edge_stick_template(libresense_edge_stick* stick, const libresense_edge_stick_template template_id, int32_t offset) {
 	if (template_id >= LIBRESENSE_EDGE_STICK_TEMPLATE_MAX) {
 		return LIBRESENSE_NOT_IMPLEMENTED;
 	}

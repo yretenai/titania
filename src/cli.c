@@ -146,6 +146,7 @@ int main(int argc, const char** argv) {
 		libresense_errorf(stderr, result, "error initializing " LIBRESENSE_PROJECT_NAME);
 		return result;
 	}
+
 	libresense_hid hid[libresense_max_controllers];
 	libresense_handle handles[libresense_max_controllers];
 	result = libresense_get_hids(hid, libresense_max_controllers);
@@ -154,6 +155,7 @@ int main(int argc, const char** argv) {
 		libresense_exit();
 		return result;
 	}
+
 	size_t connected = 0;
 	for (int hid_id = 0; hid_id < libresense_max_controllers; ++hid_id) {
 		if (hid[hid_id].handle != LIBRESENSE_INVALID_HANDLE_ID) {
@@ -368,7 +370,7 @@ int main(int argc, const char** argv) {
 	}
 
 	for (size_t i = 0; i < connected; ++i) {
-		for (libresense_profile_id j = LIBRESENSE_PROFILE_1; j < LIBRESENSE_PROFILE_MAX; ++j) {
+		for (libresense_profile_id j = 0; j < LIBRESENSE_PROFILE_COUNT; ++j) {
 			print_profile(j, hid->edge_profiles[j]);
 		}
 	}

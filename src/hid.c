@@ -236,12 +236,12 @@ libresense_result libresense_open(libresense_hid* handle, const bool use_calibra
 			}
 
 			if (IS_EDGE(state[i].hid_info)) {
-				const uint8_t profile_reports[LIBRESENSE_PROFILE_MAX] = { DUALSENSE_REPORT_EDGE_QUERY_PROFILE_TRIANGLE_P1,
+				const uint8_t profile_reports[LIBRESENSE_PROFILE_COUNT] = { DUALSENSE_REPORT_EDGE_QUERY_PROFILE_TRIANGLE_P1,
 					DUALSENSE_REPORT_EDGE_QUERY_PROFILE_SQUARE_P1,
 					DUALSENSE_REPORT_EDGE_QUERY_PROFILE_CROSS_P1,
 					DUALSENSE_REPORT_EDGE_QUERY_PROFILE_CIRCLE_P1 };
 
-				for (int j = 0; j < LIBRESENSE_PROFILE_MAX; ++j) {
+				for (int j = 0; j < LIBRESENSE_PROFILE_COUNT; ++j) {
 					dualsense_edge_profile_blob profile_data[3];
 					for (int k = 0; k < 3; ++k) {
 						profile_data[k].report_id = profile_reports[j] + k;
@@ -699,7 +699,7 @@ libresense_result libresense_bt_pair(const libresense_handle handle, const libre
 	memcpy(&msg.link_key, link_key, sizeof(libresense_link_key));
 	int32_t pair_mac[6];
 	const int test = sscanf(mac, "%02x:%02x:%02x:%02x:%02x:%02x", &pair_mac[0], &pair_mac[1], &pair_mac[2], &pair_mac[3], &pair_mac[4], &pair_mac[5]);
-	if(test != 6) {
+	if (test != 6) {
 		return LIBRESENSE_INVALID_ARGUMENT;
 	}
 
@@ -751,10 +751,14 @@ libresense_result libresense_bt_disconnect(const libresense_handle handle) {
 	return LIBRESENSE_OK;
 }
 
-libresense_result libresense_update_profile(const libresense_handle handle, const libresense_profile_id id, const libresense_edge_profile profile) {
+libresense_result libresense_update_edge_profile(const libresense_handle handle, const libresense_profile_id id, const libresense_edge_profile profile) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 	CHECK_EDGE(handle);
+
+	if (id == LIBRESENSE_PROFILE_NONE) {
+		return LIBRESENSE_OK;
+	}
 
 	if (id <= LIBRESENSE_PROFILE_TRIANGLE || id > LIBRESENSE_PROFILE_CIRCLE) {
 		return LIBRESENSE_INVALID_PROFILE;
@@ -790,18 +794,26 @@ libresense_result libresense_update_profile(const libresense_handle handle, cons
 	return LIBRESENSE_OK;
 }
 
-libresense_result libresense_delete_profile(const libresense_handle handle, const libresense_profile_id id) {
+libresense_result libresense_delete_edge_profile(const libresense_handle handle, const libresense_profile_id id) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 	CHECK_EDGE(handle);
 
-	if (id <= LIBRESENSE_PROFILE_TRIANGLE || id > LIBRESENSE_PROFILE_CIRCLE) {
+	if (id == LIBRESENSE_PROFILE_NONE) {
+		return LIBRESENSE_OK;
+	}
+
+	if ((id <= LIBRESENSE_PROFILE_TRIANGLE || id > LIBRESENSE_PROFILE_CIRCLE) && id != LIBRESENSE_PROFILE_ALL) {
 		return LIBRESENSE_INVALID_PROFILE;
 	}
 
 	dualsense_edge_profile_delete del = { 0 };
 	del.id = DUALSENSE_REPORT_EDGE_DELETE_PROFILE;
-	del.profile_id = id;
+	if (id == LIBRESENSE_PROFILE_ALL) {
+		del.profile_id = 0xFF;
+	} else {
+		del.profile_id = id;
+	}
 	del.checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t*) &del, sizeof(del) - 4);
 	if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &del, sizeof(del)))) {
 		return LIBRESENSE_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
@@ -853,7 +865,7 @@ libresense_result libresense_debug_get_hid_report_ids(const libresense_handle ha
 	memset(report_ids, 0, sizeof(libresense_report_id) * 0xFF);
 
 	if (report_size > 7 && report_size < HID_API_MAX_REPORT_DESCRIPTOR_SIZE && report[0] == 0x05 && report[1] == 0x01 && // USAGE PAGE Generic Desktop
-		report[2] == 0x09 && report[3] == 0x05 &&																		 // USAGE Game Pad
+		report[2] == 0x09 && report[3] == 0x05 && // USAGE Game Pad
 		report[4] == 0xA1 && report[5] == 0x01) {
 		int report_id = 0;
 		int last_size = 0;

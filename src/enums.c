@@ -31,12 +31,14 @@ const char* const libresense_battery_state_msg[LIBRESENSE_BATTERY_MAX + 1] = {
 	nullptr
 };
 
-const char* const libresense_edge_profile_id_msg[LIBRESENSE_PROFILE_MAX + 1] = {
+const char* const libresense_profile_id_msg[LIBRESENSE_PROFILE_MAX_META + 1] = {
 	"none",
 	"triangle",
 	"square",
 	"cross",
 	"circle",
+	nullptr,
+	"all",
 	nullptr
 };
 

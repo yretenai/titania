@@ -9,14 +9,23 @@
 
 const char* const REPORT_TYPES[3] = { "INPUT", "OUTPUT", "FEATURE" };
 
-void libresensectl_mode_dump(const libresensectl_context context) {
-	for (int i = 0; i < context.connected_controllers; ++i) {
+libresensectl_error libresensectl_mode_dump(libresensectl_context* context) {
+	for (int i = 0; i < context->connected_controllers; ++i) {
+		if (should_stop) {
+			return LIBRESENSECTL_INTERRUPTED;
+		}
+
 		char name[0x30] = { 0 };
-		sprintf(name, "report_%s_%%d.bin", context.hids[i].serial.mac);
+		sprintf(name, "report_%s_%%d.bin", context->hids[i].serial.mac);
 		libresense_report_id report_ids[0xFF];
 		hid_device* device;
-		if (IS_LIBRESENSE_OKAY(libresense_debug_get_hid(context.hids[i].handle, (intptr_t*) &device)) && IS_LIBRESENSE_OKAY(libresense_debug_get_hid_report_ids(context.hids[i].handle, report_ids))) {
+		if (IS_LIBRESENSE_OKAY(libresense_debug_get_hid(context->hids[i].handle, (intptr_t*) &device)) &&
+			IS_LIBRESENSE_OKAY(libresense_debug_get_hid_report_ids(context->hids[i].handle, report_ids))) {
 			for (int j = 0; j < 0xFF; j++) {
+				if (should_stop) {
+					return LIBRESENSECTL_INTERRUPTED;
+				}
+
 				uint8_t buffer[0x4096];
 				if (report_ids[j].id == 0) {
 					break;
@@ -48,4 +57,6 @@ void libresensectl_mode_dump(const libresensectl_context context) {
 			}
 		}
 	}
+
+	return LIBRESENSECTL_OK;
 }

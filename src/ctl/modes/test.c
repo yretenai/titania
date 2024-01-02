@@ -9,6 +9,10 @@
 bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
 	bool should_exit = false;
 	while (true) {
+		if (should_stop) {
+			return true;
+		}
+
 		libresense_data data[libresense_max_controllers];
 		const libresense_result result = libresense_pull(handles, handle_count, data);
 		if (IS_LIBRESENSE_BAD(result)) {
@@ -51,6 +55,10 @@ bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, _
 bool report_hid_close(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
 	bool should_exit = false;
 	while (true) {
+		if (should_stop) {
+			return true;
+		}
+
 		libresense_data data[libresense_max_controllers];
 		const libresense_result result = libresense_pull(handles, handle_count, data);
 		if (IS_LIBRESENSE_BAD(result)) {
@@ -81,6 +89,10 @@ bool report_hid_close(libresense_handle* handles, const size_t handle_count, __u
 
 void wait_until_options_clear(libresense_handle* handles, const size_t handle_count, __useconds_t timeout) {
 	while (true) {
+		if (should_stop) {
+			return;
+		}
+
 		libresense_data data[libresense_max_controllers];
 		const libresense_result result = libresense_pull(handles, handle_count, data);
 		if (IS_LIBRESENSE_BAD(result)) {
@@ -103,18 +115,18 @@ void wait_until_options_clear(libresense_handle* handles, const size_t handle_co
 	}
 }
 
-void libresensectl_mode_test(libresensectl_context context) {
+libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 	printf("press OPTIONS to skip test\n");
 
 	libresense_data datum[31];
-	const libresense_result result = libresense_pull(context.handles, context.connected_controllers, datum);
+	const libresense_result result = libresense_pull(context->handles, context->connected_controllers, datum);
 	if (IS_LIBRESENSE_BAD(result)) {
 		errorf(stderr, result, "error getting report");
-		return;
+		return LIBRESENSECTL_HID_ERROR;
 	}
 
 	{
-		wait_until_options_clear(context.handles, context.connected_controllers, 250000);
+		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing adaptive triggers\n");
 		libresense_effect_update update = { 0 };
 
@@ -122,11 +134,11 @@ void libresensectl_mode_test(libresensectl_context context) {
 		update.effect.uniform.position = 0.5;
 		update.effect.uniform.resistance = 1.0;
 		printf("uniform\n");
-		for (int i = 0; i < context.connected_controllers; ++i) {
-			libresense_update_effect(context.handles[i], update, update, 0.0f);
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context.handles, context.connected_controllers);
-		if (report_hid_trigger(context.handles, context.connected_controllers, 5000000, 8000)) {
+		libresense_push(context->handles, context->connected_controllers);
+		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
@@ -135,11 +147,11 @@ void libresensectl_mode_test(libresensectl_context context) {
 		update.effect.section.position.y = 0.75;
 		update.effect.section.resistance = 1.0;
 		printf("section\n");
-		for (int i = 0; i < context.connected_controllers; ++i) {
-			libresense_update_effect(context.handles[i], update, update, 0.0f);
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context.handles, context.connected_controllers);
-		if (report_hid_trigger(context.handles, context.connected_controllers, 5000000, 8000)) {
+		libresense_push(context->handles, context->connected_controllers);
+		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
@@ -155,11 +167,11 @@ void libresensectl_mode_test(libresensectl_context context) {
 		update.effect.multiple_sections.resistance[8] = 1.0f;
 		update.effect.multiple_sections.resistance[9] = 1.0f;
 		printf("multiple section\n");
-		for (int i = 0; i < context.connected_controllers; ++i) {
-			libresense_update_effect(context.handles[i], update, update, 0.0f);
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context.handles, context.connected_controllers);
-		if (report_hid_trigger(context.handles, context.connected_controllers, 5000000, 8000)) {
+		libresense_push(context->handles, context->connected_controllers);
+		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
@@ -168,11 +180,11 @@ void libresensectl_mode_test(libresensectl_context context) {
 		update.effect.trigger.position.y = 1.00f;
 		update.effect.trigger.resistance = 0.5f;
 		printf("trigger\n");
-		for (int i = 0; i < context.connected_controllers; ++i) {
-			libresense_update_effect(context.handles[i], update, update, 0.0f);
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context.handles, context.connected_controllers);
-		if (report_hid_trigger(context.handles, context.connected_controllers, 5000000, 8000)) {
+		libresense_push(context->handles, context->connected_controllers);
+		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
@@ -182,11 +194,11 @@ void libresensectl_mode_test(libresensectl_context context) {
 		update.effect.slope.resistance.x = 0.25f;
 		update.effect.slope.resistance.y = 1.0f;
 		printf("slope\n");
-		for (int i = 0; i < context.connected_controllers; ++i) {
-			libresense_update_effect(context.handles[i], update, update, 0.0f);
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context.handles, context.connected_controllers);
-		if (report_hid_trigger(context.handles, context.connected_controllers, 5000000, 8000)) {
+		libresense_push(context->handles, context->connected_controllers);
+		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
@@ -195,11 +207,11 @@ void libresensectl_mode_test(libresensectl_context context) {
 		update.effect.vibrate.amplitude = 0.75;
 		update.effect.vibrate.frequency = 201;
 		printf("vibrate\n");
-		for (int i = 0; i < context.connected_controllers; ++i) {
-			libresense_update_effect(context.handles[i], update, update, 0.0f);
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context.handles, context.connected_controllers);
-		if (report_hid_trigger(context.handles, context.connected_controllers, 5000000, 8000)) {
+		libresense_push(context->handles, context->connected_controllers);
+		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
@@ -211,11 +223,11 @@ void libresensectl_mode_test(libresensectl_context context) {
 		update.effect.vibrate_slope.frequency = 201;
 		update.effect.vibrate_slope.period = 4;
 		printf("vibrate slope\n");
-		for (int i = 0; i < context.connected_controllers; ++i) {
-			libresense_update_effect(context.handles[i], update, update, 0.0f);
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context.handles, context.connected_controllers);
-		if (report_hid_trigger(context.handles, context.connected_controllers, 5000000, 8000)) {
+		libresense_push(context->handles, context->connected_controllers);
+		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
@@ -233,11 +245,11 @@ void libresensectl_mode_test(libresensectl_context context) {
 		update.effect.multiple_vibrate.frequency = 201;
 		update.effect.multiple_vibrate.period = 4;
 		printf("multiple vibrate\n");
-		for (int i = 0; i < context.connected_controllers; ++i) {
-			libresense_update_effect(context.handles[i], update, update, 0.0f);
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context.handles, context.connected_controllers);
-		if (report_hid_trigger(context.handles, context.connected_controllers, 5000000, 8000)) {
+		libresense_push(context->handles, context->connected_controllers);
+		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
@@ -263,25 +275,29 @@ void libresensectl_mode_test(libresensectl_context context) {
 		update.effect.multiple_vibrate_sections.resistance[8] = 1.0f;
 		update.effect.multiple_vibrate_sections.resistance[9] = 1.0f;
 		printf("multiple vibrate sections\n");
-		for (int i = 0; i < context.connected_controllers; ++i) {
-			libresense_update_effect(context.handles[i], update, update, 0.0f);
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context.handles, context.connected_controllers);
-		if (report_hid_trigger(context.handles, context.connected_controllers, 5000000, 8000)) {
+		libresense_push(context->handles, context->connected_controllers);
+		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
 	reset_trigger:
-		update.mode = LIBRESENSE_EFFECT_OFF;
-		for (int i = 0; i < context.connected_controllers; ++i) {
-			libresense_update_effect(context.handles[i], update, update, 0.0f);
+		if (should_stop) {
+			return LIBRESENSECTL_INTERRUPTED;
 		}
-		libresense_push(context.handles, context.connected_controllers);
+
+		update.mode = LIBRESENSE_EFFECT_OFF;
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			libresense_update_effect(context->handles[i], update, update, 0.0f);
+		}
+		libresense_push(context->handles, context->connected_controllers);
 		usleep(100000);
 	}
 
 	{
-		wait_until_options_clear(context.handles, context.connected_controllers, 250000);
+		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing mic led...\n");
 		libresense_audio_update update = { 0 };
 		update.jack_volume = 1.0;
@@ -294,87 +310,91 @@ void libresensectl_mode_test(libresensectl_context context) {
 		update.mic_led = LIBRESENSE_MIC_LED_ON;
 
 		printf("mic led should be on...\n");
-		for (int i = 0; i < context.connected_controllers; ++i) {
-			libresense_update_audio(context.handles[i], update);
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			libresense_update_audio(context->handles[i], update);
 		}
-		libresense_push(context.handles, context.connected_controllers);
-		if (report_hid_close(context.handles, context.connected_controllers, 5000000, 10000)) {
+		libresense_push(context->handles, context->connected_controllers);
+		if (report_hid_close(context->handles, context->connected_controllers, 5000000, 10000)) {
 			goto reset_mic;
 		}
 
 		update.mic_led = LIBRESENSE_MIC_LED_FLASH;
 		printf("mic led should be flashing...\n");
-		for (int i = 0; i < context.connected_controllers; ++i) {
-			libresense_update_audio(context.handles[i], update);
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			libresense_update_audio(context->handles[i], update);
 		}
-		libresense_push(context.handles, context.connected_controllers);
-		if (report_hid_close(context.handles, context.connected_controllers, 5000000, 10000)) {
+		libresense_push(context->handles, context->connected_controllers);
+		if (report_hid_close(context->handles, context->connected_controllers, 5000000, 10000)) {
 			goto reset_mic;
 		}
 
 		update.mic_led = LIBRESENSE_MIC_LED_FAST_FLASH;
 		printf("mic led should be flashing faster (maybe)...\n");
-		for (int i = 0; i < context.connected_controllers; ++i) {
-			libresense_update_audio(context.handles[i], update);
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			libresense_update_audio(context->handles[i], update);
 		}
-		libresense_push(context.handles, context.connected_controllers);
-		if (report_hid_close(context.handles, context.connected_controllers, 5000000, 10000)) {
+		libresense_push(context->handles, context->connected_controllers);
+		if (report_hid_close(context->handles, context->connected_controllers, 5000000, 10000)) {
 			goto reset_mic;
 		}
 
 		update.mic_led = LIBRESENSE_MIC_LED_OFF;
 		printf("mic led should be off...\n");
-		for (int i = 0; i < context.connected_controllers; ++i) {
-			libresense_update_audio(context.handles[i], update);
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			libresense_update_audio(context->handles[i], update);
 		}
-		libresense_push(context.handles, context.connected_controllers);
-		report_hid_close(context.handles, context.connected_controllers, 5000000, 10000);
+		libresense_push(context->handles, context->connected_controllers);
+		report_hid_close(context->handles, context->connected_controllers, 5000000, 10000);
 
 	reset_mic:
-		printf("restoring mic based on state...\n");
-		for (int i = 0; i < context.connected_controllers; ++i) {
-			update.mic_led = (libresense_mic_led) datum[i].device.muted;
-			libresense_update_audio(context.handles[i], update);
+		if (should_stop) {
+			return LIBRESENSECTL_INTERRUPTED;
 		}
-		libresense_push(context.handles, context.connected_controllers);
+
+		printf("restoring mic based on state...\n");
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			update.mic_led = (libresense_mic_led) datum[i].device.muted;
+			libresense_update_audio(context->handles[i], update);
+		}
+		libresense_push(context->handles, context->connected_controllers);
 		usleep(1000000);
 	}
 
 	{
-		wait_until_options_clear(context.handles, context.connected_controllers, 250000);
+		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing rumble...\n");
 		float rumble;
 
 		const float ONE_OVER_255 = 1.0f / 255.0f;
 		printf("large motor...\n");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
-			for (int i = 0; i < context.connected_controllers; ++i) {
-				libresense_update_rumble(context.handles[i], rumble, 0.0f, 0.0f, false);
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				libresense_update_rumble(context->handles[i], rumble, 0.0f, 0.0f, false);
 			}
-			libresense_push(context.handles, context.connected_controllers);
-			if (report_hid_close(context.handles, context.connected_controllers, 10000, 10000)) {
+			libresense_push(context->handles, context->connected_controllers);
+			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
 				goto reset_motor;
 			}
 		}
 
 		printf("small motor...\n");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
-			for (int i = 0; i < context.connected_controllers; ++i) {
-				libresense_update_rumble(context.handles[i], 0, rumble, 0.0f, false);
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				libresense_update_rumble(context->handles[i], 0, rumble, 0.0f, false);
 			}
-			libresense_push(context.handles, context.connected_controllers);
-			if (report_hid_close(context.handles, context.connected_controllers, 10000, 10000)) {
+			libresense_push(context->handles, context->connected_controllers);
+			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
 				goto reset_motor;
 			}
 		}
 
 		printf("both motors...\n");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
-			for (int i = 0; i < context.connected_controllers; ++i) {
-				libresense_update_rumble(context.handles[i], rumble, rumble, 0.0f, false);
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				libresense_update_rumble(context->handles[i], rumble, rumble, 0.0f, false);
 			}
-			libresense_push(context.handles, context.connected_controllers);
-			if (report_hid_close(context.handles, context.connected_controllers, 10000, 10000)) {
+			libresense_push(context->handles, context->connected_controllers);
+			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
 				goto reset_motor;
 			}
 		}
@@ -382,44 +402,44 @@ void libresensectl_mode_test(libresensectl_context context) {
 		printf("rumble feedback test...\n");
 		for (int rumble_test = 0; rumble_test < 8; rumble_test++) {
 			float level = rumble_test % 2 == 0 ? 1.0f : 0.1f;
-			for (int i = 0; i < context.connected_controllers; ++i) {
-				libresense_update_rumble(context.handles[i], level, level, 0.0f, false);
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				libresense_update_rumble(context->handles[i], level, level, 0.0f, false);
 			}
-			libresense_push(context.handles, context.connected_controllers);
-			if (report_hid_close(context.handles, context.connected_controllers, 250000, 10000)) {
+			libresense_push(context->handles, context->connected_controllers);
+			if (report_hid_close(context->handles, context->connected_controllers, 250000, 10000)) {
 				goto reset_motor;
 			}
 		}
 
 		printf("large motor (legacy)...\n");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
-			for (int i = 0; i < context.connected_controllers; ++i) {
-				libresense_update_rumble(context.handles[i], rumble, 0.0f, 0.0f, true);
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				libresense_update_rumble(context->handles[i], rumble, 0.0f, 0.0f, true);
 			}
-			libresense_push(context.handles, context.connected_controllers);
-			if (report_hid_close(context.handles, context.connected_controllers, 10000, 10000)) {
+			libresense_push(context->handles, context->connected_controllers);
+			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
 				goto reset_motor;
 			}
 		}
 
 		printf("small motor (legacy)...\n");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
-			for (int i = 0; i < context.connected_controllers; ++i) {
-				libresense_update_rumble(context.handles[i], 0, rumble, 0.0f, true);
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				libresense_update_rumble(context->handles[i], 0, rumble, 0.0f, true);
 			}
-			libresense_push(context.handles, context.connected_controllers);
-			if (report_hid_close(context.handles, context.connected_controllers, 10000, 10000)) {
+			libresense_push(context->handles, context->connected_controllers);
+			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
 				goto reset_motor;
 			}
 		}
 
 		printf("both motors (legacy)...\n");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
-			for (int i = 0; i < context.connected_controllers; ++i) {
-				libresense_update_rumble(context.handles[i], rumble, rumble, 0.0f, true);
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				libresense_update_rumble(context->handles[i], rumble, rumble, 0.0f, true);
 			}
-			libresense_push(context.handles, context.connected_controllers);
-			if (report_hid_close(context.handles, context.connected_controllers, 10000, 10000)) {
+			libresense_push(context->handles, context->connected_controllers);
+			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
 				goto reset_motor;
 			}
 		}
@@ -427,25 +447,29 @@ void libresensectl_mode_test(libresensectl_context context) {
 		printf("rumble feedback test (legacy)...\n");
 		for (int rumble_test = 0; rumble_test < 8; rumble_test++) {
 			float level = rumble_test % 2 == 0 ? 1.0f : 0.1f;
-			for (int i = 0; i < context.connected_controllers; ++i) {
-				libresense_update_rumble(context.handles[i], level, level, 0.0f, true);
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				libresense_update_rumble(context->handles[i], level, level, 0.0f, true);
 			}
-			libresense_push(context.handles, context.connected_controllers);
-			if (report_hid_close(context.handles, context.connected_controllers, 250000, 10000)) {
+			libresense_push(context->handles, context->connected_controllers);
+			if (report_hid_close(context->handles, context->connected_controllers, 250000, 10000)) {
 				goto reset_motor;
 			}
 		}
 
 	reset_motor:
-		for (int i = 0; i < context.connected_controllers; ++i) {
-			libresense_update_rumble(context.handles[i], 0, 0, 0.0f, false);
+		if (should_stop) {
+			return LIBRESENSECTL_INTERRUPTED;
 		}
-		libresense_push(context.handles, context.connected_controllers);
+
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			libresense_update_rumble(context->handles[i], 0, 0, 0.0f, false);
+		}
+		libresense_push(context->handles, context->connected_controllers);
 		usleep(100000);
 	}
 
 	{
-		wait_until_options_clear(context.handles, context.connected_controllers, 250000);
+		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing touchpad leds...\n");
 
 		libresense_led_update update = { 0 };
@@ -494,16 +518,16 @@ void libresensectl_mode_test(libresensectl_context context) {
 				}
 			}
 
-			for (int j = 0; j < context.connected_controllers; ++j) {
-				libresense_update_led(context.handles[j], update);
+			for (int j = 0; j < context->connected_controllers; ++j) {
+				libresense_update_led(context->handles[j], update);
 			}
-			libresense_push(context.handles, context.connected_controllers);
+			libresense_push(context->handles, context->connected_controllers);
 			const libresense_vector3 color = update.color;
 			update.color.x = color.z;
 			update.color.y = color.x;
 			update.color.z = color.y;
 
-			if (report_hid_close(context.handles, context.connected_controllers, 250000, 10000)) {
+			if (report_hid_close(context->handles, context->connected_controllers, 250000, 10000)) {
 				goto reset_led;
 			}
 		}
@@ -511,11 +535,15 @@ void libresensectl_mode_test(libresensectl_context context) {
 
 reset_led:
 	{
+		if (should_stop) {
+			return LIBRESENSECTL_INTERRUPTED;
+		}
+
 		libresense_led_update update;
 		update.color.x = 1.0;
 		update.color.y = 0.0;
 		update.color.z = 1.0;
-		for (int j = 0; j < context.connected_controllers; ++j) {
+		for (int j = 0; j < context->connected_controllers; ++j) {
 			switch (j) {
 				case 0: update.led = LIBRESENSE_LED_PLAYER_1; break;
 				case 1: update.led = LIBRESENSE_LED_PLAYER_2; break;
@@ -523,10 +551,10 @@ reset_led:
 				case 3: update.led = LIBRESENSE_LED_PLAYER_4; break;
 				default: update.led = LIBRESENSE_LED_ALL; break;
 			}
-			libresense_update_led(context.handles[j], update);
+			libresense_update_led(context->handles[j], update);
 		}
-		libresense_push(context.handles, context.connected_controllers);
+		libresense_push(context->handles, context->connected_controllers);
 	}
 
-	usleep(100000);
+	return LIBRESENSECTL_OK;
 }

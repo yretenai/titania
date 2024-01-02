@@ -9,6 +9,8 @@
 
 #include "libresensectl.h"
 
+libresensectl_error libresensectl_mode_stub(libresensectl_context*) { return LIBRESENSECTL_NOT_IMPLEMENTED; }
+
 const libresensectl_mode modes[] = { { "report", libresensectl_mode_report },
 	{ "report-loop", libresensectl_mode_report_loop },
 	{ "watch", libresensectl_mode_report_loop },
@@ -25,15 +27,59 @@ const libresensectl_mode modes[] = { { "report", libresensectl_mode_report },
 	{ "usb", libresensectl_mode_bt_disconnect },
 	{ "bt", libresensectl_mode_bt_connect },
 	// Edge, Access
-	{ "profile", libresensectl_mode_stub },
+	{ "profile", libresensectl_mode_profile_funnel },
 	//
 	{ nullptr, nullptr } };
+
+libresensectl_context context = { 0 };
+bool should_stop = false;
+bool interrupted = false; // separate in case i accidentally set should_stop somewhere else.
+
+void shutdown() {
+	if (interrupted) {
+		return;
+	}
+
+	interrupted = should_stop = true;
+
+	for (int i = 0; i < context.connected_controllers; ++i) {
+		const libresense_result result = libresense_close(context.hids[i].handle);
+		if (IS_LIBRESENSE_BAD(result)) {
+			errorf(stderr, result, "error closing hid");
+		}
+
+		context.hids[i].handle = LIBRESENSE_INVALID_HANDLE_ID;
+	}
+
+	memset(&context, 0, sizeof(context));
+
+	libresense_exit();
+}
+
+#ifdef _WIN32
+BOOL WINAPI handle_sigint(DWORD signal) {
+	if (signal == CTRL_C_EVENT) {
+		shutdown();
+	}
+
+	return TRUE;
+}
+#else
+#include <signal.h>
+
+void handle_sigint(int signal) { shutdown(); }
+#endif
 
 int main(const int argc, const char** const argv) {
 	printf(LIBRESENSE_PROJECT_NAME " version %s\n", LIBRESENSE_PROJECT_VERSION);
 
+#ifdef _WIN32
+	SetConsoleCtrlHandler(handle_sigint, true);
+#else
+	signal(SIGINT, handle_sigint);
+#endif
+
 	const char* mode = nullptr;
-	libresensectl_context context = { 0 };
 	bool calibrate = false;
 	bool disable_regular = false;
 	bool disable_edge = false;
@@ -75,7 +121,7 @@ int main(const int argc, const char** const argv) {
 				printf("\tdump: dump every feature report from connected controllers\n");
 				printf("\tbench: benchmark report parsing speed\n");
 				printf("\tled #rrggbb|off player-led: update LED color\n");
-				printf("\tprofile convert path/to/report.{bin, json}: convert merged dualsense profile from or to json\n");
+				printf("\tprofile convert path/to/report.{bin, json}: convert merged dualsense edge profile from or to json\n");
 				printf("\tprofile import {square, cross, triangle, 1, 2, 3} path/to/profile.json: import a controller profile to the specified slot\n");
 				printf("\tprofile export {triangle, square, cross, triangle, 0, 1, 2, 3} path/to/profile.json: export a controller profile to json\n");
 				printf("\tprofile delete: delete a given profile\n");
@@ -128,6 +174,10 @@ int main(const int argc, const char** const argv) {
 		}
 	}
 
+	if (should_stop) {
+		return 0;
+	}
+
 	libresense_result result = libresense_init();
 	if (IS_LIBRESENSE_BAD(result)) {
 		errorf(stderr, result, "error initializing " LIBRESENSE_PROJECT_NAME);
@@ -142,6 +192,10 @@ int main(const int argc, const char** const argv) {
 	}
 
 	for (int hid_id = 0; hid_id < LIBRESENSECTL_CONTROLLER_COUNT; ++hid_id) {
+		if (should_stop) {
+			return 0;
+		}
+
 		if (hids[hid_id].handle == LIBRESENSE_INVALID_HANDLE_ID) {
 			break;
 		}
@@ -177,6 +231,9 @@ int main(const int argc, const char** const argv) {
 		}
 
 	pass:
+		if (should_stop) {
+			return 0;
+		}
 
 		context.hids[context.connected_controllers] = hids[hid_id];
 		result = libresense_open(&context.hids[context.connected_controllers], calibrate);
@@ -206,18 +263,20 @@ int main(const int argc, const char** const argv) {
 			continue;
 		}
 
-		current_mode->callback(context);
+		const libresensectl_error error = current_mode->callback(&context);
+		if (IS_LIBRESENSE_BAD(error)) {
+			switch (error) {
+				case LIBRESENSECTL_HID_ERROR: fprintf(stderr, "hid error while processing command\n"); break;
+				case LIBRESENSECTL_INTERRUPTED: fprintf(stderr, "caught ctrl+c\n"); break;
+				case LIBRESENSECTL_NOT_IMPLEMENTED: fprintf(stderr, "not implemented\n"); break;
+				case LIBRESENSECTL_INVALID_ARGUMENTS: fprintf(stderr, "invalid arguments\n"); break;
+				default: fprintf(stderr, "unknown error\n"); break;
+			}
+		}
 		break;
 	}
 
-	for (int i = 0; i < context.connected_controllers; ++i) {
-		result = libresense_close(context.hids[i].handle);
-		if (IS_LIBRESENSE_BAD(result)) {
-			errorf(stderr, result, "error closing hid");
-		}
-	}
+	shutdown();
 
-	libresense_exit();
+	return 0;
 }
-
-void libresensectl_mode_stub(libresensectl_context) { fprintf(stderr, "not implemented\n"); }

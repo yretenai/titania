@@ -72,16 +72,20 @@ typedef enum {
 
 typedef enum {
 	LIBRESENSE_PROFILE_NONE,
-	LIBRESENSE_PROFILE_DEFAULT,
+	LIBRESENSE_PROFILE_TRIANGLE,
 	LIBRESENSE_PROFILE_SQUARE,
 	LIBRESENSE_PROFILE_CROSS,
 	LIBRESENSE_PROFILE_CIRCLE,
-	LIBRESENSE_PROFILE_MAX,
+	LIBRESENSE_PROFILE_MAX_VALID,
 
-	LIBRESENSE_PROFILE_TRIANGLE = LIBRESENSE_PROFILE_DEFAULT,
+	LIBRESENSE_PROFILE_ALL,
+	LIBRESENSE_PROFILE_MAX_META,
+
+	LIBRESENSE_PROFILE_DEFAULT = LIBRESENSE_PROFILE_TRIANGLE,
 	LIBRESENSE_PROFILE_1 = LIBRESENSE_PROFILE_SQUARE,
 	LIBRESENSE_PROFILE_2 = LIBRESENSE_PROFILE_CROSS,
-	LIBRESENSE_PROFILE_3 = LIBRESENSE_PROFILE_CIRCLE
+	LIBRESENSE_PROFILE_3 = LIBRESENSE_PROFILE_CIRCLE,
+	LIBRESENSE_PROFILE_COUNT = 4,
 } libresense_profile_id;
 
 typedef enum {
@@ -135,7 +139,7 @@ typedef enum {
 
 LIBRESENSE_EXPORT extern const char* const libresense_error_msg[LIBRESENSE_ERROR_MAX + 1];
 LIBRESENSE_EXPORT extern const char* const libresense_battery_state_msg[LIBRESENSE_BATTERY_MAX + 1];
-LIBRESENSE_EXPORT extern const char* const libresense_edge_profile_id_msg[LIBRESENSE_PROFILE_MAX + 1];
+LIBRESENSE_EXPORT extern const char* const libresense_profile_id_msg[LIBRESENSE_PROFILE_MAX_META + 1];
 LIBRESENSE_EXPORT extern const char* const libresense_level_msg[LIBRESENSE_LEVEL_LOW + 2];
 LIBRESENSE_EXPORT extern const char* const libresense_trigger_effect_msg[LIBRESENSE_TRIGGER_EFFECT_MAX + 1];
 LIBRESENSE_EXPORT extern const char* const libresense_edge_button_id_msg[LIBRESENSE_BUTTON_ID_MAX + 1];
@@ -383,7 +387,7 @@ typedef struct {
 	libresense_serial hid_serial;
 	libresense_serial_info serial;
 	libresense_firmware_info firmware;
-	libresense_edge_profile edge_profiles[LIBRESENSE_PROFILE_MAX];
+	libresense_edge_profile edge_profiles[LIBRESENSE_PROFILE_COUNT];
 } libresense_hid;
 
 typedef struct {
@@ -725,7 +729,7 @@ LIBRESENSE_EXPORT libresense_result libresense_bt_disconnect(const libresense_ha
  * @param id: the profile id to store the profile into
  * @param profile: the profile data to store
  */
-LIBRESENSE_EXPORT libresense_result libresense_update_profile(const libresense_handle handle, const libresense_profile_id id, const libresense_edge_profile profile);
+LIBRESENSE_EXPORT libresense_result libresense_update_edge_profile(const libresense_handle handle, const libresense_profile_id id, const libresense_edge_profile profile);
 
 /**
  * @brief reset a stick template to a specific template
@@ -733,14 +737,14 @@ LIBRESENSE_EXPORT libresense_result libresense_update_profile(const libresense_h
  * @param template_id: the stick template to apply
  * @param offset: range between -5 and 5 to offset the sticks
  */
-LIBRESENSE_EXPORT libresense_result libresense_helper_stick_template(libresense_edge_stick* stick, const libresense_edge_stick_template template_id, int32_t offset);
+LIBRESENSE_EXPORT libresense_result libresense_helper_edge_stick_template(libresense_edge_stick* stick, const libresense_edge_stick_template template_id, int32_t offset);
 
 /**
  * @brief delete a dualsense edge profile
  * @param handle: the controller to update
  * @param id: the profile id to delete
  */
-LIBRESENSE_EXPORT libresense_result libresense_delete_profile(const libresense_handle handle, const libresense_profile_id id);
+LIBRESENSE_EXPORT libresense_result libresense_delete_edge_profile(const libresense_handle handle, const libresense_profile_id id);
 
 /**
  * @brief close a controller device handle

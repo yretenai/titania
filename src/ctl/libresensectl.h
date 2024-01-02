@@ -23,24 +23,41 @@ typedef struct {
 	const char** argv;
 } libresensectl_context;
 
-typedef void (*libresensectl_callback_t)(const libresensectl_context context);
+typedef enum {
+	LIBRESENSECTL_OK = LIBRESENSE_OK,
+	LIBRESENSECTL_HID_ERROR,
+	LIBRESENSECTL_INTERRUPTED,
+	LIBRESENSECTL_NOT_IMPLEMENTED,
+	LIBRESENSECTL_INVALID_ARGUMENTS,
+	LIBRESENSECTL_ERROR_MAX
+} libresensectl_error;
+
+typedef libresensectl_error (*libresensectl_callback_t)(libresensectl_context* context);
 
 typedef struct {
 	const char* const name;
 	libresensectl_callback_t callback;
 } libresensectl_mode;
 
-void libresensectl_mode_stub(libresensectl_context context);
-void libresensectl_mode_list(libresensectl_context context);
-void libresensectl_mode_report(libresensectl_context context);
-void libresensectl_mode_report_loop(libresensectl_context context);
-void libresensectl_mode_dump(libresensectl_context context);
-void libresensectl_mode_test(libresensectl_context context);
-void libresensectl_mode_bench(libresensectl_context context);
-void libresensectl_mode_led(libresensectl_context context);
-void libresensectl_mode_bt_pair(libresensectl_context context);
-void libresensectl_mode_bt_connect(libresensectl_context context);
-void libresensectl_mode_bt_disconnect(libresensectl_context context);
+libresensectl_error libresensectl_mode_list(libresensectl_context* context);
+libresensectl_error libresensectl_mode_report(libresensectl_context* context);
+libresensectl_error libresensectl_mode_report_loop(libresensectl_context* context);
+libresensectl_error libresensectl_mode_dump(libresensectl_context* context);
+libresensectl_error libresensectl_mode_test(libresensectl_context* context);
+libresensectl_error libresensectl_mode_bench(libresensectl_context* context);
+libresensectl_error libresensectl_mode_led(libresensectl_context* context);
+libresensectl_error libresensectl_mode_bt_pair(libresensectl_context* context);
+libresensectl_error libresensectl_mode_bt_connect(libresensectl_context* context);
+libresensectl_error libresensectl_mode_bt_disconnect(libresensectl_context* context);
+libresensectl_error libresensectl_mode_profile_funnel(libresensectl_context* context);
+
+libresensectl_error libresensectl_mode_edge_import(libresense_profile_id profile, void* data, libresense_hid handle);
+libresensectl_error libresensectl_mode_edge_export(libresense_profile_id profile, const char* path, libresense_hid handle);
+libresensectl_error libresensectl_mode_edge_delete(libresense_profile_id profile, libresense_hid handle);
+
+libresensectl_error libresensectl_mode_access_import(libresense_profile_id profile, void* data, libresense_hid handle);
+libresensectl_error libresensectl_mode_access_export(libresense_profile_id profile, const char* path, libresense_hid handle);
+libresensectl_error libresensectl_mode_access_delete(libresense_profile_id profile, libresense_hid handle);
 
 #define LIBREPRINT_SEP() printf(",")
 #define LIBREPRINT_STR(struc, field) printf(" " #field " = %s", struc.field)
@@ -59,6 +76,8 @@ void libresensectl_mode_bt_disconnect(libresensectl_context context);
 #define LIBREPRINT_BUTTON_TEST(field) printf(" " #field " = %s", data.buttons.field ? "Y" : "N")
 #define LIBREPRINT_EDGE_BUTTON_TEST(field) printf(" " #field " = %s", data.edge_device.raw_buttons.field ? "Y" : "N")
 #define LIBREPRINT_PROFILE_BUTTON_TEST(field) printf(" " #field " = %s", profile.disabled_buttons.field ? "Y" : "N")
+
+extern bool should_stop;
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN

@@ -22,30 +22,30 @@ int parse_octet(const char ch) {
 	return 0;
 }
 
-void libresensectl_mode_led(libresensectl_context context) {
+libresensectl_error libresensectl_mode_led(libresensectl_context* context) {
 	libresense_led_update update = { 0 };
 	update.color.x = 1.0;
 	update.color.y = 0.0;
 	update.color.z = 1.0;
 	update.led = LIBRESENSE_LED_NO_UPDATE;
 
-	if (context.argc > 1) {
-		if (strcmp(context.argv[1], "player1") == 0) {
+	if (context->argc > 1) {
+		if (strcmp(context->argv[1], "player1") == 0) {
 			update.led = LIBRESENSE_LED_PLAYER_1;
-		} else if (strcmp(context.argv[1], "player2") == 0) {
+		} else if (strcmp(context->argv[1], "player2") == 0) {
 			update.led = LIBRESENSE_LED_PLAYER_2;
-		} else if (strcmp(context.argv[1], "player3") == 0) {
+		} else if (strcmp(context->argv[1], "player3") == 0) {
 			update.led = LIBRESENSE_LED_PLAYER_3;
-		} else if (strcmp(context.argv[1], "player4") == 0) {
+		} else if (strcmp(context->argv[1], "player4") == 0) {
 			update.led = LIBRESENSE_LED_PLAYER_4;
 		} else {
-			sscanf(context.argv[1], "%d", &update.led);
+			sscanf(context->argv[1], "%d", &update.led);
 			update.led &= 0x7F;
 		}
 	}
 
-	if (context.argc > 0) {
-		const char* color = context.argv[0];
+	if (context->argc > 0) {
+		const char* color = context->argv[0];
 		int len = strlen(color);
 		if (color[0] == '#') {
 			color += 1;
@@ -75,9 +75,15 @@ void libresensectl_mode_led(libresensectl_context context) {
 
 	printf("setting color to rgb(%f, %f, %f) with led value %d", update.color.r, update.color.g, update.color.b, update.led);
 
-	for (int i = 0; i < context.connected_controllers; ++i) {
-		libresense_update_led(context.handles[i], update);
+	for (int i = 0; i < context->connected_controllers; ++i) {
+		if(should_stop) {
+			return LIBRESENSECTL_INTERRUPTED;
+		}
+
+		libresense_update_led(context->handles[i], update);
 	}
 
-	libresense_push(context.handles, context.connected_controllers);
+	libresense_push(context->handles, context->connected_controllers);
+
+	return LIBRESENSECTL_OK;
 }
