@@ -10,15 +10,19 @@
 extern "C" {
 #endif
 
+#ifndef _WCHAR_T_DEFINED
 #include <wchar.h>
+#endif
+
 #ifndef __cplusplus
 #if __STDC_VERSION__ < 202000L
 #include <stdbool.h>
 #endif
 #endif
+
 #include <stdint.h>
 
-#ifdef __WIN32
+#ifdef _WIN32
 #ifdef LIBRESENSE_EXPORTING
 #define LIBRESENSE_EXPORT __declspec(dllexport)
 #else

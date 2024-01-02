@@ -47,6 +47,6 @@
 
 ### libresensectl
 
-- 1.0.0: base functionality
+- 1.1.0: base functionality
 - 1.5.0: profile importing/exporting
 - 2.0.0: playstation access support
