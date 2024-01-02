@@ -40,7 +40,7 @@ configure_file(
 		'LIBRESENSE_MAX_CONTROLLERS' : get_option('libresense_max_controllers'),
 		'LIBRESENSE_PROJECT_NAME' : '"' + meson.project_name() + '"',
 		'LIBRESENSE_PROJECT_VERSION' : '"' + meson.project_version() + '"',
-		'LIBRESENSE_CONTROL_VERSION' : '"0.0.0"',
+		'LIBRESENSE_CONTROL_VERSION' : '"0.0.0"'
 	})
 )
 

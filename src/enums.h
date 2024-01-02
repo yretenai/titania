@@ -82,7 +82,7 @@ typedef enum _dualsense_access_page_id : uint8_t {
 	DUALSENSE_ACCESS_QUERY_PROFILE_0 = 0xF,
 	DUALSENSE_ACCESS_QUERY_PROFILE_1 = 0x10,
 	DUALSENSE_ACCESS_QUERY_PROFILE_2 = 0x11,
-	DUALSENSE_ACCESS_QUERY_PROFILE_3 = 0x12,
+	DUALSENSE_ACCESS_QUERY_PROFILE_3 = 0x12
 } dualsense_access_page_id;
 
 static_assert(sizeof(dualsense_access_page_id) == 1, "dualsense_access_page_id is not 1 byte");
@@ -120,7 +120,7 @@ static_assert(sizeof(dualsense_effect_mode) == 1, "dualsense_effect_mode is not 
 typedef enum _dualsense_bt_command : uint8_t {
 	DUALSENSE_BT_COMMAND_NONE = 0,
 	DUALSENSE_BT_COMMAND_CONNECT = 0,
-	DUALSENSE_BT_COMMAND_DISCONNECT = 0,
+	DUALSENSE_BT_COMMAND_DISCONNECT = 0
 } dualsense_bt_command;
 
 static_assert(sizeof(dualsense_bt_command) == 1, "dualsense_bt_command is not 1 byte");

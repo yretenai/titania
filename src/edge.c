@@ -279,7 +279,7 @@ const libresense_edge_template template_vectors[LIBRESENSE_EDGE_STICK_TEMPLATE_M
 			.median = {{ .x = 0.321569f, .y = 0.156863f }, { .x = 0.631373f, .y = 0.835294f }, { .x = 1.000000f, .y = 1.000000f }},
 			.max = {{ .x = 0.368627f, .y = 0.086275f }, { .x = 0.541176f, .y = 0.894118f }, { .x = 1.000000f, .y = 1.000000f }},
 		}
-	},
+	}
 };
 
 #define LERP(from, to, factor) ((float) from * (1.0f - factor)) + ((float) to * factor)
