@@ -24,18 +24,18 @@
 
 ### libresensectl
 
-- [ ] log report (`libresensectl report`)
-- [ ] test suite (`libresensectl test`)
-- [ ] report dumping (`libresensectl dump`)
-- [ ] speed benchmarking (`libresensectl bench`)
-- [ ] update led state (`libresense led #rrggbb|off [player-led]`)
+- [x] log report (`libresensectl report`)
+- [x] test suite (`libresensectl test`)
+- [x] report dumping (`libresensectl dump`)
+- [x] speed benchmarking (`libresensectl bench`)
+- [x] update led state (`libresense led #rrggbb|off [player-led]`)
 - [ ] dualsense edge merged profile conversion (`libresensectl profile convert`)
 - [ ] dualsense edge profile importing (`libresensectl profile import [square, cross, triangle]`)
 - [ ] dualsense edge profile exporting (`libresensectl profile export [triangle, square, cross, triangle]`)
 - [ ] playstation access merged profile conversion (`libresensectl profile convert`)
 - [ ] playstation access profile importing (`libresensectl profile import [1, 2, 3]`)
 - [ ] playstation access profile exporting (`libresensectl profile export [0, 1, 2, 3]`)
-- [ ] pair bluetooth (`libresensectl pair`)
+- [x] pair bluetooth (`libresensectl pair`)
 - [ ] shell autocomplete profiles
 
 ## planned version milestones
