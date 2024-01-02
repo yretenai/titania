@@ -54,6 +54,8 @@ void usleep(__int64 usec) {
 #define libresense_printf(fmt, ...) printf("[" LIBRESENSE_PROJECT_NAME "] " fmt "\n", __VA_ARGS__)
 #define libresense_print(fmt) printf("[" LIBRESENSE_PROJECT_NAME "] " fmt "\n")
 
+const char* const REPORT_TYPES[3] = { "INPUT", "OUTPUT", "FEATURE" };
+
 bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
 	bool should_exit = false;
 	while (true) {
@@ -344,13 +346,7 @@ int main(int argc, const char** argv) {
 					}
 
 					int32_t hid_report_size = report_ids[i].size + 1;
-					printf("report %d (%x): reported size is %d, type is %s",
-						report_ids[i].id,
-						report_ids[i].id,
-						hid_report_size,
-						report_ids[i].type == 0	  ? "INPUT"
-						: report_ids[i].type == 1 ? "OUTPUT"
-												  : "FEATURE");
+					printf("report %d (%x): reported size is %d, type is %s", report_ids[i].id, report_ids[i].id, hid_report_size, REPORT_TYPES[report_ids[i].type % 3]);
 
 					if (report_ids[i].type < 2) {
 						printf("\n");
@@ -858,7 +854,7 @@ int main(int argc, const char** argv) {
 	reset_mic:
 		libresense_print("restoring mic based on state...");
 		for (size_t i = 0; i < connected; ++i) {
-			update.mic_led = datum[i].device.muted ? LIBRESENSE_MIC_LED_ON : LIBRESENSE_MIC_LED_OFF;
+			update.mic_led = (libresense_mic_led) datum[i].device.muted;
 			libresense_update_audio(handles[i], update);
 		}
 		libresense_push(handles, connected);
@@ -906,8 +902,9 @@ int main(int argc, const char** argv) {
 
 		libresense_print("rumble feedback test...");
 		for (int rumble_test = 0; rumble_test < 8; rumble_test++) {
+			float level = rumble_test % 2 == 0 ? 1.0f : 0.1f;
 			for (size_t i = 0; i < connected; ++i) {
-				libresense_update_rumble(handles[i], rumble_test % 2 == 0 ? 1.0f : 0.1f, rumble_test % 2 == 0 ? 1.0f : 0.1f, 0.0f, false);
+				libresense_update_rumble(handles[i], level, level, 0.0f, false);
 			}
 			libresense_push(handles, connected);
 			if (report_hid_close(handles, connected, 250000, 10000)) {
@@ -950,8 +947,9 @@ int main(int argc, const char** argv) {
 
 		libresense_print("rumble feedback test (legacy)...");
 		for (int rumble_test = 0; rumble_test < 8; rumble_test++) {
+			float level = rumble_test % 2 == 0 ? 1.0f : 0.1f;
 			for (size_t i = 0; i < connected; ++i) {
-				libresense_update_rumble(handles[i], rumble_test % 2 == 0 ? 1.0f : 0.1f, rumble_test % 2 == 0 ? 1.0f : 0.1f, 0.0f, true);
+				libresense_update_rumble(handles[i], level, level, 0.0f, true);
 			}
 			libresense_push(handles, connected);
 			if (report_hid_close(handles, connected, 250000, 10000)) {
