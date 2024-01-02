@@ -37,11 +37,11 @@ endif
 configure_file(
 	output : 'config.h',
 	configuration : configuration_data({
-										   'LIBRESENSE_MAX_CONTROLLERS' : get_option('libresense_max_controllers'),
-										   'LIBRESENSE_PROJECT_NAME' : '"' + meson.project_name() + '"',
-										   'LIBRESENSE_PROJECT_VERSION' : '"' + meson.project_version() + '"',
-										   'LIBRESENSE_CONTROL_VERSION' : '"0.0.0"',
-									   })
+		'LIBRESENSE_MAX_CONTROLLERS' : get_option('libresense_max_controllers'),
+		'LIBRESENSE_PROJECT_NAME' : '"' + meson.project_name() + '"',
+		'LIBRESENSE_PROJECT_VERSION' : '"' + meson.project_version() + '"',
+		'LIBRESENSE_CONTROL_VERSION' : '"0.0.0"',
+	})
 )
 
 hidapi = dependency('hidapi', version : '>=0.13.0')
@@ -54,38 +54,38 @@ if get_option('libresense_debug')
 endif
 
 libresense_lib = library(meson.project_name(), [
-							 'src/access.c',
-							 'src/crc.c',
-							 'src/enums.c',
-							 'src/edge.c',
-							 'src/hid.c',
-							 'src/trans.c'
-						 ],
-						 dependencies : [hidapi, icu],
-						 gnu_symbol_visibility: 'hidden',
-						 c_args : [args, '-DLIBRESENSE_EXPORTING'],
-						 install : true,
-						 include_directories : libresense_inc
+		'src/access.c',
+		'src/crc.c',
+		'src/enums.c',
+		'src/edge.c',
+		'src/hid.c',
+		'src/trans.c'
+	],
+	dependencies : [hidapi, icu],
+	gnu_symbol_visibility: 'hidden',
+	c_args : [args, '-DLIBRESENSE_EXPORTING'],
+	install : true,
+	include_directories : libresense_inc
 )
 
 libresense_dep = declare_dependency(link_with : libresense_lib, include_directories : libresense_inc)
 
 if get_option('libresense_log')
 	executable('libresense-log', [
-				   'src/cli.c'
-			   ],
-			   c_args : args,
-			   dependencies : [libresense_dep, hidapi],
-			   install : true)
+			'src/cli.c'
+		],
+		c_args : args,
+		dependencies : [libresense_dep, hidapi],
+		install : true)
 endif
 
 if get_option('libresense_ctl')
 	executable('libresensectl', [
-				   'src/ctl/main.c'
-			   ],
-			   c_args : args,
-			   dependencies : [libresense_dep, hidapi],
-			   install : true)
+			'src/ctl/main.c'
+		],
+		c_args : args,
+		dependencies : [libresense_dep, hidapi],
+	install : true)
 endif
 
 install_headers('include/libresense.h', preserve_path : false)

@@ -167,21 +167,21 @@ libresense_result libresense_open(libresense_hid* handle, const bool use_calibra
 			serial.report_id = DUALSENSE_REPORT_SERIAL;
 			if (HID_PASS(hid_get_feature_report(state[i].hid, (uint8_t*) &serial, sizeof(dualsense_serial_info)))) {
 				sprintf(handle->serial.mac,
-						"%02x:%02x:%02x:%02x:%02x:%02x",
-						serial.device_mac[5],
-						serial.device_mac[4],
-						serial.device_mac[3],
-						serial.device_mac[2],
-						serial.device_mac[1],
-						serial.device_mac[0]);
+					"%02x:%02x:%02x:%02x:%02x:%02x",
+					serial.device_mac[5],
+					serial.device_mac[4],
+					serial.device_mac[3],
+					serial.device_mac[2],
+					serial.device_mac[1],
+					serial.device_mac[0]);
 				sprintf(handle->serial.paired_mac,
-						"%02x:%02x:%02x:%02x:%02x:%02x",
-						serial.pair_mac[5],
-						serial.pair_mac[4],
-						serial.pair_mac[3],
-						serial.pair_mac[2],
-						serial.pair_mac[1],
-						serial.pair_mac[0]);
+					"%02x:%02x:%02x:%02x:%02x:%02x",
+					serial.pair_mac[5],
+					serial.pair_mac[4],
+					serial.pair_mac[3],
+					serial.pair_mac[2],
+					serial.pair_mac[1],
+					serial.pair_mac[0]);
 				handle->serial.mac[sizeof(handle->serial.mac) - 1] = 0;
 				handle->serial.paired_mac[sizeof(handle->serial.paired_mac) - 1] = 0;
 				handle->serial.unknown = (uint64_t) serial.unknown[0] << 16 | (uint64_t) serial.unknown[1] << 8 | (uint64_t) serial.unknown[2];
@@ -237,9 +237,9 @@ libresense_result libresense_open(libresense_hid* handle, const bool use_calibra
 
 			if (IS_EDGE(state[i].hid_info)) {
 				const uint8_t profile_reports[LIBRESENSE_PROFILE_MAX] = { DUALSENSE_REPORT_EDGE_QUERY_PROFILE_TRIANGLE_P1,
-																		  DUALSENSE_REPORT_EDGE_QUERY_PROFILE_SQUARE_P1,
-																		  DUALSENSE_REPORT_EDGE_QUERY_PROFILE_CROSS_P1,
-																		  DUALSENSE_REPORT_EDGE_QUERY_PROFILE_CIRCLE_P1 };
+					DUALSENSE_REPORT_EDGE_QUERY_PROFILE_SQUARE_P1,
+					DUALSENSE_REPORT_EDGE_QUERY_PROFILE_CROSS_P1,
+					DUALSENSE_REPORT_EDGE_QUERY_PROFILE_CIRCLE_P1 };
 
 				for (int j = 0; j < LIBRESENSE_PROFILE_MAX; ++j) {
 					dualsense_edge_profile_blob profile_data[3];

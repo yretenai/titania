@@ -75,12 +75,12 @@ bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, _
 				printf("\r");
 			}
 			printf("left = { %06.2f%%, %1X, %1X }, right = { %06.2f%%, %1X, %1X } ",
-				   data[i].triggers[0].level * 100,
-				   data[i].triggers[0].id,
-				   data[i].triggers[0].effect,
-				   data[i].triggers[1].level * 100,
-				   data[i].triggers[1].id,
-				   data[i].triggers[1].effect);
+				data[i].triggers[0].level * 100,
+				data[i].triggers[0].id,
+				data[i].triggers[0].effect,
+				data[i].triggers[1].level * 100,
+				data[i].triggers[1].id,
+				data[i].triggers[1].effect);
 		}
 		usleep(delay);
 		if (useconds < delay || useconds - delay == 0) { // primary failsafe and conventional loop break
@@ -345,12 +345,12 @@ int main(int argc, const char** argv) {
 
 					int32_t hid_report_size = report_ids[i].size + 1;
 					printf("report %d (%x): reported size is %d, type is %s",
-						   report_ids[i].id,
-						   report_ids[i].id,
-						   hid_report_size,
-						   report_ids[i].type == 0	 ? "INPUT"
-						   : report_ids[i].type == 1 ? "OUTPUT"
-													 : "FEATURE");
+						report_ids[i].id,
+						report_ids[i].id,
+						hid_report_size,
+						report_ids[i].type == 0	  ? "INPUT"
+						: report_ids[i].type == 1 ? "OUTPUT"
+												  : "FEATURE");
 
 					if (report_ids[i].type < 2) {
 						printf("\n");
