@@ -58,8 +58,8 @@ int main(const int argc, const char** const argv) {
 				printf("\n");
 				printf("available options:\n");
 				printf("\t-h, --help: print this help text\n");
-				printf("\t-v, --version: print this help text\n");
-				printf("\t-d, --device: print this help text\n");
+				printf("\t-v, --version: print version and exit\n");
+				printf("\t-d, --device: filter specific device id (up to 32)\n");
 				printf("\t-c, --no-calibration: do not use calibration\n");
 				printf("\t-r, --no-regular: disable regular controllers from being considered\n");
 				printf("\t-e, --no-edge: disable edge controllers from being considered\n");
@@ -89,7 +89,7 @@ int main(const int argc, const char** const argv) {
 
 			if (strcmp(text, "-d") == 0 || strcmp(text, "--device") == 0) {
 				const char* device_ptr = argv[++i];
-				if (context.filtered_controllers > LIBRESENSECTL_CONTROLLER_COUNT) {
+				if (context.filtered_controllers >= LIBRESENSECTL_CONTROLLER_COUNT) {
 					continue;
 				}
 
@@ -141,27 +141,34 @@ int main(const int argc, const char** const argv) {
 		if (hids[hid_id].handle == LIBRESENSE_INVALID_HANDLE_ID) {
 			break;
 		}
+
 		if (disable_regular && !(hids[hid_id].is_edge || hids[hid_id].is_access)) {
-			goto skip;
+			break;
 		}
 
 		if (disable_edge && hids[hid_id].is_edge) {
-			goto skip;
+			break;
 		}
 
 		if (disable_access && hids[hid_id].is_access) {
-			goto skip;
+			break;
 		}
 
 		if (disable_bt && hids[hid_id].is_bluetooth) {
-			goto skip;
+			break;
 		}
 
-		for (int filter_id = 0; filter_id < context.filtered_controllers; ++filter_id) {
-			if (memcmp(context.filter[filter_id], hids[hid_id].hid_serial, sizeof(libresense_serial)) == 0) {
-				goto skip;
+		if (context.filtered_controllers > 0) {
+			for (int filter_id = 0; filter_id < context.filtered_controllers; ++filter_id) {
+				if (memcmp(context.filter[filter_id], hids[hid_id].hid_serial, sizeof(libresense_serial)) != 0) {
+					goto pass;
+				}
 			}
+
+			break;
 		}
+
+	pass:
 
 		context.hids[context.connected_controllers] = hids[hid_id];
 		result = libresense_open(&context.hids[context.connected_controllers], calibrate);
@@ -172,7 +179,6 @@ int main(const int argc, const char** const argv) {
 		}
 		context.handles[context.connected_controllers] = context.hids[context.connected_controllers].handle;
 		context.connected_controllers++;
-	skip:
 	}
 
 	if (context.connected_controllers == 0) {
