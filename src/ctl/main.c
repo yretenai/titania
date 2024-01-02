@@ -11,13 +11,20 @@
 
 const libresensectl_mode modes[] = { { "report", libresensectl_mode_report },
 	{ "report-loop", libresensectl_mode_report_loop },
+	{ "watch", libresensectl_mode_report_loop },
 	{ "list", libresensectl_mode_list },
 	{ "test", libresensectl_mode_test },
 	{ "dump", libresensectl_mode_dump },
 	{ "bench", libresensectl_mode_bench },
+	{ "benchmark", libresensectl_mode_bench },
 	{ "led", libresensectl_mode_led },
+	{ "light", libresensectl_mode_led },
 	{ "profile", libresensectl_mode_stub },
 	{ "pair", libresensectl_mode_stub },
+	{ "disconnect", libresensectl_mode_stub },
+	{ "connect", libresensectl_mode_stub },
+	{ "usb", libresensectl_mode_stub },
+	{ "bt", libresensectl_mode_stub },
 	{ nullptr, nullptr } };
 
 int main(const int argc, const char** const argv) {
@@ -69,6 +76,8 @@ int main(const int argc, const char** const argv) {
 				printf("\tprofile export {triangle, square, cross, triangle, 0, 1, 2, 3} path/to/profile.json: export a controller profile to json\n");
 				printf("\tprofile delete: delete a given profile\n");
 				printf("\tpair address link-key: pair with a bluetooth adapter\n");
+				printf("\tbt: instruct controller to connect via bluetooth\n");
+				printf("\tusb: instruct controller to connect via usb\n");
 				return 0;
 			}
 
