@@ -12,17 +12,16 @@
 const libresensectl_mode modes[] = { { "report", libresensectl_mode_report },
 	{ "report-loop", libresensectl_mode_report_loop },
 	{ "list", libresensectl_mode_list },
-	{ "test", libresensectl_mode_list },
-	{ "dump", libresensectl_mode_list },
-	{ "bench", libresensectl_mode_list },
-	{ "led", libresensectl_mode_list },
-	{ "profile", libresensectl_mode_list },
-	{ "pair", libresensectl_mode_list },
+	{ "test", libresensectl_mode_test },
+	{ "dump", libresensectl_mode_dump },
+	{ "bench", libresensectl_mode_bench },
+	{ "led", libresensectl_mode_led },
+	{ "profile", libresensectl_mode_stub },
+	{ "pair", libresensectl_mode_stub },
 	{ nullptr, nullptr } };
 
 int main(const int argc, const char** const argv) {
 	printf(LIBRESENSE_PROJECT_NAME " version %s\n", LIBRESENSE_PROJECT_VERSION);
-	printf(LIBRESENSE_PROJECT_NAME "ctl version %s\n", LIBRESENSE_CONTROL_VERSION);
 
 	const char* mode = nullptr;
 	libresensectl_context context = { 0 };
@@ -65,9 +64,9 @@ int main(const int argc, const char** const argv) {
 				printf("\tdump: dump every feature report from connected controllers\n");
 				printf("\tbench: benchmark report parsing speed\n");
 				printf("\tled #rrggbb|off [player-led]: update LED color\n");
-				printf("\tprofile convert path/to/report.bin: convert merged dualsense profile to json\n");
-				printf("\tprofile import {square, cross, triangle, 1, 2, 3} path/to/report.json: import a controller profile to the specified slot\n");
-				printf("\tprofile export {triangle, square, cross, triangle, 0, 1, 2, 3} path/to/report.json: export a controller profile to json\n");
+				printf("\tprofile convert path/to/report.{bin, json}: convert merged dualsense profile from or to json\n");
+				printf("\tprofile import {square, cross, triangle, 1, 2, 3} path/to/profile.json: import a controller profile to the specified slot\n");
+				printf("\tprofile export {triangle, square, cross, triangle, 0, 1, 2, 3} path/to/profile.json: export a controller profile to json\n");
 				printf("\tprofile delete: delete a given profile\n");
 				printf("\tpair address link-key: pair with a bluetooth adapter\n");
 				return 0;
@@ -105,8 +104,10 @@ int main(const int argc, const char** const argv) {
 				calibrate = false;
 			} else if (text[0] != '-') {
 				mode = text;
-				context.argc = argc - i;
-				context.argv = argv + i;
+				if (argc - i > 1) {
+					context.argc = argc - i - 1;
+					context.argv = argv + i + 1;
+				}
 				break;
 			}
 		}

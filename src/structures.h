@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <stdint.h>
 
-#include <hidapi/hidapi.h>
+#include <hidapi.h>
 
 #include "../include/libresense.h"
 

@@ -10,7 +10,7 @@
 #include "config.h"
 
 #ifdef __APPLE__
-#include <hidapi/hidapi_darwin.h>
+#include <hidapi_darwin.h>
 #endif
 
 const int32_t libresense_max_controllers = LIBRESENSE_MAX_CONTROLLERS;
@@ -390,7 +390,7 @@ libresense_result libresense_update_led(const libresense_handle handle, const li
 		hid_state->led.color.z = NORM_CLAMP_UINT8(data.color.z);
 	}
 
-	if (data.led != hid_state->led.led_id) {
+	if (data.led != LIBRESENSE_LED_NO_UPDATE) {
 		hid_state->flags.player_indicator_led = true;
 		hid_state->led.led_id = data.led;
 	}

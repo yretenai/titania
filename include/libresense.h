@@ -152,8 +152,17 @@ typedef char libresense_mac[0x12];
 typedef char libresense_link_key[0x10];
 
 typedef struct {
-	float x;
-	float y;
+	union {
+		float x;
+		float r;
+		float min;
+	};
+
+	union {
+		float y;
+		float g;
+		float max;
+	};
 } libresense_vector2;
 
 typedef struct {
@@ -162,15 +171,21 @@ typedef struct {
 } libresense_vector2i;
 
 typedef struct {
-	float x;
-	float y;
-	float z;
-} libresense_vector3;
+	union {
+		float x;
+		float r;
+	};
 
-typedef struct {
-	float min;
-	float max;
-} libresense_minmax;
+	union {
+		float y;
+		float g;
+	};
+
+	union {
+		float z;
+		float b;
+	};
+} libresense_vector3;
 
 typedef struct {
 	bool dpad_up;
@@ -438,17 +453,14 @@ typedef enum {
 	LIBRESENSE_LED_PLAYER_2 = 10,
 	LIBRESENSE_LED_PLAYER_3 = 21,
 	LIBRESENSE_LED_PLAYER_4 = 27,
-	LIBRESENSE_LED_PLAYER_5 = 17,
-	LIBRESENSE_LED_PLAYER_6 = 18,
-	LIBRESENSE_LED_PLAYER_7 = 20,
-	LIBRESENSE_LED_PLAYER_8 = 24,
 	LIBRESENSE_LED_1 = 1,
 	LIBRESENSE_LED_2 = 2,
 	LIBRESENSE_LED_3 = 4,
 	LIBRESENSE_LED_4 = 8,
 	LIBRESENSE_LED_5 = 16,
 	LIBRESENSE_LED_ALL = 31,
-	LIBRESENSE_LED_FADE = 64
+	LIBRESENSE_LED_FADE = 64,
+	LIBRESENSE_LED_NO_UPDATE = 128
 } libresense_led_index;
 
 typedef struct {
@@ -674,7 +686,7 @@ LIBRESENSE_EXPORT libresense_result libresense_get_control(const libresense_hand
  * @param power_reduction: power reduction amount for trigger motors
  */
 LIBRESENSE_EXPORT libresense_result libresense_update_effect(const libresense_handle handle, const libresense_effect_update left_trigger, const libresense_effect_update right_trigger,
-															 const float power_reduction);
+	const float power_reduction);
 
 /**
  * @brief update rumble state of a controller
@@ -685,7 +697,7 @@ LIBRESENSE_EXPORT libresense_result libresense_update_effect(const libresense_ha
  * @param emulate_legacy_behavior: instructs the dualsense to emulate how rumble motors used to work
  */
 LIBRESENSE_EXPORT libresense_result libresense_update_rumble(const libresense_handle handle, const float large_motor, const float small_motor, const float power_reduction,
-															 const bool emulate_legacy_behavior);
+	const bool emulate_legacy_behavior);
 
 /**
  * @brief pair a controller with a bluetooth adapter

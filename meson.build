@@ -39,8 +39,7 @@ configure_file(
 	configuration : configuration_data({
 		'LIBRESENSE_MAX_CONTROLLERS' : get_option('libresense_max_controllers'),
 		'LIBRESENSE_PROJECT_NAME' : '"' + meson.project_name() + '"',
-		'LIBRESENSE_PROJECT_VERSION' : '"' + meson.project_version() + '"',
-		'LIBRESENSE_CONTROL_VERSION' : '"0.0.0"'
+		'LIBRESENSE_PROJECT_VERSION' : '"' + meson.project_version() + '"'
 	})
 )
 
@@ -48,10 +47,6 @@ hidapi = dependency('hidapi', version : '>=0.13.0')
 icu = dependency('icu-uc', version : '>=73.2')
 
 libresense_inc = include_directories('include/')
-
-if get_option('libresense_debug')
-	add_project_arguments('-DLIBRESENSE_DEBUG', language : 'c')
-endif
 
 libresense_lib = library(meson.project_name(), [
 		'src/access.c',
