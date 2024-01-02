@@ -19,12 +19,14 @@ const libresensectl_mode modes[] = { { "report", libresensectl_mode_report },
 	{ "benchmark", libresensectl_mode_bench },
 	{ "led", libresensectl_mode_led },
 	{ "light", libresensectl_mode_led },
-	{ "profile", libresensectl_mode_stub },
 	{ "pair", libresensectl_mode_stub },
 	{ "disconnect", libresensectl_mode_stub },
 	{ "connect", libresensectl_mode_stub },
 	{ "usb", libresensectl_mode_stub },
 	{ "bt", libresensectl_mode_stub },
+	// Edge, Access
+	{ "profile", libresensectl_mode_stub },
+	//
 	{ nullptr, nullptr } };
 
 int main(const int argc, const char** const argv) {
@@ -70,7 +72,7 @@ int main(const int argc, const char** const argv) {
 				printf("\ttest: test various features of the connected controllers\n");
 				printf("\tdump: dump every feature report from connected controllers\n");
 				printf("\tbench: benchmark report parsing speed\n");
-				printf("\tled #rrggbb|off [player-led]: update LED color\n");
+				printf("\tled #rrggbb|off player-led: update LED color\n");
 				printf("\tprofile convert path/to/report.{bin, json}: convert merged dualsense profile from or to json\n");
 				printf("\tprofile import {square, cross, triangle, 1, 2, 3} path/to/profile.json: import a controller profile to the specified slot\n");
 				printf("\tprofile export {triangle, square, cross, triangle, 0, 1, 2, 3} path/to/profile.json: export a controller profile to json\n");
