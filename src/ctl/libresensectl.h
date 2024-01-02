@@ -38,6 +38,9 @@ void libresensectl_mode_dump(libresensectl_context context);
 void libresensectl_mode_test(libresensectl_context context);
 void libresensectl_mode_bench(libresensectl_context context);
 void libresensectl_mode_led(libresensectl_context context);
+void libresensectl_mode_bt_pair(libresensectl_context context);
+void libresensectl_mode_bt_connect(libresensectl_context context);
+void libresensectl_mode_bt_disconnect(libresensectl_context context);
 
 #define LIBREPRINT_SEP() printf(",")
 #define LIBREPRINT_STR(struc, field) printf(" " #field " = %s", struc.field)
