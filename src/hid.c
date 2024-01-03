@@ -100,6 +100,8 @@ libresense_result libresense_get_hids(libresense_hid* hids, const size_t hids_le
 				hids[index].is_access = IS_ACCESS(hids[index]);
 				wcscpy(hids[index].hid_serial, dev->serial_number);
 
+				hids[index].checksum = libresense_calc_checksum(crc_seed_libresense, (uint8_t*) &hids[index], sizeof(libresense_hid));
+
 				index += 1;
 
 				if (index >= hids_length) {
@@ -122,6 +124,14 @@ libresense_result libresense_get_hids(libresense_hid* hids, const size_t hids_le
 libresense_result libresense_open(libresense_hid* handle, const bool use_calibration) {
 	CHECK_INIT();
 
+	const uint32_t old_check = handle->checksum;
+	handle->checksum = 0;
+	const uint32_t check = libresense_calc_checksum(crc_seed_libresense, (uint8_t*) handle, sizeof(libresense_hid));
+	handle->checksum = old_check;
+	if (check != old_check) {
+		return LIBRESENSE_INVALID_HANDLE_DATA;
+	}
+
 	for (int i = 0; i < LIBRESENSE_MAX_CONTROLLERS; i++) {
 		if (state[i].hid == nullptr) {
 			memset(&state[i], 0, sizeof(dualsense_state));
@@ -134,7 +144,7 @@ libresense_result libresense_open(libresense_hid* handle, const bool use_calibra
 			state[i].output.data.id = DUALSENSE_REPORT_BLUETOOTH;
 			state[i].output.data.msg.data.id = DUALSENSE_REPORT_OUTPUT;
 
-			if (state[i].hid_info.is_bluetooth) { // on linux this also releases control from the kernel driver
+			if (state[i].hid_info.is_bluetooth) { // this is needed to reset LEDs from controller firmware
 				state[i].output.data.msg.data.flags.reset_led = true;
 				libresense_push(&handle->handle, 1);
 			}
@@ -190,49 +200,51 @@ libresense_result libresense_open(libresense_hid* handle, const bool use_calibra
 				handle->serial.paired_mac[0] = 0;
 			}
 
-			dualsense_calibration_info calibration;
-			calibration.report_id = DUALSENSE_REPORT_CALIBRATION;
-			if (HID_PASS(hid_get_feature_report(state[i].hid, (uint8_t*) &calibration, sizeof(dualsense_calibration_info)))) {
-				state[i].calibration[CALIBRATION_GYRO_X].max = CALIBRATION_GYRO(CALIBRATION_RAW_X, max);
-				state[i].calibration[CALIBRATION_GYRO_Y].max = CALIBRATION_GYRO(CALIBRATION_RAW_Y, max);
-				state[i].calibration[CALIBRATION_GYRO_Z].max = CALIBRATION_GYRO(CALIBRATION_RAW_Z, max);
+			if (!state[i].hid_info.is_access) {
+				dualsense_calibration_info calibration;
+				calibration.report_id = DUALSENSE_REPORT_CALIBRATION;
+				if (use_calibration && HID_PASS(hid_get_feature_report(state[i].hid, (uint8_t*) &calibration, sizeof(dualsense_calibration_info)))) {
+					state[i].calibration[CALIBRATION_GYRO_X].max = CALIBRATION_GYRO(CALIBRATION_RAW_X, max);
+					state[i].calibration[CALIBRATION_GYRO_Y].max = CALIBRATION_GYRO(CALIBRATION_RAW_Y, max);
+					state[i].calibration[CALIBRATION_GYRO_Z].max = CALIBRATION_GYRO(CALIBRATION_RAW_Z, max);
 
-				state[i].calibration[CALIBRATION_GYRO_X].min = CALIBRATION_GYRO(CALIBRATION_RAW_X, min);
-				state[i].calibration[CALIBRATION_GYRO_Y].min = CALIBRATION_GYRO(CALIBRATION_RAW_Y, min);
-				state[i].calibration[CALIBRATION_GYRO_Z].min = CALIBRATION_GYRO(CALIBRATION_RAW_Z, min);
+					state[i].calibration[CALIBRATION_GYRO_X].min = CALIBRATION_GYRO(CALIBRATION_RAW_X, min);
+					state[i].calibration[CALIBRATION_GYRO_Y].min = CALIBRATION_GYRO(CALIBRATION_RAW_Y, min);
+					state[i].calibration[CALIBRATION_GYRO_Z].min = CALIBRATION_GYRO(CALIBRATION_RAW_Z, min);
 
-				state[i].calibration[CALIBRATION_GYRO_X].bias = calibration.gyro_bias.x;
-				state[i].calibration[CALIBRATION_GYRO_Y].bias = calibration.gyro_bias.y;
-				state[i].calibration[CALIBRATION_GYRO_Z].bias = calibration.gyro_bias.z;
+					state[i].calibration[CALIBRATION_GYRO_X].bias = calibration.gyro_bias.x;
+					state[i].calibration[CALIBRATION_GYRO_Y].bias = calibration.gyro_bias.y;
+					state[i].calibration[CALIBRATION_GYRO_Z].bias = calibration.gyro_bias.z;
 
-				state[i].calibration[CALIBRATION_GYRO_X].speed = calibration.gyro_speed.min;
-				state[i].calibration[CALIBRATION_GYRO_Y].speed = calibration.gyro_speed.min;
-				state[i].calibration[CALIBRATION_GYRO_Z].speed = calibration.gyro_speed.min;
+					state[i].calibration[CALIBRATION_GYRO_X].speed = calibration.gyro_speed.min;
+					state[i].calibration[CALIBRATION_GYRO_Y].speed = calibration.gyro_speed.min;
+					state[i].calibration[CALIBRATION_GYRO_Z].speed = calibration.gyro_speed.min;
 
-				state[i].calibration[CALIBRATION_ACCELEROMETER_X].max = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_X, max);
-				state[i].calibration[CALIBRATION_ACCELEROMETER_Y].max = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Y, max);
-				state[i].calibration[CALIBRATION_ACCELEROMETER_Z].max = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Z, max);
+					state[i].calibration[CALIBRATION_ACCELEROMETER_X].max = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_X, max);
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Y].max = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Y, max);
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Z].max = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Z, max);
 
-				state[i].calibration[CALIBRATION_ACCELEROMETER_X].min = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_X, min);
-				state[i].calibration[CALIBRATION_ACCELEROMETER_Y].min = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Y, min);
-				state[i].calibration[CALIBRATION_ACCELEROMETER_Z].min = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Z, min);
+					state[i].calibration[CALIBRATION_ACCELEROMETER_X].min = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_X, min);
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Y].min = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Y, min);
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Z].min = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Z, min);
 
-				state[i].calibration[CALIBRATION_ACCELEROMETER_X].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_X);
-				state[i].calibration[CALIBRATION_ACCELEROMETER_Y].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_Y);
-				state[i].calibration[CALIBRATION_ACCELEROMETER_Z].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_Z);
-			} else {
-				state[i].calibration[CALIBRATION_GYRO_X] =
-					(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
-				state[i].calibration[CALIBRATION_GYRO_Y] =
-					(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
-				state[i].calibration[CALIBRATION_GYRO_Z] =
-					(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
-				state[i].calibration[CALIBRATION_ACCELEROMETER_X] =
-					(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), 0, 1 };
-				state[i].calibration[CALIBRATION_ACCELEROMETER_Y] =
-					(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), 0, 1 };
-				state[i].calibration[CALIBRATION_ACCELEROMETER_Z] =
-					(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), 0, 1 };
+					state[i].calibration[CALIBRATION_ACCELEROMETER_X].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_X);
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Y].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_Y);
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Z].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_Z);
+				} else {
+					state[i].calibration[CALIBRATION_GYRO_X] =
+						(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
+					state[i].calibration[CALIBRATION_GYRO_Y] =
+						(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
+					state[i].calibration[CALIBRATION_GYRO_Z] =
+						(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
+					state[i].calibration[CALIBRATION_ACCELEROMETER_X] =
+						(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), 0, 1 };
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Y] =
+						(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), 0, 1 };
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Z] =
+						(libresense_calibration_bit) { DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), 0, 1 };
+				}
 			}
 
 			if (IS_EDGE(state[i].hid_info)) {
@@ -269,6 +281,9 @@ libresense_result libresense_open(libresense_hid* handle, const bool use_calibra
 				libresense_update_led(handle->handle, update);
 				libresense_push(&handle->handle, 1);
 			}
+
+			state[i].hid_info.checksum = libresense_calc_checksum(crc_seed_libresense, (uint8_t*) &state[i].hid_info, sizeof(libresense_hid) - 4);
+
 			return LIBRESENSE_OK;
 		}
 	}

@@ -13,6 +13,50 @@
 
 #define CALIBRATE_BIAS(value, slot) CALIBRATE(value - calibration[slot].bias, slot)
 
+void libresense_convert_input_access(const libresense_hid hid_info, const dualsense_input_msg input, libresense_data* data) {
+	data->battery.state = input.access.battery.state + 1;
+	if (data->battery.state == LIBRESENSE_BATTERY_FULL) {
+		data->battery.level = 1.0f;
+	} else {
+		data->battery.level = input.access.battery.level * 0.1 + 0.10;
+	}
+
+	data->access_device.buttons.button1 = input.access.raw_button.button1;
+	data->access_device.buttons.button2 = input.access.raw_button.button2;
+	data->access_device.buttons.button3 = input.access.raw_button.button3;
+	data->access_device.buttons.button4 = input.access.raw_button.button4;
+	data->access_device.buttons.button5 = input.access.raw_button.button5;
+	data->access_device.buttons.button6 = input.access.raw_button.button6;
+	data->access_device.buttons.button7 = input.access.raw_button.button7;
+	data->access_device.buttons.button8 = input.access.raw_button.button8;
+	data->access_device.buttons.center_button = input.access.raw_button.center_button;
+	data->access_device.buttons.stick_button = input.access.raw_button.stick_button;
+	data->access_device.buttons.playstation = input.access.raw_button.playstation;
+	data->access_device.buttons.profile = input.access.raw_button.profile;
+	data->access_device.buttons.reserved = input.access.raw_button.reserved;
+
+	data->access_device.raw_stick.x = DENORM_CLAMP_INT8(input.access.raw_stick.x);
+	data->access_device.raw_stick.y = DENORM_CLAMP_INT8(input.access.raw_stick.y);
+
+	data->access_device.sticks[LIBRESENSE_PRIMARY].pos.x = DENORM_CLAMP_INT8(input.access.sticks[DUALSENSE_ACCESS_LEFT].stick.x);
+	data->access_device.sticks[LIBRESENSE_PRIMARY].pos.y = DENORM_CLAMP_INT8(input.access.sticks[DUALSENSE_ACCESS_LEFT].stick.y);
+	data->access_device.sticks[LIBRESENSE_SECONDARY].pos.x = DENORM_CLAMP_INT8(input.access.sticks[DUALSENSE_ACCESS_RIGHT].stick.x);
+	data->access_device.sticks[LIBRESENSE_SECONDARY].pos.y = DENORM_CLAMP_INT8(input.access.sticks[DUALSENSE_ACCESS_RIGHT].stick.y);
+
+	data->access_device.current_profile_id = input.access.profile_id + 1;
+	data->access_device.unknown_flags = input.access.combined_device_flags;
+
+	data->access_device.unknown0 = input.access.unknown0;
+	data->access_device.unknown1 = input.access.unknown1;
+	data->access_device.unknown2 = input.access.unknown2;
+	data->access_device.unknown3 = input.access.unknown3;
+	data->access_device.unknown4 = input.access.unknown4;
+	data->access_device.unknown5 = input.access.unknown5;
+	data->access_device.unknown6 = input.access.unknown6;
+	data->access_device.unknown7 = input.access.unknown7;
+	data->access_device.unknown8 = input.access.unknown8;
+}
+
 void libresense_convert_input(const libresense_hid hid_info, const dualsense_input_msg input, libresense_data* data, libresense_calibration_bit calibration[6]) {
 	*data = (libresense_data) { 0 };
 	data->hid = hid_info;
@@ -53,7 +97,8 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 	data->sticks[LIBRESENSE_RIGHT].y = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_RIGHT].y);
 
 	if (IS_ACCESS(hid_info)) {
-		return; // todo.
+		libresense_convert_input_access(hid_info, input, data);
+		return;
 	}
 
 	data->time.touch_sequence = input.touch_sequence;

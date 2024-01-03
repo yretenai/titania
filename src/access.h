@@ -19,6 +19,31 @@
 #define PACKED __attribute__((__packed__))
 #endif
 
+typedef struct {
+	bool button1 : 1;
+	bool button2 : 1;
+	bool button3 : 1;
+	bool button4 : 1;
+	bool button5 : 1;
+	bool button6 : 1;
+	bool button7 : 1;
+	bool button8 : 1;
+	bool center_button : 1;
+	bool stick_button : 1;
+	bool playstation : 1;
+	bool profile : 1;
+	uint8_t reserved : 4;
+} dualsense_access_raw_button;
+
+static_assert(sizeof(dualsense_access_raw_button) == 2, "dualsense_access_raw_button is not 2 bytes");
+
+typedef struct {
+	dualsense_vector2b stick;
+	uint16_t unknown;
+} dualsense_access_stick;
+
+static_assert(sizeof(dualsense_access_stick) == 4, "dualsense_access_stick is not 4 bytes");
+
 #ifdef _MSC_VER
 #pragma pack(pop)
 #endif

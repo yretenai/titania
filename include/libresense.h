@@ -48,6 +48,7 @@ typedef enum {
 	LIBRESENSE_OK = 0,
 	LIBRESENSE_NOT_INITIALIZED,
 	LIBRESENSE_INVALID_LIBRARY,
+	LIBRESENSE_INVALID_HANDLE_DATA,
 	LIBRESENSE_INVALID_HANDLE,
 	LIBRESENSE_INVALID_DATA,
 	LIBRESENSE_INVALID_PROFILE,
@@ -140,6 +141,7 @@ typedef enum {
 LIBRESENSE_EXPORT extern const char* const libresense_error_msg[LIBRESENSE_ERROR_MAX + 1];
 LIBRESENSE_EXPORT extern const char* const libresense_battery_state_msg[LIBRESENSE_BATTERY_MAX + 1];
 LIBRESENSE_EXPORT extern const char* const libresense_profile_id_msg[LIBRESENSE_PROFILE_MAX_META + 1];
+LIBRESENSE_EXPORT extern const char* const libresense_profile_id_alt_msg[LIBRESENSE_PROFILE_MAX_META + 1];
 LIBRESENSE_EXPORT extern const char* const libresense_level_msg[LIBRESENSE_LEVEL_LOW + 2];
 LIBRESENSE_EXPORT extern const char* const libresense_trigger_effect_msg[LIBRESENSE_TRIGGER_EFFECT_MAX + 1];
 LIBRESENSE_EXPORT extern const char* const libresense_edge_button_id_msg[LIBRESENSE_BUTTON_ID_MAX + 1];
@@ -388,6 +390,7 @@ typedef struct {
 	libresense_serial_info serial;
 	libresense_firmware_info firmware;
 	libresense_edge_profile edge_profiles[LIBRESENSE_PROFILE_COUNT];
+	uint32_t checksum;
 } libresense_hid;
 
 typedef struct {
@@ -431,6 +434,44 @@ typedef struct {
 } libresense_edge_state;
 
 typedef struct {
+	bool button1;
+	bool button2;
+	bool button3;
+	bool button4;
+	bool button5;
+	bool button6;
+	bool button7;
+	bool button8;
+	bool center_button;
+	bool stick_button;
+	bool playstation;
+	bool profile;
+	uint8_t reserved;
+} libresense_access_button;
+
+typedef struct {
+	libresense_vector2 pos;
+	uint16_t unknown;
+} libresense_access_stick;
+
+typedef struct {
+	libresense_access_button buttons;
+	libresense_vector2 raw_stick;
+	libresense_access_stick sticks[2];
+	libresense_profile_id current_profile_id;
+	uint32_t unknown_flags;
+	uint32_t unknown0;
+	uint32_t unknown1;
+	uint32_t unknown2;
+	uint32_t unknown3;
+	uint32_t unknown4;
+	uint32_t unknown5;
+	uint32_t unknown6;
+	uint32_t unknown7;
+	uint32_t unknown8;
+} libresense_access_state;
+
+typedef struct {
 	libresense_hid hid;
 	libresense_bt bt;
 	libresense_time time;
@@ -442,6 +483,7 @@ typedef struct {
 	libresense_battery battery;
 	libresense_device_state device;
 	libresense_edge_state edge_device;
+	libresense_access_state access_device;
 	uint64_t state_id;
 } libresense_data;
 

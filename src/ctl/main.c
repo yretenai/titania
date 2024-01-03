@@ -31,9 +31,9 @@ const libresensectl_mode modes[] = { { "report", libresensectl_mode_report },
 	//
 	{ nullptr, nullptr } };
 
-libresensectl_context context = { 0 };
+static libresensectl_context context = { 0 };
+static bool interrupted = false; // separate in case i accidentally set should_stop somewhere else.
 bool should_stop = false;
-bool interrupted = false; // separate in case i accidentally set should_stop somewhere else.
 
 void shutdown() {
 	if (interrupted) {

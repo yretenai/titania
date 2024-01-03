@@ -16,10 +16,10 @@
 
 static_assert(__STDC_VERSION__ >= 202000L, "a c2x compiler is required");
 
-#include "common.h"
-#include "enums.h"
-#include "edge.h"
 #include "access.h"
+#include "common.h"
+#include "edge.h"
+#include "enums.h"
 
 #ifdef _MSC_VER
 #define PACKED
@@ -27,13 +27,6 @@ static_assert(__STDC_VERSION__ >= 202000L, "a c2x compiler is required");
 #else
 #define PACKED __attribute__((__packed__))
 #endif
-
-typedef struct PACKED {
-	uint8_t x;
-	uint8_t y;
-} dualsense_stick;
-
-static_assert(sizeof(dualsense_stick) == 2, "dualsense_stick is not 2 bytes");
 
 typedef struct PACKED {
 	dualsense_dpad dpad : 4;
@@ -150,17 +143,41 @@ typedef struct PACKED {
 		dualsense_report_id id;
 	};
 
-	dualsense_stick sticks[2];
+	dualsense_vector2b sticks[2];
 	uint8_t triggers[2];
 	uint8_t sequence;
 	dualsense_button buttons;
 	uint32_t firmware_time;
-	dualsense_sensors sensors;
-	dualsense_touch touch[2];
-	uint8_t touch_sequence;
-	dualsense_adaptive_trigger adaptive_triggers[2];
-	uint32_t state_id;
-	dualsense_device_state state;
+
+	union {
+		struct PACKED {
+			dualsense_sensors sensors;
+			dualsense_touch touch[2];
+			uint8_t touch_sequence;
+			dualsense_adaptive_trigger adaptive_triggers[2];
+			uint32_t state_id;
+			dualsense_device_state state;
+		};
+
+		struct PACKED {
+			dualsense_access_raw_button raw_button;
+			dualsense_vector2b raw_stick;
+			uint32_t unknown0; // 00 * 4
+			uint32_t unknown1; // 00 * 4
+			uint32_t unknown2; // ? 80 00 00 00
+			uint32_t unknown3; // ? 80 00 00 00
+			uint8_t unknown4; // 00
+			dualsense_battery_state battery;
+			uint16_t unknown5; // some bit flags? 06 00
+			uint8_t profile_id; // 1..3
+			uint8_t combined_device_flags; // more bit flags: 4 = E3, 64 = E4. Where are E1 and E2???? I think E1 and E2 are for combining Access controllers? Likely related to unknown 2 and 3.
+			uint8_t unknown6; // 1
+			dualsense_access_stick sticks[2];
+			uint32_t unknown7; // 0
+			uint8_t unknown8; // 0
+		} access;
+	};
+
 	uint64_t checksum;
 } dualsense_input_msg;
 
@@ -457,6 +474,7 @@ extern uint32_t crc_seed_input;
 extern uint32_t crc_seed_output;
 extern uint32_t crc_seed_feature;
 extern uint32_t crc_seed_feature_edge;
+extern uint32_t crc_seed_libresense;
 
 /**
  * @brief convert dualsense input report to libresense's representation

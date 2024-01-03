@@ -10,23 +10,7 @@
 
 #include "config.h"
 
-#define LIBREPRINT_SEP() printf(",")
-#define LIBREPRINT_STR(struc, field) printf(" " #field " = %s", struc.field)
-#define LIBREPRINT_FIRMWARE_HW(struc, field) \
-	printf(" " #field " { generation = %d, variation = %d, revision = %d, reserved = %d }", struc.field.generation, struc.field.variation, struc.field.revision, struc.field.reserved)
-#define LIBREPRINT_UPDATE(struc, field) printf(" " #field " = %04x (%d.%d.%d)", struc.field.major, struc.field.major, struc.field.minor, struc.field.revision)
-#define LIBREPRINT_FIRMWARE(struc, field) printf(" " #field " = %d.%d.%d", struc.field.major, struc.field.minor, struc.field.revision)
-#define LIBREPRINT_U32(struc, field) printf(" " #field " = %u", struc.field)
-#define LIBREPRINT_U64(struc, field) printf(" " #field " = %lu", struc.field)
-#define LIBREPRINT_X16(struc, field) printf(" " #field " = 0x%04x", struc.field)
-#define LIBREPRINT_FLOAT(struc, field) printf(" " #field " = %f", struc.field)
-#define LIBREPRINT_PERCENT(struc, field) printf(" " #field " = %f%%", struc.field * 100.0f)
-#define LIBREPRINT_PERCENT_LABEL(struc, field, name) printf(" " name " = %f%%", struc.field * 100.0f)
-#define LIBREPRINT_ENUM(struc, field, strs, name) printf(" " name " = %s", strs[struc.field])
-#define LIBREPRINT_TEST(struc, field) printf(" " #field " = %s", struc.field ? "Y" : "N")
-#define LIBREPRINT_BUTTON_TEST(field) printf(" " #field " = %s", data.buttons.field ? "Y" : "N")
-#define LIBREPRINT_EDGE_BUTTON_TEST(field) printf(" " #field " = %s", data.edge_device.raw_buttons.field ? "Y" : "N")
-#define LIBREPRINT_PROFILE_BUTTON_TEST(field) printf(" " #field " = %s", profile.disabled_buttons.field ? "Y" : "N")
+#include "ctl/libreprint.h"
 
 #define libresense_errorf(fp, result, fmt) fprintf(fp, "[" LIBRESENSE_PROJECT_NAME "] " fmt ": %s\n", libresense_error_msg[result])
 #define libresense_printf(fmt, ...) printf("[" LIBRESENSE_PROJECT_NAME "] " fmt "\n", __VA_ARGS__)
@@ -36,7 +20,7 @@ void print_profile(libresense_profile_id profile_id, libresense_edge_profile pro
 		return;
 	}
 
-	printf("profile %s:\n", libresense_edge_profile_id_msg[profile_id]);
+	printf("profile %s:\n", libresense_profile_id_msg[profile_id]);
 
 	// clang-format off
 	LIBREPRINT_TEST(profile, valid); printf("\n");
@@ -268,63 +252,107 @@ int main(int argc, const char** argv) {
 		LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_RIGHT], y);
 		printf(" } }\n");
 
-		if(data.hid.is_access) {
-			continue;
+		if(!data.hid.is_access) {
+			printf("triggers { left = {");
+			LIBREPRINT_PERCENT(data.triggers[LIBRESENSE_LEFT], level); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.triggers[LIBRESENSE_LEFT], id); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.triggers[LIBRESENSE_LEFT], section); LIBREPRINT_SEP();
+			LIBREPRINT_ENUM(data.triggers[LIBRESENSE_LEFT], effect, libresense_trigger_effect_msg, "effect");
+			printf(" }, right = {");
+			LIBREPRINT_PERCENT(data.triggers[LIBRESENSE_RIGHT], level); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.triggers[LIBRESENSE_RIGHT], id); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.triggers[LIBRESENSE_RIGHT], section); LIBREPRINT_SEP();
+			LIBREPRINT_ENUM(data.triggers[LIBRESENSE_RIGHT], effect, libresense_trigger_effect_msg, "effect");
+			printf(" } }\n");
+
+			printf("touch { primary = {");
+			LIBREPRINT_TEST(data.touch[LIBRESENSE_PRIMARY], active); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY], id); LIBREPRINT_SEP();
+			printf(" pos = {");
+			LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY].pos, x); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY].pos, y);
+			printf(" } }, secondary = {");
+			LIBREPRINT_TEST(data.touch[LIBRESENSE_SECONDARY], active); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY], id); LIBREPRINT_SEP();
+			printf(" pos = {");
+			LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY].pos, x); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY].pos, y);
+			printf(" } } }\n");
+
+
+			printf("sensors {");
+			LIBREPRINT_U32(data.sensors, temperature); LIBREPRINT_SEP();
+			printf(" accelerometer = {");
+			LIBREPRINT_FLOAT(data.sensors.accelerometer, x); LIBREPRINT_SEP();
+			LIBREPRINT_FLOAT(data.sensors.accelerometer, y); LIBREPRINT_SEP();
+			LIBREPRINT_FLOAT(data.sensors.accelerometer, z);
+			printf(" }, gyro = {");
+			LIBREPRINT_FLOAT(data.sensors.gyro, x); LIBREPRINT_SEP();
+			LIBREPRINT_FLOAT(data.sensors.gyro, y); LIBREPRINT_SEP();
+			LIBREPRINT_FLOAT(data.sensors.gyro, z);
+			printf(" } }\n");
+
+			printf("state {");
+			LIBREPRINT_TEST(data.device, headphones); LIBREPRINT_SEP();
+			LIBREPRINT_TEST(data.device, headset); LIBREPRINT_SEP();
+			LIBREPRINT_TEST(data.device, muted); LIBREPRINT_SEP();
+			LIBREPRINT_TEST(data.device, usb_data); LIBREPRINT_SEP();
+			LIBREPRINT_TEST(data.device, usb_power); LIBREPRINT_SEP();
+			LIBREPRINT_TEST(data.device, external_mic); LIBREPRINT_SEP();
+			LIBREPRINT_TEST(data.device, haptic_filter); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.device, reserved);
+			printf(" }\n");
+		} else {
+			printf("sticks { primary = {");
+			LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_PRIMARY], pos.x); LIBREPRINT_SEP();
+			LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_PRIMARY], pos.y); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.access_device.sticks[LIBRESENSE_PRIMARY], unknown);
+			printf(" }, secondary = {");
+			LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_SECONDARY], pos.x); LIBREPRINT_SEP();
+			LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_SECONDARY], pos.y); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.access_device.sticks[LIBRESENSE_SECONDARY], unknown);
+			printf(" } }\n");
+
+			printf("raw buttons {");
+			LIBREPRINT_ACCESS_BUTTON_TEST(button1); LIBREPRINT_SEP();
+			LIBREPRINT_ACCESS_BUTTON_TEST(button2); LIBREPRINT_SEP();
+			LIBREPRINT_ACCESS_BUTTON_TEST(button3); LIBREPRINT_SEP();
+			LIBREPRINT_ACCESS_BUTTON_TEST(button4); LIBREPRINT_SEP();
+			LIBREPRINT_ACCESS_BUTTON_TEST(button5); LIBREPRINT_SEP();
+			LIBREPRINT_ACCESS_BUTTON_TEST(button6); LIBREPRINT_SEP();
+			LIBREPRINT_ACCESS_BUTTON_TEST(button7); LIBREPRINT_SEP();
+			LIBREPRINT_ACCESS_BUTTON_TEST(button8); LIBREPRINT_SEP();
+			LIBREPRINT_ACCESS_BUTTON_TEST(center_button); LIBREPRINT_SEP();
+			LIBREPRINT_ACCESS_BUTTON_TEST(stick_button); LIBREPRINT_SEP();
+			LIBREPRINT_ACCESS_BUTTON_TEST(playstation); LIBREPRINT_SEP();
+			LIBREPRINT_ACCESS_BUTTON_TEST(profile); LIBREPRINT_SEP();
+			printf(" }\n");
+
+			printf("raw sticks {");
+			LIBREPRINT_FLOAT(data.access_device.raw_stick, x); LIBREPRINT_SEP();
+			LIBREPRINT_FLOAT(data.access_device.raw_stick, y);
+			printf(" }\n");
+
+
+			printf("access state {");
+			LIBREPRINT_ENUM(data.access_device, current_profile_id, libresense_profile_id_alt_msg, "profile"); LIBREPRINT_SEP();
+			printf(" unknowns = {");
+			LIBREPRINT_U32(data.access_device, unknown_flags); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.access_device, unknown0); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.access_device, unknown1); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.access_device, unknown2); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.access_device, unknown3); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.access_device, unknown4); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.access_device, unknown5); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.access_device, unknown6); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.access_device, unknown7); LIBREPRINT_SEP();
+			LIBREPRINT_U32(data.access_device, unknown8);
+			printf(" } }\n");
 		}
-
-		printf("triggers { left = {");
-		LIBREPRINT_PERCENT(data.triggers[LIBRESENSE_LEFT], level); LIBREPRINT_SEP();
-		LIBREPRINT_U32(data.triggers[LIBRESENSE_LEFT], id); LIBREPRINT_SEP();
-		LIBREPRINT_U32(data.triggers[LIBRESENSE_LEFT], section); LIBREPRINT_SEP();
-		LIBREPRINT_ENUM(data.triggers[LIBRESENSE_LEFT], effect, libresense_trigger_effect_msg, "effect");
-		printf(" }, right = {");
-		LIBREPRINT_PERCENT(data.triggers[LIBRESENSE_RIGHT], level); LIBREPRINT_SEP();
-		LIBREPRINT_U32(data.triggers[LIBRESENSE_RIGHT], id); LIBREPRINT_SEP();
-		LIBREPRINT_U32(data.triggers[LIBRESENSE_RIGHT], section); LIBREPRINT_SEP();
-		LIBREPRINT_ENUM(data.triggers[LIBRESENSE_RIGHT], effect, libresense_trigger_effect_msg, "effect");
-		printf(" } }\n");
-
-		printf("touch { primary = {");
-		LIBREPRINT_TEST(data.touch[LIBRESENSE_PRIMARY], active); LIBREPRINT_SEP();
-		LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY], id); LIBREPRINT_SEP();
-		printf(" pos = {");
-		LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY].pos, x); LIBREPRINT_SEP();
-		LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY].pos, y);
-		printf(" } }, secondary = {");
-		LIBREPRINT_TEST(data.touch[LIBRESENSE_SECONDARY], active); LIBREPRINT_SEP();
-		LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY], id); LIBREPRINT_SEP();
-		printf(" pos = {");
-		LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY].pos, x); LIBREPRINT_SEP();
-		LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY].pos, y);
-		printf(" } } }\n");
-
-
-		printf("sensors {");
-		LIBREPRINT_U32(data.sensors, temperature); LIBREPRINT_SEP();
-		printf(" accelerometer = {");
-		LIBREPRINT_FLOAT(data.sensors.accelerometer, x); LIBREPRINT_SEP();
-		LIBREPRINT_FLOAT(data.sensors.accelerometer, y); LIBREPRINT_SEP();
-		LIBREPRINT_FLOAT(data.sensors.accelerometer, z);
-		printf(" }, gyro = {");
-		LIBREPRINT_FLOAT(data.sensors.gyro, x); LIBREPRINT_SEP();
-		LIBREPRINT_FLOAT(data.sensors.gyro, y); LIBREPRINT_SEP();
-		LIBREPRINT_FLOAT(data.sensors.gyro, z);
-		printf(" } }\n");
 
 		printf("battery {");
 		LIBREPRINT_PERCENT(data.battery, level); LIBREPRINT_SEP();
 		LIBREPRINT_ENUM(data.battery, state, libresense_battery_state_msg, "state");
-		printf(" }\n");
-
-		printf("state {");
-		LIBREPRINT_TEST(data.device, headphones); LIBREPRINT_SEP();
-		LIBREPRINT_TEST(data.device, headset); LIBREPRINT_SEP();
-		LIBREPRINT_TEST(data.device, muted); LIBREPRINT_SEP();
-		LIBREPRINT_TEST(data.device, usb_data); LIBREPRINT_SEP();
-		LIBREPRINT_TEST(data.device, usb_power); LIBREPRINT_SEP();
-		LIBREPRINT_TEST(data.device, external_mic); LIBREPRINT_SEP();
-		LIBREPRINT_TEST(data.device, haptic_filter); LIBREPRINT_SEP();
-		LIBREPRINT_U32(data.device, reserved);
 		printf(" }\n");
 
 		if (hid->is_edge) {
@@ -353,7 +381,7 @@ int main(int argc, const char** argv) {
 			LIBREPRINT_ENUM(data.edge_device, trigger_levels[LIBRESENSE_LEFT], libresense_level_msg, "left"); LIBREPRINT_SEP();
 			LIBREPRINT_ENUM(data.edge_device, trigger_levels[LIBRESENSE_RIGHT], libresense_level_msg, "right");
 			printf(" },");
-			LIBREPRINT_ENUM(data.edge_device, current_profile_id, libresense_edge_profile_id_msg, "profile"); LIBREPRINT_SEP();
+			LIBREPRINT_ENUM(data.edge_device, current_profile_id, libresense_profile_id_msg, "profile"); LIBREPRINT_SEP();
 			printf(" indicator = {");
 			LIBREPRINT_TEST(data.edge_device.profile_indicator, led); LIBREPRINT_SEP();
 			LIBREPRINT_TEST(data.edge_device.profile_indicator, vibration); LIBREPRINT_SEP();

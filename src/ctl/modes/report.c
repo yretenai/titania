@@ -101,63 +101,107 @@ libresensectl_error libresensectl_mode_report_inner(libresensectl_context* conte
 			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_RIGHT], y);
 			printf(" } }\n");
 
-			if(data.hid.is_access) {
-				continue;
+			if(!data.hid.is_access) {
+				printf("triggers { left = {");
+				LIBREPRINT_PERCENT(data.triggers[LIBRESENSE_LEFT], level); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.triggers[LIBRESENSE_LEFT], id); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.triggers[LIBRESENSE_LEFT], section); LIBREPRINT_SEP();
+				LIBREPRINT_ENUM(data.triggers[LIBRESENSE_LEFT], effect, libresense_trigger_effect_msg, "effect");
+				printf(" }, right = {");
+				LIBREPRINT_PERCENT(data.triggers[LIBRESENSE_RIGHT], level); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.triggers[LIBRESENSE_RIGHT], id); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.triggers[LIBRESENSE_RIGHT], section); LIBREPRINT_SEP();
+				LIBREPRINT_ENUM(data.triggers[LIBRESENSE_RIGHT], effect, libresense_trigger_effect_msg, "effect");
+				printf(" } }\n");
+
+				printf("touch { primary = {");
+				LIBREPRINT_TEST(data.touch[LIBRESENSE_PRIMARY], active); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY], id); LIBREPRINT_SEP();
+				printf(" pos = {");
+				LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY].pos, x); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY].pos, y);
+				printf(" } }, secondary = {");
+				LIBREPRINT_TEST(data.touch[LIBRESENSE_SECONDARY], active); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY], id); LIBREPRINT_SEP();
+				printf(" pos = {");
+				LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY].pos, x); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY].pos, y);
+				printf(" } } }\n");
+
+
+				printf("sensors {");
+				LIBREPRINT_U32(data.sensors, temperature); LIBREPRINT_SEP();
+				printf(" accelerometer = {");
+				LIBREPRINT_FLOAT(data.sensors.accelerometer, x); LIBREPRINT_SEP();
+				LIBREPRINT_FLOAT(data.sensors.accelerometer, y); LIBREPRINT_SEP();
+				LIBREPRINT_FLOAT(data.sensors.accelerometer, z);
+				printf(" }, gyro = {");
+				LIBREPRINT_FLOAT(data.sensors.gyro, x); LIBREPRINT_SEP();
+				LIBREPRINT_FLOAT(data.sensors.gyro, y); LIBREPRINT_SEP();
+				LIBREPRINT_FLOAT(data.sensors.gyro, z);
+				printf(" } }\n");
+
+				printf("state {");
+				LIBREPRINT_TEST(data.device, headphones); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.device, headset); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.device, muted); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.device, usb_data); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.device, usb_power); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.device, external_mic); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.device, haptic_filter); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.device, reserved);
+				printf(" }\n");
+			} else {
+				printf("sticks { primary = {");
+				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_PRIMARY], pos.x); LIBREPRINT_SEP();
+				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_PRIMARY], pos.y); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.access_device.sticks[LIBRESENSE_PRIMARY], unknown);
+				printf(" }, secondary = {");
+				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_SECONDARY], pos.x); LIBREPRINT_SEP();
+				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_SECONDARY], pos.y); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.access_device.sticks[LIBRESENSE_SECONDARY], unknown);
+				printf(" } }\n");
+
+				printf("raw buttons {");
+				LIBREPRINT_ACCESS_BUTTON_TEST(button1); LIBREPRINT_SEP();
+				LIBREPRINT_ACCESS_BUTTON_TEST(button2); LIBREPRINT_SEP();
+				LIBREPRINT_ACCESS_BUTTON_TEST(button3); LIBREPRINT_SEP();
+				LIBREPRINT_ACCESS_BUTTON_TEST(button4); LIBREPRINT_SEP();
+				LIBREPRINT_ACCESS_BUTTON_TEST(button5); LIBREPRINT_SEP();
+				LIBREPRINT_ACCESS_BUTTON_TEST(button6); LIBREPRINT_SEP();
+				LIBREPRINT_ACCESS_BUTTON_TEST(button7); LIBREPRINT_SEP();
+				LIBREPRINT_ACCESS_BUTTON_TEST(button8); LIBREPRINT_SEP();
+				LIBREPRINT_ACCESS_BUTTON_TEST(center_button); LIBREPRINT_SEP();
+				LIBREPRINT_ACCESS_BUTTON_TEST(stick_button); LIBREPRINT_SEP();
+				LIBREPRINT_ACCESS_BUTTON_TEST(playstation); LIBREPRINT_SEP();
+				LIBREPRINT_ACCESS_BUTTON_TEST(profile); LIBREPRINT_SEP();
+				printf(" }\n");
+
+				printf("raw sticks {");
+				LIBREPRINT_FLOAT(data.access_device.raw_stick, x); LIBREPRINT_SEP();
+				LIBREPRINT_FLOAT(data.access_device.raw_stick, y);
+				printf(" }\n");
+
+
+				printf("access state {");
+				LIBREPRINT_ENUM(data.access_device, current_profile_id, libresense_profile_id_alt_msg, "profile"); LIBREPRINT_SEP();
+				printf(" unknowns = {");
+				LIBREPRINT_U32(data.access_device, unknown_flags); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.access_device, unknown0); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.access_device, unknown1); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.access_device, unknown2); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.access_device, unknown3); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.access_device, unknown4); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.access_device, unknown5); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.access_device, unknown6); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.access_device, unknown7); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.access_device, unknown8);
+				printf(" } }\n");
 			}
-
-			printf("triggers { left = {");
-			LIBREPRINT_PERCENT(data.triggers[LIBRESENSE_LEFT], level); LIBREPRINT_SEP();
-			LIBREPRINT_U32(data.triggers[LIBRESENSE_LEFT], id); LIBREPRINT_SEP();
-			LIBREPRINT_U32(data.triggers[LIBRESENSE_LEFT], section); LIBREPRINT_SEP();
-			LIBREPRINT_ENUM(data.triggers[LIBRESENSE_LEFT], effect, libresense_trigger_effect_msg, "effect");
-			printf(" }, right = {");
-			LIBREPRINT_PERCENT(data.triggers[LIBRESENSE_RIGHT], level); LIBREPRINT_SEP();
-			LIBREPRINT_U32(data.triggers[LIBRESENSE_RIGHT], id); LIBREPRINT_SEP();
-			LIBREPRINT_U32(data.triggers[LIBRESENSE_RIGHT], section); LIBREPRINT_SEP();
-			LIBREPRINT_ENUM(data.triggers[LIBRESENSE_RIGHT], effect, libresense_trigger_effect_msg, "effect");
-			printf(" } }\n");
-
-			printf("touch { primary = {");
-			LIBREPRINT_TEST(data.touch[LIBRESENSE_PRIMARY], active); LIBREPRINT_SEP();
-			LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY], id); LIBREPRINT_SEP();
-			printf(" pos = {");
-			LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY].pos, x); LIBREPRINT_SEP();
-			LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY].pos, y);
-			printf(" } }, secondary = {");
-			LIBREPRINT_TEST(data.touch[LIBRESENSE_SECONDARY], active); LIBREPRINT_SEP();
-			LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY], id); LIBREPRINT_SEP();
-			printf(" pos = {");
-			LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY].pos, x); LIBREPRINT_SEP();
-			LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY].pos, y);
-			printf(" } } }\n");
-
-
-			printf("sensors {");
-			LIBREPRINT_U32(data.sensors, temperature); LIBREPRINT_SEP();
-			printf(" accelerometer = {");
-			LIBREPRINT_FLOAT(data.sensors.accelerometer, x); LIBREPRINT_SEP();
-			LIBREPRINT_FLOAT(data.sensors.accelerometer, y); LIBREPRINT_SEP();
-			LIBREPRINT_FLOAT(data.sensors.accelerometer, z);
-			printf(" }, gyro = {");
-			LIBREPRINT_FLOAT(data.sensors.gyro, x); LIBREPRINT_SEP();
-			LIBREPRINT_FLOAT(data.sensors.gyro, y); LIBREPRINT_SEP();
-			LIBREPRINT_FLOAT(data.sensors.gyro, z);
-			printf(" } }\n");
 
 			printf("battery {");
 			LIBREPRINT_PERCENT(data.battery, level); LIBREPRINT_SEP();
 			LIBREPRINT_ENUM(data.battery, state, libresense_battery_state_msg, "state");
-			printf(" }\n");
-
-			printf("state {");
-			LIBREPRINT_TEST(data.device, headphones); LIBREPRINT_SEP();
-			LIBREPRINT_TEST(data.device, headset); LIBREPRINT_SEP();
-			LIBREPRINT_TEST(data.device, muted); LIBREPRINT_SEP();
-			LIBREPRINT_TEST(data.device, usb_data); LIBREPRINT_SEP();
-			LIBREPRINT_TEST(data.device, usb_power); LIBREPRINT_SEP();
-			LIBREPRINT_TEST(data.device, external_mic); LIBREPRINT_SEP();
-			LIBREPRINT_TEST(data.device, haptic_filter); LIBREPRINT_SEP();
-			LIBREPRINT_U32(data.device, reserved);
 			printf(" }\n");
 
 			if (hid.is_edge) {

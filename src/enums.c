@@ -9,6 +9,7 @@ const char* const libresense_error_msg[LIBRESENSE_ERROR_MAX + 1] = {
 	"ok",
 	"not initialized",
 	"invalid library (struct size mismatch)",
+	"invalid handle data",
 	"invalid handle",
 	"invalid data",
 	"invalid profile",
@@ -37,6 +38,17 @@ const char* const libresense_profile_id_msg[LIBRESENSE_PROFILE_MAX_META + 1] = {
 	"square",
 	"cross",
 	"circle",
+	nullptr,
+	"all",
+	nullptr
+};
+
+const char* const libresense_profile_id_alt_msg[LIBRESENSE_PROFILE_MAX_META + 1] = {
+	"none",
+	"default",
+	"profile 1",
+	"profile 2",
+	"profile 3",
 	nullptr,
 	"all",
 	nullptr
