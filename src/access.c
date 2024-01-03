@@ -17,7 +17,7 @@ libresense_result libresense_update_access_led(const libresense_handle handle, c
 
 	if (data.led != LIBRESENSE_LED_NO_UPDATE) {
 		hid_state->flags.player_indicator_led = true;
-		hid_state->led.led_id = data.led;
+		hid_state->led.led_id = data.led % 4;
 	}
 
 	hid_state->flags.status_led = true;
@@ -32,7 +32,7 @@ libresense_result libresense_update_access_led(const libresense_handle handle, c
 		hid_state->led_flags.profile_led = true;
 		hid_state->led_flags.profile_led2 = true;
 		hid_state->control.profile_id = data.access.profile_led;
-		hid_state->control.set_profile_id = data.access.update_profile_led;
+		hid_state->control.disable_profile_switching = false;
 	}
 
 	return LIBRESENSE_OK;

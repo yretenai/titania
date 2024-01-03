@@ -571,7 +571,6 @@ skip_led:
 			}
 
 			update.access.enable_profile_led = true;
-			update.access.update_profile_led = true;
 			update.access.profile_led = (i % 4);
 			// 0 = off, 1 = left, 2 = both
 			update.access.enable_center_led = (i % 3) > 0;
@@ -614,7 +613,6 @@ reset_led:
 		update.access.enable_profile_led = true;
 		update.access.enable_center_led = true;
 		update.access.enable_second_center_led = false;
-		update.access.update_profile_led = true;
 
 		for (int j = 0; j < context->connected_controllers; ++j) {
 			if (datum[j].hid.is_access) {

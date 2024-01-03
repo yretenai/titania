@@ -61,7 +61,7 @@ static_assert(sizeof(dualsense_access_stick) == 4, "dualsense_access_stick is no
 
 typedef struct PACKED {
 	uint8_t profile_id : 3;
-	bool set_profile_id : 1;
+	bool disable_profile_switching : 1; // ??? this bricks profiles
 	bool unknown : 1;
 	bool unknown2 : 1;
 	bool unknown3 : 1;

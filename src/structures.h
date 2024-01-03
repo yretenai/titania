@@ -288,7 +288,7 @@ typedef struct PACKED {
 	bool led_brightness_control : 1;
 	bool led_effect_control : 1;
 	bool advanced_rumble_control : 1;
-	uint8_t reserved2 : 4;
+	uint8_t reserved2 : 4; // edge_profile_id?
 	bool has_edge_flag : 1;
 
 	// misc flags

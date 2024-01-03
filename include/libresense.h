@@ -518,7 +518,6 @@ typedef struct {
 	bool enable_profile_led;
 	bool enable_center_led;
 	bool enable_second_center_led;
-	bool update_profile_led;
 	uint8_t profile_led;
 } libresense_access_led_update;
 

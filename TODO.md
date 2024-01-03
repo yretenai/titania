@@ -16,8 +16,8 @@
 - [x] serial number reading
 - [x] dualsense edge profile report reading
 - [x] dualsense edge profile report writing
-- [ ] playstation access input reading
-- [ ] playstation access output reading
+- [x] playstation access input reading
+- [x] playstation access output reading
 - [ ] playstation access profile report reading
 - [ ] playstation access profile report writing
 - [ ] documentation
@@ -49,4 +49,4 @@
 
 - 1.1.0: base functionality
 - 1.5.0: profile importing/exporting
-- 2.0.0: playstation access support
+- 2.0.0: playstation access profile importing/exporting
