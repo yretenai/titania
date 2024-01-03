@@ -190,6 +190,7 @@ libresensectl_error libresensectl_mode_report_inner(libresensectl_context* conte
 
 				printf("access state {");
 				LIBREPRINT_ENUM(data.access_device, current_profile_id, libresense_profile_id_alt_msg, "profile"); LIBREPRINT_SEP();
+				LIBREPRINT_TEST(data.access_device, profile_switching_disabled); LIBREPRINT_SEP();
 				printf(" unknowns = {");
 				LIBREPRINT_U32(data.access_device, unknown_flags); LIBREPRINT_SEP();
 				LIBREPRINT_U32(data.access_device, unknown0); LIBREPRINT_SEP();

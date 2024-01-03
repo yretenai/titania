@@ -5,6 +5,7 @@
 #include "../libresensectl.h"
 
 #include <stdio.h>
+#include <string.h>
 
 bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
 	bool should_exit = false;
@@ -139,7 +140,10 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		}
 	}
 
-	if (!is_only_access) {
+	bool all_tests = context->argc == 0;
+	const char* selected_test = context->argc > 0 ? context->argv[0] : nullptr;
+
+	if (!is_only_access && (all_tests || strcmp(selected_test, "triggers") == 0)) {
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing adaptive triggers\n");
 		libresense_effect_update update = { 0 };
@@ -149,6 +153,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		update.effect.uniform.resistance = 1.0;
 		printf("uniform\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
 			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
 		libresense_push(context->handles, context->connected_controllers);
@@ -162,6 +169,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		update.effect.section.resistance = 1.0;
 		printf("section\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
 			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
 		libresense_push(context->handles, context->connected_controllers);
@@ -182,6 +192,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		update.effect.multiple_sections.resistance[9] = 1.0f;
 		printf("multiple section\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
 			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
 		libresense_push(context->handles, context->connected_controllers);
@@ -195,6 +208,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		update.effect.trigger.resistance = 0.5f;
 		printf("trigger\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
 			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
 		libresense_push(context->handles, context->connected_controllers);
@@ -209,6 +225,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		update.effect.slope.resistance.y = 1.0f;
 		printf("slope\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
 			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
 		libresense_push(context->handles, context->connected_controllers);
@@ -222,6 +241,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		update.effect.vibrate.frequency = 201;
 		printf("vibrate\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
 			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
 		libresense_push(context->handles, context->connected_controllers);
@@ -238,6 +260,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		update.effect.vibrate_slope.period = 4;
 		printf("vibrate slope\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
 			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
 		libresense_push(context->handles, context->connected_controllers);
@@ -260,6 +285,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		update.effect.multiple_vibrate.period = 4;
 		printf("multiple vibrate\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
 			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
 		libresense_push(context->handles, context->connected_controllers);
@@ -290,6 +318,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		update.effect.multiple_vibrate_sections.resistance[9] = 1.0f;
 		printf("multiple vibrate sections\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
 			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
 		libresense_push(context->handles, context->connected_controllers);
@@ -304,77 +335,16 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 
 		update.mode = LIBRESENSE_EFFECT_OFF;
 		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
 			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
 		libresense_push(context->handles, context->connected_controllers);
 		usleep(100000);
 	}
 
-	if (!is_only_access) {
-		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
-		printf("testing mic led...\n");
-		libresense_audio_update update = { 0 };
-		update.jack_volume = 1.0;
-		update.speaker_volume = 1.0;
-		update.microphone_volume = 1.0;
-		update.mic_selection = LIBRESENSE_MIC_AUTO;
-		update.mic_balance = LIBRESENSE_MIC_AUTO;
-		update.disable_audio_jack = false;
-		update.force_enable_speaker = false;
-		update.mic_led = LIBRESENSE_MIC_LED_ON;
-
-		printf("mic led should be on...\n");
-		for (int i = 0; i < context->connected_controllers; ++i) {
-			libresense_update_audio(context->handles[i], update);
-		}
-		libresense_push(context->handles, context->connected_controllers);
-		if (report_hid_close(context->handles, context->connected_controllers, 5000000, 10000)) {
-			goto reset_mic;
-		}
-
-		update.mic_led = LIBRESENSE_MIC_LED_FLASH;
-		printf("mic led should be flashing...\n");
-		for (int i = 0; i < context->connected_controllers; ++i) {
-			libresense_update_audio(context->handles[i], update);
-		}
-		libresense_push(context->handles, context->connected_controllers);
-		if (report_hid_close(context->handles, context->connected_controllers, 5000000, 10000)) {
-			goto reset_mic;
-		}
-
-		update.mic_led = LIBRESENSE_MIC_LED_FAST_FLASH;
-		printf("mic led should be flashing faster (maybe)...\n");
-		for (int i = 0; i < context->connected_controllers; ++i) {
-			libresense_update_audio(context->handles[i], update);
-		}
-		libresense_push(context->handles, context->connected_controllers);
-		if (report_hid_close(context->handles, context->connected_controllers, 5000000, 10000)) {
-			goto reset_mic;
-		}
-
-		update.mic_led = LIBRESENSE_MIC_LED_OFF;
-		printf("mic led should be off...\n");
-		for (int i = 0; i < context->connected_controllers; ++i) {
-			libresense_update_audio(context->handles[i], update);
-		}
-		libresense_push(context->handles, context->connected_controllers);
-		report_hid_close(context->handles, context->connected_controllers, 5000000, 10000);
-
-	reset_mic:
-		if (should_stop) {
-			return LIBRESENSECTL_INTERRUPTED;
-		}
-
-		printf("restoring mic based on state...\n");
-		for (int i = 0; i < context->connected_controllers; ++i) {
-			update.mic_led = (libresense_mic_led) datum[i].device.muted;
-			libresense_update_audio(context->handles[i], update);
-		}
-		libresense_push(context->handles, context->connected_controllers);
-		usleep(1000000);
-	}
-
-	if (!is_only_access) {
+	if (!is_only_access && (all_tests || strcmp(selected_test, "rumble") == 0)) {
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing rumble...\n");
 		float rumble;
@@ -383,6 +353,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		printf("large motor...\n");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
 				libresense_update_rumble(context->handles[i], rumble, 0.0f, 0.0f, false);
 			}
 			libresense_push(context->handles, context->connected_controllers);
@@ -394,6 +367,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		printf("small motor...\n");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
 				libresense_update_rumble(context->handles[i], 0, rumble, 0.0f, false);
 			}
 			libresense_push(context->handles, context->connected_controllers);
@@ -405,6 +381,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		printf("both motors...\n");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
 				libresense_update_rumble(context->handles[i], rumble, rumble, 0.0f, false);
 			}
 			libresense_push(context->handles, context->connected_controllers);
@@ -417,6 +396,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		for (int rumble_test = 0; rumble_test < 8; rumble_test++) {
 			float level = rumble_test % 2 == 0 ? 1.0f : 0.1f;
 			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
 				libresense_update_rumble(context->handles[i], level, level, 0.0f, false);
 			}
 			libresense_push(context->handles, context->connected_controllers);
@@ -428,6 +410,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		printf("large motor (legacy)...\n");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
 				libresense_update_rumble(context->handles[i], rumble, 0.0f, 0.0f, true);
 			}
 			libresense_push(context->handles, context->connected_controllers);
@@ -439,6 +424,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		printf("small motor (legacy)...\n");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
 				libresense_update_rumble(context->handles[i], 0, rumble, 0.0f, true);
 			}
 			libresense_push(context->handles, context->connected_controllers);
@@ -450,6 +438,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		printf("both motors (legacy)...\n");
 		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
 			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
 				libresense_update_rumble(context->handles[i], rumble, rumble, 0.0f, true);
 			}
 			libresense_push(context->handles, context->connected_controllers);
@@ -462,6 +453,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		for (int rumble_test = 0; rumble_test < 8; rumble_test++) {
 			float level = rumble_test % 2 == 0 ? 1.0f : 0.1f;
 			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
 				libresense_update_rumble(context->handles[i], level, level, 0.0f, true);
 			}
 			libresense_push(context->handles, context->connected_controllers);
@@ -476,13 +470,95 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		}
 
 		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
 			libresense_update_rumble(context->handles[i], 0, 0, 0.0f, false);
 		}
 		libresense_push(context->handles, context->connected_controllers);
 		usleep(100000);
 	}
 
-	if (!is_only_access) {
+	if (!is_only_access && (all_tests || strcmp(selected_test, "mic") == 0)) {
+		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
+		printf("testing mic led...\n");
+		libresense_audio_update update = { 0 };
+		update.jack_volume = 1.0;
+		update.speaker_volume = 1.0;
+		update.microphone_volume = 1.0;
+		update.mic_selection = LIBRESENSE_MIC_AUTO;
+		update.mic_balance = LIBRESENSE_MIC_AUTO;
+		update.disable_audio_jack = false;
+		update.force_enable_speaker = false;
+		update.mic_led = LIBRESENSE_MIC_LED_ON;
+
+		printf("mic led should be on...\n");
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
+			libresense_update_audio(context->handles[i], update);
+		}
+		libresense_push(context->handles, context->connected_controllers);
+		if (report_hid_close(context->handles, context->connected_controllers, 5000000, 10000)) {
+			goto reset_mic;
+		}
+
+		update.mic_led = LIBRESENSE_MIC_LED_FLASH;
+		printf("mic led should be flashing...\n");
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
+			libresense_update_audio(context->handles[i], update);
+		}
+		libresense_push(context->handles, context->connected_controllers);
+		if (report_hid_close(context->handles, context->connected_controllers, 5000000, 10000)) {
+			goto reset_mic;
+		}
+
+		update.mic_led = LIBRESENSE_MIC_LED_FAST_FLASH;
+		printf("mic led should be flashing faster (maybe)...\n");
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
+			libresense_update_audio(context->handles[i], update);
+		}
+		libresense_push(context->handles, context->connected_controllers);
+		if (report_hid_close(context->handles, context->connected_controllers, 5000000, 10000)) {
+			goto reset_mic;
+		}
+
+		update.mic_led = LIBRESENSE_MIC_LED_OFF;
+		printf("mic led should be off...\n");
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
+			libresense_update_audio(context->handles[i], update);
+		}
+		libresense_push(context->handles, context->connected_controllers);
+		report_hid_close(context->handles, context->connected_controllers, 5000000, 10000);
+
+	reset_mic:
+		if (should_stop) {
+			return LIBRESENSECTL_INTERRUPTED;
+		}
+
+		printf("restoring mic based on state...\n");
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
+			update.mic_led = (libresense_mic_led) datum[i].device.muted;
+			libresense_update_audio(context->handles[i], update);
+		}
+		libresense_push(context->handles, context->connected_controllers);
+		usleep(1000000);
+	}
+
+	if (!is_only_access && (all_tests || strcmp(selected_test, "led") == 0)) {
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing touchpad leds...\n");
 
@@ -529,6 +605,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 			}
 
 			for (int j = 0; j < context->connected_controllers; ++j) {
+				if (context->hids[j].is_access) {
+					continue;
+				}
 				libresense_update_led(context->handles[j], update);
 			}
 			libresense_push(context->handles, context->connected_controllers);
@@ -548,7 +627,7 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 	}
 
 skip_led:
-	if (has_access) {
+	if (has_access && (all_tests || strcmp(selected_test, "led") == 0)) {
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing access leds...\n");
 
@@ -571,6 +650,7 @@ skip_led:
 			}
 
 			update.access.enable_profile_led = true;
+			update.access.update_profile = true;
 			update.access.profile_led = (i % 4);
 			// 0 = off, 1 = left, 2 = both
 			update.access.enable_center_led = (i % 3) > 0;

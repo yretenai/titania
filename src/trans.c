@@ -44,6 +44,7 @@ void libresense_convert_input_access(const libresense_hid hid_info, const dualse
 	data->access_device.sticks[LIBRESENSE_SECONDARY].pos.y = DENORM_CLAMP_INT8(input.access.sticks[DUALSENSE_ACCESS_RIGHT].stick.y);
 
 	data->access_device.current_profile_id = input.access.profile_id + 1;
+	data->access_device.profile_switching_disabled = input.access.profile_switching_disabled;
 	data->access_device.unknown_flags = input.access.combined_device_flags;
 
 	data->access_device.unknown0 = input.access.unknown0;
@@ -55,6 +56,7 @@ void libresense_convert_input_access(const libresense_hid hid_info, const dualse
 	data->access_device.unknown6 = input.access.unknown6;
 	data->access_device.unknown7 = input.access.unknown7;
 	data->access_device.unknown8 = input.access.unknown8;
+	data->access_device.unknown9 = input.access.unknown9;
 }
 
 void libresense_convert_input(const libresense_hid hid_info, const dualsense_input_msg input, libresense_data* data, libresense_calibration_bit calibration[6]) {

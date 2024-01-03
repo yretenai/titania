@@ -460,6 +460,7 @@ typedef struct {
 	libresense_vector2 raw_stick;
 	libresense_access_stick sticks[2];
 	libresense_profile_id current_profile_id;
+	bool profile_switching_disabled;
 	uint32_t unknown_flags;
 	uint32_t unknown0;
 	uint32_t unknown1;
@@ -470,6 +471,7 @@ typedef struct {
 	uint32_t unknown6;
 	uint32_t unknown7;
 	uint32_t unknown8;
+	uint32_t unknown9;
 } libresense_access_state;
 
 typedef struct {
@@ -518,6 +520,7 @@ typedef struct {
 	bool enable_profile_led;
 	bool enable_center_led;
 	bool enable_second_center_led;
+	bool update_profile;
 	uint8_t profile_led;
 } libresense_access_led_update;
 

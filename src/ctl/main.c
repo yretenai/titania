@@ -200,27 +200,27 @@ int main(const int argc, const char** const argv) {
 		}
 
 		if (hids[hid_id].handle == LIBRESENSE_INVALID_HANDLE_ID) {
-			break;
+			continue;
 		}
 
 		if (disable_regular && !(hids[hid_id].is_edge || hids[hid_id].is_access)) {
-			break;
+			continue;
 		}
 
 		if (disable_edge && hids[hid_id].is_edge) {
-			break;
+			continue;
 		}
 
 		if (disable_access && hids[hid_id].is_access) {
-			break;
+			continue;
 		}
 
 		if (disable_bt && hids[hid_id].is_bluetooth) {
-			break;
+			continue;
 		}
 
 		if (disable_usb && !hids[hid_id].is_bluetooth) {
-			break;
+			continue;
 		}
 
 		if (filtered_controllers > 0) {
@@ -230,7 +230,7 @@ int main(const int argc, const char** const argv) {
 				}
 			}
 
-			break;
+			continue;
 		}
 
 	pass:

@@ -277,12 +277,16 @@ libresense_result libresense_open(libresense_hid* handle, const bool use_calibra
 			state[i].hid_info = *handle;
 
 			// this is at the end so it's reasonably late<
-			if (!IS_ACCESS(state[i].hid_info)) {
-				libresense_led_update update;
+			{
+				libresense_led_update update = { 0 };
 				update.color.x = 1.0;
 				update.color.y = 0.0;
 				update.color.z = 1.0;
 				update.led = LIBRESENSE_LED_PLAYER_1;
+				update.access.enable_profile_led = true;
+				update.access.enable_center_led = true;
+				update.access.enable_second_center_led = false;
+				update.access.update_profile = true;
 				libresense_update_led(handle->handle, update);
 				libresense_push(&handle->handle, 1);
 			}
@@ -485,12 +489,12 @@ libresense_result libresense_update_control(const libresense_handle handle, cons
 	hid_state->led.effect = data.led_effect;
 
 	hid_state->control2.reserved1 = data.reserved1;
-	hid_state->control2.reserved2 = data.reserved2;
 	hid_state->control2.reserved3 = data.reserved3;
 
 	if (IS_EDGE(state[handle].hid_info)) {
 		hid_state->control2.has_edge_flag = true;
 		hid_state->control2.edge_extension = true;
+		hid_state->control2.edge_disable_switching = data.edge_disable_switching_profiles;
 		hid_state->edge.flags.enable_switching = !data.edge_disable_switching_profiles;
 
 		hid_state->edge.flags.indicator = true;
@@ -531,7 +535,6 @@ libresense_result libresense_get_control(const libresense_handle handle, librese
 	control->led_effect = hid_state->led.effect;
 
 	control->reserved1 = hid_state->control2.reserved1;
-	control->reserved2 = hid_state->control2.reserved2;
 	control->reserved3 = hid_state->control2.reserved3;
 
 	if (IS_EDGE(state[handle].hid_info)) {

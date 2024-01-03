@@ -171,12 +171,14 @@ typedef struct PACKED {
 			uint8_t unknown4; // 00
 			dualsense_battery_state battery;
 			uint16_t unknown5; // some bit flags? 06 00
-			uint8_t profile_id; // 1..3
+			uint8_t profile_id : 3; // 1..3
+			bool profile_switching_disabled : 1;
+			uint8_t unknown6 : 4;
 			uint8_t combined_device_flags; // more bit flags: 4 = E3, 64 = E4. Where are E1 and E2???? I think E1 and E2 are for combining Access controllers? Likely related to unknown 2 and 3.
-			uint8_t unknown6; // 1
+			uint8_t unknown7; // 1
 			dualsense_access_stick sticks[2];
-			uint32_t unknown7; // 0
-			uint8_t unknown8; // 0
+			uint32_t unknown8; // 0
+			uint8_t unknown9; // 0
 		} access;
 	};
 
@@ -288,7 +290,8 @@ typedef struct PACKED {
 	bool led_brightness_control : 1;
 	bool led_effect_control : 1;
 	bool advanced_rumble_control : 1;
-	uint8_t reserved2 : 4; // edge_profile_id?
+	uint8_t reserved2 : 3;
+	bool edge_disable_switching : 1;
 	bool has_edge_flag : 1;
 
 	// misc flags
