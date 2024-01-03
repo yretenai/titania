@@ -33,7 +33,10 @@ void libresense_convert_input_access(const libresense_hid hid_info, const dualse
 	data->access_device.buttons.stick_button = input.access.raw_button.stick_button;
 	data->access_device.buttons.playstation = input.access.raw_button.playstation;
 	data->access_device.buttons.profile = input.access.raw_button.profile;
-	data->access_device.buttons.reserved = input.access.raw_button.reserved;
+	data->access_device.buttons.e1 = input.access.raw_button.e1;
+	data->access_device.buttons.e2 = input.access.raw_button.e2;
+	data->access_device.buttons.e3 = input.access.raw_button.e3;
+	data->access_device.buttons.e4 = input.access.raw_button.e4;
 
 	data->access_device.raw_stick.x = DENORM_CLAMP_INT8(input.access.raw_stick.x);
 	data->access_device.raw_stick.y = DENORM_CLAMP_INT8(input.access.raw_stick.y);

@@ -33,7 +33,10 @@ typedef struct PACKED {
 	bool stick_button : 1;
 	bool playstation : 1;
 	bool profile : 1;
-	uint8_t reserved : 4;
+	bool e1 : 1;
+	bool e2 : 1;
+	bool e3 : 1;
+	bool e4 : 1;
 } dualsense_access_raw_button;
 
 static_assert(sizeof(dualsense_access_raw_button) == 2, "dualsense_access_raw_button is not 2 bytes");

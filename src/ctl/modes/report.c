@@ -180,6 +180,10 @@ libresensectl_error libresensectl_mode_report_inner(libresensectl_context* conte
 				LIBREPRINT_ACCESS_BUTTON_TEST(stick_button); LIBREPRINT_SEP();
 				LIBREPRINT_ACCESS_BUTTON_TEST(playstation); LIBREPRINT_SEP();
 				LIBREPRINT_ACCESS_BUTTON_TEST(profile); LIBREPRINT_SEP();
+				LIBREPRINT_ACCESS_BUTTON_TEST(e1); LIBREPRINT_SEP();
+				LIBREPRINT_ACCESS_BUTTON_TEST(e2); LIBREPRINT_SEP();
+				LIBREPRINT_ACCESS_BUTTON_TEST(e3); LIBREPRINT_SEP();
+				LIBREPRINT_ACCESS_BUTTON_TEST(e4); LIBREPRINT_SEP();
 				printf(" }\n");
 
 				printf("access raw stick {");

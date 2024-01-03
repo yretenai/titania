@@ -447,7 +447,10 @@ typedef struct {
 	bool stick_button;
 	bool playstation;
 	bool profile;
-	uint8_t reserved;
+	bool e1;
+	bool e2;
+	bool e3;
+	bool e4;
 } libresense_access_button;
 
 typedef struct {
