@@ -64,6 +64,11 @@ libresensectl_error libresensectl_mode_report_inner(libresensectl_context* conte
 			LIBREPRINT_U64(data.time, checksum);
 			printf(" }\n");
 
+			printf("battery {");
+			LIBREPRINT_PERCENT(data.battery, level); LIBREPRINT_SEP();
+			LIBREPRINT_ENUM(data.battery, state, libresense_battery_state_msg, "state");
+			printf(" }\n");
+
 			printf("buttons {");
 			LIBREPRINT_BUTTON_TEST(dpad_up); LIBREPRINT_SEP();
 			LIBREPRINT_BUTTON_TEST(dpad_right); LIBREPRINT_SEP();
@@ -152,7 +157,7 @@ libresensectl_error libresensectl_mode_report_inner(libresensectl_context* conte
 				LIBREPRINT_U32(data.device, reserved);
 				printf(" }\n");
 			} else {
-				printf("sticks { primary = {");
+				printf("access sticks { primary = {");
 				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_PRIMARY], pos.x); LIBREPRINT_SEP();
 				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_PRIMARY], pos.y); LIBREPRINT_SEP();
 				LIBREPRINT_U32(data.access_device.sticks[LIBRESENSE_PRIMARY], unknown);
@@ -162,7 +167,7 @@ libresensectl_error libresensectl_mode_report_inner(libresensectl_context* conte
 				LIBREPRINT_U32(data.access_device.sticks[LIBRESENSE_SECONDARY], unknown);
 				printf(" } }\n");
 
-				printf("raw buttons {");
+				printf("access buttons {");
 				LIBREPRINT_ACCESS_BUTTON_TEST(button1); LIBREPRINT_SEP();
 				LIBREPRINT_ACCESS_BUTTON_TEST(button2); LIBREPRINT_SEP();
 				LIBREPRINT_ACCESS_BUTTON_TEST(button3); LIBREPRINT_SEP();
@@ -177,7 +182,7 @@ libresensectl_error libresensectl_mode_report_inner(libresensectl_context* conte
 				LIBREPRINT_ACCESS_BUTTON_TEST(profile); LIBREPRINT_SEP();
 				printf(" }\n");
 
-				printf("raw sticks {");
+				printf("access raw stick {");
 				LIBREPRINT_FLOAT(data.access_device.raw_stick, x); LIBREPRINT_SEP();
 				LIBREPRINT_FLOAT(data.access_device.raw_stick, y);
 				printf(" }\n");
@@ -199,13 +204,8 @@ libresensectl_error libresensectl_mode_report_inner(libresensectl_context* conte
 				printf(" } }\n");
 			}
 
-			printf("battery {");
-			LIBREPRINT_PERCENT(data.battery, level); LIBREPRINT_SEP();
-			LIBREPRINT_ENUM(data.battery, state, libresense_battery_state_msg, "state");
-			printf(" }\n");
-
 			if (hid.is_edge) {
-				printf("raw buttons {");
+				printf("edge buttons {");
 				LIBREPRINT_EDGE_BUTTON_TEST(dpad_up); LIBREPRINT_SEP();
 				LIBREPRINT_EDGE_BUTTON_TEST(dpad_right); LIBREPRINT_SEP();
 				LIBREPRINT_EDGE_BUTTON_TEST(dpad_down); LIBREPRINT_SEP();

@@ -50,7 +50,7 @@ while the library is built on c2x, the `libresense.h` header is c17 (maybe c11) 
 
 ## usage
 
-TODO, see src/cli.c for the source of `libresense-log` (which is a "test function")
+TODO, see src/ctl/ for the source of `libresensectl`
 
 ## acknowledgements
 

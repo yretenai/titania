@@ -65,15 +65,6 @@ libresense_lib = library(meson.project_name(), [
 
 libresense_dep = declare_dependency(link_with : libresense_lib, include_directories : libresense_inc)
 
-if get_option('libresense_log')
-	executable('libresense-log', [
-			'src/cli.c'
-		],
-		c_args : args,
-		dependencies : [libresense_dep, hidapi],
-		install : true)
-endif
-
 if get_option('libresense_ctl')
 	executable('libresensectl', [
 			'src/ctl/main.c',
@@ -119,18 +110,6 @@ if get_option('libresense_man')
 			install_dir : join_paths(get_option('mandir'), 'man1'),
 			command : [pandoc_commands, '@OUTPUT@', '@INPUT@']
 		)
-
-		if get_option('libresense_log')
-			custom_target(
-				'libresense-log.1',
-				output : 'libresense-log.1',
-				input : 'man/libresense-log.1.md',
-				build_always_stale : true,
-				install : true,
-				install_dir : join_paths(get_option('mandir'), 'man1'),
-				command : [pandoc_commands, '@OUTPUT@', '@INPUT@']
-			)
-		endif
 
 		if get_option('libresense_ctl')
 			custom_target(
