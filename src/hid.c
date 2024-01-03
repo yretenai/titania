@@ -15,7 +15,7 @@
 
 const int32_t libresense_max_controllers = LIBRESENSE_MAX_CONTROLLERS;
 
-static dualsense_state state[LIBRESENSE_MAX_CONTROLLERS];
+dualsense_state state[LIBRESENSE_MAX_CONTROLLERS];
 static bool is_initialized = false;
 
 static libresense_device_info device_infos[] = {
@@ -145,7 +145,12 @@ libresense_result libresense_open(libresense_hid* handle, const bool use_calibra
 			state[i].output.data.msg.data.id = DUALSENSE_REPORT_OUTPUT;
 
 			if (state[i].hid_info.is_bluetooth) { // this is needed to reset LEDs from controller firmware
-				state[i].output.data.msg.data.flags.reset_led = true;
+				if (IS_ACCESS(state[i].hid_info)) {
+					state[i].output.data.msg.access.flags.reset_led = true;
+				} else {
+					state[i].output.data.msg.data.flags.reset_led = true;
+				}
+
 				libresense_push(&handle->handle, 1);
 			}
 
@@ -272,7 +277,7 @@ libresense_result libresense_open(libresense_hid* handle, const bool use_calibra
 			state[i].hid_info = *handle;
 
 			// this is at the end so it's reasonably late<
-			{
+			if (!IS_ACCESS(state[i].hid_info)) {
 				libresense_led_update update;
 				update.color.x = 1.0;
 				update.color.y = 0.0;
@@ -353,18 +358,20 @@ libresense_result libresense_push(libresense_handle* handle, const size_t handle
 	for (size_t i = 0; i < handle_count; i++) {
 		CHECK_HANDLE_VALID(handle[i]);
 		dualsense_state* hid_state = &state[handle[i]];
-		if (IS_ACCESS(hid_state->hid_info)) {
-			continue; // todo.
+		if (!hid_state->hid_info.is_access) { // this likely exists on access as well, idk where yet.
+			hid_state->output.data.msg.data.state_id = ++hid_state->seq;
 		}
-
-		hid_state->output.data.msg.data.state_id = ++hid_state->seq;
 
 		const uint8_t* buffer = hid_state->output.buffer;
 		size_t size = sizeof(dualsense_output_msg_ex);
 		if (!hid_state->hid_info.is_bluetooth) {
 			buffer = hid_state->output.data.msg.buffer;
 			size = sizeof(dualsense_output_msg);
-			if (!hid_state->hid_info.is_edge) {
+			// Regular: 48 bytes, Edge: 64 bytes, Access: 32 bytes.
+			// why.
+			if (hid_state->hid_info.is_access) {
+				size -= 0x20;
+			} else if (!hid_state->hid_info.is_edge) {
 				size -= 0x10;
 			}
 		} else {
@@ -396,6 +403,10 @@ libresense_result libresense_update_led(const libresense_handle handle, const li
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
+	if (IS_ACCESS(state[handle].hid_info)) {
+		return libresense_update_access_led(handle, data);
+	}
+
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 
 	if (data.color.x >= 0.0f && data.color.y >= 0.0f && data.color.z >= 0.0f) {
@@ -416,6 +427,10 @@ libresense_result libresense_update_led(const libresense_handle handle, const li
 libresense_result libresense_update_audio(const libresense_handle handle, const libresense_audio_update data) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
+
+	if (IS_ACCESS(state[handle].hid_info)) {
+		return LIBRESENSE_NOT_SUPPORTED;
+	}
 
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 
@@ -441,6 +456,10 @@ libresense_result libresense_update_audio(const libresense_handle handle, const 
 libresense_result libresense_update_control(const libresense_handle handle, const libresense_control_update data) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
+
+	if (IS_ACCESS(state[handle].hid_info)) {
+		return LIBRESENSE_NOT_SUPPORTED;
+	}
 
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 
@@ -485,6 +504,10 @@ libresense_result libresense_update_control(const libresense_handle handle, cons
 libresense_result libresense_get_control(const libresense_handle handle, libresense_control_update* control) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
+
+	if (IS_ACCESS(state[handle].hid_info)) {
+		return LIBRESENSE_NOT_SUPPORTED;
+	}
 
 	const dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 
@@ -655,6 +678,10 @@ libresense_result libresense_update_effect(const libresense_handle handle, const
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
+	if (IS_ACCESS(state[handle].hid_info)) {
+		return LIBRESENSE_NOT_SUPPORTED;
+	}
+
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 	hid_state->flags.left_trigger_motor = left_trigger.mode != LIBRESENSE_EFFECT_NONE;
 	hid_state->flags.right_trigger_motor = right_trigger.mode != LIBRESENSE_EFFECT_NONE;
@@ -687,6 +714,10 @@ libresense_result libresense_update_effect(const libresense_handle handle, const
 libresense_result libresense_update_rumble(const libresense_handle handle, const float large_motor, const float small_motor, const float power_reduction, const bool emulate_legacy_behavior) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
+
+	if (IS_ACCESS(state[handle].hid_info)) {
+		return LIBRESENSE_NOT_SUPPORTED;
+	}
 
 	const libresense_hid hid = state[handle].hid_info;
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;

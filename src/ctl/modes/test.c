@@ -125,7 +125,21 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		return LIBRESENSECTL_HID_ERROR;
 	}
 
-	{
+	bool is_only_access = true;
+	bool has_access = false;
+	if (context->connected_controllers == 0) {
+		return LIBRESENSECTL_OK;
+	}
+
+	for (int i = 0; i < context->connected_controllers; ++i) {
+		if (context->hids[i].is_access) {
+			has_access = true;
+		} else {
+			is_only_access = false;
+		}
+	}
+
+	if (!is_only_access) {
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing adaptive triggers\n");
 		libresense_effect_update update = { 0 };
@@ -296,7 +310,7 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		usleep(100000);
 	}
 
-	{
+	if (!is_only_access) {
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing mic led...\n");
 		libresense_audio_update update = { 0 };
@@ -360,7 +374,7 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		usleep(1000000);
 	}
 
-	{
+	if (!is_only_access) {
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing rumble...\n");
 		float rumble;
@@ -468,7 +482,7 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		usleep(100000);
 	}
 
-	{
+	if (!is_only_access) {
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing touchpad leds...\n");
 
@@ -479,10 +493,6 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 		update.led = LIBRESENSE_LED_NO_UPDATE;
 		int i = 0;
 		while (true) {
-			if (i++ > 4 * 30) { // 250 ms per frame, 4 frames per second. 4 * 30 = 30 seconds worth of frames.
-				break;
-			}
-
 			if (i < 6) {
 				if (i == 1) {
 					update.led = LIBRESENSE_LED_PLAYER_1;
@@ -528,7 +538,65 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 			update.color.z = color.y;
 
 			if (report_hid_close(context->handles, context->connected_controllers, 250000, 10000)) {
+				goto skip_led;
+			}
+
+			if (i++ > 4 * 30) { // 250 ms per frame, 4 frames per second. 4 * 30 = 30 seconds worth of frames.
+				break;
+			}
+		}
+	}
+
+skip_led:
+	if (has_access) {
+		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
+		printf("testing access leds...\n");
+
+		libresense_led_update update = { 0 };
+		update.color.x = 1.0;
+		update.color.y = 0.0;
+		update.color.z = 1.0;
+		update.led = LIBRESENSE_LED_NO_UPDATE;
+		int i = 0;
+		while (true) {
+			const int v = i % 4;
+			if (v == 0) {
+				update.led = LIBRESENSE_LED_ACCESS_1;
+			} else if (v == 1) {
+				update.led = LIBRESENSE_LED_ACCESS_2;
+			} else if (v == 2) {
+				update.led = LIBRESENSE_LED_ACCESS_3;
+			} else if (v == 3) {
+				update.led = LIBRESENSE_LED_ACCESS_4;
+			}
+
+			update.access.enable_profile_led = true;
+			update.access.update_profile_led = true;
+			update.access.profile_led = (i % 4);
+			// 0 = off, 1 = left, 2 = both
+			update.access.enable_center_led = (i % 3) > 0;
+			update.access.enable_second_center_led = (i % 3) > 1;
+
+			for (int j = 0; j < context->connected_controllers; ++j) {
+				if (!context->hids[j].is_access) {
+					continue;
+				}
+
+				libresense_update_led(context->handles[j], update);
+			}
+
+			libresense_push(context->handles, context->connected_controllers);
+			const libresense_vector3 color = update.color;
+			update.color.x = color.z;
+			update.color.y = color.x;
+			update.color.z = color.y;
+
+			if (report_hid_close(context->handles, context->connected_controllers, 250000, 10000)) {
 				goto reset_led;
+			}
+
+			if (i++ > 4 * 30) { // 250 ms per frame, 4 frames per second. 4 * 30 = 30 seconds worth of frames.
+				break;
 			}
 		}
 	}
@@ -543,14 +611,32 @@ reset_led:
 		update.color.x = 1.0;
 		update.color.y = 0.0;
 		update.color.z = 1.0;
+		update.access.enable_profile_led = true;
+		update.access.enable_center_led = true;
+		update.access.enable_second_center_led = false;
+		update.access.update_profile_led = true;
+
 		for (int j = 0; j < context->connected_controllers; ++j) {
-			switch (j) {
-				case 0: update.led = LIBRESENSE_LED_PLAYER_1; break;
-				case 1: update.led = LIBRESENSE_LED_PLAYER_2; break;
-				case 2: update.led = LIBRESENSE_LED_PLAYER_3; break;
-				case 3: update.led = LIBRESENSE_LED_PLAYER_4; break;
-				default: update.led = LIBRESENSE_LED_ALL; break;
+			if (datum[j].hid.is_access) {
+				switch (j) {
+					case 0: update.led = LIBRESENSE_LED_ACCESS_1; break;
+					case 1: update.led = LIBRESENSE_LED_ACCESS_2; break;
+					case 2: update.led = LIBRESENSE_LED_ACCESS_3; break;
+					case 3: update.led = LIBRESENSE_LED_ACCESS_4; break;
+					default: update.led = LIBRESENSE_LED_ACCESS_4; break;
+				}
+				update.access.profile_led = datum[j].access_device.current_profile_id;
+			} else {
+				switch (j) {
+					case 0: update.led = LIBRESENSE_LED_PLAYER_1; break;
+					case 1: update.led = LIBRESENSE_LED_PLAYER_2; break;
+					case 2: update.led = LIBRESENSE_LED_PLAYER_3; break;
+					case 3: update.led = LIBRESENSE_LED_PLAYER_4; break;
+					default: update.led = LIBRESENSE_LED_ALL; break;
+				}
+				update.access.profile_led = 0;
 			}
+
 			libresense_update_led(context->handles[j], update);
 		}
 		libresense_push(context->handles, context->connected_controllers);

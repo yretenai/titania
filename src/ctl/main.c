@@ -87,6 +87,9 @@ int main(const int argc, const char** const argv) {
 	bool disable_bt = false;
 	bool disable_usb = false;
 
+	int filtered_controllers = 0;
+	libresense_serial filter[LIBRESENSECTL_CONTROLLER_COUNT] = { 0 };
+
 	if (argc > 1) {
 		for (int i = 1; i < argc; ++i) {
 			const int arglen = strlen(argv[i]);
@@ -137,7 +140,7 @@ int main(const int argc, const char** const argv) {
 
 			if (strcmp(text, "-d") == 0 || strcmp(text, "--device") == 0) {
 				const char* device_ptr = argv[++i];
-				if (context.filtered_controllers >= LIBRESENSECTL_CONTROLLER_COUNT) {
+				if (filtered_controllers >= LIBRESENSECTL_CONTROLLER_COUNT) {
 					continue;
 				}
 
@@ -147,10 +150,10 @@ int main(const int argc, const char** const argv) {
 				}
 
 				for (int j = 0; j < devlen; ++j) {
-					context.filter[context.filtered_controllers][j] = device_ptr[j];
+					filter[filtered_controllers][j] = device_ptr[j];
 				}
 
-				context.filtered_controllers++;
+				filtered_controllers++;
 			} else if (strcmp(text, "-r") == 0 || strcmp(text, "--no-regular") == 0) {
 				disable_regular = true;
 			} else if (strcmp(text, "-e") == 0 || strcmp(text, "--no-edge") == 0) {
@@ -220,9 +223,9 @@ int main(const int argc, const char** const argv) {
 			break;
 		}
 
-		if (context.filtered_controllers > 0) {
-			for (int filter_id = 0; filter_id < context.filtered_controllers; ++filter_id) {
-				if (memcmp(context.filter[filter_id], hids[hid_id].hid_serial, sizeof(libresense_serial)) != 0) {
+		if (filtered_controllers > 0) {
+			for (int filter_id = 0; filter_id < filtered_controllers; ++filter_id) {
+				if (memcmp(filter[filter_id], hids[hid_id].hid_serial, sizeof(libresense_serial)) != 0) {
 					goto pass;
 				}
 			}

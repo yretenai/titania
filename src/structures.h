@@ -14,6 +14,8 @@
 
 #include "../include/libresense.h"
 
+#include <config.h>
+
 static_assert(__STDC_VERSION__ >= 202000L, "a c2x compiler is required");
 
 #include "access.h"
@@ -323,6 +325,8 @@ typedef struct PACKED {
 	uint8_t seq : 4;
 } dualsense_report_output_bt;
 
+static_assert(sizeof(dualsense_report_output_bt) == 1, "dualsense_report_output_bt is not 1 byte");
+
 typedef struct PACKED {
 	union {
 		dualsense_report_output_bt bt;
@@ -344,11 +348,30 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_output_msg) == 0x40, "dualsense_output_msg is not 64 bytes");
 
 typedef struct PACKED {
+	union {
+		dualsense_report_output_bt bt;
+		dualsense_report_id id;
+	};
+
+	dualsense_access_mutator_flags flags;
+	dualsense_led_output led; // needs mutator led
+	dualsense_access_control control; // needs mutator control
+	dualsense_access_control2 control2; // needs mutator control2
+	dualsense_access_led_flags led_flags;
+	uint8_t unknown2[9]; // always zero?
+	bool show_center_indicator; // ???????
+	uint8_t reserved[8];
+} dualsense_output_access_msg;
+
+static_assert(sizeof(dualsense_output_access_msg) == 0x20, "dualsense_output_access_msg is not 32 bytes");
+
+typedef struct PACKED {
 	dualsense_report_id id;
 
 	union {
 		dualsense_output_msg data;
 		uint8_t buffer[sizeof(dualsense_output_msg)];
+		dualsense_output_access_msg access;
 	} msg;
 
 	uint8_t reserved[9];
@@ -476,6 +499,8 @@ extern uint32_t crc_seed_feature;
 extern uint32_t crc_seed_feature_edge;
 extern uint32_t crc_seed_libresense;
 
+extern dualsense_state state[LIBRESENSE_MAX_CONTROLLERS];
+
 /**
  * @brief convert dualsense input report to libresense's representation
  * @param hid_info: hid device info
@@ -493,12 +518,18 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 libresense_result libresense_convert_edge_profile_input(dualsense_edge_profile_blob input[3], libresense_edge_profile* output);
 
 /**
- * @brief todo
- * convert a libresense profile to dualsense edge's representation
+ * @brief convert a libresense profile to dualsense edge's representation
  * @param input: the input to convert
  * @param output: the profile to convert into
  */
-libresense_result libresense_convert_edge_profile_output(libresense_edge_profile input, dualsense_edge_profile_blob output[3]); // todo
+libresense_result libresense_convert_edge_profile_output(libresense_edge_profile input, dualsense_edge_profile_blob output[3]);
+
+/**
+ * @brief update LED state of an access controller
+ * @param handle: the controller to update
+ * @param data: led update data
+ */
+libresense_result libresense_update_access_led(const libresense_handle handle, const libresense_led_update data);
 
 /**
  * @brief initializes checksum tables

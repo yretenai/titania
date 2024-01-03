@@ -17,8 +17,6 @@ typedef struct {
 	int connected_controllers;
 	libresense_hid hids[LIBRESENSECTL_CONTROLLER_COUNT];
 	libresense_handle handles[LIBRESENSECTL_CONTROLLER_COUNT];
-	int filtered_controllers;
-	libresense_serial filter[LIBRESENSECTL_CONTROLLER_COUNT];
 	int argc;
 	const char** argv;
 } libresensectl_context;

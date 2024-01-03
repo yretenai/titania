@@ -60,6 +60,7 @@ typedef enum {
 	LIBRESENSE_NO_SLOTS,
 	LIBRESENSE_NOT_EDGE,
 	LIBRESENSE_NOT_ACCESS,
+	LIBRESENSE_NOT_SUPPORTED,
 	LIBRESENSE_ERROR_MAX
 } libresense_result;
 
@@ -504,14 +505,27 @@ typedef enum {
 	LIBRESENSE_LED_3 = 4,
 	LIBRESENSE_LED_4 = 8,
 	LIBRESENSE_LED_5 = 16,
+	LIBRESENSE_LED_ACCESS_1 = 1,
+	LIBRESENSE_LED_ACCESS_2 = 2,
+	LIBRESENSE_LED_ACCESS_3 = 3,
+	LIBRESENSE_LED_ACCESS_4 = 4,
 	LIBRESENSE_LED_ALL = 31,
 	LIBRESENSE_LED_FADE = 64,
 	LIBRESENSE_LED_NO_UPDATE = 128
 } libresense_led_index;
 
 typedef struct {
+	bool enable_profile_led;
+	bool enable_center_led;
+	bool enable_second_center_led;
+	bool update_profile_led;
+	uint8_t profile_led;
+} libresense_access_led_update;
+
+typedef struct {
 	libresense_led_index led;
 	libresense_vector3 color;
+	libresense_access_led_update access;
 } libresense_led_update;
 
 typedef enum {
