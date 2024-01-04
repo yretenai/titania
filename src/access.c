@@ -17,7 +17,18 @@ libresense_result libresense_update_access_led(const libresense_handle handle, c
 
 	if (data.led != LIBRESENSE_LED_NO_UPDATE) {
 		hid_state->flags.player_indicator_led = true;
-		hid_state->led.led_id = data.led % 5;
+
+		switch (data.led & 0x3F) {
+			case LIBRESENSE_LED_NONE: break;
+			case LIBRESENSE_LED_PLAYER_1: hid_state->led.led_id = LIBRESENSE_LED_ACCESS_1; break;
+			case LIBRESENSE_LED_PLAYER_2: hid_state->led.led_id = LIBRESENSE_LED_ACCESS_2; break;
+			case LIBRESENSE_LED_PLAYER_3: hid_state->led.led_id = LIBRESENSE_LED_ACCESS_3; break;
+			case LIBRESENSE_LED_PLAYER_4: hid_state->led.led_id = LIBRESENSE_LED_ACCESS_4; break;
+			case LIBRESENSE_LED_ALL: hid_state->led.led_id = LIBRESENSE_LED_ACCESS_4; break;
+			default: hid_state->led.led_id = data.led % 5; break;
+		}
+
+		hid_state->led.led_id |= data.led & LIBRESENSE_LED_INSTANT;
 	}
 
 	hid_state->flags.status_led = true;
@@ -36,4 +47,8 @@ libresense_result libresense_update_access_led(const libresense_handle handle, c
 	}
 
 	return LIBRESENSE_OK;
+}
+
+libresense_result libresense_debug_get_access_profile(const libresense_handle handle, const libresense_profile_id profile_id, uint8_t profile_data[LIBRESENSE_MERGED_REPORT_ACCESS_SIZE]) {
+	return LIBRESENSE_NOT_IMPLEMENTED;
 }

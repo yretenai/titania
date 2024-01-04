@@ -43,6 +43,8 @@ extern "C" {
 #define LIBRESENSE_POLLING_RATE_USB (4)
 #define LIBRESENSE_TRIGGER_GRANULARITY (10)
 #define LIBRESENSE_FIRMWARE_DATE_LEN (0x20)
+#define LIBRESENSE_MERGED_REPORT_EDGE_SIZE (174)
+#define LIBRESENSE_MERGED_REPORT_ACCESS_SIZE (1024) // todo: calculate max access report size.
 
 typedef enum {
 	LIBRESENSE_OK = 0,
@@ -515,7 +517,7 @@ typedef enum {
 	LIBRESENSE_LED_ACCESS_3 = 3,
 	LIBRESENSE_LED_ACCESS_4 = 4,
 	LIBRESENSE_LED_ALL = 31,
-	LIBRESENSE_LED_FADE = 64,
+	LIBRESENSE_LED_INSTANT = 32,
 	LIBRESENSE_LED_NO_UPDATE = 128
 } libresense_led_index;
 
@@ -824,7 +826,7 @@ LIBRESENSE_EXPORT void libresense_exit(void);
  * @param input: data to convert from
  * @param output: the profile to convert into
  */
-LIBRESENSE_EXPORT libresense_result libresense_debug_convert_edge_profile(uint8_t input[174], libresense_edge_profile* output);
+LIBRESENSE_EXPORT libresense_result libresense_debug_convert_edge_profile(uint8_t input[LIBRESENSE_MERGED_REPORT_EDGE_SIZE], libresense_edge_profile* output);
 
 /**
  * @brief (debug) get the underlying hid device
@@ -839,6 +841,22 @@ LIBRESENSE_EXPORT libresense_result libresense_debug_get_hid(const libresense_ha
  * @param report_ids: where to store the hid report info
  */
 LIBRESENSE_EXPORT libresense_result libresense_debug_get_hid_report_ids(const libresense_handle handle, libresense_report_id report_ids[0xFF]);
+
+/**
+ * @brief (debug) get a merged edge profile
+ * @param handle: the device to query
+ * @param profile_id: profile to get
+ * @param profile_data: profile data buffer
+ */
+LIBRESENSE_EXPORT libresense_result libresense_debug_get_edge_profile(const libresense_handle handle, const libresense_profile_id profile_id, uint8_t profile_data[LIBRESENSE_MERGED_REPORT_EDGE_SIZE]);
+
+/**
+ * @brief (debug) get a merged access profile
+ * @param handle: the device to query
+ * @param profile_id: profile to get
+ * @param profile_data: profile data buffer
+ */
+LIBRESENSE_EXPORT libresense_result libresense_debug_get_access_profile(const libresense_handle handle, const libresense_profile_id profile_id, uint8_t profile_data[LIBRESENSE_MERGED_REPORT_ACCESS_SIZE]);
 #ifdef __cplusplus
 }
 #endif

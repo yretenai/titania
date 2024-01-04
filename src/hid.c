@@ -16,7 +16,7 @@
 const int32_t libresense_max_controllers = LIBRESENSE_MAX_CONTROLLERS;
 
 dualsense_state state[LIBRESENSE_MAX_CONTROLLERS];
-static bool is_initialized = false;
+bool is_initialized = false;
 
 static libresense_device_info device_infos[] = {
 	{ 0x054C, 0x0CE6 }, // DualSense
@@ -262,7 +262,7 @@ libresense_result libresense_open(libresense_hid* handle, const bool use_calibra
 					dualsense_edge_profile_blob profile_data[3];
 					for (int k = 0; k < 3; ++k) {
 						profile_data[k].report_id = profile_reports[j] + k;
-						if (HID_FAIL(hid_get_feature_report(state[i].hid, (uint8_t*) &profile_data[k], sizeof(dualsense_edge_profile_blob))) || profile_data[k].profile_part == 0x10) {
+						if (HID_FAIL(hid_get_feature_report(state[i].hid, (uint8_t*) &profile_data[k], sizeof(dualsense_edge_profile_blob))) || (k == 0 && profile_data[k].profile_part == 0x10)) {
 							goto skip_profile;
 						}
 					}

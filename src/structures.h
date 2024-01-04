@@ -503,6 +503,7 @@ extern uint32_t crc_seed_feature_edge;
 extern uint32_t crc_seed_libresense;
 
 extern dualsense_state state[LIBRESENSE_MAX_CONTROLLERS];
+extern bool is_initialized;
 
 /**
  * @brief convert dualsense input report to libresense's representation

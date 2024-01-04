@@ -13,7 +13,8 @@ typedef enum {
 	PROFILE_MODE_CONVERT = 'c',
 	PROFILE_MODE_IMPORT = 'i',
 	PROFILE_MODE_EXPORT = 'e',
-	PROFILE_MODE_DELETE = 'd'
+	PROFILE_MODE_DELETE = 'd',
+	PROFILE_MODE_DEBUG_DUMP = '~'
 } profile_mode;
 
 libresense_profile_id convert_profile_id(const char* const str) {
@@ -44,6 +45,50 @@ libresense_profile_id convert_profile_id(const char* const str) {
 	}
 
 	return LIBRESENSE_PROFILE_NONE;
+}
+
+libresensectl_error libresensectl_mode_profile_dump(libresensectl_context* context) {
+	if (context->argc < 2) {
+		return LIBRESENSECTL_INVALID_ARGUMENTS;
+	}
+
+	const libresense_profile_id profile = convert_profile_id(context->argv[1]);
+
+	for (int i = 0; i < context->connected_controllers; ++i) {
+		libresense_result result;
+		uint8_t buffer[LIBRESENSE_MERGED_REPORT_ACCESS_SIZE];
+		const char* name;
+		size_t n ;
+		if (context->hids[i].is_edge) {
+			result = libresense_debug_get_edge_profile(context->handles[i], profile, buffer);
+			name = libresense_profile_id_msg[profile];
+			n = LIBRESENSE_MERGED_REPORT_EDGE_SIZE;
+		} else if (context->hids[i].is_access) {
+			result = libresense_debug_get_access_profile(context->handles[i], profile, buffer);
+			name = libresense_profile_id_alt_msg[profile];
+			n = LIBRESENSE_MERGED_REPORT_ACCESS_SIZE;
+		} else {
+			continue;
+		}
+
+		if (result == LIBRESENSECTL_NOT_IMPLEMENTED) {
+			continue;
+		}
+
+		if (IS_LIBRESENSE_BAD(result)) {
+			return LIBRESENSECTL_HID_ERROR;
+		}
+
+		char report_name[256];
+		sprintf(report_name, "%s_profile_%s.bin", context->hids[i].serial.mac, name);
+		FILE* file = fopen(report_name, "w+b");
+		if (file != nullptr) {
+			fwrite(buffer, 1, n, file);
+			fclose(file);
+		}
+	}
+
+	return LIBRESENSECTL_OK;
 }
 
 libresensectl_error libresensectl_mode_profile_import_selector(libresensectl_context* context) { return LIBRESENSECTL_NOT_IMPLEMENTED; }
@@ -84,7 +129,11 @@ libresensectl_error libresensectl_mode_profile_funnel(libresensectl_context* con
 		mode = (profile_mode) tolower(context->argv[0][0]);
 	}
 
-	if (mode != PROFILE_MODE_CONVERT && mode != PROFILE_MODE_IMPORT && mode != PROFILE_MODE_EXPORT && mode != PROFILE_MODE_DELETE) {
+	if (mode != PROFILE_MODE_CONVERT &&
+		mode != PROFILE_MODE_IMPORT &&
+		mode != PROFILE_MODE_EXPORT &&
+		mode != PROFILE_MODE_DELETE &&
+		mode != PROFILE_MODE_DEBUG_DUMP) {
 		fprintf(stderr, "profile mode needs to be one of (convert, import, export, delete)\n");
 		return LIBRESENSECTL_INVALID_ARGUMENTS;
 	}
@@ -107,6 +156,12 @@ libresensectl_error libresensectl_mode_profile_funnel(libresensectl_context* con
 			break;
 		case PROFILE_MODE_DELETE:
 			result = libresensectl_mode_profile_delete_selector(context);
+			if (IS_LIBRESENSE_BAD(result)) {
+				return result;
+			}
+			break;
+		case PROFILE_MODE_DEBUG_DUMP:
+			result = libresensectl_mode_profile_dump(context);
 			if (IS_LIBRESENSE_BAD(result)) {
 				return result;
 			}

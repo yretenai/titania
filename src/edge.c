@@ -322,7 +322,7 @@ libresense_result libresense_helper_edge_stick_template(libresense_edge_stick* s
 	return LIBRESENSE_OK;
 }
 
-libresense_result libresense_debug_convert_edge_profile(uint8_t input[174], libresense_edge_profile* output) {
+libresense_result libresense_debug_convert_edge_profile(uint8_t input[LIBRESENSE_MERGED_REPORT_EDGE_SIZE], libresense_edge_profile* output) {
 	dualsense_edge_profile_blob report[3];
 
 	memcpy(&report[0].blob, &input[0], sizeof(report[0].blob));
@@ -330,4 +330,32 @@ libresense_result libresense_debug_convert_edge_profile(uint8_t input[174], libr
 	memcpy(&report[2].blob, &input[sizeof(report[0].blob) + sizeof(report[1].blob)], sizeof(report[2].blob));
 
 	return libresense_convert_edge_profile_input(report, output);
+}
+
+libresense_result libresense_debug_get_edge_profile(const libresense_handle handle, const libresense_profile_id profile_id, uint8_t profile_data[LIBRESENSE_MERGED_REPORT_EDGE_SIZE]) {
+	CHECK_INIT();
+	CHECK_HANDLE_VALID(handle);
+	CHECK_EDGE(handle);
+
+	dualsense_edge_profile_blob data = { 0 };
+
+	uint8_t id;
+	switch (profile_id) {
+		case LIBRESENSE_PROFILE_TRIANGLE: id = DUALSENSE_REPORT_EDGE_QUERY_PROFILE_TRIANGLE_P1; break;
+		case LIBRESENSE_PROFILE_SQUARE: id = DUALSENSE_REPORT_EDGE_QUERY_PROFILE_SQUARE_P1; break;
+		case LIBRESENSE_PROFILE_CROSS: id = DUALSENSE_REPORT_EDGE_QUERY_PROFILE_CROSS_P1; break;
+		case LIBRESENSE_PROFILE_CIRCLE: id = DUALSENSE_REPORT_EDGE_QUERY_PROFILE_CIRCLE_P1; break;
+		default: return LIBRESENSE_INVALID_PROFILE;
+	}
+
+	for (int i = 0; i < 3; ++i) {
+		data.report_id = id + i;
+		if (HID_FAIL(hid_get_feature_report(state[i].hid, (uint8_t*) &data, sizeof(dualsense_edge_profile_blob))) || (i == 0 && data.version == 0x10)) {
+			return LIBRESENSE_INVALID_DATA;
+		}
+
+		memcpy(&profile_data[sizeof(data.blob) * i], data.blob, sizeof(data.blob));
+	}
+
+	return LIBRESENSE_OK;
 }

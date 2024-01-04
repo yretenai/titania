@@ -168,14 +168,14 @@ typedef struct PACKED {
 	uint32_t checksum;
 } dualsense_edge_profile_msg;
 
-static_assert(sizeof(dualsense_edge_profile_msg) == 174, "dualsense_edge_profile_msg size is not 174");
+static_assert(sizeof(dualsense_edge_profile_msg) == LIBRESENSE_MERGED_REPORT_EDGE_SIZE, "dualsense_edge_profile_msg size is not LIBRESENSE_MERGED_REPORT_EDGE_SIZE");
 
 typedef union {
 	dualsense_edge_profile_msg msg;
 	uint8_t buffers[3][0x3a];
 } dualsense_edge_profile;
 
-static_assert(sizeof(dualsense_edge_profile) == 174, "dualsense_edge_profile size is not 174");
+static_assert(sizeof(dualsense_edge_profile) == LIBRESENSE_MERGED_REPORT_EDGE_SIZE, "dualsense_edge_profile size is not LIBRESENSE_MERGED_REPORT_EDGE_SIZE");
 
 typedef struct PACKED {
 	uint8_t report_id;
