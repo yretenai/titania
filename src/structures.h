@@ -164,21 +164,24 @@ typedef struct PACKED {
 		struct PACKED {
 			dualsense_access_raw_button raw_button;
 			dualsense_vector2b raw_stick;
-			uint32_t unknown0; // 00 * 4
-			uint32_t unknown1; // 00 * 4
-			uint32_t unknown2; // ? 80 00 00 00
-			uint32_t unknown3; // ? 80 00 00 00
-			uint8_t unknown4; // 00
+			dualsense_vector2b e[4];
+			uint32_t unknown1; // buttons? 80 00 00 00
+			uint32_t unknown2; // buttons? 80 00 00 00
+			uint8_t unknown3; // 00
 			dualsense_battery_state battery;
-			uint16_t unknown5; // some bit flags? 06 00
+			uint16_t unknown4; // some bit flags? 06 00
 			uint8_t profile_id : 3; // 1..3
 			bool profile_switching_disabled : 1;
-			uint8_t unknown6 : 4;
-			uint8_t combined_device_flags; // more bit flags: 4 = E3, 64 = E4. Where are E1 and E2???? I think E1 and E2 are for combining Access controllers? Likely related to unknown 2 and 3.
-			uint8_t unknown7; // 1
-			dualsense_access_stick sticks[2];
-			uint32_t unknown8; // 0
-			uint8_t unknown9; // 0
+			uint8_t unknown5 : 4;
+			dualsense_access_expansion e3e4;
+			uint8_t unknown6; // 1
+			dualsense_vector2b stick1;
+			uint8_t unknown7;
+			dualsense_vector2b stick2;
+			uint8_t unknown8; // 0
+			dualsense_access_expansion e1e2;
+			uint32_t unknown9; // 0
+			uint8_t unknown10; // 0
 		} access;
 	};
 

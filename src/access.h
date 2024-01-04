@@ -33,20 +33,17 @@ typedef struct PACKED {
 	bool stick_button : 1;
 	bool playstation : 1;
 	bool profile : 1;
-	bool e1 : 1;
-	bool e2 : 1;
-	bool e3 : 1;
-	bool e4 : 1;
+	uint8_t reserved : 4;
 } dualsense_access_raw_button;
 
 static_assert(sizeof(dualsense_access_raw_button) == 2, "dualsense_access_raw_button is not 2 bytes");
 
-typedef struct PACKED {
-	dualsense_vector2b stick;
-	uint16_t unknown;
-} dualsense_access_stick;
+typedef struct {
+	uint8_t left_port : 4;
+	uint8_t right_port : 4;
+} dualsense_access_expansion;
 
-static_assert(sizeof(dualsense_access_stick) == 4, "dualsense_access_stick is not 4 bytes");
+static_assert(sizeof(dualsense_access_expansion) == 1, "dualsense_access_expansion is not 1 bytes");
 
 typedef struct PACKED {
 	bool status_led : 1;
@@ -60,7 +57,7 @@ typedef struct PACKED {
 	uint8_t reserved : 8;
 } dualsense_access_mutator_flags;
 
-static_assert(sizeof(dualsense_access_stick) == 4, "dualsense_access_stick is not 2 bytes");
+static_assert(sizeof(dualsense_access_mutator_flags) == 2, "dualsense_access_mutator_flags is not 2 bytes");
 
 typedef struct PACKED {
 	uint8_t profile_id : 3;

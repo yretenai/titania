@@ -157,14 +157,20 @@ libresensectl_error libresensectl_mode_report_inner(libresensectl_context* conte
 				LIBREPRINT_U32(data.device, reserved);
 				printf(" }\n");
 			} else {
+				for(int j = 0; j < 4; ++j) {
+					printf("access extension e%d {", j + 1);
+					LIBREPRINT_FLOAT(data.access_device.extensions[j], pos.x); LIBREPRINT_SEP();
+					LIBREPRINT_FLOAT(data.access_device.extensions[j], pos.y); LIBREPRINT_SEP();
+					LIBREPRINT_ENUM(data.access_device.extensions[j], type, libresense_access_extension_id_msg, "type");
+					printf(" }\n");
+				}
+
 				printf("access sticks { primary = {");
-				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_PRIMARY], pos.x); LIBREPRINT_SEP();
-				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_PRIMARY], pos.y); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.access_device.sticks[LIBRESENSE_PRIMARY], unknown);
+				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_PRIMARY], x); LIBREPRINT_SEP();
+				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_PRIMARY], y);
 				printf(" }, secondary = {");
-				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_SECONDARY], pos.x); LIBREPRINT_SEP();
-				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_SECONDARY], pos.y); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.access_device.sticks[LIBRESENSE_SECONDARY], unknown);
+				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_SECONDARY], x); LIBREPRINT_SEP();
+				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_SECONDARY], y);
 				printf(" } }\n");
 
 				printf("access buttons {");
@@ -196,8 +202,6 @@ libresensectl_error libresensectl_mode_report_inner(libresensectl_context* conte
 				LIBREPRINT_ENUM(data.access_device, current_profile_id, libresense_profile_id_alt_msg, "profile"); LIBREPRINT_SEP();
 				LIBREPRINT_TEST(data.access_device, profile_switching_disabled); LIBREPRINT_SEP();
 				printf(" unknowns = {");
-				LIBREPRINT_U32(data.access_device, unknown_flags); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.access_device, unknown0); LIBREPRINT_SEP();
 				LIBREPRINT_U32(data.access_device, unknown1); LIBREPRINT_SEP();
 				LIBREPRINT_U32(data.access_device, unknown2); LIBREPRINT_SEP();
 				LIBREPRINT_U32(data.access_device, unknown3); LIBREPRINT_SEP();
@@ -205,7 +209,8 @@ libresensectl_error libresensectl_mode_report_inner(libresensectl_context* conte
 				LIBREPRINT_U32(data.access_device, unknown5); LIBREPRINT_SEP();
 				LIBREPRINT_U32(data.access_device, unknown6); LIBREPRINT_SEP();
 				LIBREPRINT_U32(data.access_device, unknown7); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.access_device, unknown8);
+				LIBREPRINT_U32(data.access_device, unknown8); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.access_device, unknown9);
 				printf(" } }\n");
 			}
 

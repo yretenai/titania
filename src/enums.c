@@ -101,4 +101,13 @@ const char* const libresense_edge_button_id_msg[LIBRESENSE_BUTTON_ID_MAX + 1] = 
 	"touch",
 	nullptr
 };
+
+const char* const libresense_access_extension_id_msg[LIBRESENSE_ACCESS_EXTENSION_MAX + 1] = {
+	"disconnected",
+	"button",
+	"trigger",
+	"stick",
+	"invalid",
+	nullptr
+};
 // clang-format on

@@ -33,24 +33,39 @@ void libresense_convert_input_access(const libresense_hid hid_info, const dualse
 	data->access_device.buttons.stick_button = input.access.raw_button.stick_button;
 	data->access_device.buttons.playstation = input.access.raw_button.playstation;
 	data->access_device.buttons.profile = input.access.raw_button.profile;
-	data->access_device.buttons.e1 = input.access.raw_button.e1;
-	data->access_device.buttons.e2 = input.access.raw_button.e2;
-	data->access_device.buttons.e3 = input.access.raw_button.e3;
-	data->access_device.buttons.e4 = input.access.raw_button.e4;
+	data->access_device.buttons.reserved = input.access.raw_button.reserved;
+	data->access_device.buttons.e1 = input.access.e[0].x != 0 || input.access.e[0].y != 0;
+	data->access_device.buttons.e2 = input.access.e[1].x != 0 || input.access.e[1].y != 0;
+	data->access_device.buttons.e3 = input.access.e[2].x != 0 || input.access.e[2].y != 0;
+	data->access_device.buttons.e4 = input.access.e[3].x != 0 || input.access.e[3].y != 0;
 
 	data->access_device.raw_stick.x = DENORM_CLAMP_INT8(input.access.raw_stick.x);
 	data->access_device.raw_stick.y = DENORM_CLAMP_INT8(input.access.raw_stick.y);
 
-	data->access_device.sticks[LIBRESENSE_PRIMARY].pos.x = DENORM_CLAMP_INT8(input.access.sticks[DUALSENSE_ACCESS_LEFT].stick.x);
-	data->access_device.sticks[LIBRESENSE_PRIMARY].pos.y = DENORM_CLAMP_INT8(input.access.sticks[DUALSENSE_ACCESS_LEFT].stick.y);
-	data->access_device.sticks[LIBRESENSE_SECONDARY].pos.x = DENORM_CLAMP_INT8(input.access.sticks[DUALSENSE_ACCESS_RIGHT].stick.x);
-	data->access_device.sticks[LIBRESENSE_SECONDARY].pos.y = DENORM_CLAMP_INT8(input.access.sticks[DUALSENSE_ACCESS_RIGHT].stick.y);
+	data->access_device.sticks[LIBRESENSE_PRIMARY].x = DENORM_CLAMP_INT8(input.access.stick1.x);
+	data->access_device.sticks[LIBRESENSE_PRIMARY].y = DENORM_CLAMP_INT8(input.access.stick1.y);
+	data->access_device.sticks[LIBRESENSE_SECONDARY].x = DENORM_CLAMP_INT8(input.access.stick2.x);
+	data->access_device.sticks[LIBRESENSE_SECONDARY].y = DENORM_CLAMP_INT8(input.access.stick2.y);
 
 	data->access_device.current_profile_id = input.access.profile_id + 1;
 	data->access_device.profile_switching_disabled = input.access.profile_switching_disabled;
-	data->access_device.unknown_flags = input.access.combined_device_flags;
 
-	data->access_device.unknown0 = input.access.unknown0;
+	data->access_device.extensions[LIBRESENSE_EXTENSION1].pos.x = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION1].x);
+	data->access_device.extensions[LIBRESENSE_EXTENSION1].pos.y = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION1].y);
+	data->access_device.extensions[LIBRESENSE_EXTENSION1].type = input.access.e1e2.left_port;
+
+	data->access_device.extensions[LIBRESENSE_EXTENSION2].pos.x = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION2].x);
+	data->access_device.extensions[LIBRESENSE_EXTENSION2].pos.y = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION2].y);
+	data->access_device.extensions[LIBRESENSE_EXTENSION2].type = input.access.e1e2.right_port;
+
+	data->access_device.extensions[LIBRESENSE_EXTENSION3].pos.x = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION3].x);
+	data->access_device.extensions[LIBRESENSE_EXTENSION3].pos.y = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION3].y);
+	data->access_device.extensions[LIBRESENSE_EXTENSION3].type = input.access.e3e4.left_port;
+
+	data->access_device.extensions[LIBRESENSE_EXTENSION4].pos.x = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION4].x);
+	data->access_device.extensions[LIBRESENSE_EXTENSION4].pos.y = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION4].y);
+	data->access_device.extensions[LIBRESENSE_EXTENSION4].type = input.access.e3e4.right_port;
+
 	data->access_device.unknown1 = input.access.unknown1;
 	data->access_device.unknown2 = input.access.unknown2;
 	data->access_device.unknown3 = input.access.unknown3;

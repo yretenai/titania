@@ -38,6 +38,10 @@ extern "C" {
 #define LIBRESENSE_RIGHT (1)
 #define LIBRESENSE_PRIMARY (0)
 #define LIBRESENSE_SECONDARY (1)
+#define LIBRESENSE_EXTENSION1 (0)
+#define LIBRESENSE_EXTENSION2 (1)
+#define LIBRESENSE_EXTENSION3 (2)
+#define LIBRESENSE_EXTENSION4 (3)
 #define LIBRESENSE_MIN_DELAY (125)
 #define LIBRESENSE_POLLING_RATE_BT (1)
 #define LIBRESENSE_POLLING_RATE_USB (4)
@@ -100,6 +104,15 @@ typedef enum {
 } libresense_level;
 
 typedef enum {
+	LIBRESENSE_ACCESS_EXTENSION_DISCONNECTED = 0,
+	LIBRESENSE_ACCESS_EXTENSION_BUTTON = 1,
+	LIBRESENSE_ACCESS_EXTENSION_TRIGGER = 2,
+	LIBRESENSE_ACCESS_EXTENSION_STICK = 3,
+	LIBRESENSE_ACCESS_EXTENSION_INVALID = 4,
+	LIBRESENSE_ACCESS_EXTENSION_MAX
+} libresense_access_extension_id;
+
+typedef enum {
 	LIBRESENSE_TRIGGER_EFFECT_OFF = 0,
 	LIBRESENSE_TRIGGER_EFFECT_UNIFORM = 1,
 	LIBRESENSE_TRIGGER_EFFECT_TRIGGER = 2,
@@ -148,6 +161,7 @@ LIBRESENSE_EXPORT extern const char* const libresense_profile_id_alt_msg[LIBRESE
 LIBRESENSE_EXPORT extern const char* const libresense_level_msg[LIBRESENSE_LEVEL_LOW + 2];
 LIBRESENSE_EXPORT extern const char* const libresense_trigger_effect_msg[LIBRESENSE_TRIGGER_EFFECT_MAX + 1];
 LIBRESENSE_EXPORT extern const char* const libresense_edge_button_id_msg[LIBRESENSE_BUTTON_ID_MAX + 1];
+LIBRESENSE_EXPORT extern const char* const libresense_access_extension_id_msg[LIBRESENSE_ACCESS_EXTENSION_MAX + 1];
 LIBRESENSE_EXPORT extern const int libresense_max_controllers;
 
 #define IS_LIBRESENSE_OKAY(result) (result == LIBRESENSE_OK)
@@ -453,21 +467,21 @@ typedef struct {
 	bool e2;
 	bool e3;
 	bool e4;
+	uint8_t reserved;
 } libresense_access_button;
 
 typedef struct {
 	libresense_vector2 pos;
-	uint16_t unknown;
-} libresense_access_stick;
+	libresense_access_extension_id type;
+} libresense_access_extension;
 
 typedef struct {
 	libresense_access_button buttons;
 	libresense_vector2 raw_stick;
-	libresense_access_stick sticks[2];
+	libresense_vector2 sticks[2];
 	libresense_profile_id current_profile_id;
 	bool profile_switching_disabled;
-	uint32_t unknown_flags;
-	uint32_t unknown0;
+	libresense_access_extension extensions[4];
 	uint32_t unknown1;
 	uint32_t unknown2;
 	uint32_t unknown3;
