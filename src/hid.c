@@ -286,7 +286,7 @@ libresense_result libresense_open(libresense_hid* handle, const bool use_calibra
 				update.access.enable_profile_led = true;
 				update.access.enable_center_led = true;
 				update.access.enable_second_center_led = false;
-				update.access.update_profile = true;
+				update.access.update_profile = false;
 				libresense_update_led(handle->handle, update);
 				libresense_push(&handle->handle, 1);
 			}
