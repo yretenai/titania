@@ -159,8 +159,8 @@ libresensectl_error libresensectl_mode_report_inner(libresensectl_context* conte
 			} else {
 				for(int j = 0; j < 4; ++j) {
 					printf("access extension e%d {", j + 1);
-					LIBREPRINT_FLOAT(data.access_device.extensions[j], pos.x); LIBREPRINT_SEP();
-					LIBREPRINT_FLOAT(data.access_device.extensions[j], pos.y); LIBREPRINT_SEP();
+					LIBREPRINT_FLOAT(data.access_device.extensions[j].pos, x); LIBREPRINT_SEP();
+					LIBREPRINT_FLOAT(data.access_device.extensions[j].pos, y); LIBREPRINT_SEP();
 					LIBREPRINT_ENUM(data.access_device.extensions[j], type, libresense_access_extension_id_msg, "type");
 					printf(" }\n");
 				}
