@@ -190,6 +190,7 @@ libresensectl_error libresensectl_mode_report_inner(libresensectl_context* conte
 				LIBREPRINT_ACCESS_BUTTON_TEST(e2); LIBREPRINT_SEP();
 				LIBREPRINT_ACCESS_BUTTON_TEST(e3); LIBREPRINT_SEP();
 				LIBREPRINT_ACCESS_BUTTON_TEST(e4); LIBREPRINT_SEP();
+				LIBREPRINT_U32(data.access_device.buttons, reserved);
 				printf(" }\n");
 
 				printf("access raw stick {");
