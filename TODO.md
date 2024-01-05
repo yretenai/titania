@@ -50,3 +50,8 @@
 - 1.1.0: base functionality
 - 1.5.0: profile importing/exporting
 - 2.0.0: playstation access profile importing/exporting
+
+### under consideration
+
+- DualShock 3 Support - Massively different from the DualShock 4, DualSense, and Access, but is interesting enough to be considered (pressure sensitive buttons! gyro is real!)
+- DualShock 4 Support - A lot of structrues are iterated for the DualSense, with some entirely identical (BT Pairing, Version info, Calibration.)
