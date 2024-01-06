@@ -27,7 +27,7 @@ libresensectl_error libresensectl_mode_bt_pair(libresensectl_context* context) {
 	}
 
 	for (int i = 0; i < context->connected_controllers; ++i) {
-		if(should_stop) {
+		if (should_stop) {
 			return LIBRESENSECTL_INTERRUPTED;
 		}
 
@@ -42,7 +42,7 @@ libresensectl_error libresensectl_mode_bt_pair(libresensectl_context* context) {
 
 libresensectl_error libresensectl_mode_bt_connect(libresensectl_context* context) {
 	for (int i = 0; i < context->connected_controllers; ++i) {
-		if(should_stop) {
+		if (should_stop) {
 			return LIBRESENSECTL_INTERRUPTED;
 		}
 
@@ -57,7 +57,7 @@ libresensectl_error libresensectl_mode_bt_connect(libresensectl_context* context
 
 libresensectl_error libresensectl_mode_bt_disconnect(libresensectl_context* context) {
 	for (int i = 0; i < context->connected_controllers; ++i) {
-		if(should_stop) {
+		if (should_stop) {
 			return LIBRESENSECTL_INTERRUPTED;
 		}
 

@@ -213,7 +213,6 @@ libresense_result libresense_convert_edge_profile_output(libresense_edge_profile
 	profile.msg.disabled_buttons.reserved = input.disabled_buttons.edge_reserved;
 	profile.msg.disabled_buttons.sticks_swapped = input.sticks_swapped;
 
-
 #ifdef _WIN32
 	uint16_t unknown = input.unknown & 0x7ff;
 	uint16_t unknown2 = input.unknown >> 7 & 0xfff;
