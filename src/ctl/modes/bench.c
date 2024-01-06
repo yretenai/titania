@@ -25,6 +25,9 @@ void usleep(__useconds_t usec) {
 #else
 #define __USE_XOPEN_EXTENDED
 #include <unistd.h>
+#ifdef __APPLE__
+typedef useconds_t __useconds_t;
+#endif
 #endif
 
 libresensectl_error libresensectl_mode_bench(libresensectl_context* context) {
@@ -55,7 +58,7 @@ libresensectl_error libresensectl_mode_bench(libresensectl_context* context) {
 		}
 
 		if (++i % 1000 == 0) {
-			printf("min: %ld ns, max: %ld ns, avg: %ld ns\n", min, max, avg / 1000);
+			printf("min: %lu ns, max: %lu ns, avg: %lu ns\n", (unsigned long) min, (unsigned long) max, (unsigned long) avg / 1000);
 			max = 0;
 			min = UINT64_MAX;
 			avg = 0;

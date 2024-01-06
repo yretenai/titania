@@ -10,6 +10,9 @@
 #ifndef _WIN32
 #define __USE_XOPEN_EXTENDED
 #include <unistd.h>
+#ifdef __APPLE__
+typedef useconds_t __useconds_t;
+#endif
 #endif
 
 bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {

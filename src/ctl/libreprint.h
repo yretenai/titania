@@ -14,7 +14,7 @@
 #define LIBREPRINT_UPDATE(struc, field) printf(" " #field " = %04x (%d.%d.%d)", struc.field.major, struc.field.major, struc.field.minor, struc.field.revision)
 #define LIBREPRINT_FIRMWARE(struc, field) printf(" " #field " = %d.%d.%d", struc.field.major, struc.field.minor, struc.field.revision)
 #define LIBREPRINT_U32(struc, field) printf(" " #field " = %u", struc.field)
-#define LIBREPRINT_U64(struc, field) printf(" " #field " = %lu", struc.field)
+#define LIBREPRINT_U64(struc, field) printf(" " #field " = %lu", (unsigned long) struc.field)
 #define LIBREPRINT_X16(struc, field) printf(" " #field " = 0x%04x", struc.field)
 #define LIBREPRINT_FLOAT(struc, field) printf(" " #field " = %f", struc.field)
 #define LIBREPRINT_PERCENT(struc, field) printf(" " #field " = %f%%", struc.field * 100.0f)
