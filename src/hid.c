@@ -9,8 +9,6 @@
 
 #include "config.h"
 
-#include <unistd.h>
-
 #ifdef __APPLE__
 #include <hidapi_darwin.h>
 #endif

@@ -86,6 +86,7 @@ int main(const int argc, const char** const argv) {
 	bool disable_access = false;
 	bool disable_bt = false;
 	bool disable_usb = false;
+	bool blocking = true;
 
 	int filtered_controllers = 0;
 	libresense_serial filter[LIBRESENSECTL_CONTROLLER_COUNT] = { 0 };
@@ -116,6 +117,7 @@ int main(const int argc, const char** const argv) {
 				printf("\t-a, --no-access: disable access controllers from being considered\n");
 				printf("\t-b, --no-bt: disable bluetooth controllers from being considered\n");
 				printf("\t-u, --no-usb: disable usb controllers from being considered\n");
+				printf("\t-z, --non-blocking: disable blocking reads\n");
 				printf("\n");
 				printf("available modes:\n");
 				printf("\tlist: list every controller\n");
@@ -166,6 +168,8 @@ int main(const int argc, const char** const argv) {
 				disable_usb = true;
 			} else if (strcmp(text, "-c") == 0 || strcmp(text, "--no-calibration") == 0) {
 				calibrate = false;
+			} else if (strcmp(text, "-z") == 0 || strcmp(text, "--non-blocking") == 0) {
+				blocking = false;
 			} else if (text[0] != '-') {
 				mode = text;
 				if (argc - i > 1) {
@@ -239,7 +243,7 @@ int main(const int argc, const char** const argv) {
 		}
 
 		context.hids[context.connected_controllers] = hids[hid_id];
-		result = libresense_open(&context.hids[context.connected_controllers], calibrate, true);
+		result = libresense_open(&context.hids[context.connected_controllers], calibrate, blocking);
 		if (IS_LIBRESENSE_BAD(result)) {
 			errorf(stderr, result, "error initializing hid");
 			context.connected_controllers--;
