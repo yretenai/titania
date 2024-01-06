@@ -43,11 +43,7 @@ void shutdown() {
 	interrupted = should_stop = true;
 
 	for (int i = 0; i < context.connected_controllers; ++i) {
-		const libresense_result result = libresense_close(context.hids[i].handle);
-		if (IS_LIBRESENSE_BAD(result)) {
-			errorf(stderr, result, "error closing hid");
-		}
-
+		libresense_close(context.hids[i].handle);
 		context.hids[i].handle = LIBRESENSE_INVALID_HANDLE_ID;
 	}
 
@@ -271,7 +267,7 @@ int main(const int argc, const char** const argv) {
 		}
 
 		const libresensectl_error error = current_mode->callback(&context);
-		if (IS_LIBRESENSE_BAD(error)) {
+		if (IS_LIBRESENSECTL_BAD(error)) {
 			switch (error) {
 				case LIBRESENSECTL_HID_ERROR: fprintf(stderr, "hid error while processing command\n"); break;
 				case LIBRESENSECTL_INTERRUPTED: fprintf(stderr, "caught ctrl+c\n"); break;

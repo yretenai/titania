@@ -141,7 +141,7 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 	}
 
 	bool all_tests = context->argc == 0;
-	const char* selected_test = context->argc > 0 ? context->argv[0] : nullptr;
+	const char* selected_test = context->argc > 0 ? context->argv[0] : "all";
 
 	if (!is_only_access && (all_tests || strcmp(selected_test, "triggers") == 0)) {
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);

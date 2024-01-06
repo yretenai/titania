@@ -39,8 +39,9 @@ libresensectl_error libresensectl_mode_led(libresensectl_context* context) {
 		} else if (strcmp(context->argv[1], "player4") == 0) {
 			update.led = LIBRESENSE_LED_PLAYER_4;
 		} else {
-			sscanf(context->argv[1], "%d", &update.led);
-			update.led &= 0x7F;
+			int n;
+			sscanf(context->argv[1], "%d", &n);
+			update.led = (libresense_led_index) (n & 0x7F);
 		}
 	}
 
@@ -76,7 +77,7 @@ libresensectl_error libresensectl_mode_led(libresensectl_context* context) {
 	printf("setting color to rgb(%f, %f, %f) with led value %d", update.color.r, update.color.g, update.color.b, update.led);
 
 	for (int i = 0; i < context->connected_controllers; ++i) {
-		if(should_stop) {
+		if (should_stop) {
 			return LIBRESENSECTL_INTERRUPTED;
 		}
 

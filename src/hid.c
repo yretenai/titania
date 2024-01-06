@@ -718,7 +718,7 @@ libresense_result libresense_bt_pair(const libresense_handle handle, const libre
 
 	dualsense_bt_pair_msg msg = { 0 };
 	memcpy(&msg.link_key, link_key, sizeof(libresense_link_key));
-	int32_t pair_mac[6];
+	uint32_t pair_mac[6];
 	const int test = sscanf(mac, "%02x:%02x:%02x:%02x:%02x:%02x", &pair_mac[0], &pair_mac[1], &pair_mac[2], &pair_mac[3], &pair_mac[4], &pair_mac[5]);
 	if (test != 6) {
 		return LIBRESENSE_INVALID_ARGUMENT;

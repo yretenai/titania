@@ -39,6 +39,8 @@ libresense_profile_id convert_profile_id(const char* const str) {
 							default: return LIBRESENSE_PROFILE_NONE;
 						}
 					}
+
+					return LIBRESENSE_PROFILE_NONE;
 				}
 			default: return LIBRESENSE_PROFILE_NONE;
 		}
@@ -58,7 +60,7 @@ libresensectl_error libresensectl_mode_profile_dump(libresensectl_context* conte
 		libresense_result result;
 		uint8_t buffer[LIBRESENSE_MERGED_REPORT_ACCESS_SIZE];
 		const char* name;
-		size_t n ;
+		size_t n;
 		if (context->hids[i].is_edge) {
 			result = libresense_debug_get_edge_profile(context->handles[i], profile, buffer);
 			name = libresense_profile_id_msg[profile];
@@ -71,7 +73,7 @@ libresensectl_error libresensectl_mode_profile_dump(libresensectl_context* conte
 			continue;
 		}
 
-		if (result == LIBRESENSECTL_NOT_IMPLEMENTED) {
+		if (result == LIBRESENSE_NOT_IMPLEMENTED) {
 			continue;
 		}
 
@@ -115,7 +117,7 @@ libresensectl_error libresensectl_mode_profile_delete_selector(libresensectl_con
 			continue;
 		}
 
-		if (IS_LIBRESENSE_BAD(result)) {
+		if (IS_LIBRESENSECTL_BAD(result)) {
 			return LIBRESENSECTL_HID_ERROR;
 		}
 	}
@@ -129,11 +131,7 @@ libresensectl_error libresensectl_mode_profile_funnel(libresensectl_context* con
 		mode = (profile_mode) tolower(context->argv[0][0]);
 	}
 
-	if (mode != PROFILE_MODE_CONVERT &&
-		mode != PROFILE_MODE_IMPORT &&
-		mode != PROFILE_MODE_EXPORT &&
-		mode != PROFILE_MODE_DELETE &&
-		mode != PROFILE_MODE_DEBUG_DUMP) {
+	if (mode != PROFILE_MODE_CONVERT && mode != PROFILE_MODE_IMPORT && mode != PROFILE_MODE_EXPORT && mode != PROFILE_MODE_DELETE && mode != PROFILE_MODE_DEBUG_DUMP) {
 		fprintf(stderr, "profile mode needs to be one of (convert, import, export, delete)\n");
 		return LIBRESENSECTL_INVALID_ARGUMENTS;
 	}
@@ -144,25 +142,25 @@ libresensectl_error libresensectl_mode_profile_funnel(libresensectl_context* con
 		case PROFILE_MODE_CONVERT: return LIBRESENSECTL_NOT_IMPLEMENTED;
 		case PROFILE_MODE_IMPORT:
 			result = libresensectl_mode_profile_import_selector(context);
-			if (IS_LIBRESENSE_BAD(result)) {
+			if (IS_LIBRESENSECTL_BAD(result)) {
 				return result;
 			}
 			break;
 		case PROFILE_MODE_EXPORT:
 			result = libresensectl_mode_profile_export_selector(context);
-			if (IS_LIBRESENSE_BAD(result)) {
+			if (IS_LIBRESENSECTL_BAD(result)) {
 				return result;
 			}
 			break;
 		case PROFILE_MODE_DELETE:
 			result = libresensectl_mode_profile_delete_selector(context);
-			if (IS_LIBRESENSE_BAD(result)) {
+			if (IS_LIBRESENSECTL_BAD(result)) {
 				return result;
 			}
 			break;
 		case PROFILE_MODE_DEBUG_DUMP:
 			result = libresensectl_mode_profile_dump(context);
-			if (IS_LIBRESENSE_BAD(result)) {
+			if (IS_LIBRESENSECTL_BAD(result)) {
 				return result;
 			}
 			break;

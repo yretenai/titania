@@ -30,6 +30,9 @@ typedef enum {
 	LIBRESENSECTL_ERROR_MAX
 } libresensectl_error;
 
+#define IS_LIBRESENSECTL_OKAY(result) (result == LIBRESENSECTL_OK)
+#define IS_LIBRESENSECTL_BAD(result) (result != LIBRESENSECTL_OK)
+
 typedef libresensectl_error (*libresensectl_callback_t)(libresensectl_context* context);
 
 typedef struct {
