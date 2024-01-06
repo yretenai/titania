@@ -11,6 +11,10 @@
 
 #define LIBRESENSECTL_CONTROLLER_COUNT (31)
 
+#if __STDC_VERSION__ < 202000
+#define nullptr ((void*) 0)
+#endif
+
 #define errorf(fp, result, fmt) fprintf(fp, fmt ": %s\n", libresense_error_msg[result])
 
 typedef struct {
@@ -65,24 +69,8 @@ libresensectl_error libresensectl_mode_access_delete(libresense_profile_id profi
 extern bool should_stop;
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <conio.h>
-#include <windows.h>
-
-// https://stackoverflow.com/questions/5801813/c-usleep-is-obsolete-workarounds-for-windows-mingw
-void usleep(__int64 usec) {
-	HANDLE timer;
-	LARGE_INTEGER ft;
-	ft.QuadPart = -(10 * usec);
-	timer = CreateWaitableTimer(nullptr, TRUE, nullptr);
-	SetWaitableTimer(timer, &ft, 0, nullptr, nullptr, 0);
-	WaitForSingleObject(timer, INFINITE);
-	CloseHandle(timer);
-}
-#else
-#define __USE_XOPEN_EXTENDED
-#include <unistd.h>
-#define clrscr() printf("\033[1;1H\033[2J")
+typedef __int64 __useconds_t;
+void usleep(__useconds_t usec);
 #endif
 
 #endif

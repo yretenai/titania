@@ -105,8 +105,13 @@ libresense_result libresense_convert_edge_profile_input(uint8_t profile_data[LIB
 	output->disabled_buttons.edge_reserved = profile.msg.disabled_buttons.reserved;
 	output->sticks_swapped = profile.msg.disabled_buttons.sticks_swapped;
 	output->timestamp = profile.msg.timestamp;
+#ifdef _WIN32
+	uint16_t unknown = (uint16_t) profile.msg.flags.unknown1a | ((uint16_t) profile.msg.flags.unknown1b << 4);
+	uint16_t unknown2 = (uint16_t) profile.msg.flags.unknown2a | ((uint16_t) profile.msg.flags.unknown2b << 4);
+	output->unknown = unknown | unknown2;
+#else
 	output->unknown = (uint32_t) profile.msg.flags.unknown | (uint32_t) profile.msg.flags.unknown2 << 11;
-
+#endif
 	output->valid = true;
 
 	return LIBRESENSE_OK;
@@ -207,8 +212,19 @@ libresense_result libresense_convert_edge_profile_output(libresense_edge_profile
 	profile.msg.disabled_buttons.right_paddle = input.disabled_buttons.edge_right_paddle;
 	profile.msg.disabled_buttons.reserved = input.disabled_buttons.edge_reserved;
 	profile.msg.disabled_buttons.sticks_swapped = input.sticks_swapped;
+
+
+#ifdef _WIN32
+	uint16_t unknown = input.unknown & 0x7ff;
+	uint16_t unknown2 = input.unknown >> 7 & 0xfff;
+	profile.msg.flags.unknown1a = unknown & 0xf;
+	profile.msg.flags.unknown1b = unknown >> 4;
+	profile.msg.flags.unknown2a = unknown & 0xf;
+	profile.msg.flags.unknown2b = unknown >> 4;
+#else
 	profile.msg.flags.unknown = input.unknown & 0x7ff;
 	profile.msg.flags.unknown2 = input.unknown >> 7 & 0xfff;
+#endif
 	profile.msg.timestamp = input.timestamp;
 	memcpy(&profile.msg.uuid, input.id, sizeof(profile.msg.uuid));
 

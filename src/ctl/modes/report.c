@@ -258,7 +258,7 @@ libresensectl_error libresensectl_mode_report_inner(libresensectl_context* conte
 		}
 
 		if (loop) {
-			clrscr();
+			printf("\033[1;1H\033[2J");
 		}
 	} while (loop && !should_stop);
 
@@ -278,6 +278,14 @@ libresensectl_error libresensectl_mode_list(libresensectl_context* context) {
 			printf("PlayStation Access Controller (");
 		} else {
 			printf("DualSense Controller (");
+		}
+
+		if (hid.is_edge) {
+			printf("Edge, ");
+		} else if (hid.is_access) {
+			printf("Access, ");
+		} else {
+			printf("Regular, ");
 		}
 
 		if (hid.is_bluetooth) {

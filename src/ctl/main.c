@@ -7,9 +7,15 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define _CRT_SECURE_NO_WARNINGS
+#include <windows.h>
+#endif
+
 #include "libresensectl.h"
 
-libresensectl_error libresensectl_mode_stub(libresensectl_context*) { return LIBRESENSECTL_NOT_IMPLEMENTED; }
+libresensectl_error libresensectl_mode_stub(libresensectl_context* _unused) { return LIBRESENSECTL_NOT_IMPLEMENTED; }
 
 const libresensectl_mode modes[] = { { "report", libresensectl_mode_report },
 	{ "report-loop", libresensectl_mode_report_loop },
@@ -35,7 +41,7 @@ static libresensectl_context context = { 0 };
 static bool interrupted = false; // separate in case i accidentally set should_stop somewhere else.
 bool should_stop = false;
 
-void shutdown() {
+void shutdown(void) {
 	if (interrupted) {
 		return;
 	}
@@ -199,7 +205,7 @@ int main(const int argc, const char** const argv) {
 			return 0;
 		}
 
-		if (query[hid_id].hid_serial[0] == 0) {
+		if (query[hid_id].hid_path[0] == 0) {
 			continue;
 		}
 
@@ -225,7 +231,7 @@ int main(const int argc, const char** const argv) {
 
 		if (filtered_controllers > 0) {
 			for (int filter_id = 0; filter_id < filtered_controllers; ++filter_id) {
-				if (memcmp(filter[filter_id], query[hid_id].hid_serial, sizeof(libresense_serial)) != 0) {
+				if (query[hid_id].hid_serial[0] != 0 && memcmp(filter[filter_id], query[hid_id].hid_serial, sizeof(libresense_serial)) != 0) {
 					goto pass;
 				}
 			}
@@ -238,8 +244,7 @@ int main(const int argc, const char** const argv) {
 			return 0;
 		}
 
-		result =
-			libresense_open(query[hid_id].vendor_id, query[hid_id].product_id, query[hid_id].hid_serial, query[hid_id].is_bluetooth, &context.hids[context.connected_controllers], calibrate, blocking);
+		result = libresense_open(query[hid_id].hid_path, query[hid_id].is_bluetooth, &context.hids[context.connected_controllers], calibrate, blocking);
 		if (IS_LIBRESENSE_BAD(result)) {
 			errorf(stderr, result, "error initializing hid");
 			context.connected_controllers--;

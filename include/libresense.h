@@ -170,6 +170,7 @@ typedef uint16_t libresense_wchar;
 
 typedef signed int libresense_handle;
 typedef wchar_t libresense_serial[0x100]; // Max HID Parameter length is 256 on USB, 512 on BT. HID serials are wide-chars, which are 2 bytes.
+typedef char libresense_hid_path[0x200];
 
 typedef char libresense_mac[0x12];
 typedef char libresense_link_key[0x10];
@@ -407,6 +408,7 @@ typedef struct {
 	bool is_edge;
 	bool is_access;
 	libresense_serial hid_serial;
+	libresense_hid_path hid_path;
 } libresense_query;
 
 typedef struct {
@@ -720,16 +722,13 @@ LIBRESENSE_EXPORT libresense_result libresense_get_hids(libresense_query* hids, 
 
 /**
  * @brief open a HID handle for processing
- * @param vendor_id: the vendor id of the device to open
- * @param product_id: the product id of the device to open
- * @param serial: the serial of the device to open
+ * @param path: the path of the device to open
  * @param is_bluetooth: whether or not to consider this device a bluetooth device.
  * @param handle: pointer to the libresense HID handle, this value will hold the libresense_handle value when the function returns
  * @param use_calibration: whether or not to use calibration data for the gyroscope and accelerometer
  * @param blocking: whether or not to wait for data before reading, this is sometimes slower or faster.
  */
-LIBRESENSE_EXPORT libresense_result libresense_open(const uint16_t vendor_id, const uint16_t product_id, const libresense_serial serial, const bool is_bluetooth, libresense_hid* handle,
-	const bool use_calibration, const bool blocking);
+LIBRESENSE_EXPORT libresense_result libresense_open(const libresense_hid_path path, const bool is_bluetooth, libresense_hid* handle, const bool use_calibration, const bool blocking);
 
 /**
  * @brief poll controllers for input data

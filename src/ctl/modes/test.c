@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifndef _WIN32
+#define __USE_XOPEN_EXTENDED
+#include <unistd.h>
+#endif
+
 bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
 	bool should_exit = false;
 	while (true) {
@@ -14,7 +19,7 @@ bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, _
 			return true;
 		}
 
-		libresense_data data[libresense_max_controllers];
+		libresense_data data[LIBRESENSECTL_CONTROLLER_COUNT];
 		const libresense_result result = libresense_pull(handles, handle_count, data);
 		if (IS_LIBRESENSE_BAD(result)) {
 			printf("invalid pull response");
@@ -60,7 +65,7 @@ bool report_hid_close(libresense_handle* handles, const size_t handle_count, __u
 			return true;
 		}
 
-		libresense_data data[libresense_max_controllers];
+		libresense_data data[LIBRESENSECTL_CONTROLLER_COUNT];
 		const libresense_result result = libresense_pull(handles, handle_count, data);
 		if (IS_LIBRESENSE_BAD(result)) {
 			printf("invalid pull response");
@@ -94,7 +99,7 @@ void wait_until_options_clear(libresense_handle* handles, const size_t handle_co
 			return;
 		}
 
-		libresense_data data[libresense_max_controllers];
+		libresense_data data[LIBRESENSECTL_CONTROLLER_COUNT];
 		const libresense_result result = libresense_pull(handles, handle_count, data);
 		if (IS_LIBRESENSE_BAD(result)) {
 			return;

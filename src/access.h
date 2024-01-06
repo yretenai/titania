@@ -16,6 +16,10 @@
 #ifdef _MSC_VER
 #define PACKED
 #pragma pack(push, 1)
+
+#if __STDC_VERSION__ < 202000
+#define nullptr ((void*) 0)
+#endif
 #else
 #define PACKED __attribute__((__packed__))
 #endif
@@ -91,11 +95,11 @@ static_assert(sizeof(dualsense_access_led_flags) == 2, "dualsense_access_led_fla
 
 typedef struct PACKED {
 	uint8_t report_id;
-	dualsense_access_page_id page_id;
+	uint8_t page_id;
 	uint8_t profile_id;
 
 	union PACKED {
-		dualsense_profile_version version;
+		uint32_t version;
 		uint8_t blob[0x39];
 	};
 

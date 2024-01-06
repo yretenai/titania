@@ -12,11 +12,13 @@
 
 #include <hidapi.h>
 
-#include "../include/libresense.h"
+#include <libresense.h>
 
 #include <config.h>
 
+#ifndef _MSC_VER
 static_assert(__STDC_VERSION__ >= 202000L, "a c2x compiler is required");
+#endif
 
 #include "access.h"
 #include "common.h"
@@ -26,12 +28,16 @@ static_assert(__STDC_VERSION__ >= 202000L, "a c2x compiler is required");
 #ifdef _MSC_VER
 #define PACKED
 #pragma pack(push, 1)
+
+#if __STDC_VERSION__ < 202000
+#define nullptr ((void*) 0)
+#endif
 #else
 #define PACKED __attribute__((__packed__))
 #endif
 
 typedef struct PACKED {
-	dualsense_dpad dpad : 4;
+	uint8_t dpad : 4;
 	bool square : 1;
 	bool cross : 1;
 	bool circle : 1;
@@ -142,7 +148,7 @@ static_assert(sizeof(dualsense_input_msg_bt) == 1, "dualsense_input_msg_bt is no
 typedef struct PACKED {
 	union {
 		dualsense_input_msg_bt bt;
-		dualsense_report_id report_id;
+		uint8_t report_id;
 	};
 
 	dualsense_vector2b sticks[2];
@@ -191,7 +197,7 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_input_msg) == 0x40, "dualsense_input_msg is not 64 bytes");
 
 typedef struct PACKED {
-	dualsense_report_id report_id;
+	uint8_t report_id;
 
 	union {
 		dualsense_input_msg data;
@@ -243,7 +249,7 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_led_output) == 6, "dualsense_led_output is not 6 bytes");
 
 typedef struct PACKED {
-	dualsense_effect_mode mode;
+	uint8_t mode;
 
 	union {
 		uint8_t value[LIBRESENSE_TRIGGER_GRANULARITY];
@@ -299,7 +305,8 @@ typedef struct PACKED {
 
 	// misc flags
 	bool enable_lowpass_filter : 1;
-	uint16_t reserved3 : 14;
+	uint8_t reserved3a : 7;
+	uint8_t reserved3b : 7;
 
 	bool edge_extension : 1;
 } dualsense_control2;
@@ -336,7 +343,7 @@ static_assert(sizeof(dualsense_report_output_bt) == 1, "dualsense_report_output_
 typedef struct PACKED {
 	union {
 		dualsense_report_output_bt bt;
-		dualsense_report_id report_id;
+		uint8_t report_id;
 	};
 
 	dualsense_mutator_flags flags;
@@ -356,7 +363,7 @@ static_assert(sizeof(dualsense_output_msg) == 0x40, "dualsense_output_msg is not
 typedef struct PACKED {
 	union {
 		dualsense_report_output_bt bt;
-		dualsense_report_id report_id;
+		uint8_t report_id;
 	};
 
 	dualsense_access_mutator_flags flags;
@@ -372,7 +379,7 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_output_access_msg) == 0x20, "dualsense_output_access_msg is not 32 bytes");
 
 typedef struct PACKED {
-	dualsense_report_id report_id;
+	uint8_t report_id;
 
 	union {
 		dualsense_output_msg data;
@@ -477,7 +484,7 @@ typedef struct {
 } dualsense_state;
 
 typedef struct PACKED {
-	dualsense_report_id report_id;
+	uint8_t report_id;
 	uint8_t pair_mac[6];
 	uint8_t link_key[0x10];
 	uint32_t checksum;
@@ -486,8 +493,8 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_bt_pair_msg) == 0x1b, "dualsense_bt_pair_msg is not 27 bytes");
 
 typedef struct PACKED {
-	dualsense_report_id report_id;
-	dualsense_bt_command command;
+	uint8_t report_id;
+	uint8_t command;
 	uint8_t reserved[0x2a];
 	uint32_t checksum;
 } dualsense_bt_command_msg;

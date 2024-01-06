@@ -13,6 +13,10 @@
 #ifdef _MSC_VER
 #define PACKED
 #pragma pack(push, 1)
+
+#if __STDC_VERSION__ < 202000
+#define nullptr ((void*) 0)
+#endif
 #else
 #define PACKED __attribute__((__packed__))
 #endif
@@ -114,8 +118,15 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_vector3b) == 3, "dualsense_vector3b is not 3 bytes");
 
 typedef struct PACKED {
+#ifdef _WIN32
+	uint8_t x1 : 8;
+	uint8_t x2 : 4;
+	uint8_t y1 : 4;
+	uint8_t y2 : 8;
+#else
 	uint16_t x : 12;
 	uint16_t y : 12;
+#endif
 } dualsense_vector2;
 
 static_assert(sizeof(dualsense_vector2) == 3, "dualsense_vector2 is not 3 bytes");

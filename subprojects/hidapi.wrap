@@ -1,8 +1,7 @@
-[wrap-file]
-directory = hidapi-0.14.0
-source_url = https://github.com/libusb/hidapi/archive/refs/tags/hidapi-0.14.0.tar.gz
-source_filename = hidapi-0.14.0.tar.gz
-source_hash = a5714234abe6e1f53647dd8cba7d69f65f71c558b7896ed218864ffcf405bcbd
+[wrap-git]
+url=https://github.com/libusb/hidapi.git
+revision=hidapi-0.14.0
+depth=1
 
 [provide]
 hidapi = hidapi_dep

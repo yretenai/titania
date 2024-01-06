@@ -10,17 +10,10 @@
 #include <assert.h>
 #include <stdint.h>
 
-#ifdef _MSC_VER
-#define PACKED
-#pragma pack(push, 1)
-#else
-#define PACKED __attribute__((__packed__))
-#endif
-
 #define MAKE_EDGE_PROFILE_REPORT(id, name) \
 	DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P1 = id, DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P2 = id + 1, DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P3 = id + 2
 
-typedef enum _dualsense_report_id : uint8_t {
+typedef enum _dualsense_report_id {
 	// usb:
 	DUALSENSE_REPORT_INPUT = 0x1,
 	DUALSENSE_REPORT_OUTPUT = 0x2,
@@ -73,9 +66,7 @@ typedef enum _dualsense_report_id : uint8_t {
 												// this means the max size is about 1200~
 } dualsense_report_id;
 
-static_assert(sizeof(dualsense_report_id) == 1, "dualsense_report_id is not 1 byte");
-
-typedef enum _dualsense_access_page_id : uint8_t {
+typedef enum _dualsense_access_page_id {
 	DUALSENSE_ACCESS_DELETE_PROFILE = 0x3,
 	DUALSENSE_ACCESS_UPDATE_PROFILE_1 = 0x9,
 	DUALSENSE_ACCESS_UPDATE_PROFILE_2 = 0xA,
@@ -86,9 +77,7 @@ typedef enum _dualsense_access_page_id : uint8_t {
 	DUALSENSE_ACCESS_QUERY_PROFILE_3 = 0x12
 } dualsense_access_page_id;
 
-static_assert(sizeof(dualsense_access_page_id) == 1, "dualsense_access_page_id is not 1 byte");
-
-typedef enum _dualsense_dpad : uint8_t {
+typedef enum _dualsense_dpad {
 	DUALSENSE_DPAD_U = 0,
 	DUALSENSE_DPAD_UR = 1,
 	DUALSENSE_DPAD_R = 2,
@@ -100,9 +89,7 @@ typedef enum _dualsense_dpad : uint8_t {
 	DUALSENSE_DPAD_RESET = 8
 } dualsense_dpad;
 
-static_assert(sizeof(dualsense_dpad) == 1, "dualsense_dpad is not 1 byte");
-
-typedef enum _dualsense_effect_mode : uint8_t {
+typedef enum _dualsense_effect_mode {
 	DUALSENSE_EFFECT_MODE_OFF = 0x5,
 	DUALSENSE_EFFECT_MODE_STOP = 0x0,
 	DUALSENSE_EFFECT_MODE_UNIFORM = 0x1,
@@ -116,27 +103,16 @@ typedef enum _dualsense_effect_mode : uint8_t {
 	DUALSENSE_EFFECT_MODE_MUTIPLE_VIBRATE_SECTIONS = 0x23
 } dualsense_effect_mode;
 
-static_assert(sizeof(dualsense_effect_mode) == 1, "dualsense_effect_mode is not 1 byte");
-
-typedef enum _dualsense_bt_command : uint8_t {
+typedef enum _dualsense_bt_command {
 	DUALSENSE_BT_COMMAND_NONE = 0,
 	DUALSENSE_BT_COMMAND_CONNECT = 0,
 	DUALSENSE_BT_COMMAND_DISCONNECT = 0
 } dualsense_bt_command;
 
-static_assert(sizeof(dualsense_bt_command) == 1, "dualsense_bt_command is not 1 byte");
-
-typedef enum _dualsense_profile_version : uint32_t {
+typedef enum _dualsense_profile_version {
 	DUALSENSE_PROFILE_VERSION_INVALID = 0,
 	DUALSENSE_PROFILE_VERSION_EDGE_V1 = 1,
 	DUALSENSE_PROFILE_VERSION_ACCESS_V1 = 2
 } dualsense_profile_version;
-
-static_assert(sizeof(dualsense_profile_version) == 4, "dualsense_profile_version is not 4 bytes");
-
-#ifdef _MSC_VER
-#pragma pack(pop)
-#endif
-#undef PACKED
 
 #endif // LIBRESENSE_ENUMS_H

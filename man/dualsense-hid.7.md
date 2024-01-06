@@ -15,7 +15,7 @@ FORMATTING
 
 The format of this page describes binary structures in a meta-syntax.
 
-**Endianness** is defined in the report description. 
+**Endianness** is defined in the report description.
 
 **Field types** are denoted by bracketing the name
  ~ e.g. `**\[int\]**
@@ -128,7 +128,7 @@ this *report* is *64 bytes*.
  ~ directional data for the analog sticks.
 
 **\[uint8(2)\]\[norm(255)\]** triggers
- ~ left, right 
+ ~ left, right
  ~ pressure level for each of the triggers
 
 **\[uint8\]** usb sequence
@@ -164,7 +164,7 @@ this *report* is *64 bytes*.
 **\[device_state\]** state
  ~ device state flags, see below
 
-**\[checksum\]** checksum 
+**\[checksum\]** checksum
  ~ secure signed checksum of the entire message (excluding this field.)
 
 REPORT 0x2 OUTPUT

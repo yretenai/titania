@@ -15,6 +15,10 @@
 #ifdef _MSC_VER
 #define PACKED
 #pragma pack(push, 1)
+
+#if __STDC_VERSION__ < 202000
+#define nullptr ((void*) 0)
+#endif
 #else
 #define PACKED __attribute__((__packed__))
 #endif
@@ -24,7 +28,7 @@ typedef struct PACKED {
 	bool unknown2 : 1;
 	bool led_indicator : 1;
 	bool vibrate_indicator : 1;
-	libresense_profile_id id : 3;
+	uint8_t id : 3;
 	bool disable_switching : 1;
 } dualsense_device_state_edge_profile;
 
@@ -35,20 +39,20 @@ typedef struct PACKED {
 	bool stick_error : 1;
 	bool stick_calibrating : 1;
 	bool stick_unknown : 1;
-	libresense_level left_trigger_level : 2;
-	libresense_level right_trigger_level : 2;
+	uint8_t left_trigger_level : 2;
+	uint8_t right_trigger_level : 2;
 } dualsense_device_state_edge_input;
 
 static_assert(sizeof(dualsense_device_state_edge_input) == 1, "dualsense_device_state_edge_input is not 1 byte");
 
 typedef struct PACKED {
-	dualsense_dpad dpad : 4;
+	uint8_t dpad : 4;
 	bool square : 1;
 	bool cross : 1;
 	bool circle : 1;
 	bool triangle : 1;
 	bool emulating_rumble : 1; // this is updated with motor power state flag
-	libresense_level brightness_override : 2; // this is updated* somewhere* -> setting the entire report to 0xFF sets this to 0b11
+	uint8_t brightness_override : 2; // this is updated* somewhere* -> setting the entire report to 0xFF sets this to 0b11
 	uint8_t unknown : 2;
 	bool playstation : 1;
 	bool share : 1;
@@ -144,10 +148,12 @@ static_assert(sizeof(dualsense_edge_profile_disabled_buttons) == 4, "dualsense_e
 
 typedef struct PACKED {
 	uint8_t left_stick_profile : 4;
-	uint16_t unknown : 11;
+	uint8_t unknown1a : 4;
+	uint8_t unknown1b : 3;
 	bool triggers_mirrored : 1;
 	uint8_t right_stick_profile : 4;
-	uint16_t unknown2 : 12;
+	uint8_t unknown2a : 4;
+	uint8_t unknown2b : 8;
 } dualsense_edge_profile_flags;
 
 static_assert(sizeof(dualsense_edge_profile_flags) == 4, "dualsense_edge_profile_flags size is not 4");
@@ -182,7 +188,7 @@ typedef struct PACKED {
 	uint8_t profile_part;
 
 	union PACKED {
-		dualsense_profile_version version;
+		uint32_t version;
 		uint8_t blob[0x3a];
 	};
 
@@ -192,7 +198,7 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_edge_profile_blob) == 64, "dualsense_edge_profile_blob size is not 64");
 
 typedef struct PACKED {
-	dualsense_report_id report_id;
+	uint8_t report_id;
 	uint8_t profile_id;
 	uint8_t reserved[58];
 	uint32_t checksum;

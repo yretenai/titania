@@ -139,12 +139,19 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 
 	data->touch[LIBRESENSE_PRIMARY].id = input.touch[DUALSENSE_LEFT].id.value;
 	data->touch[LIBRESENSE_PRIMARY].active = !input.touch[DUALSENSE_LEFT].id.idle;
-	data->touch[LIBRESENSE_PRIMARY].pos.x = input.touch[DUALSENSE_LEFT].pos.x;
-	data->touch[LIBRESENSE_PRIMARY].pos.y = input.touch[DUALSENSE_LEFT].pos.y;
 	data->touch[LIBRESENSE_SECONDARY].id = input.touch[DUALSENSE_RIGHT].id.value;
 	data->touch[LIBRESENSE_SECONDARY].active = !input.touch[DUALSENSE_RIGHT].id.idle;
+#ifdef _WIN32
+	data->touch[LIBRESENSE_PRIMARY].pos.x = ((uint16_t) input.touch[DUALSENSE_LEFT].pos.x1) | ((uint16_t) input.touch[DUALSENSE_LEFT].pos.x2 << 8);
+	data->touch[LIBRESENSE_PRIMARY].pos.x = ((uint16_t) input.touch[DUALSENSE_LEFT].pos.y1) | ((uint16_t) input.touch[DUALSENSE_LEFT].pos.y2 << 4);
+	data->touch[LIBRESENSE_SECONDARY].pos.x = ((uint16_t) input.touch[DUALSENSE_RIGHT].pos.x1) | ((uint16_t) input.touch[DUALSENSE_RIGHT].pos.x2 << 8);
+	data->touch[LIBRESENSE_SECONDARY].pos.x = ((uint16_t) input.touch[DUALSENSE_RIGHT].pos.y1) | ((uint16_t) input.touch[DUALSENSE_RIGHT].pos.y2 << 4);
+#else
+	data->touch[LIBRESENSE_PRIMARY].pos.x = input.touch[DUALSENSE_LEFT].pos.x;
+	data->touch[LIBRESENSE_PRIMARY].pos.y = input.touch[DUALSENSE_LEFT].pos.y;
 	data->touch[LIBRESENSE_SECONDARY].pos.x = input.touch[DUALSENSE_RIGHT].pos.x;
 	data->touch[LIBRESENSE_SECONDARY].pos.y = input.touch[DUALSENSE_RIGHT].pos.y;
+#endif
 	data->buttons.touchpad = data->touch[LIBRESENSE_PRIMARY].active || data->touch[LIBRESENSE_SECONDARY].active;
 
 	data->sensors.accelerometer.x = CALIBRATE(input.sensors.accelerometer.x, CALIBRATION_ACCELEROMETER_X) / DUALSENSE_ACCELEROMETER_RESOLUTION / G_CONST;

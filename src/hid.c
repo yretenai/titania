@@ -91,6 +91,11 @@ libresense_result libresense_get_hids(libresense_query* hids, const size_t hids_
 				return LIBRESENSE_INVALID_DATA;
 			}
 
+			if (strlen(dev->path) >= 0x200) {
+				hid_free_enumeration(root);
+				return LIBRESENSE_INVALID_DATA;
+			}
+
 			if (dev->bus_type == HID_API_BUS_USB || dev->bus_type == HID_API_BUS_BLUETOOTH) {
 				hids[index].product_id = dev->product_id;
 				hids[index].vendor_id = dev->vendor_id;
@@ -98,6 +103,7 @@ libresense_result libresense_get_hids(libresense_query* hids, const size_t hids_
 				hids[index].is_edge = IS_EDGE(hids[index]);
 				hids[index].is_access = IS_ACCESS(hids[index]);
 				wcscpy(hids[index].hid_serial, dev->serial_number);
+				strcpy(hids[index].hid_path, dev->path);
 
 				index += 1;
 
@@ -118,23 +124,27 @@ libresense_result libresense_get_hids(libresense_query* hids, const size_t hids_
 	return LIBRESENSE_OK;
 }
 
-libresense_result libresense_open(const uint16_t vid, const uint16_t pid, const libresense_serial hid_serial, const bool is_bluetooth, libresense_hid* handle, const bool use_calibration,
-	const bool blocking) {
+libresense_result libresense_open(const libresense_hid_path path, const bool is_bluetooth, libresense_hid* handle, const bool use_calibration, const bool blocking) {
 	CHECK_INIT();
 
 	for (int i = 0; i < LIBRESENSE_MAX_CONTROLLERS; i++) {
 		if (state[i].hid == nullptr) {
 			memset(&state[i], 0, sizeof(dualsense_state));
 			handle->handle = i;
-			state[i].hid = hid_open(vid, pid, hid_serial);
+			state[i].hid = hid_open_path(path);
 			if (state[i].hid == nullptr) {
 				return LIBRESENSE_HIDAPI_FAIL;
 			}
 
 			hid_set_nonblocking(state[i].hid, !blocking);
-
-			handle->product_id = pid;
-			handle->vendor_id = vid;
+			struct hid_device_info* info = hid_get_device_info(state[i].hid);
+			if (info != nullptr) {
+				handle->product_id = info->product_id;
+				handle->vendor_id = info->vendor_id;
+			} else {
+				handle->product_id = 0x0CE6; // DualSense
+				handle->vendor_id = 0x054C; // Sony
+			}
 			handle->is_bluetooth = is_bluetooth;
 			state[i].hid_info = *handle;
 			handle->is_edge = IS_EDGE(state[i].hid_info);
@@ -461,7 +471,12 @@ libresense_result libresense_update_control(const libresense_handle handle, cons
 	hid_state->led.effect = data.led_effect;
 
 	hid_state->control2.reserved1 = data.reserved1;
+#ifdef _WIN32
+	hid_state->control2.reserved3a = data.reserved3 & 0x7F;
+	hid_state->control2.reserved3b = data.reserved3 >> 7;
+#else
 	hid_state->control2.reserved3 = data.reserved3;
+#endif
 
 	if (IS_EDGE(state[handle].hid_info)) {
 		hid_state->control2.has_edge_flag = true;
@@ -507,7 +522,11 @@ libresense_result libresense_get_control(const libresense_handle handle, librese
 	control->led_effect = hid_state->led.effect;
 
 	control->reserved1 = hid_state->control2.reserved1;
+#ifdef _WIN32
+	control->reserved3 = hid_state->control2.reserved3a | (hid_state->control2.reserved3b << 7);
+#else
 	control->reserved3 = hid_state->control2.reserved3;
+#endif
 
 	if (IS_EDGE(state[handle].hid_info)) {
 		control->edge_disable_switching_profiles = !hid_state->edge.flags.enable_switching;

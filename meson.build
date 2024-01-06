@@ -24,7 +24,8 @@ args = compiler.get_supported_arguments(
 	'-Werror',
 	'-Wno-unused-variable',
 	'-Wno-unused-parameter',
-	'-Wno-microsoft-fixed-enum'
+	'-Wno-microsoft-fixed-enum',
+	'/wd4820'
 )
 
 if get_option('buildtype') == 'custom'
@@ -43,8 +44,15 @@ configure_file(
 	})
 )
 
-hidapi = dependency('hidapi', version : '>=0.13.0')
-icu = dependency('icu-uc', version : '>=73.2')
+hidapi = dependency('hidapi', version : '>=0.13.0', required : false)
+if not hidapi.found()
+	hidapi = dependency('hidapi')
+endif
+
+icu = dependency('icu-uc', version : '>=73.2', required : false)
+if not icu.found()
+	icu = dependency('icu-uc')
+endif
 
 libresense_inc = include_directories('include/')
 
@@ -66,6 +74,7 @@ libresense_lib = library(meson.project_name(), [
 libresense_dep = declare_dependency(link_with : libresense_lib, include_directories : libresense_inc)
 
 if get_option('libresense_ctl')
+	json = dependency('libjson', version : '>=1.0')
 	executable('libresensectl', [
 			'src/ctl/main.c',
 			'src/ctl/modes/access.c',
@@ -79,7 +88,7 @@ if get_option('libresense_ctl')
 			'src/ctl/modes/test.c'
 		],
 		c_args : args,
-		dependencies : [libresense_dep, hidapi],
+		dependencies : [libresense_dep, hidapi, json],
 	install : true)
 endif
 

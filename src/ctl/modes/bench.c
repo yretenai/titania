@@ -7,6 +7,26 @@
 #include <stdio.h>
 #include <time.h>
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define _CRT_SECURE_NO_WARNINGS
+#include <windows.h>
+
+// https://stackoverflow.com/questions/5801813/c-usleep-is-obsolete-workarounds-for-windows-mingw
+void usleep(__useconds_t usec) {
+	HANDLE timer;
+	LARGE_INTEGER ft;
+	ft.QuadPart = -(10 * usec);
+	timer = CreateWaitableTimer(nullptr, TRUE, nullptr);
+	SetWaitableTimer(timer, &ft, 0, nullptr, nullptr, 0);
+	WaitForSingleObject(timer, INFINITE);
+	CloseHandle(timer);
+}
+#else
+#define __USE_XOPEN_EXTENDED
+#include <unistd.h>
+#endif
+
 libresensectl_error libresensectl_mode_bench(libresensectl_context* context) {
 	printf("testing latency, press CTRL+C to stop\n");
 	uint64_t max = 0;
