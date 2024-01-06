@@ -89,6 +89,21 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_access_led_flags) == 2, "dualsense_access_led_flags is not 2 bytes");
 
+typedef struct PACKED {
+	uint8_t report_id;
+	dualsense_access_page_id page_id;
+	uint8_t profile_id;
+
+	union PACKED {
+		dualsense_profile_version version;
+		uint8_t blob[0x39];
+	};
+
+	uint32_t checksum;
+} dualsense_access_profile_blob;
+
+static_assert(sizeof(dualsense_access_profile_blob) == 64, "dualsense_access_profile_blob size is not 64");
+
 #ifdef _MSC_VER
 #pragma pack(pop)
 #endif

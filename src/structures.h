@@ -142,7 +142,7 @@ static_assert(sizeof(dualsense_input_msg_bt) == 1, "dualsense_input_msg_bt is no
 typedef struct PACKED {
 	union {
 		dualsense_input_msg_bt bt;
-		dualsense_report_id id;
+		dualsense_report_id report_id;
 	};
 
 	dualsense_vector2b sticks[2];
@@ -191,7 +191,7 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_input_msg) == 0x40, "dualsense_input_msg is not 64 bytes");
 
 typedef struct PACKED {
-	dualsense_report_id id;
+	dualsense_report_id report_id;
 
 	union {
 		dualsense_input_msg data;
@@ -336,7 +336,7 @@ static_assert(sizeof(dualsense_report_output_bt) == 1, "dualsense_report_output_
 typedef struct PACKED {
 	union {
 		dualsense_report_output_bt bt;
-		dualsense_report_id id;
+		dualsense_report_id report_id;
 	};
 
 	dualsense_mutator_flags flags;
@@ -356,7 +356,7 @@ static_assert(sizeof(dualsense_output_msg) == 0x40, "dualsense_output_msg is not
 typedef struct PACKED {
 	union {
 		dualsense_report_output_bt bt;
-		dualsense_report_id id;
+		dualsense_report_id report_id;
 	};
 
 	dualsense_access_mutator_flags flags;
@@ -372,7 +372,7 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_output_access_msg) == 0x20, "dualsense_output_access_msg is not 32 bytes");
 
 typedef struct PACKED {
-	dualsense_report_id id;
+	dualsense_report_id report_id;
 
 	union {
 		dualsense_output_msg data;
@@ -477,7 +477,7 @@ typedef struct {
 } dualsense_state;
 
 typedef struct PACKED {
-	dualsense_report_id id;
+	dualsense_report_id report_id;
 	uint8_t pair_mac[6];
 	uint8_t link_key[0x10];
 	uint32_t checksum;
@@ -486,7 +486,7 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_bt_pair_msg) == 0x1b, "dualsense_bt_pair_msg is not 27 bytes");
 
 typedef struct PACKED {
-	dualsense_report_id id;
+	dualsense_report_id report_id;
 	dualsense_bt_command command;
 	uint8_t reserved[0x2a];
 	uint32_t checksum;
@@ -518,18 +518,18 @@ extern bool is_initialized;
 void libresense_convert_input(const libresense_hid hid_info, const dualsense_input_msg input, libresense_data* data, libresense_calibration_bit calibration[6]);
 
 /**
- * @brief convert a dualsense edge profile to libresense's representation
- * @param input: the input to convert
- * @param output: the profile to convert into
- */
-libresense_result libresense_convert_edge_profile_input(dualsense_edge_profile_blob input[3], libresense_edge_profile* output);
-
-/**
  * @brief convert a libresense profile to dualsense edge's representation
  * @param input: the input to convert
  * @param output: the profile to convert into
  */
 libresense_result libresense_convert_edge_profile_output(libresense_edge_profile input, dualsense_edge_profile_blob output[3]);
+
+/**
+ * @brief convert a libresense profile to access's representation
+ * @param input: the input to convert
+ * @param output: the profile to convert into
+ */
+libresense_result libresense_convert_access_profile_output(libresense_access_profile input, dualsense_edge_profile_blob output[0x12]);
 
 /**
  * @brief update LED state of an access controller

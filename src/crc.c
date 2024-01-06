@@ -9,7 +9,7 @@ uint32_t crc_table[256];
 uint32_t crc_seed_input = 0;
 uint32_t crc_seed_output = 0;
 uint32_t crc_seed_feature = 0;
-uint32_t crc_seed_feature_edge = 0;
+uint32_t crc_seed_feature_edge = 0; // todo: validate that this also works for Access
 uint32_t crc_seed_libresense = 0;
 
 uint32_t checksum(uint32_t crc, const uint8_t* buffer, const size_t size) {

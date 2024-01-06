@@ -190,8 +190,8 @@ int main(const int argc, const char** const argv) {
 		errorf(stderr, result, "error initializing " LIBRESENSE_PROJECT_NAME);
 		return result;
 	}
-	libresense_hid hids[LIBRESENSECTL_CONTROLLER_COUNT];
-	result = libresense_get_hids(hids, LIBRESENSECTL_CONTROLLER_COUNT);
+	libresense_query query[LIBRESENSECTL_CONTROLLER_COUNT];
+	result = libresense_get_hids(query, LIBRESENSECTL_CONTROLLER_COUNT);
 	if (IS_LIBRESENSE_BAD(result)) {
 		errorf(stderr, result, "error getting hids");
 		libresense_exit();
@@ -203,33 +203,33 @@ int main(const int argc, const char** const argv) {
 			return 0;
 		}
 
-		if (hids[hid_id].handle == LIBRESENSE_INVALID_HANDLE_ID) {
+		if (query[hid_id].hid_serial[0] == 0) {
 			continue;
 		}
 
-		if (disable_regular && !(hids[hid_id].is_edge || hids[hid_id].is_access)) {
+		if (disable_regular && !(query[hid_id].is_edge || query[hid_id].is_access)) {
 			continue;
 		}
 
-		if (disable_edge && hids[hid_id].is_edge) {
+		if (disable_edge && query[hid_id].is_edge) {
 			continue;
 		}
 
-		if (disable_access && hids[hid_id].is_access) {
+		if (disable_access && query[hid_id].is_access) {
 			continue;
 		}
 
-		if (disable_bt && hids[hid_id].is_bluetooth) {
+		if (disable_bt && query[hid_id].is_bluetooth) {
 			continue;
 		}
 
-		if (disable_usb && !hids[hid_id].is_bluetooth) {
+		if (disable_usb && !query[hid_id].is_bluetooth) {
 			continue;
 		}
 
 		if (filtered_controllers > 0) {
 			for (int filter_id = 0; filter_id < filtered_controllers; ++filter_id) {
-				if (memcmp(filter[filter_id], hids[hid_id].hid_serial, sizeof(libresense_serial)) != 0) {
+				if (memcmp(filter[filter_id], query[hid_id].hid_serial, sizeof(libresense_serial)) != 0) {
 					goto pass;
 				}
 			}
@@ -242,8 +242,8 @@ int main(const int argc, const char** const argv) {
 			return 0;
 		}
 
-		context.hids[context.connected_controllers] = hids[hid_id];
-		result = libresense_open(&context.hids[context.connected_controllers], calibrate, blocking);
+		result =
+			libresense_open(query[hid_id].vendor_id, query[hid_id].product_id, query[hid_id].hid_serial, query[hid_id].is_bluetooth, &context.hids[context.connected_controllers], calibrate, blocking);
 		if (IS_LIBRESENSE_BAD(result)) {
 			errorf(stderr, result, "error initializing hid");
 			context.connected_controllers--;

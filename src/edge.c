@@ -8,20 +8,10 @@
 #include <string.h>
 #include <unicode/ucnv.h>
 
-libresense_result libresense_convert_edge_profile_input(dualsense_edge_profile_blob input[3], libresense_edge_profile* output) {
+libresense_result libresense_convert_edge_profile_input(uint8_t profile_data[LIBRESENSE_MERGED_REPORT_EDGE_SIZE], libresense_edge_profile* output) {
 	memset(output, 0, sizeof(libresense_edge_profile));
-	if (input[0].version == 0) {
-		return LIBRESENSE_OK;
-	}
 
-	if (input[0].version != 1) {
-		return LIBRESENSE_NOT_IMPLEMENTED;
-	}
-
-	dualsense_edge_profile profile = { 0 };
-	memcpy(profile.buffers[0], &input[0].blob, sizeof(input[0].blob));
-	memcpy(profile.buffers[1], &input[1].blob, sizeof(input[1].blob));
-	memcpy(profile.buffers[2], &input[2].blob, sizeof(input[2].blob));
+	const dualsense_edge_profile profile = *(dualsense_edge_profile*) profile_data;
 
 	UErrorCode err = U_ZERO_ERROR;
 
@@ -322,16 +312,6 @@ libresense_result libresense_helper_edge_stick_template(libresense_edge_stick* s
 	return LIBRESENSE_OK;
 }
 
-libresense_result libresense_debug_convert_edge_profile(uint8_t input[LIBRESENSE_MERGED_REPORT_EDGE_SIZE], libresense_edge_profile* output) {
-	dualsense_edge_profile_blob report[3];
-
-	memcpy(&report[0].blob, &input[0], sizeof(report[0].blob));
-	memcpy(&report[1].blob, &input[sizeof(report[0].blob)], sizeof(report[1].blob));
-	memcpy(&report[2].blob, &input[sizeof(report[0].blob) + sizeof(report[1].blob)], sizeof(report[2].blob));
-
-	return libresense_convert_edge_profile_input(report, output);
-}
-
 libresense_result libresense_debug_get_edge_profile(const libresense_handle handle, const libresense_profile_id profile_id, uint8_t profile_data[LIBRESENSE_MERGED_REPORT_EDGE_SIZE]) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
@@ -350,11 +330,34 @@ libresense_result libresense_debug_get_edge_profile(const libresense_handle hand
 
 	for (int i = 0; i < 3; ++i) {
 		data.report_id = id + i;
-		if (HID_FAIL(hid_get_feature_report(state[i].hid, (uint8_t*) &data, sizeof(dualsense_edge_profile_blob))) || (i == 0 && data.version == 0x10)) {
+		if (HID_FAIL(hid_get_feature_report(state[handle].hid, (uint8_t*) &data, sizeof(dualsense_edge_profile_blob))) || (i == 0 && data.profile_part == 0x10)) {
 			return LIBRESENSE_INVALID_DATA;
 		}
 
 		memcpy(&profile_data[sizeof(data.blob) * i], data.blob, sizeof(data.blob));
+	}
+
+	return LIBRESENSE_OK;
+}
+
+libresense_result libresense_query_edge_profile(const libresense_handle handle, libresense_edge_profile profiles[LIBRESENSE_PROFILE_COUNT]) {
+	CHECK_INIT();
+	CHECK_HANDLE_VALID(handle);
+	CHECK_EDGE(handle);
+
+	const libresense_profile_id profile_ids[LIBRESENSE_PROFILE_COUNT] = { LIBRESENSE_PROFILE_TRIANGLE, LIBRESENSE_PROFILE_SQUARE, LIBRESENSE_PROFILE_CROSS, LIBRESENSE_PROFILE_CIRCLE };
+	uint8_t profile_data[LIBRESENSE_MERGED_REPORT_EDGE_SIZE];
+
+	for (int i = 0; i < LIBRESENSE_PROFILE_COUNT; ++i) {
+		if (IS_LIBRESENSE_BAD(libresense_debug_get_edge_profile(handle, profile_ids[i], profile_data))) {
+			profiles[i].valid = false;
+			continue;
+		}
+
+		if (IS_LIBRESENSE_BAD(libresense_convert_edge_profile_input(profile_data, &profiles[i]))) {
+			memset(&profile_data[i], 0, sizeof(libresense_edge_profile));
+			profiles[i].valid = false;
+		}
 	}
 
 	return LIBRESENSE_OK;

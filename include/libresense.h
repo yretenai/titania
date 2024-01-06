@@ -397,17 +397,27 @@ typedef struct {
 } libresense_edge_profile;
 
 typedef struct {
-	libresense_handle handle;
+	bool valid;
+} libresense_access_profile;
+
+typedef struct {
 	uint16_t product_id;
 	uint16_t vendor_id;
 	bool is_bluetooth;
 	bool is_edge;
 	bool is_access;
 	libresense_serial hid_serial;
+} libresense_query;
+
+typedef struct {
+	libresense_handle handle;
+	uint16_t product_id;
+	uint16_t vendor_id;
+	bool is_bluetooth;
+	bool is_edge;
+	bool is_access;
 	libresense_serial_info serial;
 	libresense_firmware_info firmware;
-	libresense_edge_profile edge_profiles[LIBRESENSE_PROFILE_COUNT];
-	uint32_t checksum;
 } libresense_hid;
 
 typedef struct {
@@ -706,15 +716,20 @@ LIBRESENSE_EXPORT libresense_result libresense_init_checked(const size_t size);
  * @param hids: pointer to where HID data should be stored
  * @param hids_length: array size of hids
  */
-LIBRESENSE_EXPORT libresense_result libresense_get_hids(libresense_hid* hids, const size_t hids_length);
+LIBRESENSE_EXPORT libresense_result libresense_get_hids(libresense_query* hids, const size_t hids_length);
 
 /**
  * @brief open a HID handle for processing
+ * @param vendor_id: the vendor id of the device to open
+ * @param product_id: the product id of the device to open
+ * @param serial: the serial of the device to open
+ * @param is_bluetooth: whether or not to consider this device a bluetooth device.
  * @param handle: pointer to the libresense HID handle, this value will hold the libresense_handle value when the function returns
  * @param use_calibration: whether or not to use calibration data for the gyroscope and accelerometer
  * @param blocking: whether or not to wait for data before reading, this is sometimes slower or faster.
  */
-LIBRESENSE_EXPORT libresense_result libresense_open(libresense_hid* handle, const bool use_calibration, const bool blocking);
+LIBRESENSE_EXPORT libresense_result libresense_open(const uint16_t vendor_id, const uint16_t product_id, const libresense_serial serial, const bool is_bluetooth, libresense_hid* handle,
+	const bool use_calibration, const bool blocking);
 
 /**
  * @brief poll controllers for input data
@@ -810,6 +825,28 @@ LIBRESENSE_EXPORT libresense_result libresense_bt_disconnect(const libresense_ha
 LIBRESENSE_EXPORT libresense_result libresense_update_edge_profile(const libresense_handle handle, const libresense_profile_id id, const libresense_edge_profile profile);
 
 /**
+ * @brief update a dualsense edge profile
+ * @param handle: the controller to update
+ * @param id: the profile id to store the profile into
+ * @param profile: the profile data to store
+ */
+LIBRESENSE_EXPORT libresense_result libresense_update_access_profile(const libresense_handle handle, const libresense_profile_id id, const libresense_access_profile profile);
+
+/**
+ * @brief fetches all dualsense edge profiles
+ * @param handle: the controller to query
+ * @param profiles: the profile data
+ */
+LIBRESENSE_EXPORT libresense_result libresense_query_edge_profile(const libresense_handle handle, libresense_edge_profile profiles[LIBRESENSE_PROFILE_COUNT]);
+
+/**
+ * @brief fetches all access profiles
+ * @param handle: the controller to query
+ * @param profiles: the profile data
+ */
+LIBRESENSE_EXPORT libresense_result libresense_query_access_profile(const libresense_handle handle, libresense_access_profile profiles[LIBRESENSE_PROFILE_COUNT]);
+
+/**
  * @brief reset a stick template to a specific template
  * @param stick: the stick to update
  * @param template_id: the stick template to apply
@@ -825,6 +862,13 @@ LIBRESENSE_EXPORT libresense_result libresense_helper_edge_stick_template(libres
 LIBRESENSE_EXPORT libresense_result libresense_delete_edge_profile(const libresense_handle handle, const libresense_profile_id id);
 
 /**
+ * @brief delete a dualsense access profile
+ * @param handle: the controller to update
+ * @param id: the profile id to delete
+ */
+LIBRESENSE_EXPORT libresense_result libresense_delete_access_profile(const libresense_handle handle, const libresense_profile_id id);
+
+/**
  * @brief close a controller device handle
  * @param handle: the controller to close
  */
@@ -834,14 +878,6 @@ LIBRESENSE_EXPORT libresense_result libresense_close(const libresense_handle han
  * @brief cleans up library internals for exit
  */
 LIBRESENSE_EXPORT void libresense_exit(void);
-
-/**
- * @brief (debug) convert a merged dualsense profile to libresense's representation
- * @note merged dualsense profiles are made using the merge-edge-profile.py script
- * @param input: data to convert from
- * @param output: the profile to convert into
- */
-LIBRESENSE_EXPORT libresense_result libresense_debug_convert_edge_profile(uint8_t input[LIBRESENSE_MERGED_REPORT_EDGE_SIZE], libresense_edge_profile* output);
 
 /**
  * @brief (debug) get the underlying hid device
@@ -871,7 +907,23 @@ LIBRESENSE_EXPORT libresense_result libresense_debug_get_edge_profile(const libr
  * @param profile_id: profile to get
  * @param profile_data: profile data buffer
  */
-LIBRESENSE_EXPORT libresense_result libresense_debug_get_access_profile(const libresense_handle handle, const libresense_profile_id profile_id, uint8_t profile_data[LIBRESENSE_MERGED_REPORT_ACCESS_SIZE]);
+LIBRESENSE_EXPORT libresense_result libresense_debug_get_access_profile(const libresense_handle handle, const libresense_profile_id profile_id,
+	uint8_t profile_data[LIBRESENSE_MERGED_REPORT_ACCESS_SIZE]);
+
+/**
+ * @brief convert a dualsense edge profile to libresense's representation
+ * @param input: the input to convert
+ * @param output: the profile to convert into
+ */
+LIBRESENSE_EXPORT libresense_result libresense_convert_edge_profile_input(uint8_t input[LIBRESENSE_MERGED_REPORT_EDGE_SIZE], libresense_edge_profile* output);
+
+/**
+ * @brief convert an access profile to libresense's representation
+ * @param input: the input to convert
+ * @param output: the profile to convert into
+ */
+LIBRESENSE_EXPORT libresense_result libresense_convert_access_profile_input(uint8_t input[LIBRESENSE_MERGED_REPORT_ACCESS_SIZE], libresense_access_profile* output);
+
 #ifdef __cplusplus
 }
 #endif

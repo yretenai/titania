@@ -126,6 +126,14 @@ typedef enum _dualsense_bt_command : uint8_t {
 
 static_assert(sizeof(dualsense_bt_command) == 1, "dualsense_bt_command is not 1 byte");
 
+typedef enum _dualsense_profile_version : uint32_t {
+	DUALSENSE_PROFILE_VERSION_INVALID = 0,
+	DUALSENSE_PROFILE_VERSION_EDGE_V1 = 1,
+	DUALSENSE_PROFILE_VERSION_ACCESS_V1 = 2
+} dualsense_profile_version;
+
+static_assert(sizeof(dualsense_profile_version) == 4, "dualsense_profile_version is not 4 bytes");
+
 #ifdef _MSC_VER
 #pragma pack(pop)
 #endif

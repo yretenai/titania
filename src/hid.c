@@ -72,7 +72,7 @@ libresense_result libresense_init_checked(const size_t size) {
 	return LIBRESENSE_OK;
 }
 
-libresense_result libresense_get_hids(libresense_hid* hids, const size_t hids_length) {
+libresense_result libresense_get_hids(libresense_query* hids, const size_t hids_length) {
 	CHECK_INIT();
 	size_t index = 0;
 
@@ -92,15 +92,12 @@ libresense_result libresense_get_hids(libresense_hid* hids, const size_t hids_le
 			}
 
 			if (dev->bus_type == HID_API_BUS_USB || dev->bus_type == HID_API_BUS_BLUETOOTH) {
-				hids[index].handle = 0;
 				hids[index].product_id = dev->product_id;
 				hids[index].vendor_id = dev->vendor_id;
 				hids[index].is_bluetooth = dev->bus_type == HID_API_BUS_BLUETOOTH;
 				hids[index].is_edge = IS_EDGE(hids[index]);
 				hids[index].is_access = IS_ACCESS(hids[index]);
 				wcscpy(hids[index].hid_serial, dev->serial_number);
-
-				hids[index].checksum = libresense_calc_checksum(crc_seed_libresense, (uint8_t*) &hids[index], sizeof(libresense_hid));
 
 				index += 1;
 
@@ -115,37 +112,35 @@ libresense_result libresense_get_hids(libresense_hid* hids, const size_t hids_le
 	}
 
 	for (size_t i = index; i < hids_length; i++) {
-		hids[i].handle = LIBRESENSE_INVALID_HANDLE_ID;
+		hids[i].hid_serial[0] = 0;
 	}
 
 	return LIBRESENSE_OK;
 }
 
-libresense_result libresense_open(libresense_hid* handle, const bool use_calibration, const bool blocking) {
+libresense_result libresense_open(const uint16_t vid, const uint16_t pid, const libresense_serial hid_serial, const bool is_bluetooth, libresense_hid* handle, const bool use_calibration,
+	const bool blocking) {
 	CHECK_INIT();
-
-	const uint32_t old_check = handle->checksum;
-	handle->checksum = 0;
-	const uint32_t check = libresense_calc_checksum(crc_seed_libresense, (uint8_t*) handle, sizeof(libresense_hid));
-	handle->checksum = old_check;
-	if (check != old_check) {
-		return LIBRESENSE_INVALID_HANDLE_DATA;
-	}
 
 	for (int i = 0; i < LIBRESENSE_MAX_CONTROLLERS; i++) {
 		if (state[i].hid == nullptr) {
 			memset(&state[i], 0, sizeof(dualsense_state));
 			handle->handle = i;
-			state[i].hid = hid_open(handle->vendor_id, handle->product_id, handle->hid_serial);
+			state[i].hid = hid_open(vid, pid, hid_serial);
 			if (state[i].hid == nullptr) {
 				return LIBRESENSE_HIDAPI_FAIL;
 			}
 
 			hid_set_nonblocking(state[i].hid, !blocking);
 
+			handle->product_id = pid;
+			handle->vendor_id = vid;
+			handle->is_bluetooth = is_bluetooth;
 			state[i].hid_info = *handle;
-			state[i].output.data.id = DUALSENSE_REPORT_BLUETOOTH;
-			state[i].output.data.msg.data.id = DUALSENSE_REPORT_OUTPUT;
+			handle->is_edge = IS_EDGE(state[i].hid_info);
+			handle->is_access = IS_ACCESS(state[i].hid_info);
+			state[i].output.data.report_id = DUALSENSE_REPORT_BLUETOOTH;
+			state[i].output.data.msg.data.report_id = DUALSENSE_REPORT_OUTPUT;
 
 			if (state[i].hid_info.is_bluetooth) { // this is needed to reset LEDs from controller firmware
 				if (IS_ACCESS(state[i].hid_info)) {
@@ -255,28 +250,6 @@ libresense_result libresense_open(libresense_hid* handle, const bool use_calibra
 				}
 			}
 
-			if (IS_EDGE(state[i].hid_info)) {
-				const uint8_t profile_reports[LIBRESENSE_PROFILE_COUNT] = { DUALSENSE_REPORT_EDGE_QUERY_PROFILE_TRIANGLE_P1,
-					DUALSENSE_REPORT_EDGE_QUERY_PROFILE_SQUARE_P1,
-					DUALSENSE_REPORT_EDGE_QUERY_PROFILE_CROSS_P1,
-					DUALSENSE_REPORT_EDGE_QUERY_PROFILE_CIRCLE_P1 };
-
-				for (int j = 0; j < LIBRESENSE_PROFILE_COUNT; ++j) {
-					dualsense_edge_profile_blob profile_data[3];
-					for (int k = 0; k < 3; ++k) {
-						profile_data[k].report_id = profile_reports[j] + k;
-						if (HID_FAIL(hid_get_feature_report(state[i].hid, (uint8_t*) &profile_data[k], sizeof(dualsense_edge_profile_blob))) || (k == 0 && profile_data[k].profile_part == 0x10)) {
-							goto skip_profile;
-						}
-					}
-
-					if (IS_LIBRESENSE_BAD(libresense_convert_edge_profile_input(profile_data, &handle->edge_profiles[j + 1]))) {
-						memset(&handle->edge_profiles[j], 0, sizeof(libresense_edge_profile));
-					}
-				skip_profile:
-				}
-			}
-
 			state[i].hid_info = *handle;
 
 			// this is at the end so it's reasonably late<
@@ -293,8 +266,6 @@ libresense_result libresense_open(libresense_hid* handle, const bool use_calibra
 				libresense_update_led(handle->handle, update);
 				libresense_push(&handle->handle, 1);
 			}
-
-			state[i].hid_info.checksum = libresense_calc_checksum(crc_seed_libresense, (uint8_t*) &state[i].hid_info, sizeof(libresense_hid) - 4);
 
 			return LIBRESENSE_OK;
 		}
@@ -330,8 +301,8 @@ libresense_result libresense_pull(libresense_handle* handle, const size_t handle
 			size = sizeof(dualsense_input_msg);
 		}
 
-		hid_state->input.data.id = DUALSENSE_REPORT_BLUETOOTH;
-		hid_state->input.data.msg.data.id = DUALSENSE_REPORT_INPUT;
+		hid_state->input.data.report_id = DUALSENSE_REPORT_BLUETOOTH;
+		hid_state->input.data.msg.data.report_id = DUALSENSE_REPORT_INPUT;
 		const int report_size = hid_read(hid_state->hid, buffer, size);
 
 		if (HID_PASS(report_size)) {
@@ -380,7 +351,7 @@ libresense_result libresense_push(libresense_handle* handle, const size_t handle
 				size -= 0x10;
 			}
 		} else {
-			hid_state->output.data.msg.data.id = 0;
+			hid_state->output.data.msg.data.report_id = 0;
 			hid_state->output.data.msg.data.bt.enable_hid = true;
 			hid_state->output.data.msg.data.bt.seq = hid_state->seq & 0xF;
 			hid_state->output.data.bt_checksum = libresense_calc_checksum(crc_seed_output, buffer, size - 4);
@@ -392,8 +363,8 @@ libresense_result libresense_push(libresense_handle* handle, const size_t handle
 			continue; // invalid!
 		}
 
-		hid_state->output.data.id = DUALSENSE_REPORT_BLUETOOTH;
-		hid_state->output.data.msg.data.id = DUALSENSE_REPORT_OUTPUT;
+		hid_state->output.data.report_id = DUALSENSE_REPORT_BLUETOOTH;
+		hid_state->output.data.msg.data.report_id = DUALSENSE_REPORT_OUTPUT;
 		hid_state->output.data.msg.data.flags.value = 0;
 		const bool edge_enable = hid_state->output.data.msg.data.edge.flags.enable_switching;
 		hid_state->output.data.msg.data.edge.flags.value = 0;
@@ -759,7 +730,7 @@ libresense_result libresense_bt_pair(const libresense_handle handle, const libre
 	msg.pair_mac[3] = pair_mac[3] & 0xFF;
 	msg.pair_mac[4] = pair_mac[4] & 0xFF;
 	msg.pair_mac[5] = pair_mac[5] & 0xFF;
-	msg.id = DUALSENSE_REPORT_PAIR;
+	msg.report_id = DUALSENSE_REPORT_PAIR;
 	msg.checksum = libresense_calc_checksum(crc_seed_feature, (uint8_t*) &msg, sizeof(dualsense_bt_pair_msg) - 4);
 
 	if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &msg, sizeof(dualsense_bt_pair_msg)))) {
@@ -774,7 +745,7 @@ libresense_result libresense_bt_connect(const libresense_handle handle) {
 	CHECK_HANDLE_VALID(handle);
 
 	dualsense_bt_command_msg msg = { 0 };
-	msg.id = DUALSENSE_REPORT_COMMAND_BT;
+	msg.report_id = DUALSENSE_REPORT_COMMAND_BT;
 	msg.command = DUALSENSE_BT_COMMAND_CONNECT;
 	msg.checksum = libresense_calc_checksum(crc_seed_feature, (uint8_t*) &msg, sizeof(dualsense_bt_command_msg) - 4);
 
@@ -790,7 +761,7 @@ libresense_result libresense_bt_disconnect(const libresense_handle handle) {
 	CHECK_HANDLE_VALID(handle);
 
 	dualsense_bt_command_msg msg = { 0 };
-	msg.id = DUALSENSE_REPORT_COMMAND_BT;
+	msg.report_id = DUALSENSE_REPORT_COMMAND_BT;
 	msg.command = DUALSENSE_BT_COMMAND_DISCONNECT;
 	msg.checksum = libresense_calc_checksum(crc_seed_feature, (uint8_t*) &msg, sizeof(dualsense_bt_command_msg) - 4);
 
@@ -858,7 +829,36 @@ libresense_result libresense_delete_edge_profile(const libresense_handle handle,
 	}
 
 	dualsense_edge_profile_delete del = { 0 };
-	del.id = DUALSENSE_REPORT_EDGE_DELETE_PROFILE;
+	del.report_id = DUALSENSE_REPORT_EDGE_DELETE_PROFILE;
+	if (id == LIBRESENSE_PROFILE_ALL) {
+		del.profile_id = 0xFF;
+	} else {
+		del.profile_id = id;
+	}
+	del.checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t*) &del, sizeof(del) - 4);
+	if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &del, sizeof(del)))) {
+		return LIBRESENSE_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
+	}
+
+	return LIBRESENSE_OK;
+}
+
+libresense_result libresense_delete_access_profile(const libresense_handle handle, const libresense_profile_id id) {
+	CHECK_INIT();
+	CHECK_HANDLE_VALID(handle);
+	CHECK_EDGE(handle);
+
+	if (id == LIBRESENSE_PROFILE_NONE) {
+		return LIBRESENSE_OK;
+	}
+
+	if ((id <= LIBRESENSE_PROFILE_DEFAULT || id > LIBRESENSE_PROFILE_3) && id != LIBRESENSE_PROFILE_ALL) {
+		return LIBRESENSE_INVALID_PROFILE;
+	}
+
+	dualsense_access_profile_blob del = { 0 };
+	del.report_id = DUALSENSE_REPORT_ACCESS_SET_PROFILE;
+	del.page_id = DUALSENSE_ACCESS_DELETE_PROFILE;
 	if (id == LIBRESENSE_PROFILE_ALL) {
 		del.profile_id = 0xFF;
 	} else {

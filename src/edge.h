@@ -47,7 +47,7 @@ typedef struct PACKED {
 	bool cross : 1;
 	bool circle : 1;
 	bool triangle : 1;
-	bool emulating_rumble : 1;				  // this is updated with motor power state flag
+	bool emulating_rumble : 1; // this is updated with motor power state flag
 	libresense_level brightness_override : 2; // this is updated* somewhere* -> setting the entire report to 0xFF sets this to 0b11
 	uint8_t unknown : 2;
 	bool playstation : 1;
@@ -159,7 +159,7 @@ typedef struct PACKED {
 	dualsense_edge_profile_stick sticks[2];
 	dualsense_edge_profile_deadzone triggers[2];
 	uint8_t vibration_reduction; // Off = 0xFF, Weak = 0x3, Medium = 0x2
-	uint8_t trigger_reduction;	 // Off = 0xFF, Weak = 0x9, Medium = 0x6
+	uint8_t trigger_reduction; // Off = 0xFF, Weak = 0x9, Medium = 0x6
 	uint8_t remapped_button[0x10];
 	dualsense_edge_profile_disabled_buttons disabled_buttons;
 	dualsense_edge_profile_flags flags;
@@ -182,7 +182,7 @@ typedef struct PACKED {
 	uint8_t profile_part;
 
 	union PACKED {
-		uint32_t version;
+		dualsense_profile_version version;
 		uint8_t blob[0x3a];
 	};
 
@@ -192,7 +192,7 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_edge_profile_blob) == 64, "dualsense_edge_profile_blob size is not 64");
 
 typedef struct PACKED {
-	dualsense_report_id id;
+	dualsense_report_id report_id;
 	uint8_t profile_id;
 	uint8_t reserved[58];
 	uint32_t checksum;
