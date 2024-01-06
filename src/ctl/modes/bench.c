@@ -2,7 +2,7 @@
 //  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
 //  SPDX-License-Identifier: MPL-2.0
 
-#define _POSIX_C_SOURCE 202301L
+#define _POSIX_C_SOURCE 200809L
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
