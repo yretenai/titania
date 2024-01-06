@@ -228,7 +228,7 @@ libresensectl_error libresensectl_mode_report_inner(libresensectl_context* conte
 				LIBREPRINT_EDGE_BUTTON_TEST(share); LIBREPRINT_SEP();
 				LIBREPRINT_EDGE_BUTTON_TEST(option); LIBREPRINT_SEP();
 				LIBREPRINT_EDGE_BUTTON_TEST(playstation); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(mute); LIBREPRINT_SEP();
+				LIBREPRINT_EDGE_BUTTON_TEST(mute);
 				printf(" }\n");
 
 
