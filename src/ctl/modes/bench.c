@@ -2,10 +2,7 @@
 //  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
 //  SPDX-License-Identifier: MPL-2.0
 
-#include "../libresensectl.h"
-
-#include <stdio.h>
-#include <time.h>
+#define _POSIX_C_SOURCE 202301L
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -13,22 +10,22 @@
 #include <windows.h>
 
 // https://stackoverflow.com/questions/5801813/c-usleep-is-obsolete-workarounds-for-windows-mingw
-void usleep(__useconds_t usec) {
+void nanosleep(const struct timespec *tspec, void* nullvoid) {
 	HANDLE timer;
 	LARGE_INTEGER ft;
-	ft.QuadPart = -(10 * usec);
+	ft.QuadPart = -(10000 * tspec->tv_nsec);
 	timer = CreateWaitableTimer(nullptr, TRUE, nullptr);
 	SetWaitableTimer(timer, &ft, 0, nullptr, nullptr, 0);
 	WaitForSingleObject(timer, INFINITE);
 	CloseHandle(timer);
 }
-#else
-#define __USE_XOPEN_EXTENDED
-#include <unistd.h>
-#ifdef __APPLE__
-typedef useconds_t __useconds_t;
 #endif
-#endif
+
+#include "../libresensectl.h"
+
+#include <stdio.h>
+#include <time.h>
+
 
 libresensectl_error libresensectl_mode_bench(libresensectl_context* context) {
 	printf("testing latency, press CTRL+C to stop\n");
@@ -39,6 +36,7 @@ libresensectl_error libresensectl_mode_bench(libresensectl_context* context) {
 	libresense_data data;
 	libresense_handle handle = context->handles[0];
 	int32_t i = 0;
+	const struct timespec sleep_time = { 0, 1e+6 };
 	while (true) {
 		if (should_stop) {
 			return LIBRESENSECTL_INTERRUPTED;
@@ -64,6 +62,6 @@ libresensectl_error libresensectl_mode_bench(libresensectl_context* context) {
 			avg = 0;
 		}
 
-		usleep(1000);
+		nanosleep(&sleep_time, nullptr);
 	}
 }

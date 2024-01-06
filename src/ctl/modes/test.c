@@ -2,20 +2,19 @@
 //  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
 //  SPDX-License-Identifier: MPL-2.0
 
+#define _POSIX_C_SOURCE 202301L
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+
 #include "../libresensectl.h"
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
-#ifndef _WIN32
-#define __USE_XOPEN_EXTENDED
-#include <unistd.h>
-#ifdef __APPLE__
-typedef useconds_t __useconds_t;
-#endif
-#endif
-
-bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
+bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, useconds_t useconds, const useconds_t delay) {
 	bool should_exit = false;
 	while (true) {
 		if (should_stop) {
@@ -47,11 +46,12 @@ bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, _
 				data[i].triggers[1].id,
 				data[i].triggers[1].effect);
 		}
-		usleep(delay);
+		struct timespec delayspec = { 0, delay * 1000 };
+		nanosleep(&delayspec, nullptr);
 		if (useconds < delay || useconds - delay == 0) { // primary failsafe and conventional loop break
 			break;
 		}
-		const __useconds_t old = useconds;
+		const useconds_t old = useconds;
 		useconds -= delay;
 		if (useconds > old) { // second failsafe.
 			break;
@@ -61,7 +61,7 @@ bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, _
 	return should_exit;
 }
 
-bool report_hid_close(libresense_handle* handles, const size_t handle_count, __useconds_t useconds, const __useconds_t delay) {
+bool report_hid_close(libresense_handle* handles, const size_t handle_count, useconds_t useconds, const useconds_t delay) {
 	bool should_exit = false;
 	while (true) {
 		if (should_stop) {
@@ -83,11 +83,12 @@ bool report_hid_close(libresense_handle* handles, const size_t handle_count, __u
 			}
 		}
 
-		usleep(delay);
+		struct timespec delayspec = { 0, delay * 1000 };
+		nanosleep(&delayspec, nullptr);
 		if (useconds < delay || useconds - delay == 0) { // primary failsafe and conventional loop break
 			break;
 		}
-		const __useconds_t old = useconds;
+		const useconds_t old = useconds;
 		useconds -= delay;
 		if (useconds > old) { // second failsafe.
 			break;
@@ -96,7 +97,7 @@ bool report_hid_close(libresense_handle* handles, const size_t handle_count, __u
 	return should_exit;
 }
 
-void wait_until_options_clear(libresense_handle* handles, const size_t handle_count, __useconds_t timeout) {
+void wait_until_options_clear(libresense_handle* handles, const size_t handle_count, useconds_t timeout) {
 	while (true) {
 		if (should_stop) {
 			return;
@@ -112,11 +113,12 @@ void wait_until_options_clear(libresense_handle* handles, const size_t handle_co
 				return;
 			}
 		}
-		usleep(16000);
+		struct timespec delayspec = { 0, 16000000 };
+		nanosleep(&delayspec, nullptr);
 		if (timeout < 16000 || timeout - 16000 == 0) { // primary failsafe and conventional loop break
 			break;
 		}
-		const __useconds_t old = timeout;
+		const useconds_t old = timeout;
 		timeout -= 16000;
 		if (timeout > old) { // second failsafe.
 			break;
@@ -349,7 +351,8 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 			libresense_update_effect(context->handles[i], update, update, 0.0f);
 		}
 		libresense_push(context->handles, context->connected_controllers);
-		usleep(100000);
+		struct timespec delayspec = { 0, 1e+8 };
+		nanosleep(&delayspec, nullptr);
 	}
 
 	if (!is_only_access && (all_tests || strcmp(selected_test, "rumble") == 0)) {
@@ -484,7 +487,8 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 			libresense_update_rumble(context->handles[i], 0, 0, 0.0f, false);
 		}
 		libresense_push(context->handles, context->connected_controllers);
-		usleep(100000);
+		struct timespec delayspec = { 0, 1e+8 };
+		nanosleep(&delayspec, nullptr);
 	}
 
 	if (!is_only_access && (all_tests || strcmp(selected_test, "mic") == 0)) {
@@ -563,7 +567,6 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 			libresense_update_audio(context->handles[i], update);
 		}
 		libresense_push(context->handles, context->connected_controllers);
-		usleep(1000000);
 	}
 
 	if (!is_only_access && (all_tests || strcmp(selected_test, "led") == 0)) {

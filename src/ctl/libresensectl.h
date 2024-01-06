@@ -71,8 +71,9 @@ libresensectl_error libresensectl_mode_access_delete(libresense_profile_id profi
 extern bool should_stop;
 
 #ifdef _WIN32
-typedef __int64 __useconds_t;
-void usleep(__useconds_t usec);
+#include <time.h>
+void nanosleep(const struct timespec *tspec, void* nullvoid);
+typedef uint64_t useconds_t;
 #endif
 
 #endif
