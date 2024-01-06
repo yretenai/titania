@@ -305,8 +305,12 @@ typedef struct PACKED {
 
 	// misc flags
 	bool enable_lowpass_filter : 1;
+#ifdef _WIN32
 	uint8_t reserved3a : 7;
 	uint8_t reserved3b : 7;
+#else
+	uint16_t reserved3 : 14;
+#endif
 
 	bool edge_extension : 1;
 } dualsense_control2;

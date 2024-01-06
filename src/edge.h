@@ -148,12 +148,20 @@ static_assert(sizeof(dualsense_edge_profile_disabled_buttons) == 4, "dualsense_e
 
 typedef struct PACKED {
 	uint8_t left_stick_profile : 4;
+#ifdef _WIN32
 	uint8_t unknown1a : 4;
-	uint8_t unknown1b : 3;
+	uint8_t unknown1b : 7;
+#else
+	uint16_t unknown : 11;
+#endif
 	bool triggers_mirrored : 1;
 	uint8_t right_stick_profile : 4;
+#ifdef _WIN32
 	uint8_t unknown2a : 4;
 	uint8_t unknown2b : 8;
+#else
+	uint16_t unknown2 : 12;
+#endif
 } dualsense_edge_profile_flags;
 
 static_assert(sizeof(dualsense_edge_profile_flags) == 4, "dualsense_edge_profile_flags size is not 4");
