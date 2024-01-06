@@ -12,16 +12,17 @@
 
 #include "common.h"
 #include "enums.h"
+#include <libresense_config_internal.h>
 
 #ifdef _MSC_VER
 #define PACKED
 #pragma pack(push, 1)
-
-#if __STDC_VERSION__ < 202000
-#define nullptr ((void*) 0)
-#endif
 #else
 #define PACKED __attribute__((__packed__))
+#endif
+
+#ifndef LIBRESENSE_HAS_NULLPTR
+#define nullptr ((void*) 0)
 #endif
 
 typedef struct PACKED {

@@ -35,13 +35,25 @@ if get_option('buildtype') == 'custom'
 	)
 endif
 
-configure_file(
-	output : 'config.h',
+has_nullptr = false
+if compiler.compiles('int main(void) { return nullptr == 0; }', name : 'has nullptr')
+	has_nullptr = true
+endif
+
+config_file = configure_file(
+	output : 'libresense_config.h',
 	configuration : configuration_data({
 		'LIBRESENSE_MAX_CONTROLLERS' : get_option('libresense_max_controllers'),
 		'LIBRESENSE_PROJECT_NAME' : '"' + meson.project_name() + '"',
 		'LIBRESENSE_PROJECT_VERSION' : '"' + meson.project_version() + '"'
 	})
+)
+
+configure_file(
+	output : 'libresense_config_internal.h',
+	configuration : configuration_data({
+	   'LIBRESENSE_HAS_NULLPTR' : has_nullptr
+   })
 )
 
 hidapi = dependency('hidapi', version : '>=0.13.0', required : false)
@@ -92,7 +104,7 @@ if get_option('libresense_ctl')
 	install : true)
 endif
 
-install_headers('include/libresense.h', preserve_path : false)
+install_headers(['include/libresense.h', config_file], preserve_path : false)
 
 if get_option('libresense_man')
 	pandoc = find_program('pandoc', required : false)

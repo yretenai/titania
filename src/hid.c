@@ -7,7 +7,7 @@
 
 #include "structures.h"
 
-#include "config.h"
+#include <libresense_config.h>
 
 #ifdef __APPLE__
 #include <hidapi_darwin.h>

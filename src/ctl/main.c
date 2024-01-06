@@ -2,7 +2,7 @@
 //  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
 //  SPDX-License-Identifier: MPL-2.0
 
-#include <config.h>
+#include <libresense_config.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>

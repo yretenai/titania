@@ -14,7 +14,8 @@
 
 #include <libresense.h>
 
-#include <config.h>
+#include <libresense_config.h>
+#include <libresense_config_internal.h>
 
 #ifndef _MSC_VER
 static_assert(__STDC_VERSION__ >= 202000L, "a c2x compiler is required");
@@ -24,16 +25,17 @@ static_assert(__STDC_VERSION__ >= 202000L, "a c2x compiler is required");
 #include "common.h"
 #include "edge.h"
 #include "enums.h"
+#include <libresense_config.h>
 
 #ifdef _MSC_VER
 #define PACKED
 #pragma pack(push, 1)
-
-#if __STDC_VERSION__ < 202000
-#define nullptr ((void*) 0)
-#endif
 #else
 #define PACKED __attribute__((__packed__))
+#endif
+
+#ifndef LIBRESENSE_HAS_NULLPTR
+#define nullptr ((void*) 0)
 #endif
 
 typedef struct PACKED {

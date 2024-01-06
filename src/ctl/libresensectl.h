@@ -9,9 +9,11 @@
 
 #include <libresense.h>
 
+#include <libresense_config_internal.h>
+
 #define LIBRESENSECTL_CONTROLLER_COUNT (31)
 
-#if __STDC_VERSION__ < 202000
+#ifndef LIBRESENSE_HAS_NULLPTR
 #define nullptr ((void*) 0)
 #endif
 
