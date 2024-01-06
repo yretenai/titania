@@ -239,7 +239,7 @@ int main(const int argc, const char** const argv) {
 		}
 
 		context.hids[context.connected_controllers] = hids[hid_id];
-		result = libresense_open(&context.hids[context.connected_controllers], calibrate);
+		result = libresense_open(&context.hids[context.connected_controllers], calibrate, true);
 		if (IS_LIBRESENSE_BAD(result)) {
 			errorf(stderr, result, "error initializing hid");
 			context.connected_controllers--;

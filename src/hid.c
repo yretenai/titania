@@ -9,6 +9,8 @@
 
 #include "config.h"
 
+#include <unistd.h>
+
 #ifdef __APPLE__
 #include <hidapi_darwin.h>
 #endif
@@ -121,7 +123,7 @@ libresense_result libresense_get_hids(libresense_hid* hids, const size_t hids_le
 	return LIBRESENSE_OK;
 }
 
-libresense_result libresense_open(libresense_hid* handle, const bool use_calibration) {
+libresense_result libresense_open(libresense_hid* handle, const bool use_calibration, const bool blocking) {
 	CHECK_INIT();
 
 	const uint32_t old_check = handle->checksum;
@@ -140,6 +142,9 @@ libresense_result libresense_open(libresense_hid* handle, const bool use_calibra
 			if (state[i].hid == nullptr) {
 				return LIBRESENSE_HIDAPI_FAIL;
 			}
+
+			hid_set_nonblocking(state[i].hid, !blocking);
+
 			state[i].hid_info = *handle;
 			state[i].output.data.id = DUALSENSE_REPORT_BLUETOOTH;
 			state[i].output.data.msg.data.id = DUALSENSE_REPORT_OUTPUT;
@@ -326,20 +331,18 @@ libresense_result libresense_pull(libresense_handle* handle, const size_t handle
 			buffer = hid_state->input.data.msg.buffer;
 			size = sizeof(dualsense_input_msg);
 		}
-		// NOTE: should we clear the buffer? speed jitters a lot more if we clear memory
-		// the controller polls at between 1KHz (BT) and 250Hz (USB), so we ideally want to be < 1ms
-		memset(buffer + 1, 0, size - 1);
+
 		hid_state->input.data.id = DUALSENSE_REPORT_BLUETOOTH;
 		hid_state->input.data.msg.data.id = DUALSENSE_REPORT_INPUT;
+		const int report_size = hid_read(hid_state->hid, buffer, size);
 
-		if (HID_FAIL(hid_read(hid_state->hid, buffer, size))) {
+		if (HID_PASS(report_size)) {
+			libresense_convert_input(hid_state->hid_info, hid_state->input.data.msg.data, &data[i], hid_state->calibration);
+		} else if (HID_FAIL(report_size)) {
 			libresense_close(handle[i]);
 			handle[i] = LIBRESENSE_INVALID_HANDLE_ID;
 			data[i] = invalid;
-			continue; // invalid!
 		}
-
-		libresense_convert_input(hid_state->hid_info, hid_state->input.data.msg.data, &data[i], hid_state->calibration);
 	}
 
 	return LIBRESENSE_OK;

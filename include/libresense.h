@@ -712,8 +712,9 @@ LIBRESENSE_EXPORT libresense_result libresense_get_hids(libresense_hid* hids, co
  * @brief open a HID handle for processing
  * @param handle: pointer to the libresense HID handle, this value will hold the libresense_handle value when the function returns
  * @param use_calibration: whether or not to use calibration data for the gyroscope and accelerometer
+ * @param blocking: whether or not to wait for data before reading, this is sometimes slower or faster.
  */
-LIBRESENSE_EXPORT libresense_result libresense_open(libresense_hid* handle, bool use_calibration);
+LIBRESENSE_EXPORT libresense_result libresense_open(libresense_hid* handle, const bool use_calibration, const bool blocking);
 
 /**
  * @brief poll controllers for input data
