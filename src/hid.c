@@ -715,7 +715,7 @@ libresense_result libresense_update_rumble(const libresense_handle handle, const
 
 	const libresense_hid hid = state[handle].hid_info;
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
-	hid_state->flags.rumble = hid_state->flags.motor_power = true;
+	hid_state->flags.rumble = true;
 
 	if (hid.is_edge || hid.firmware.update.major >= 0x224) {
 		hid_state->flags.control2 = true;
@@ -724,9 +724,14 @@ libresense_result libresense_update_rumble(const libresense_handle handle, const
 	} else {
 		hid_state->flags.haptics = true;
 	}
-	hid_state->motor_flags.rumble_power_reduction = NORM_CLAMP(power_reduction, 0x7);
+
 	hid_state->rumble[DUALSENSE_LARGE_MOTOR] = NORM_CLAMP_UINT8(large_motor);
 	hid_state->rumble[DUALSENSE_SMALL_MOTOR] = NORM_CLAMP_UINT8(small_motor);
+
+	if (power_reduction > 0) {
+		hid_state->flags.motor_power = true;
+		hid_state->motor_flags.rumble_power_reduction = NORM_CLAMP(power_reduction - 1, 0x7);
+	}
 
 	return LIBRESENSE_OK;
 }
