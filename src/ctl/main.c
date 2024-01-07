@@ -352,6 +352,8 @@ int main(const int argc, const char** const argv) {
 		return 1;
 	}
 
+	libresense_delete_access_profile(context.handles[0], LIBRESENSE_PROFILE_1);
+
 	libresensectl_error error = cb(&context);
 	if (IS_LIBRESENSECTL_BAD(error)) {
 		switch (error) {

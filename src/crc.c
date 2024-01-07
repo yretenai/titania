@@ -9,7 +9,7 @@ uint32_t crc_table[256];
 uint32_t crc_seed_input = 0;
 uint32_t crc_seed_output = 0;
 uint32_t crc_seed_feature = 0;
-uint32_t crc_seed_feature_edge = 0; // todo: validate that this also works for Access
+uint32_t crc_seed_feature_profile = 0;
 uint32_t crc_seed_libresense = 0;
 
 uint32_t checksum(uint32_t crc, const uint8_t* buffer, const size_t size) {
@@ -34,8 +34,8 @@ void libresense_init_checksum(void) {
 	crc_seed_output = checksum(UINT32_MAX, (uint8_t*) &crc_seed_output, 1);
 	crc_seed_feature = DUALSENSE_CRC_FEATURE;
 	crc_seed_feature = checksum(UINT32_MAX, (uint8_t*) &crc_seed_feature, 1);
-	crc_seed_feature_edge = DUALSENSE_CRC_FEATURE_EDGE;
-	crc_seed_feature_edge = checksum(UINT32_MAX, (uint8_t*) &crc_seed_feature_edge, 1);
+	crc_seed_feature_profile = DUALSENSE_CRC_FEATURE_EDGE;
+	crc_seed_feature_profile = checksum(UINT32_MAX, (uint8_t*) &crc_seed_feature_profile, 1);
 	crc_seed_libresense = LIBRESENSE_CRC;
 	crc_seed_libresense = checksum(UINT32_MAX, (uint8_t*) &crc_seed_libresense, 4);
 }

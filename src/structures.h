@@ -515,7 +515,7 @@ static_assert(sizeof(dualsense_bt_command_msg) == 0x30, "dualsense_bt_command_ms
 extern uint32_t crc_seed_input;
 extern uint32_t crc_seed_output;
 extern uint32_t crc_seed_feature;
-extern uint32_t crc_seed_feature_edge;
+extern uint32_t crc_seed_feature_profile;
 extern uint32_t crc_seed_libresense;
 
 extern dualsense_state state[LIBRESENSE_MAX_CONTROLLERS];

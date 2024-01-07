@@ -826,9 +826,9 @@ libresense_result libresense_update_edge_profile(const libresense_handle handle,
 		default: return LIBRESENSE_INVALID_PROFILE;
 	}
 
-	output[0].checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t*) &output[0], sizeof(output[0]) - 4);
-	output[1].checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t*) &output[1], sizeof(output[1]) - 4);
-	output[2].checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t*) &output[2], sizeof(output[2]) - 4);
+	output[0].checksum = libresense_calc_checksum(crc_seed_feature_profile, (uint8_t*) &output[0], sizeof(output[0]) - 4);
+	output[1].checksum = libresense_calc_checksum(crc_seed_feature_profile, (uint8_t*) &output[1], sizeof(output[1]) - 4);
+	output[2].checksum = libresense_calc_checksum(crc_seed_feature_profile, (uint8_t*) &output[2], sizeof(output[2]) - 4);
 
 	for (int i = 0; i < 3; ++i) {
 		if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &output[i], sizeof(dualsense_edge_profile_blob)))) {
@@ -859,7 +859,7 @@ libresense_result libresense_delete_edge_profile(const libresense_handle handle,
 	} else {
 		del.profile_id = id;
 	}
-	del.checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t*) &del, sizeof(del) - 4);
+	del.checksum = libresense_calc_checksum(crc_seed_feature_profile, (uint8_t*) &del, sizeof(del) - 4);
 	if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &del, sizeof(del)))) {
 		return LIBRESENSE_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
 	}
@@ -870,7 +870,7 @@ libresense_result libresense_delete_edge_profile(const libresense_handle handle,
 libresense_result libresense_delete_access_profile(const libresense_handle handle, const libresense_profile_id id) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
-	CHECK_EDGE(handle);
+	CHECK_ACCESS(handle);
 
 	if (id == LIBRESENSE_PROFILE_NONE) {
 		return LIBRESENSE_OK;
@@ -888,7 +888,7 @@ libresense_result libresense_delete_access_profile(const libresense_handle handl
 	} else {
 		del.profile_id = id;
 	}
-	del.checksum = libresense_calc_checksum(crc_seed_feature_edge, (uint8_t*) &del, sizeof(del) - 4);
+	del.checksum = libresense_calc_checksum(crc_seed_feature_profile, (uint8_t*) &del, sizeof(del) - 4);
 	if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &del, sizeof(del)))) {
 		return LIBRESENSE_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
 	}
