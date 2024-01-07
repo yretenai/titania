@@ -23,25 +23,24 @@ int parse_octet(const char ch) {
 }
 
 titaniactl_error titaniactl_mode_led(titaniactl_context* context) {
-	titania_led_update update = { 0 };
-	update.color.x = 1.0;
-	update.color.y = 0.0;
-	update.color.z = 1.0;
-	update.led = TITANIA_LED_NO_UPDATE;
+	titania_led_index led = TITANIA_LED_NO_UPDATE;
+	float r = 1.0f;
+	float g = 0.0f;
+	float b = 1.0f;
 
 	if (context->argc > 1) {
 		if (strcmp(context->argv[1], "player1") == 0) {
-			update.led = TITANIA_LED_PLAYER_1;
+			led = TITANIA_LED_PLAYER_1;
 		} else if (strcmp(context->argv[1], "player2") == 0) {
-			update.led = TITANIA_LED_PLAYER_2;
+			led = TITANIA_LED_PLAYER_2;
 		} else if (strcmp(context->argv[1], "player3") == 0) {
-			update.led = TITANIA_LED_PLAYER_3;
+			led = TITANIA_LED_PLAYER_3;
 		} else if (strcmp(context->argv[1], "player4") == 0) {
-			update.led = TITANIA_LED_PLAYER_4;
+			led = TITANIA_LED_PLAYER_4;
 		} else {
 			int n;
 			sscanf(context->argv[1], "%d", &n);
-			update.led = (titania_led_index) (n & 0x7F);
+			led = (titania_led_index) (n & 0x7F);
 		}
 	}
 
@@ -69,10 +68,16 @@ titaniactl_error titaniactl_mode_led(titaniactl_context* context) {
 			}
 		}
 
-		update.color.r = r8 / 255.0f;
-		update.color.g = g8 / 255.0f;
-		update.color.b = b8 / 255.0f;
+		r = r8 / 255.0f;
+		g = g8 / 255.0f;
+		b = b8 / 255.0f;
 	}
+
+	titania_led_update update = { 0 };
+	update.color.x = r;
+	update.color.y = g;
+	update.color.z = b;
+	update.led = led;
 
 	if (!is_json) {
 		printf("setting color to rgb(%f, %f, %f) with led value %d", update.color.r, update.color.g, update.color.b, update.led);

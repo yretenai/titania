@@ -101,7 +101,10 @@ typedef struct PACKED dualsense_access_profile_blob {
 	uint8_t profile_id;
 
 	union PACKED {
-		uint32_t version;
+		struct {
+			uint32_t version;
+			uint8_t _padding[0x35];
+		};
 		uint8_t blob[0x39];
 	};
 

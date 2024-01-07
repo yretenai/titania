@@ -197,7 +197,10 @@ typedef struct PACKED dualsense_edge_profile_blob {
 	uint8_t profile_part;
 
 	union PACKED {
-		uint32_t version;
+		struct {
+			uint32_t version;
+			uint8_t _padding[0x36];
+		};
 		uint8_t blob[0x3a];
 	};
 
