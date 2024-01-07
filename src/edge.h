@@ -13,7 +13,7 @@
 #include "enums.h"
 #include <libresense_config_internal.h>
 
-#ifdef _MSC_VER
+#ifdef LIBRESENSE_HAS_PACK
 #define PACKED
 #pragma pack(push, 1)
 #else
@@ -226,7 +226,7 @@ typedef struct PACKED libresense_edge_template {
 	libresense_edge_template_vector vectors;
 } libresense_edge_template;
 
-#ifdef _MSC_VER
+#ifdef LIBRESENSE_HAS_PACK
 #pragma pack(pop)
 #endif
 #undef PACKED

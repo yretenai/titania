@@ -8,7 +8,7 @@ project(
 		'default_library=both'
 	],
 	license : 'MPL-2',
-	meson_version : '>=1.2.0',
+	meson_version : '>=1.3.0',
 	version : '1.1.0'
 )
 
@@ -25,6 +25,8 @@ args = compiler.get_supported_arguments(
 	'-Wno-unused-variable',
 	'-Wno-unused-parameter',
 	'-Wno-microsoft-fixed-enum',
+	'-fcx-limited-range',
+	'-ffp-contract=on',
 	'/wd4820'
 )
 
@@ -36,8 +38,35 @@ if get_option('buildtype') == 'custom'
 endif
 
 has_nullptr = false
-if compiler.compiles('int main(void) { return nullptr == 0; }', name : 'has nullptr')
+if compiler.compiles('int main(void) { return nullptr == 0; }\n', name : 'has nullptr', args : args, werror : true)
 	has_nullptr = true
+endif
+
+pack_test = '''
+#pragma pack(push, 1)
+
+struct nya {
+	char a;
+	int b;
+};
+static_assert(sizeof(struct nya) == 5, "");
+
+#pragma pack(pop)
+'''
+
+has_pack = false
+if compiler.compiles(pack_test, name : 'has pack', args : args, werror : true)
+	has_pack = true
+endif
+
+stdc_test = '''
+#pragma STDC FP_CONTRACT ON
+#pragma STDC CX_LIMITED_RANGE ON
+'''
+
+has_stdc_flags = false
+if compiler.compiles(stdc_test, name : 'has stdc flags', args : args, werror : true)
+	has_stdc_flags = true
 endif
 
 config_file = configure_file(
@@ -52,7 +81,9 @@ config_file = configure_file(
 configure_file(
 	output : 'libresense_config_internal.h',
 	configuration : configuration_data({
-	   'LIBRESENSE_HAS_NULLPTR' : has_nullptr
+		'LIBRESENSE_HAS_NULLPTR' : has_nullptr,
+		'LIBRESENSE_HAS_PACK' : has_pack,
+		'LIBRESENSE_HAS_STDC_FLAGS': has_stdc_flags
    })
 )
 

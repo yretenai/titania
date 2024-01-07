@@ -27,7 +27,7 @@ static_assert(__STDC_VERSION__ >= 202000L, "a c2x compiler is required");
 #include "enums.h"
 #include <libresense_config.h>
 
-#ifdef _MSC_VER
+#ifdef LIBRESENSE_HAS_PACK
 #define PACKED
 #pragma pack(push, 1)
 #else
@@ -507,7 +507,7 @@ typedef struct PACKED dualsense_bt_command_msg {
 
 static_assert(sizeof(dualsense_bt_command_msg) == 0x30, "dualsense_bt_command_msg is not 48 bytes");
 
-#ifdef _MSC_VER
+#ifdef LIBRESENSE_HAS_PACK
 #pragma pack(pop)
 #endif
 #undef PACKED

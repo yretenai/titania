@@ -4,6 +4,13 @@
 
 #include "structures.h"
 
+#include <libresense_config_internal.h>
+
+#ifdef LIBRESENSE_HAS_STDC_FLAGS
+#pragma STDC FP_CONTRACT ON
+#pragma STDC CX_LIMITED_RANGE ON
+#endif
+
 #define PI_CONST 3.14159265358979323846f
 #define G_CONST 9.80665f
 

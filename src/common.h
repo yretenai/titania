@@ -12,7 +12,7 @@
 
 #include <libresense_config_internal.h>
 
-#ifdef _MSC_VER
+#ifdef LIBRESENSE_HAS_PACK
 #define PACKED
 #pragma pack(push, 1)
 #else
@@ -164,7 +164,7 @@ typedef uint8_t dualsense_profile_uuid[0x10];
 
 static_assert(sizeof(libresense_wchar) == 2, "libresense_wchar size is not 2");
 
-#ifdef _MSC_VER
+#ifdef LIBRESENSE_HAS_PACK
 #pragma pack(pop)
 #endif
 #undef PACKED

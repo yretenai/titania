@@ -15,7 +15,7 @@
 #include "common.h"
 #include "enums.h"
 
-#ifdef _MSC_VER
+#ifdef LIBRESENSE_HAS_PACK
 #define PACKED
 #pragma pack(push, 1)
 #else
@@ -110,7 +110,7 @@ typedef struct PACKED dualsense_access_profile_blob {
 
 static_assert(sizeof(dualsense_access_profile_blob) == 64, "dualsense_access_profile_blob size is not 64");
 
-#ifdef _MSC_VER
+#ifdef LIBRESENSE_HAS_PACK
 #pragma pack(pop)
 #endif
 #undef PACKED
