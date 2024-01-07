@@ -373,8 +373,8 @@ int main(const int argc, const char** const argv) {
 			case LIBRESENSECTL_NOT_IMPLEMENTED: libresensectl_errorf("not implemented", "sorry"); break;
 			case LIBRESENSECTL_INVALID_ARGUMENTS: libresensectl_errorf("invalid arguments", "one of the arguments was invalid"); break;
 			case LIBRESENSECTL_INVALID_PAIR_ARGUMENTS: libresensectl_errorf("invalid arguments", "you need to provide a mac address and a bluetooth link key"); break;
-			case LIBRESENSECTL_INVALID_MAC_ADDRESS: libresensectl_errorf("invalid arguments", "mac address is not valid");
-			case LIBRESENSECTL_INVALID_LINK_KEY: libresensectl_errorf("invalid arguments", "bluetooth link key is not 16 characters");
+			case LIBRESENSECTL_INVALID_MAC_ADDRESS: libresensectl_errorf("invalid arguments", "mac address is not valid"); break;
+			case LIBRESENSECTL_INVALID_LINK_KEY: libresensectl_errorf("invalid arguments", "bluetooth link key is not 16 characters"); break;
 			case LIBRESENSECTL_INVALID_PROFILE: libresensectl_errorf("invalid profile", "profile data is not valid to import"); break;
 			case LIBRESENSECTL_EMPTY_PROFILE: libresensectl_errorf("empty profile", "profile is empty"); break;
 			case LIBRESENSECTL_FILE_READ_ERROR: libresensectl_errorf("file read error", "could not open or read file"); break;

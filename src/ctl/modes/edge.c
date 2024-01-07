@@ -211,13 +211,14 @@ libresensectl_error libresensectl_mode_edge_export(libresense_profile_id profile
 		return LIBRESENSECTL_FILE_WRITE_ERROR;
 	}
 	fwrite(profile_str, 1, strlen(profile_str), file);
-	free(profile_str);
-	free(output_path);
 	fclose(file);
 
 	if (!is_json) {
 		printf("successfully wrote profile %s\n", output_path);
 	}
+
+	free(profile_str);
+	free(output_path);
 
 	return LIBRESENSECTL_OK;
 }

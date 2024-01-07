@@ -1,6 +1,6 @@
 [wrap-git]
 url = https://git.vlhl.dev/navi/json.git
-revision = 8a284c41724cadb53dded8929816789f0d682d6d
+revision = e66039a4bdb809691ba326edf5f144fe786715cb
 depth = 1
 
 [provide]
