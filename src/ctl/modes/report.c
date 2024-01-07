@@ -581,7 +581,7 @@ libresensectl_error libresensectl_mode_report_json_inner(libresensectl_context* 
 		free(json_text);
 	} while (loop && !should_stop);
 
-	return LIBRESENSECTL_OK;
+	return LIBRESENSECTL_OK_NO_JSON;
 }
 
 libresensectl_error libresensectl_mode_report_json(libresensectl_context* context) { return libresensectl_mode_report_json_inner(context, false); }
@@ -643,5 +643,5 @@ libresensectl_error libresensectl_mode_list_json(libresensectl_context* context)
 	json_delete(arr);
 	free(json_text);
 
-	return LIBRESENSECTL_OK;
+	return LIBRESENSECTL_OK_NO_JSON;
 }

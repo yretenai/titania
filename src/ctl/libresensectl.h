@@ -26,6 +26,8 @@ typedef struct {
 } libresensectl_context;
 
 typedef enum {
+	LIBRESENSECTL_OK_NO_JSON_INTERRUPTED = -2,
+	LIBRESENSECTL_OK_NO_JSON = -1,
 	LIBRESENSECTL_OK = LIBRESENSE_OK,
 	LIBRESENSECTL_HID_ERROR,
 	LIBRESENSECTL_INTERRUPTED,
@@ -38,7 +40,7 @@ typedef enum {
 } libresensectl_error;
 
 #define IS_LIBRESENSECTL_OKAY(result) (result == LIBRESENSECTL_OK)
-#define IS_LIBRESENSECTL_BAD(result) (result != LIBRESENSECTL_OK)
+#define IS_LIBRESENSECTL_BAD(result) (result > LIBRESENSECTL_OK)
 
 typedef libresensectl_error (*libresensectl_callback_t)(libresensectl_context* context);
 

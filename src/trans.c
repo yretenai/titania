@@ -185,7 +185,7 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 	data->bt.seq = input.bt.seq;
 
 	if (IS_EDGE(hid_info)) {
-		data->time.battery = 0;
+		data->time.battery = data->time.system + data->time.sensor;
 		data->edge_device.raw_buttons.dpad_up = CHECK_DPAD(input.state.edge.override, U, UR, UL);
 		data->edge_device.raw_buttons.dpad_down = CHECK_DPAD(input.state.edge.override, D, DR, DL);
 		data->edge_device.raw_buttons.dpad_left = CHECK_DPAD(input.state.edge.override, L, UL, DL);

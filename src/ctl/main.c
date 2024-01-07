@@ -352,11 +352,17 @@ int main(const int argc, const char** const argv) {
 		return 1;
 	}
 
-	const libresensectl_error error = cb(&context);
+	libresensectl_error error = cb(&context);
 	if (IS_LIBRESENSECTL_BAD(error)) {
 		switch (error) {
 			case LIBRESENSECTL_HID_ERROR: libresensectl_errorf("hid error", "errored while processing command"); break;
-			case LIBRESENSECTL_INTERRUPTED: libresensectl_errorf("caught ctrl+c", "exiting"); break;
+			case LIBRESENSECTL_INTERRUPTED:
+				if (is_json) {
+					error = LIBRESENSECTL_OK_NO_JSON_INTERRUPTED;
+				} else {
+					libresensectl_errorf("caught ctrl+c", "exiting");
+				}
+				break;
 			case LIBRESENSECTL_NOT_IMPLEMENTED: libresensectl_errorf("not implemented", "sorry"); break;
 			case LIBRESENSECTL_INVALID_ARGUMENTS: libresensectl_errorf("invalid arguments", "one of the arguments was invalid"); break;
 			case LIBRESENSECTL_INVALID_PAIR_ARGUMENTS: libresensectl_errorf("invalid arguments", "you need to provide a mac address and a bluetooth link key"); break;
@@ -368,13 +374,21 @@ int main(const int argc, const char** const argv) {
 
 	shutdown();
 
-	if (is_json) {
+	if (is_json && error > LIBRESENSECTL_OK_NO_JSON) {
 		struct json* obj = json_new_object();
 		json_object_add_bool(obj, "success", true);
 		char* json_text = json_print(obj);
 		printf("%s\n", json_text);
 		json_delete(obj);
 		free(json_text);
+	}
+
+	if (error == LIBRESENSECTL_OK_NO_JSON_INTERRUPTED) {
+		return LIBRESENSECTL_INTERRUPTED;
+	}
+
+	if (error == LIBRESENSECTL_OK_NO_JSON) {
+		return LIBRESENSECTL_OK;
 	}
 
 	return error;
