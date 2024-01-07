@@ -10,7 +10,7 @@
 #include <windows.h>
 
 // https://stackoverflow.com/questions/5801813/c-usleep-is-obsolete-workarounds-for-windows-mingw
-void nanosleep(const struct timespec *tspec, void* nullvoid) {
+void nanosleep(const struct timespec* tspec, void* nullvoid) {
 	HANDLE timer;
 	LARGE_INTEGER ft;
 	ft.QuadPart = -(10000 * tspec->tv_nsec);
@@ -25,7 +25,6 @@ void nanosleep(const struct timespec *tspec, void* nullvoid) {
 
 #include <stdio.h>
 #include <time.h>
-
 
 libresensectl_error libresensectl_mode_bench(libresensectl_context* context) {
 	printf("testing latency, press CTRL+C to stop\n");

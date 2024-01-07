@@ -86,7 +86,7 @@ extern bool is_json;
 
 #ifdef _WIN32
 #include <time.h>
-void nanosleep(const struct timespec *tspec, void* nullvoid);
+void nanosleep(const struct timespec* tspec, void* nullvoid);
 typedef uint64_t useconds_t;
 #endif
 
