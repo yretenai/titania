@@ -17,8 +17,6 @@
 #define nullptr ((void*) 0)
 #endif
 
-#define errorf(fp, result, fmt) fprintf(fp, fmt ": %s\n", libresense_error_msg[result])
-
 typedef struct {
 	int connected_controllers;
 	libresense_hid hids[LIBRESENSECTL_CONTROLLER_COUNT];
@@ -33,6 +31,9 @@ typedef enum {
 	LIBRESENSECTL_INTERRUPTED,
 	LIBRESENSECTL_NOT_IMPLEMENTED,
 	LIBRESENSECTL_INVALID_ARGUMENTS,
+	LIBRESENSECTL_INVALID_PAIR_ARGUMENTS,
+	LIBRESENSECTL_INVALID_MAC_ADDRESS,
+	LIBRESENSECTL_INVALID_LINK_KEY,
 	LIBRESENSECTL_ERROR_MAX
 } libresensectl_error;
 
@@ -44,7 +45,13 @@ typedef libresensectl_error (*libresensectl_callback_t)(libresensectl_context* c
 typedef struct {
 	const char* const name;
 	libresensectl_callback_t callback;
+	libresensectl_callback_t json_callback;
+	const char* const help;
+	const char* const args;
 } libresensectl_mode;
+
+void libresense_errorf(const libresense_result result, const char* message);
+void libresensectl_errorf(const char* error, const char* message);
 
 libresensectl_error libresensectl_mode_list(libresensectl_context* context);
 libresensectl_error libresensectl_mode_report(libresensectl_context* context);
@@ -58,6 +65,10 @@ libresensectl_error libresensectl_mode_bt_connect(libresensectl_context* context
 libresensectl_error libresensectl_mode_bt_disconnect(libresensectl_context* context);
 libresensectl_error libresensectl_mode_profile_funnel(libresensectl_context* context);
 
+libresensectl_error libresensectl_mode_list_json(libresensectl_context* context);
+libresensectl_error libresensectl_mode_report_json(libresensectl_context* context);
+libresensectl_error libresensectl_mode_report_loop_json(libresensectl_context* context);
+
 libresensectl_error libresensectl_mode_edge_import(libresense_profile_id profile, void* data, libresense_hid handle);
 libresensectl_error libresensectl_mode_edge_export(libresense_profile_id profile, const char* path, libresense_hid handle);
 libresensectl_error libresensectl_mode_edge_delete(libresense_profile_id profile, libresense_hid handle);
@@ -69,6 +80,7 @@ libresensectl_error libresensectl_mode_access_delete(libresense_profile_id profi
 #include "libreprint.h"
 
 extern bool should_stop;
+extern bool is_json;
 
 #ifdef _WIN32
 #include <time.h>

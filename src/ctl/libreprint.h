@@ -7,6 +7,8 @@
 #ifndef LIBREPRINT_H
 #define LIBREPRINT_H
 
+#define CHECK_ENUM_SAFE(val, arr) val < sizeof(arr) / sizeof(const char* const) && arr[val] != nullptr
+
 #define LIBREPRINT_SEP() printf(",")
 #define LIBREPRINT_STR(struc, field) printf(" " #field " = %s", struc.field)
 #define LIBREPRINT_FIRMWARE_HW(struc, field) \
@@ -19,7 +21,7 @@
 #define LIBREPRINT_FLOAT(struc, field) printf(" " #field " = %f", struc.field)
 #define LIBREPRINT_PERCENT(struc, field) printf(" " #field " = %f%%", struc.field * 100.0f)
 #define LIBREPRINT_PERCENT_LABEL(struc, field, name) printf(" " name " = %f%%", struc.field * 100.0f)
-#define LIBREPRINT_ENUM(struc, field, strs, name) printf(" " name " = %s", strs[struc.field])
+#define LIBREPRINT_ENUM(struc, field, strs, name) CHECK_ENUM_SAFE(struc.field, strs) ? printf(" " name " = %s", strs[(int32_t) struc.field]) : printf(" " name " = %d", (int32_t) struc.field)
 #define LIBREPRINT_TEST(struc, field) printf(" " #field " = %s", struc.field ? "Y" : "N")
 #define LIBREPRINT_BUTTON_TEST(field) printf(" " #field " = %s", data.buttons.field ? "Y" : "N")
 #define LIBREPRINT_EDGE_BUTTON_TEST(field) printf(" " #field " = %s", data.edge_device.raw_buttons.field ? "Y" : "N")

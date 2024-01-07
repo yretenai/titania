@@ -74,7 +74,9 @@ libresensectl_error libresensectl_mode_led(libresensectl_context* context) {
 		update.color.b = b8 / 255.0f;
 	}
 
-	printf("setting color to rgb(%f, %f, %f) with led value %d", update.color.r, update.color.g, update.color.b, update.led);
+	if(!is_json) {
+		printf("setting color to rgb(%f, %f, %f) with led value %d", update.color.r, update.color.g, update.color.b, update.led);
+	}
 
 	for (int i = 0; i < context->connected_controllers; ++i) {
 		if (should_stop) {

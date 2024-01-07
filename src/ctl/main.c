@@ -2,7 +2,6 @@
 //  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
 //  SPDX-License-Identifier: MPL-2.0
 
-#include <libresense_config.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
@@ -13,29 +12,37 @@
 #include <windows.h>
 #endif
 
+#include <libresense_config.h>
+
 #include "libresensectl.h"
+
+#include <json.h>
 
 libresensectl_error libresensectl_mode_stub(libresensectl_context* _unused) { return LIBRESENSECTL_NOT_IMPLEMENTED; }
 
-const libresensectl_mode modes[] = { { "report", libresensectl_mode_report },
-	{ "report-loop", libresensectl_mode_report_loop },
-	{ "watch", libresensectl_mode_report_loop },
-	{ "list", libresensectl_mode_list },
-	{ "test", libresensectl_mode_test },
-	{ "dump", libresensectl_mode_dump },
-	{ "bench", libresensectl_mode_bench },
-	{ "benchmark", libresensectl_mode_bench },
-	{ "led", libresensectl_mode_led },
-	{ "light", libresensectl_mode_led },
-	{ "pair", libresensectl_mode_bt_pair },
-	{ "disconnect", libresensectl_mode_bt_disconnect },
-	{ "connect", libresensectl_mode_bt_connect },
-	{ "usb", libresensectl_mode_bt_disconnect },
-	{ "bt", libresensectl_mode_bt_connect },
+const libresensectl_mode modes[] = { { "report", libresensectl_mode_report, libresensectl_mode_report_json, "print the input report of connected controllers", nullptr },
+	{ "watch", libresensectl_mode_report_loop, libresensectl_mode_report_loop_json, "repeatedly print the input report of connected controllers", nullptr },
+	{ "report-loop", libresensectl_mode_report_loop, libresensectl_mode_report_loop_json, nullptr, nullptr },
+	{ "list", libresensectl_mode_list, libresensectl_mode_list_json, "list every controller", nullptr },
+	{ "test", libresensectl_mode_test, nullptr, "test various features of the connected controllers", nullptr },
+	{ "dump", libresensectl_mode_dump, nullptr, "dump every feature report from connected controllers", nullptr },
+	{ "benchmark", libresensectl_mode_bench, nullptr, "benchmark report parsing speed", nullptr },
+	{ "bench", libresensectl_mode_bench, nullptr, nullptr, nullptr },
+	{ "led", libresensectl_mode_led, libresensectl_mode_led, "update LED color", "#rrggbb|off player-led" },
+	{ "light", libresensectl_mode_led, libresensectl_mode_led, nullptr, nullptr },
+	{ "pair", libresensectl_mode_bt_pair, libresensectl_mode_bt_pair, "pair with a bluetooth adapter", "address link-key" },
+	{ "usb", libresensectl_mode_bt_disconnect, libresensectl_mode_bt_disconnect, "instruct controller to connect via bluetooth", nullptr },
+	{ "bt", libresensectl_mode_bt_connect, libresensectl_mode_bt_connect, "instruct controller to connect via usb", nullptr },
+	{ "disconnect", libresensectl_mode_bt_disconnect, libresensectl_mode_bt_disconnect, nullptr, nullptr },
+	{ "connect", libresensectl_mode_bt_connect, libresensectl_mode_bt_connect, nullptr, nullptr },
 	// Edge, Access
-	{ "profile", libresensectl_mode_profile_funnel },
+	{ "profile", libresensectl_mode_profile_funnel, nullptr, nullptr, nullptr },
+	{ "profile convert", nullptr, nullptr, "convert merged dualsense edge profile from or to json", "path/to/report.{bin, json}" },
+	{ "profile import", nullptr, nullptr, "import a controller profile to the specified slot", "{square, cross, triangle, 1, 2, 3} path/to/profile.json" },
+	{ "profile export", nullptr, nullptr, "export a controller profile to json", "{triangle, square, cross, triangle, 0, 1, 2, 3} path/to/profile.json" },
+	{ "profile delete", nullptr, nullptr, "delete a given profile", nullptr },
 	//
-	{ nullptr, nullptr } };
+	{ nullptr, nullptr, nullptr, nullptr, nullptr } };
 
 static libresensectl_context context = { 0 };
 static bool interrupted = false; // separate in case i accidentally set should_stop somewhere else.
@@ -72,9 +79,27 @@ BOOL WINAPI handle_sigint(DWORD signal) {
 void handle_sigint(int signal) { shutdown(); }
 #endif
 
-int main(const int argc, const char** const argv) {
-	printf(LIBRESENSE_PROJECT_NAME " version %s\n", LIBRESENSE_PROJECT_VERSION);
+bool is_json = false;
 
+void libresensectl_errorf(const char* error, const char* message) {
+	if (is_json) {
+		struct json* obj = json_new_object();
+		json_object_add_bool(obj, "success", false);
+		json_object_add_string(obj, "error", error);
+		json_object_add_string(obj, "message", message);
+		char* json_text = json_print(obj);
+		printf("%s\n", json_text);
+		json_delete(obj);
+		free(json_text);
+		return;
+	}
+
+	fprintf(stderr, "%s: %s\n", message, error);
+}
+
+void libresense_errorf(const libresense_result result, const char* message) { libresensectl_errorf(libresense_error_msg[result], message); }
+
+int main(const int argc, const char** const argv) {
 #ifdef _WIN32
 	SetConsoleCtrlHandler(handle_sigint, true);
 #else
@@ -93,6 +118,7 @@ int main(const int argc, const char** const argv) {
 	int filtered_controllers = 0;
 	libresense_serial filter[LIBRESENSECTL_CONTROLLER_COUNT] = { 0 };
 
+	char text[255];
 	if (argc > 1) {
 		for (int i = 1; i < argc; ++i) {
 			const int arglen = strlen(argv[i]);
@@ -100,18 +126,19 @@ int main(const int argc, const char** const argv) {
 				continue; // too long; skipped
 			}
 
-			char text[255];
 			strcpy(text, argv[i]);
 			for (char* p = text; *p; ++p) {
 				*p = tolower(*p);
 			}
 
 			if (strcmp(text, "-h") == 0 || strcmp(text, "--help") == 0 || strcmp(text, "help") == 0) {
+				printf(LIBRESENSE_PROJECT_NAME " version %s\n", LIBRESENSE_PROJECT_VERSION);
 				printf("usage: libresensectl [opts] [mode [mode opts]]\n");
 				printf("\n");
 				printf("available options:\n");
 				printf("\t-h, --help: print this help text\n");
 				printf("\t-v, --version: print version and exit\n");
+				printf("\t-j, --json: output json to stdout\n");
 				printf("\t-d, --device: filter specific device id (up to 32)\n");
 				printf("\t-c, --no-calibration: do not use calibration\n");
 				printf("\t-r, --no-regular: disable regular controllers from being considered\n");
@@ -122,24 +149,59 @@ int main(const int argc, const char** const argv) {
 				printf("\t-z, --non-blocking: disable blocking reads\n");
 				printf("\n");
 				printf("available modes:\n");
-				printf("\tlist: list every controller\n");
-				printf("\treport: print the input report of connected controllers\n");
-				printf("\ttest: test various features of the connected controllers\n");
-				printf("\tdump: dump every feature report from connected controllers\n");
-				printf("\tbench: benchmark report parsing speed\n");
-				printf("\tled #rrggbb|off player-led: update LED color\n");
-				printf("\tprofile convert path/to/report.{bin, json}: convert merged dualsense edge profile from or to json\n");
-				printf("\tprofile import {square, cross, triangle, 1, 2, 3} path/to/profile.json: import a controller profile to the specified slot\n");
-				printf("\tprofile export {triangle, square, cross, triangle, 0, 1, 2, 3} path/to/profile.json: export a controller profile to json\n");
-				printf("\tprofile delete: delete a given profile\n");
-				printf("\tpair address link-key: pair with a bluetooth adapter\n");
-				printf("\tbt: instruct controller to connect via bluetooth\n");
-				printf("\tusb: instruct controller to connect via usb\n");
+				for (size_t j = 0; j < sizeof(modes) / sizeof(libresensectl_mode); ++j) {
+					if (modes[j].help == nullptr) {
+						continue;
+					}
+
+					printf("\t%s", modes[j].name);
+					if (modes[j].args != nullptr) {
+						printf(" %s", modes[j].args);
+					}
+
+					printf(": %s\n", modes[j].help);
+				}
+
+				bool has_json_lead = false;
+				for (size_t j = 0; j < sizeof(modes) / sizeof(libresensectl_mode); ++j) {
+					if (modes[j].json_callback == nullptr || modes[j].name == nullptr) {
+						continue;
+					}
+
+					if (!has_json_lead) {
+						printf("\nthese modes support json output: ");
+						has_json_lead = true;
+					} else {
+						printf(", ");
+					}
+
+					printf("%s", modes[j].name);
+				}
+
+				if (has_json_lead) {
+					printf("\n");
+				}
 				return 0;
 			}
 
 			if (strcmp(text, "-v") == 0 || strcmp(text, "--version") == 0 || strcmp(text, "version") == 0) {
+				if (is_json) {
+					struct json* obj = json_new_object();
+					json_object_add_string(obj, "version", LIBRESENSE_PROJECT_VERSION);
+					json_object_add_string(obj, "name", LIBRESENSE_PROJECT_NAME);
+					json_object_add_number(obj, "max_controllers", libresense_max_controllers);
+					char* json_text = json_print(obj);
+					printf("%s\n", json_text);
+					json_delete(obj);
+					free(json_text);
+				} else {
+					printf(LIBRESENSE_PROJECT_NAME " version %s\n", LIBRESENSE_PROJECT_VERSION);
+				}
 				return 0;
+			}
+
+			if (strcmp(text, "-j") == 0 || strcmp(text, "--json") == 0) {
+				is_json = true;
 			}
 
 			if (strcmp(text, "-d") == 0 || strcmp(text, "--device") == 0) {
@@ -187,15 +249,45 @@ int main(const int argc, const char** const argv) {
 		return 0;
 	}
 
+	if (mode == nullptr) {
+		mode = "report";
+	}
+
+	const libresensectl_mode* current_mode = &modes[0];
+	libresensectl_callback_t cb = nullptr;
+	while (current_mode->name != nullptr) {
+		if (strcmp(current_mode->name, mode) != 0) {
+			current_mode++;
+			continue;
+		}
+
+		cb = current_mode->callback;
+		if (is_json && current_mode->json_callback != nullptr) {
+			cb = current_mode->json_callback;
+		} else {
+			is_json = false;
+		}
+
+		break;
+	}
+
+	if (!is_json) {
+		printf(LIBRESENSE_PROJECT_NAME " version %s\n", LIBRESENSE_PROJECT_VERSION);
+	}
+
+	if (cb == nullptr) {
+		libresensectl_errorf("invalid mode", "mode not recognized");
+	}
+
 	libresense_result result = libresense_init();
 	if (IS_LIBRESENSE_BAD(result)) {
-		errorf(stderr, result, "error initializing " LIBRESENSE_PROJECT_NAME);
+		libresense_errorf(result, "error initializing " LIBRESENSE_PROJECT_NAME);
 		return result;
 	}
 	libresense_query query[LIBRESENSECTL_CONTROLLER_COUNT];
 	result = libresense_get_hids(query, LIBRESENSECTL_CONTROLLER_COUNT);
 	if (IS_LIBRESENSE_BAD(result)) {
-		errorf(stderr, result, "error getting hids");
+		libresense_errorf(result, "error getting hids");
 		libresense_exit();
 		return result;
 	}
@@ -246,7 +338,7 @@ int main(const int argc, const char** const argv) {
 
 		result = libresense_open(query[hid_id].hid_path, query[hid_id].is_bluetooth, &context.hids[context.connected_controllers], calibrate, blocking);
 		if (IS_LIBRESENSE_BAD(result)) {
-			errorf(stderr, result, "error initializing hid");
+			libresense_errorf(result, "error initializing hid");
 			context.connected_controllers--;
 			continue;
 		}
@@ -255,36 +347,35 @@ int main(const int argc, const char** const argv) {
 	}
 
 	if (context.connected_controllers == 0) {
-		fprintf(stderr, "no hids... connect a device\n");
+		libresensectl_errorf("no hids", "connect a device");
 		libresense_exit();
 		return 1;
 	}
 
-	if (mode == nullptr) {
-		mode = "report";
-	}
-
-	const libresensectl_mode* current_mode = &modes[0];
-	while (current_mode->name != nullptr) {
-		if (strcmp(current_mode->name, mode) != 0) {
-			current_mode++;
-			continue;
+	const libresensectl_error error = cb(&context);
+	if (IS_LIBRESENSECTL_BAD(error)) {
+		switch (error) {
+			case LIBRESENSECTL_HID_ERROR: libresensectl_errorf("hid error", "errored while processing command"); break;
+			case LIBRESENSECTL_INTERRUPTED: libresensectl_errorf("caught ctrl+c", "exiting"); break;
+			case LIBRESENSECTL_NOT_IMPLEMENTED: libresensectl_errorf("not implemented", "sorry"); break;
+			case LIBRESENSECTL_INVALID_ARGUMENTS: libresensectl_errorf("invalid arguments", "one of the arguments was invalid"); break;
+			case LIBRESENSECTL_INVALID_PAIR_ARGUMENTS: libresensectl_errorf("invalid arguments", "you need to provide a mac address and a bluetooth link key"); break;
+			case LIBRESENSECTL_INVALID_MAC_ADDRESS: libresensectl_errorf("invalid arguments", "mac address is not valid");
+			case LIBRESENSECTL_INVALID_LINK_KEY: libresensectl_errorf("invalid arguments", "bluetooth link key is not 16 characters");
+			default: libresensectl_errorf("unexpected error", "goodbye"); break;
 		}
-
-		const libresensectl_error error = current_mode->callback(&context);
-		if (IS_LIBRESENSECTL_BAD(error)) {
-			switch (error) {
-				case LIBRESENSECTL_HID_ERROR: fprintf(stderr, "hid error while processing command\n"); break;
-				case LIBRESENSECTL_INTERRUPTED: fprintf(stderr, "caught ctrl+c\n"); break;
-				case LIBRESENSECTL_NOT_IMPLEMENTED: fprintf(stderr, "not implemented\n"); break;
-				case LIBRESENSECTL_INVALID_ARGUMENTS: fprintf(stderr, "invalid arguments\n"); break;
-				default: fprintf(stderr, "unknown error\n"); break;
-			}
-		}
-		break;
 	}
 
 	shutdown();
 
-	return 0;
+	if (is_json) {
+		struct json* obj = json_new_object();
+		json_object_add_bool(obj, "success", true);
+		char* json_text = json_print(obj);
+		printf("%s\n", json_text);
+		json_delete(obj);
+		free(json_text);
+	}
+
+	return error;
 }

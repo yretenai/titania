@@ -129,10 +129,10 @@ void wait_until_options_clear(libresense_handle* handles, const size_t handle_co
 libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 	printf("press OPTIONS to skip test\n");
 
-	libresense_data datum[31];
+	libresense_data datum[LIBRESENSECTL_CONTROLLER_COUNT];
 	const libresense_result result = libresense_pull(context->handles, context->connected_controllers, datum);
 	if (IS_LIBRESENSE_BAD(result)) {
-		errorf(stderr, result, "error getting report");
+		libresense_errorf(result, "error getting report");
 		return LIBRESENSECTL_HID_ERROR;
 	}
 
@@ -614,6 +614,8 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 					update.led = LIBRESENSE_LED_2;
 				}
 			}
+
+			update.led |= LIBRESENSE_LED_INSTANT;
 
 			for (int j = 0; j < context->connected_controllers; ++j) {
 				if (context->hids[j].is_access) {

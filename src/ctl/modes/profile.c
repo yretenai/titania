@@ -132,7 +132,6 @@ libresensectl_error libresensectl_mode_profile_funnel(libresensectl_context* con
 	}
 
 	if (mode != PROFILE_MODE_CONVERT && mode != PROFILE_MODE_IMPORT && mode != PROFILE_MODE_EXPORT && mode != PROFILE_MODE_DELETE && mode != PROFILE_MODE_DEBUG_DUMP) {
-		fprintf(stderr, "profile mode needs to be one of (convert, import, export, delete)\n");
 		return LIBRESENSECTL_INVALID_ARGUMENTS;
 	}
 
