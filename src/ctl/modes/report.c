@@ -278,15 +278,15 @@ libresensectl_error libresensectl_mode_report_json_inner(libresensectl_context* 
 			return LIBRESENSECTL_HID_ERROR;
 		}
 
-		struct json* arr = json_new_array();
+		struct json* root_obj = json_new_object();
+		json_object_add_bool(root_obj, "success", true);
+		struct json* arr = json_object_add_array(root_obj, "devices");
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			const libresense_data data = datum[i];
 			const libresense_hid hid = context->hids[i];
 			char strbuffer[512];
 
 			struct json* obj = json_array_add_object(arr);
-			json_object_add_bool(obj, "success", true);
-
 			{
 				struct json* hid_obj = json_object_add_object(obj, "hid");
 				json_object_add_bool(hid_obj, "isEdge", hid.is_edge);
@@ -620,11 +620,12 @@ libresensectl_error libresensectl_mode_list(libresensectl_context* context) {
 }
 
 libresensectl_error libresensectl_mode_list_json(libresensectl_context* context) {
-	struct json* arr = json_new_array();
+	struct json* root_obj = json_new_object();
+	json_object_add_bool(root_obj, "success", true);
+	struct json* arr = json_object_add_array(root_obj, "devices");
 	for (int i = 0; i < context->connected_controllers; ++i) {
 		const libresense_hid hid = context->hids[i];
 		struct json* obj = json_array_add_object(arr);
-		json_object_add_bool(obj, "success", true);
 		json_object_add_bool(obj, "isEdge", hid.is_edge);
 		json_object_add_bool(obj, "isAccess", hid.is_access);
 		json_object_add_bool(obj, "isBluetooth", hid.is_bluetooth);
