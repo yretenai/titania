@@ -19,7 +19,7 @@
 
 #define MAKE_LIBRESENSE_ERROR(result) (LIBRESENSECTL_LIBRESENSE_ERROR | ((libresensectl_error) result << 16))
 
-typedef struct {
+typedef struct libresensectl_context {
 	int connected_controllers;
 	libresense_hid hids[LIBRESENSECTL_CONTROLLER_COUNT];
 	libresense_handle handles[LIBRESENSECTL_CONTROLLER_COUNT];
@@ -27,7 +27,7 @@ typedef struct {
 	const char** argv;
 } libresensectl_context;
 
-typedef enum {
+typedef enum libresensectl_error {
 	LIBRESENSECTL_OK_NO_JSON_INTERRUPTED = -2,
 	LIBRESENSECTL_OK_NO_JSON = -1,
 	LIBRESENSECTL_OK = LIBRESENSE_OK,
@@ -52,7 +52,7 @@ typedef enum {
 
 typedef libresensectl_error (*libresensectl_callback_t)(libresensectl_context* context);
 
-typedef struct {
+typedef struct libresensectl_mode {
 	const char* const name;
 	libresensectl_callback_t callback;
 	libresensectl_callback_t json_callback;

@@ -103,7 +103,7 @@
 	if (!IS_ACCESS(state[h].hid_info)) \
 	return LIBRESENSE_NOT_ACCESS
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_vector3 {
 	int16_t x;
 	int16_t y;
 	int16_t z;
@@ -111,7 +111,7 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_vector3) == 6, "dualsense_vector3 is not 6 bytes");
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_vector3b {
 	uint8_t x;
 	uint8_t y;
 	uint8_t z;
@@ -119,7 +119,7 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_vector3b) == 3, "dualsense_vector3b is not 3 bytes");
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_vector2 {
 #ifdef _WIN32
 	uint8_t x1 : 8;
 	uint8_t x2 : 4;
@@ -133,14 +133,14 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_vector2) == 3, "dualsense_vector2 is not 3 bytes");
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_vector2b {
 	uint8_t x;
 	uint8_t y;
 } dualsense_vector2b;
 
 static_assert(sizeof(dualsense_vector2b) == 2, "dualsense_vector2b is not 2 bytes");
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_vector3s {
 	int16_t x;
 	int16_t y;
 	int16_t z;
@@ -148,14 +148,14 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_vector3s) == 6, "dualsense_vector3s is not 6 bytes");
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_minmax {
 	int16_t max;
 	int16_t min;
 } dualsense_minmax;
 
 static_assert(sizeof(dualsense_minmax) == 4, "dualsense_minmax is not 4 bytes");
 
-typedef struct {
+typedef struct PACKED libresense_device_info {
 	uint16_t vendor_id;
 	uint16_t product_id;
 } libresense_device_info;

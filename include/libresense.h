@@ -50,7 +50,7 @@ extern "C" {
 #define LIBRESENSE_MERGED_REPORT_EDGE_SIZE (174)
 #define LIBRESENSE_MERGED_REPORT_ACCESS_SIZE (1024) // todo: calculate max access report size.
 
-typedef enum {
+typedef enum libresense_result {
 	LIBRESENSE_OK = 0,
 	LIBRESENSE_NOT_INITIALIZED,
 	LIBRESENSE_INVALID_LIBRARY,
@@ -70,7 +70,7 @@ typedef enum {
 	LIBRESENSE_ERROR_MAX
 } libresense_result;
 
-typedef enum {
+typedef enum libresense_battery_state {
 	LIBRESENSE_BATTERY_UNKNOWN = 0,
 	LIBRESENSE_BATTERY_DISCHARGING,
 	LIBRESENSE_BATTERY_CHARGING,
@@ -78,7 +78,7 @@ typedef enum {
 	LIBRESENSE_BATTERY_MAX
 } libresense_battery_state;
 
-typedef enum {
+typedef enum libresense_profile_id {
 	LIBRESENSE_PROFILE_NONE,
 	LIBRESENSE_PROFILE_TRIANGLE,
 	LIBRESENSE_PROFILE_SQUARE,
@@ -96,14 +96,14 @@ typedef enum {
 	LIBRESENSE_PROFILE_COUNT = 4,
 } libresense_profile_id;
 
-typedef enum {
+typedef enum libresense_level {
 	LIBRESENSE_LEVEL_HIGH = 0,
 	LIBRESENSE_LEVEL_MEDIUM = 1,
 	LIBRESENSE_LEVEL_LOW = 2,
 	LIBRESENSE_LEVEL_OFF = 3
 } libresense_level;
 
-typedef enum {
+typedef enum libresense_access_extension_id {
 	LIBRESENSE_ACCESS_EXTENSION_DISCONNECTED = 0,
 	LIBRESENSE_ACCESS_EXTENSION_BUTTON = 1,
 	LIBRESENSE_ACCESS_EXTENSION_TRIGGER = 2,
@@ -112,7 +112,7 @@ typedef enum {
 	LIBRESENSE_ACCESS_EXTENSION_MAX
 } libresense_access_extension_id;
 
-typedef enum {
+typedef enum libresense_trigger_effect_state {
 	LIBRESENSE_TRIGGER_EFFECT_OFF = 0,
 	LIBRESENSE_TRIGGER_EFFECT_UNIFORM = 1,
 	LIBRESENSE_TRIGGER_EFFECT_TRIGGER = 2,
@@ -132,7 +132,7 @@ typedef enum {
 	LIBRESENSE_TRIGGER_EFFECT_MAX
 } libresense_trigger_effect_state;
 
-typedef enum {
+typedef enum libresense_edge_button_id {
 	LIBRESENSE_BUTTON_ID_UP,
 	LIBRESENSE_BUTTON_ID_LEFT,
 	LIBRESENSE_BUTTON_ID_DOWN,
@@ -154,7 +154,7 @@ typedef enum {
 	LIBRESENSE_BUTTON_ID_MAX
 } libresense_edge_button_id;
 
-typedef enum {
+typedef enum libresense_edge_stick_template {
 	LIBRESENSE_EDGE_STICK_TEMPLATE_DEFAULT,
 	LIBRESENSE_EDGE_STICK_TEMPLATE_QUICK,
 	LIBRESENSE_EDGE_STICK_TEMPLATE_PRECISE,
@@ -167,13 +167,68 @@ typedef enum {
 // NOTE: 1 and 2 may be valid, but it is untested!
 // Also I don't know if this is actually interpolation!
 // Only two templates that have Smooth is Precise and Steady
-typedef enum {
+typedef enum libresense_edge_interpolation_type {
 	LIBRESENSE_EDGE_INTERPOLATION_TYPE_NONE = 0,
 	LIBRESENSE_EDGE_INTERPOLATION_TYPE_UNKNOWN1 = 1,
 	LIBRESENSE_EDGE_INTERPOLATION_TYPE_UNKNOWN2 = 2,
 	LIBRESENSE_EDGE_INTERPOLATION_TYPE_LINEAR = 3,
 	LIBRESENSE_EDGE_INTERPOLATION_TYPE_SMOOTH = 4
 } libresense_edge_interpolation_type;
+
+typedef enum libresense_effect_mode {
+	LIBRESENSE_EFFECT_NONE = -1,
+	LIBRESENSE_EFFECT_OFF = 0,
+	LIBRESENSE_EFFECT_STOP_VIBRATING,
+	LIBRESENSE_EFFECT_UNIFORM,
+	LIBRESENSE_EFFECT_SLOPE,
+	LIBRESENSE_EFFECT_TRIGGER,
+	LIBRESENSE_EFFECT_SECTION,
+	LIBRESENSE_EFFECT_VIBRATE,
+	LIBRESENSE_EFFECT_VIBRATE_SLOPE,
+	LIBRESENSE_EFFECT_MUTIPLE_SECTIONS,
+	LIBRESENSE_EFFECT_MUTIPLE_VIBRATE,
+	LIBRESENSE_EFFECT_MUTIPLE_VIBRATE_SECTIONS
+} libresense_effect_mode;
+
+typedef enum libresense_led_effect {
+	LIBRESENSE_LED_EFFECT_OFF = 0,
+	LIBRESENSE_LED_EFFECT_RESET = 1,
+	LIBRESENSE_LED_EFFECT_FADE_OUT = 2
+} libresense_led_effect;
+
+typedef enum libresense_led_index {
+	LIBRESENSE_LED_NONE = 0,
+	LIBRESENSE_LED_PLAYER_1 = 4,
+	LIBRESENSE_LED_PLAYER_2 = 10,
+	LIBRESENSE_LED_PLAYER_3 = 21,
+	LIBRESENSE_LED_PLAYER_4 = 27,
+	LIBRESENSE_LED_1 = 1,
+	LIBRESENSE_LED_2 = 2,
+	LIBRESENSE_LED_3 = 4,
+	LIBRESENSE_LED_4 = 8,
+	LIBRESENSE_LED_5 = 16,
+	LIBRESENSE_LED_ACCESS_1 = 1,
+	LIBRESENSE_LED_ACCESS_2 = 2,
+	LIBRESENSE_LED_ACCESS_3 = 3,
+	LIBRESENSE_LED_ACCESS_4 = 4,
+	LIBRESENSE_LED_ALL = 31,
+	LIBRESENSE_LED_INSTANT = 32,
+	LIBRESENSE_LED_NO_UPDATE = 128
+} libresense_led_index;
+
+typedef enum libresense_audio_mic {
+	LIBRESENSE_MIC_AUTO = 0,
+	LIBRESENSE_MIC_INTERNAL = 1,
+	LIBRESENSE_MIC_EXTERNAL = 2,
+	LIBRESENSE_MIC_BOTH = 3
+} libresense_audio_mic;
+
+typedef enum libresense_mic_led {
+	LIBRESENSE_MIC_LED_OFF = 0,
+	LIBRESENSE_MIC_LED_ON = 1,
+	LIBRESENSE_MIC_LED_FLASH = 2,
+	LIBRESENSE_MIC_LED_FAST_FLASH = 3
+} libresense_mic_led;
 
 LIBRESENSE_EXPORT extern const char* const libresense_error_msg[LIBRESENSE_ERROR_MAX + 1];
 LIBRESENSE_EXPORT extern const char* const libresense_battery_state_msg[LIBRESENSE_BATTERY_MAX + 1];
@@ -198,7 +253,7 @@ typedef char libresense_hid_path[0x200];
 typedef char libresense_mac[0x12];
 typedef char libresense_link_key[0x10];
 
-typedef struct {
+typedef struct libresense_vector2 {
 	union {
 		float x;
 		float r;
@@ -212,12 +267,12 @@ typedef struct {
 	};
 } libresense_vector2;
 
-typedef struct {
+typedef struct libresense_vector2i {
 	int x;
 	int y;
 } libresense_vector2i;
 
-typedef struct {
+typedef struct libresense_vector3 {
 	union {
 		float x;
 		float r;
@@ -234,7 +289,7 @@ typedef struct {
 	};
 } libresense_vector3;
 
-typedef struct {
+typedef struct libresense_buttons {
 	bool dpad_up;
 	bool dpad_right;
 	bool dpad_down;
@@ -263,20 +318,20 @@ typedef struct {
 	bool touchpad;
 } libresense_buttons;
 
-typedef struct {
+typedef struct libresense_trigger {
 	float level;
 	uint8_t id;
 	uint8_t section;
 	libresense_trigger_effect_state effect;
 } libresense_trigger;
 
-typedef struct {
+typedef struct libresense_touchpad {
 	uint32_t id;
 	bool active;
 	libresense_vector2i pos;
 } libresense_touchpad;
 
-typedef struct {
+typedef struct libresense_time {
 	uint8_t sequence;
 	uint8_t touch_sequence;
 	uint32_t driver_sequence;
@@ -286,13 +341,13 @@ typedef struct {
 	uint64_t checksum;
 } libresense_time;
 
-typedef struct {
+typedef struct libresense_sensors {
 	libresense_vector3 accelerometer;
 	libresense_vector3 gyro;
 	int32_t temperature;
 } libresense_sensors;
 
-typedef struct {
+typedef struct libresense_device_state {
 	bool headphones;
 	bool headset;
 	bool muted;
@@ -303,25 +358,25 @@ typedef struct {
 	uint16_t reserved;
 } libresense_device_state;
 
-typedef struct {
+typedef struct libresense_battery {
 	float level;
 	libresense_battery_state state;
 } libresense_battery;
 
-typedef struct {
+typedef struct libresense_firmware_version {
 	uint16_t major;
 	uint16_t minor;
 	uint16_t revision;
 } libresense_firmware_version;
 
-typedef struct {
+typedef struct libresense_firmware_hardware {
 	uint16_t reserved;
 	uint16_t variation;
 	uint16_t generation;
 	uint16_t revision;
 } libresense_firmware_hardware;
 
-typedef struct {
+typedef struct libresense_firmware_info {
 	char datetime[LIBRESENSE_FIRMWARE_DATE_LEN];
 	uint16_t type;
 	// 0x0004 = DualSense (0xCE6, Bond)
@@ -340,13 +395,13 @@ typedef struct {
 	libresense_firmware_version mcu_firmware;
 } libresense_firmware_info;
 
-typedef struct {
+typedef struct libresense_serial_info {
 	libresense_mac mac;
 	libresense_mac paired_mac;
 	uint32_t unknown;
 } libresense_serial_info;
 
-typedef struct {
+typedef struct libresense_edge_stick {
 	libresense_edge_stick_template template_id;
 	libresense_vector2 deadzone;
 	libresense_vector2 curve_points[3];
@@ -355,11 +410,11 @@ typedef struct {
 	bool disabled;
 } libresense_edge_stick;
 
-typedef struct {
+typedef struct libresense_edge_trigger {
 	libresense_vector2 deadzone;
 } libresense_edge_trigger;
 
-typedef union {
+typedef union libresense_edge_button_remap {
 	struct {
 		libresense_edge_button_id up;
 		libresense_edge_button_id down;
@@ -382,7 +437,7 @@ typedef union {
 	libresense_edge_button_id values[0x10];
 } libresense_edge_button_remap;
 
-typedef struct {
+typedef struct libresense_edge_profile {
 	bool valid;
 	uint32_t version;
 	char name[0x81];
@@ -399,11 +454,11 @@ typedef struct {
 	uint64_t timestamp;
 } libresense_edge_profile;
 
-typedef struct {
+typedef struct libresense_access_profile {
 	bool valid;
 } libresense_access_profile;
 
-typedef struct {
+typedef struct libresense_query {
 	uint16_t product_id;
 	uint16_t vendor_id;
 	bool is_bluetooth;
@@ -413,7 +468,7 @@ typedef struct {
 	libresense_hid_path hid_path;
 } libresense_query;
 
-typedef struct {
+typedef struct libresense_hid {
 	libresense_handle handle;
 	uint16_t product_id;
 	uint16_t vendor_id;
@@ -424,13 +479,13 @@ typedef struct {
 	libresense_firmware_info firmware;
 } libresense_hid;
 
-typedef struct {
+typedef struct libresense_report_id {
 	uint8_t id;
 	uint8_t type;
 	uint32_t size;
 } libresense_report_id;
 
-typedef struct {
+typedef struct libresense_bt {
 	bool has_hid;
 	bool unknown;
 	bool unknown2;
@@ -438,10 +493,10 @@ typedef struct {
 	uint8_t seq;
 } libresense_bt;
 
-typedef struct {
+typedef struct libresense_edge_state {
 	libresense_buttons raw_buttons;
 
-	struct {
+	struct libresense_edge_state_stick {
 		bool disconnected;
 		bool errored;
 		bool calibrating;
@@ -451,7 +506,7 @@ typedef struct {
 	libresense_level trigger_levels[2];
 	libresense_profile_id current_profile_id;
 
-	struct {
+	struct libresense_edge_state_indicator {
 		bool led;
 		bool vibration;
 		bool switching_disabled;
@@ -464,7 +519,7 @@ typedef struct {
 	uint8_t unknown;
 } libresense_edge_state;
 
-typedef struct {
+typedef struct libresense_access_button {
 	bool button1;
 	bool button2;
 	bool button3;
@@ -484,12 +539,12 @@ typedef struct {
 	uint8_t reserved;
 } libresense_access_button;
 
-typedef struct {
+typedef struct libresense_access_extension {
 	libresense_vector2 pos;
 	libresense_access_extension_id type;
 } libresense_access_extension;
 
-typedef struct {
+typedef struct libresense_access_state {
 	libresense_access_button buttons;
 	libresense_vector2 raw_stick;
 	libresense_vector2 sticks[2];
@@ -507,7 +562,7 @@ typedef struct {
 	uint32_t unknown9;
 } libresense_access_state;
 
-typedef struct {
+typedef struct libresense_data {
 	libresense_hid hid;
 	libresense_bt bt;
 	libresense_time time;
@@ -523,33 +578,7 @@ typedef struct {
 	uint64_t state_id;
 } libresense_data;
 
-typedef enum {
-	LIBRESENSE_LED_EFFECT_OFF = 0,
-	LIBRESENSE_LED_EFFECT_RESET = 1,
-	LIBRESENSE_LED_EFFECT_FADE_OUT = 2
-} libresense_led_effect;
-
-typedef enum {
-	LIBRESENSE_LED_NONE = 0,
-	LIBRESENSE_LED_PLAYER_1 = 4,
-	LIBRESENSE_LED_PLAYER_2 = 10,
-	LIBRESENSE_LED_PLAYER_3 = 21,
-	LIBRESENSE_LED_PLAYER_4 = 27,
-	LIBRESENSE_LED_1 = 1,
-	LIBRESENSE_LED_2 = 2,
-	LIBRESENSE_LED_3 = 4,
-	LIBRESENSE_LED_4 = 8,
-	LIBRESENSE_LED_5 = 16,
-	LIBRESENSE_LED_ACCESS_1 = 1,
-	LIBRESENSE_LED_ACCESS_2 = 2,
-	LIBRESENSE_LED_ACCESS_3 = 3,
-	LIBRESENSE_LED_ACCESS_4 = 4,
-	LIBRESENSE_LED_ALL = 31,
-	LIBRESENSE_LED_INSTANT = 32,
-	LIBRESENSE_LED_NO_UPDATE = 128
-} libresense_led_index;
-
-typedef struct {
+typedef struct libresense_access_led_update {
 	bool enable_profile_led;
 	bool enable_center_led;
 	bool enable_second_center_led;
@@ -557,50 +586,35 @@ typedef struct {
 	uint8_t profile_led;
 } libresense_access_led_update;
 
-typedef struct {
+typedef struct libresense_led_update {
 	libresense_led_index led;
 	libresense_vector3 color;
 	libresense_access_led_update access;
 } libresense_led_update;
 
-typedef enum {
-	LIBRESENSE_EFFECT_NONE = -1,
-	LIBRESENSE_EFFECT_OFF = 0,
-	LIBRESENSE_EFFECT_STOP_VIBRATING,
-	LIBRESENSE_EFFECT_UNIFORM,
-	LIBRESENSE_EFFECT_SLOPE,
-	LIBRESENSE_EFFECT_TRIGGER,
-	LIBRESENSE_EFFECT_SECTION,
-	LIBRESENSE_EFFECT_VIBRATE,
-	LIBRESENSE_EFFECT_VIBRATE_SLOPE,
-	LIBRESENSE_EFFECT_MUTIPLE_SECTIONS,
-	LIBRESENSE_EFFECT_MUTIPLE_VIBRATE,
-	LIBRESENSE_EFFECT_MUTIPLE_VIBRATE_SECTIONS
-} libresense_effect_mode;
-
-typedef struct {
+typedef struct libresense_effect_update_off {
 	uint8_t reserved[0x60];
 } libresense_effect_update_off;
 
 typedef libresense_effect_update_off libresense_effect_update_stop;
 typedef libresense_effect_update_off libresense_effect_update_none;
 
-typedef struct {
+typedef struct libresense_effect_update_uniform {
 	float position;
 	float resistance;
 } libresense_effect_update_uniform;
 
-typedef struct {
+typedef struct libresense_effect_update_slope {
 	libresense_vector2 position;
 	libresense_vector2 resistance;
 } libresense_effect_update_slope;
 
-typedef struct {
+typedef struct libresense_effect_update_trigger {
 	libresense_vector2 position;
 	float resistance;
 } libresense_effect_update_trigger;
 
-typedef struct {
+typedef struct libresense_effect_update_section {
 	libresense_vector2 position;
 	float resistance;
 } libresense_effect_update_section;
@@ -609,38 +623,38 @@ typedef struct {
 // frequency is the raw Hz frequency of the vibration, 201 is a good value.
 // period is the period in 0.1s steps, 1 is 100ms
 // "stable" frequency table = 1..38, 39, 41, 42, 44, 46, 48, 51, 53, 56, 59, 63, 67, 72, 77, 84, 91, 101, 112, 126, 143, 167, 201, 251, 255
-typedef struct {
+typedef struct libresense_effect_update_vibrate {
 	float position;
 	float amplitude;
 	int32_t frequency;
 } libresense_effect_update_vibrate;
 
-typedef struct {
+typedef struct libresense_effect_update_vibrate_slope {
 	libresense_vector2 position;
 	libresense_vector2 amplitude;
 	int32_t frequency;
 	int32_t period;
 } libresense_effect_update_vibrate_slope;
 
-typedef struct {
+typedef struct libresense_effect_update_multiple_sections {
 	float resistance[LIBRESENSE_TRIGGER_GRANULARITY];
 } libresense_effect_update_multiple_sections;
 
-typedef struct {
+typedef struct libresense_effect_update_multiple_vibrate {
 	float amplitude[LIBRESENSE_TRIGGER_GRANULARITY];
 	int32_t frequency;
 	int32_t period;
 } libresense_effect_update_multiple_vibrate;
 
-typedef struct {
+typedef struct libresense_effect_update_multiple_vibrate_sections {
 	float resistance[LIBRESENSE_TRIGGER_GRANULARITY];
 	float amplitude[LIBRESENSE_TRIGGER_GRANULARITY];
 } libresense_effect_update_multiple_vibrate_sections;
 
-typedef struct {
+typedef struct libresense_effect_update {
 	libresense_effect_mode mode;
 
-	union {
+	union libresense_effect_update_effect {
 		libresense_effect_update_none none;
 		libresense_effect_update_off off;
 		libresense_effect_update_stop stop;
@@ -656,21 +670,7 @@ typedef struct {
 	} effect;
 } libresense_effect_update;
 
-typedef enum {
-	LIBRESENSE_MIC_AUTO = 0,
-	LIBRESENSE_MIC_INTERNAL = 1,
-	LIBRESENSE_MIC_EXTERNAL = 2,
-	LIBRESENSE_MIC_BOTH = 3
-} libresense_audio_mic;
-
-typedef enum {
-	LIBRESENSE_MIC_LED_OFF = 0,
-	LIBRESENSE_MIC_LED_ON = 1,
-	LIBRESENSE_MIC_LED_FLASH = 2,
-	LIBRESENSE_MIC_LED_FAST_FLASH = 3
-} libresense_mic_led;
-
-typedef struct {
+typedef struct libresense_audio_update {
 	float jack_volume;
 	float speaker_volume;
 	float microphone_volume;
@@ -681,7 +681,7 @@ typedef struct {
 	bool force_enable_speaker;
 } libresense_audio_update;
 
-typedef struct {
+typedef struct libresense_control_update {
 	bool touch_powersave;
 	bool sensor_powersave;
 	bool rumble_powersave;

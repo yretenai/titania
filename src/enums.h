@@ -13,7 +13,7 @@
 #define MAKE_EDGE_PROFILE_REPORT(id, name) \
 	DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P1 = id, DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P2 = id + 1, DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P3 = id + 2
 
-typedef enum _dualsense_report_id {
+typedef enum dualsense_report_id {
 	// usb:
 	DUALSENSE_REPORT_INPUT = 0x1,
 	DUALSENSE_REPORT_OUTPUT = 0x2,
@@ -66,7 +66,7 @@ typedef enum _dualsense_report_id {
 												// this means the max size is about 1200~
 } dualsense_report_id;
 
-typedef enum _dualsense_access_page_id {
+typedef enum dualsense_access_page_id {
 	DUALSENSE_ACCESS_DELETE_PROFILE = 0x3,
 	DUALSENSE_ACCESS_UPDATE_PROFILE_1 = 0x9,
 	DUALSENSE_ACCESS_UPDATE_PROFILE_2 = 0xA,
@@ -77,7 +77,7 @@ typedef enum _dualsense_access_page_id {
 	DUALSENSE_ACCESS_QUERY_PROFILE_3 = 0x12
 } dualsense_access_page_id;
 
-typedef enum _dualsense_dpad {
+typedef enum dualsense_dpad {
 	DUALSENSE_DPAD_U = 0,
 	DUALSENSE_DPAD_UR = 1,
 	DUALSENSE_DPAD_R = 2,
@@ -89,7 +89,7 @@ typedef enum _dualsense_dpad {
 	DUALSENSE_DPAD_RESET = 8
 } dualsense_dpad;
 
-typedef enum _dualsense_effect_mode {
+typedef enum dualsense_effect_mode {
 	DUALSENSE_EFFECT_MODE_OFF = 0x5,
 	DUALSENSE_EFFECT_MODE_STOP = 0x0,
 	DUALSENSE_EFFECT_MODE_UNIFORM = 0x1,
@@ -103,13 +103,13 @@ typedef enum _dualsense_effect_mode {
 	DUALSENSE_EFFECT_MODE_MUTIPLE_VIBRATE_SECTIONS = 0x23
 } dualsense_effect_mode;
 
-typedef enum _dualsense_bt_command {
+typedef enum dualsense_bt_command {
 	DUALSENSE_BT_COMMAND_NONE = 0,
 	DUALSENSE_BT_COMMAND_CONNECT = 0,
 	DUALSENSE_BT_COMMAND_DISCONNECT = 0
 } dualsense_bt_command;
 
-typedef enum _dualsense_profile_version {
+typedef enum dualsense_profile_version {
 	DUALSENSE_PROFILE_VERSION_INVALID = 0,
 	DUALSENSE_PROFILE_VERSION_EDGE_V1 = 1,
 	DUALSENSE_PROFILE_VERSION_ACCESS_V1 = 2

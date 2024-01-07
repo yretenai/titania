@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef enum {
+typedef enum profile_mode {
 	PROFILE_MODE_INVALID,
 	PROFILE_MODE_CONVERT = 'c',
 	PROFILE_MODE_IMPORT = 'i',

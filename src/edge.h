@@ -24,7 +24,7 @@
 #define nullptr ((void*) 0)
 #endif
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_device_state_edge_profile {
 	bool unknown1 : 1;
 	bool unknown2 : 1;
 	bool led_indicator : 1;
@@ -35,7 +35,7 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_device_state_edge_profile) == 1, "dualsense_device_state_edge_profile is not 1 byte");
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_device_state_edge_input {
 	bool stick_disconnected : 1;
 	bool stick_error : 1;
 	bool stick_calibrating : 1;
@@ -46,7 +46,7 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_device_state_edge_input) == 1, "dualsense_device_state_edge_input is not 1 byte");
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_device_state_edge_override {
 	uint8_t dpad : 4;
 	bool square : 1;
 	bool cross : 1;
@@ -62,7 +62,7 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_device_state_edge_override) == 2, "dualsense_device_state_edge_override is not 2 bytes");
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_device_state_edge {
 	dualsense_device_state_edge_profile profile;
 	dualsense_device_state_edge_input input;
 	dualsense_device_state_edge_override override;
@@ -70,14 +70,14 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_device_state_edge) == 4, "dualsense_device_state_edge is not 4 bytes");
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_edge_indicator_update {
 	bool enable_led : 1;
 	bool enable_vibration : 1;
 } dualsense_edge_indicator_update;
 
 static_assert(sizeof(dualsense_edge_indicator_update) == 1, "dualsense_edge_indicator_update is not 1 byte");
 
-typedef union {
+typedef union PACKED dualsense_edge_mutator {
 	struct PACKED {
 		bool indicator : 1;
 		bool enable_switching : 1;
@@ -89,7 +89,7 @@ typedef union {
 
 static_assert(sizeof(dualsense_edge_mutator) == 1, "dualsense_edge_mutator is not 1 byte");
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_edge_update {
 	dualsense_edge_mutator flags;
 	dualsense_edge_indicator_update indicator;
 	uint8_t reserved[0xE];
@@ -97,14 +97,14 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_edge_update) == 16, "dualsense_edge_update is not 16 bytes");
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_edge_profile_deadzone {
 	uint8_t min;
 	uint8_t max;
 } dualsense_edge_profile_deadzone;
 
 static_assert(sizeof(dualsense_edge_profile_deadzone) == 2, "dualsense_edge_profile_deadzone size is not 2");
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_edge_profile_stick {
 	uint8_t interpolation_type; // 3 for everything, except precise which is 4. interpolation type?
 	uint8_t deadzone;
 	uint8_t unknown; // deadzone max? always zero.
@@ -114,7 +114,7 @@ typedef struct PACKED {
 static_assert(sizeof(dualsense_edge_profile_stick) == 9, "dualsense_edge_profile_stick size is not 9");
 
 // this bitset has no order whatsoever??
-typedef struct PACKED {
+typedef struct PACKED dualsense_edge_profile_disabled_buttons {
 	bool dpad_up : 1;
 	bool dpad_left : 1;
 	bool dpad_down : 1;
@@ -147,7 +147,7 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_edge_profile_disabled_buttons) == 4, "dualsense_edge_profile_disabled_buttons size is not 4");
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_edge_profile_flags {
 	uint8_t left_stick_profile : 4;
 #ifdef _WIN32
 	uint8_t unknown1a : 4;
@@ -167,7 +167,7 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_edge_profile_flags) == 4, "dualsense_edge_profile_flags size is not 4");
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_edge_profile_msg {
 	uint32_t version;
 	libresense_wchar name[40];
 	dualsense_profile_uuid uuid;
@@ -185,14 +185,14 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_edge_profile_msg) == LIBRESENSE_MERGED_REPORT_EDGE_SIZE, "dualsense_edge_profile_msg size is not LIBRESENSE_MERGED_REPORT_EDGE_SIZE");
 
-typedef union {
+typedef union PACKED dualsense_edge_profile {
 	dualsense_edge_profile_msg msg;
 	uint8_t buffers[3][0x3a];
 } dualsense_edge_profile;
 
 static_assert(sizeof(dualsense_edge_profile) == LIBRESENSE_MERGED_REPORT_EDGE_SIZE, "dualsense_edge_profile size is not LIBRESENSE_MERGED_REPORT_EDGE_SIZE");
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_edge_profile_blob {
 	uint8_t report_id;
 	uint8_t profile_part;
 
@@ -206,7 +206,7 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_edge_profile_blob) == 64, "dualsense_edge_profile_blob size is not 64");
 
-typedef struct PACKED {
+typedef struct PACKED dualsense_edge_profile_delete {
 	uint8_t report_id;
 	uint8_t profile_id;
 	uint8_t reserved[58];
@@ -215,13 +215,13 @@ typedef struct PACKED {
 
 static_assert(sizeof(dualsense_edge_profile_delete) == 64, "dualsense_edge_profile_delete size is not 64");
 
-typedef struct {
+typedef struct PACKED libresense_edge_template_vector {
 	libresense_vector2 min[3];
 	libresense_vector2 median[3];
 	libresense_vector2 max[3];
 } libresense_edge_template_vector;
 
-typedef struct {
+typedef struct PACKED libresense_edge_template {
 	uint8_t interpolation_type;
 	libresense_edge_template_vector vectors;
 } libresense_edge_template;
