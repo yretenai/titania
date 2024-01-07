@@ -1,11 +1,11 @@
-//  libresense project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  titania project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
 //  SPDX-License-Identifier: MPL-2.0
 
 #pragma once
 
-#ifndef LIBRESENSE_ENUMS_H
-#define LIBRESENSE_ENUMS_H
+#ifndef TITANIA_ENUMS_H
+#define TITANIA_ENUMS_H
 
 #include <assert.h>
 #include <stdint.h>
@@ -115,4 +115,4 @@ typedef enum dualsense_profile_version {
 	DUALSENSE_PROFILE_VERSION_ACCESS_V1 = 2
 } dualsense_profile_version;
 
-#endif // LIBRESENSE_ENUMS_H
+#endif // TITANIA_ENUMS_H

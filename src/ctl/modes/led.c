@@ -1,8 +1,8 @@
-//  libresense project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  titania project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
 //  SPDX-License-Identifier: MPL-2.0
 
-#include "../libresensectl.h"
+#include "../titaniactl.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -22,26 +22,26 @@ int parse_octet(const char ch) {
 	return 0;
 }
 
-libresensectl_error libresensectl_mode_led(libresensectl_context* context) {
-	libresense_led_update update = { 0 };
+titaniactl_error titaniactl_mode_led(titaniactl_context* context) {
+	titania_led_update update = { 0 };
 	update.color.x = 1.0;
 	update.color.y = 0.0;
 	update.color.z = 1.0;
-	update.led = LIBRESENSE_LED_NO_UPDATE;
+	update.led = TITANIA_LED_NO_UPDATE;
 
 	if (context->argc > 1) {
 		if (strcmp(context->argv[1], "player1") == 0) {
-			update.led = LIBRESENSE_LED_PLAYER_1;
+			update.led = TITANIA_LED_PLAYER_1;
 		} else if (strcmp(context->argv[1], "player2") == 0) {
-			update.led = LIBRESENSE_LED_PLAYER_2;
+			update.led = TITANIA_LED_PLAYER_2;
 		} else if (strcmp(context->argv[1], "player3") == 0) {
-			update.led = LIBRESENSE_LED_PLAYER_3;
+			update.led = TITANIA_LED_PLAYER_3;
 		} else if (strcmp(context->argv[1], "player4") == 0) {
-			update.led = LIBRESENSE_LED_PLAYER_4;
+			update.led = TITANIA_LED_PLAYER_4;
 		} else {
 			int n;
 			sscanf(context->argv[1], "%d", &n);
-			update.led = (libresense_led_index) (n & 0x7F);
+			update.led = (titania_led_index) (n & 0x7F);
 		}
 	}
 
@@ -80,13 +80,13 @@ libresensectl_error libresensectl_mode_led(libresensectl_context* context) {
 
 	for (int i = 0; i < context->connected_controllers; ++i) {
 		if (should_stop) {
-			return LIBRESENSECTL_INTERRUPTED;
+			return TITANIACTL_INTERRUPTED;
 		}
 
-		libresense_update_led(context->handles[i], update);
+		titania_update_led(context->handles[i], update);
 	}
 
-	libresense_push(context->handles, context->connected_controllers);
+	titania_push(context->handles, context->connected_controllers);
 
-	return LIBRESENSECTL_OK;
+	return TITANIACTL_OK;
 }

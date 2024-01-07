@@ -1,11 +1,11 @@
-//  libresense project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  titania project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
 //  SPDX-License-Identifier: MPL-2.0
 
 #include "structures.h"
 
 // clang-format off
-const char* const libresense_error_msg[LIBRESENSE_ERROR_MAX + 1] = {
+const char* const titania_error_msg[TITANIA_ERROR_MAX + 1] = {
 	"ok",
 	"not initialized",
 	"invalid library (struct size mismatch)",
@@ -25,7 +25,7 @@ const char* const libresense_error_msg[LIBRESENSE_ERROR_MAX + 1] = {
 	nullptr
 };
 
-const char* const libresense_battery_state_msg[LIBRESENSE_BATTERY_MAX + 1] = {
+const char* const titania_battery_state_msg[TITANIA_BATTERY_MAX + 1] = {
 	"unknown",
 	"discharging",
 	"charging",
@@ -33,7 +33,7 @@ const char* const libresense_battery_state_msg[LIBRESENSE_BATTERY_MAX + 1] = {
 	nullptr
 };
 
-const char* const libresense_profile_id_msg[LIBRESENSE_PROFILE_MAX_META + 1] = {
+const char* const titania_profile_id_msg[TITANIA_PROFILE_MAX_META + 1] = {
 	"none",
 	"triangle",
 	"square",
@@ -44,7 +44,7 @@ const char* const libresense_profile_id_msg[LIBRESENSE_PROFILE_MAX_META + 1] = {
 	nullptr
 };
 
-const char* const libresense_profile_id_alt_msg[LIBRESENSE_PROFILE_MAX_META + 1] = {
+const char* const titania_profile_id_alt_msg[TITANIA_PROFILE_MAX_META + 1] = {
 	"none",
 	"default",
 	"profile 1",
@@ -55,14 +55,14 @@ const char* const libresense_profile_id_alt_msg[LIBRESENSE_PROFILE_MAX_META + 1]
 	nullptr
 };
 
-const char* const libresense_level_msg[LIBRESENSE_LEVEL_LOW + 2] = {
+const char* const titania_level_msg[TITANIA_LEVEL_LOW + 2] = {
 	"high",
 	"medium",
 	"low",
 	nullptr
 };
 
-const char* const libresense_trigger_effect_msg[LIBRESENSE_TRIGGER_EFFECT_MAX + 1] = {
+const char* const titania_trigger_effect_msg[TITANIA_TRIGGER_EFFECT_MAX + 1] = {
 	"off",
 	"uniform",
 	"trigger",
@@ -80,7 +80,7 @@ const char* const libresense_trigger_effect_msg[LIBRESENSE_TRIGGER_EFFECT_MAX + 
 	nullptr
 };
 
-const char* const libresense_edge_button_id_msg[LIBRESENSE_BUTTON_ID_MAX + 1] = {
+const char* const titania_edge_button_id_msg[TITANIA_BUTTON_ID_MAX + 1] = {
 	"up",
 	"left",
 	"down",
@@ -102,7 +102,7 @@ const char* const libresense_edge_button_id_msg[LIBRESENSE_BUTTON_ID_MAX + 1] = 
 	nullptr
 };
 
-const char* const libresense_edge_button_id_alt_msg[LIBRESENSE_BUTTON_ID_MAX + 1] = {
+const char* const titania_edge_button_id_alt_msg[TITANIA_BUTTON_ID_MAX + 1] = {
 	"up",
 	"left",
 	"down",
@@ -124,7 +124,7 @@ const char* const libresense_edge_button_id_alt_msg[LIBRESENSE_BUTTON_ID_MAX + 1
 	nullptr
 };
 
-const char* const libresense_access_extension_id_msg[LIBRESENSE_ACCESS_EXTENSION_MAX + 1] = {
+const char* const titania_access_extension_id_msg[TITANIA_ACCESS_EXTENSION_MAX + 1] = {
 	"disconnected",
 	"button",
 	"trigger",
@@ -133,7 +133,7 @@ const char* const libresense_access_extension_id_msg[LIBRESENSE_ACCESS_EXTENSION
 	nullptr
 };
 
-const char* const libresense_edge_stick_template_msg[LIBRESENSE_EDGE_STICK_TEMPLATE_MAX + 1] = {
+const char* const titania_edge_stick_template_msg[TITANIA_EDGE_STICK_TEMPLATE_MAX + 1] = {
 	"default",
 	"quick",
 	"precise",

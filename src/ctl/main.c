@@ -1,5 +1,5 @@
-//  libresense project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  titania project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
 //  SPDX-License-Identifier: MPL-2.0
 
 #include <ctype.h>
@@ -12,31 +12,31 @@
 #include <windows.h>
 #endif
 
-#include <libresense_config.h>
+#include <titania_config.h>
 
-#include "libresensectl.h"
+#include "titaniactl.h"
 
 #include <json.h>
 
-libresensectl_error libresensectl_mode_stub(libresensectl_context* _unused) { return LIBRESENSECTL_NOT_IMPLEMENTED; }
+titaniactl_error titaniactl_mode_stub(titaniactl_context* _unused) { return TITANIACTL_NOT_IMPLEMENTED; }
 
-const libresensectl_mode modes[] = { { "report", libresensectl_mode_report, libresensectl_mode_report_json, "print the input report of connected controllers", nullptr },
-	{ "watch", libresensectl_mode_report_loop, libresensectl_mode_report_loop_json, "repeatedly print the input report of connected controllers", nullptr },
-	{ "report-loop", libresensectl_mode_report_loop, libresensectl_mode_report_loop_json, nullptr, nullptr },
-	{ "list", libresensectl_mode_list, libresensectl_mode_list_json, "list every controller", nullptr },
-	{ "test", libresensectl_mode_test, nullptr, "test various features of the connected controllers", nullptr },
-	{ "dump", libresensectl_mode_dump, nullptr, "dump every feature report from connected controllers", nullptr },
-	{ "benchmark", libresensectl_mode_bench, nullptr, "benchmark report parsing speed", nullptr },
-	{ "bench", libresensectl_mode_bench, nullptr, nullptr, nullptr },
-	{ "led", libresensectl_mode_led, libresensectl_mode_led, "update LED color", "#rrggbb|off player-led" },
-	{ "light", libresensectl_mode_led, libresensectl_mode_led, nullptr, nullptr },
-	{ "pair", libresensectl_mode_bt_pair, libresensectl_mode_bt_pair, "pair with a bluetooth adapter", "address link-key" },
-	{ "usb", libresensectl_mode_bt_disconnect, libresensectl_mode_bt_disconnect, "instruct controller to connect via bluetooth", nullptr },
-	{ "bt", libresensectl_mode_bt_connect, libresensectl_mode_bt_connect, "instruct controller to connect via usb", nullptr },
-	{ "disconnect", libresensectl_mode_bt_disconnect, libresensectl_mode_bt_disconnect, nullptr, nullptr },
-	{ "connect", libresensectl_mode_bt_connect, libresensectl_mode_bt_connect, nullptr, nullptr },
+const titaniactl_mode modes[] = { { "report", titaniactl_mode_report, titaniactl_mode_report_json, "print the input report of connected controllers", nullptr },
+	{ "watch", titaniactl_mode_report_loop, titaniactl_mode_report_loop_json, "repeatedly print the input report of connected controllers", nullptr },
+	{ "report-loop", titaniactl_mode_report_loop, titaniactl_mode_report_loop_json, nullptr, nullptr },
+	{ "list", titaniactl_mode_list, titaniactl_mode_list_json, "list every controller", nullptr },
+	{ "test", titaniactl_mode_test, nullptr, "test various features of the connected controllers", nullptr },
+	{ "dump", titaniactl_mode_dump, nullptr, "dump every feature report from connected controllers", nullptr },
+	{ "benchmark", titaniactl_mode_bench, nullptr, "benchmark report parsing speed", nullptr },
+	{ "bench", titaniactl_mode_bench, nullptr, nullptr, nullptr },
+	{ "led", titaniactl_mode_led, titaniactl_mode_led, "update LED color", "#rrggbb|off player-led" },
+	{ "light", titaniactl_mode_led, titaniactl_mode_led, nullptr, nullptr },
+	{ "pair", titaniactl_mode_bt_pair, titaniactl_mode_bt_pair, "pair with a bluetooth adapter", "address link-key" },
+	{ "usb", titaniactl_mode_bt_disconnect, titaniactl_mode_bt_disconnect, "instruct controller to connect via bluetooth", nullptr },
+	{ "bt", titaniactl_mode_bt_connect, titaniactl_mode_bt_connect, "instruct controller to connect via usb", nullptr },
+	{ "disconnect", titaniactl_mode_bt_disconnect, titaniactl_mode_bt_disconnect, nullptr, nullptr },
+	{ "connect", titaniactl_mode_bt_connect, titaniactl_mode_bt_connect, nullptr, nullptr },
 	// Edge, Access
-	{ "profile", libresensectl_mode_profile_funnel, libresensectl_mode_profile_funnel, nullptr, nullptr },
+	{ "profile", titaniactl_mode_profile_funnel, titaniactl_mode_profile_funnel, nullptr, nullptr },
 	{ "profile convert", nullptr, nullptr, "convert merged dualsense edge profile from or to json", "path/to/report.{bin, json}" },
 	{ "profile import", nullptr, nullptr, "import a controller profile to the specified slot", "{square, cross, triangle, 1, 2, 3} path/to/profile.json" },
 	{ "profile export", nullptr, nullptr, "export a controller profile to json", "{triangle, square, cross, triangle, 0, 1, 2, 3} path/to/profile.json" },
@@ -44,7 +44,7 @@ const libresensectl_mode modes[] = { { "report", libresensectl_mode_report, libr
 	//
 	{ nullptr, nullptr, nullptr, nullptr, nullptr } };
 
-static libresensectl_context context = { 0 };
+static titaniactl_context context = { 0 };
 static bool interrupted = false; // separate in case i accidentally set should_stop somewhere else.
 bool should_stop = false;
 
@@ -56,13 +56,13 @@ void shutdown(void) {
 	interrupted = should_stop = true;
 
 	for (int i = 0; i < context.connected_controllers; ++i) {
-		libresense_close(context.hids[i].handle);
-		context.hids[i].handle = LIBRESENSE_INVALID_HANDLE_ID;
+		titania_close(context.hids[i].handle);
+		context.hids[i].handle = TITANIA_INVALID_HANDLE_ID;
 	}
 
 	memset(&context, 0, sizeof(context));
 
-	libresense_exit();
+	titania_exit();
 }
 
 #ifdef _WIN32
@@ -81,7 +81,7 @@ void handle_sigint(int signal) { shutdown(); }
 
 bool is_json = false;
 
-void libresensectl_errorf(const char* error, const char* message) {
+void titaniactl_errorf(const char* error, const char* message) {
 	if (is_json) {
 		struct json* obj = json_new_object();
 		json_object_add_bool(obj, "success", false);
@@ -97,11 +97,11 @@ void libresensectl_errorf(const char* error, const char* message) {
 	fprintf(stderr, "%s: %s\n", message, error);
 }
 
-void libresense_errorf(const libresense_result result, const char* message) {
-	if (CHECK_ENUM_SAFE(result, libresense_error_msg)) {
-		libresensectl_errorf(libresense_error_msg[result], message);
+void titania_errorf(const titania_result result, const char* message) {
+	if (CHECK_ENUM_SAFE(result, titania_error_msg)) {
+		titaniactl_errorf(titania_error_msg[result], message);
 	} else {
-		libresensectl_errorf("malformed libresense error", message);
+		titaniactl_errorf("malformed titania error", message);
 	}
 }
 
@@ -122,7 +122,7 @@ int main(const int argc, const char** const argv) {
 	bool blocking = true;
 
 	int filtered_controllers = 0;
-	libresense_serial filter[LIBRESENSECTL_CONTROLLER_COUNT] = { 0 };
+	titania_serial filter[TITANIACTL_CONTROLLER_COUNT] = { 0 };
 
 	char text[255];
 	if (argc > 1) {
@@ -138,8 +138,8 @@ int main(const int argc, const char** const argv) {
 			}
 
 			if (strcmp(text, "-h") == 0 || strcmp(text, "--help") == 0 || strcmp(text, "help") == 0) {
-				printf(LIBRESENSE_PROJECT_NAME " version %s\n", LIBRESENSE_PROJECT_VERSION);
-				printf("usage: libresensectl [opts] [mode [mode opts]]\n");
+				printf(TITANIA_PROJECT_NAME " version %s\n", TITANIA_PROJECT_VERSION);
+				printf("usage: titaniactl [opts] [mode [mode opts]]\n");
 				printf("\n");
 				printf("available options:\n");
 				printf("\t-h, --help: print this help text\n");
@@ -155,7 +155,7 @@ int main(const int argc, const char** const argv) {
 				printf("\t-z, --non-blocking: disable blocking reads\n");
 				printf("\n");
 				printf("available modes:\n");
-				for (size_t j = 0; j < sizeof(modes) / sizeof(libresensectl_mode); ++j) {
+				for (size_t j = 0; j < sizeof(modes) / sizeof(titaniactl_mode); ++j) {
 					if (modes[j].help == nullptr) {
 						continue;
 					}
@@ -169,7 +169,7 @@ int main(const int argc, const char** const argv) {
 				}
 
 				bool has_json_lead = false;
-				for (size_t j = 0; j < sizeof(modes) / sizeof(libresensectl_mode); ++j) {
+				for (size_t j = 0; j < sizeof(modes) / sizeof(titaniactl_mode); ++j) {
 					if (modes[j].json_callback == nullptr || modes[j].name == nullptr) {
 						continue;
 					}
@@ -193,15 +193,15 @@ int main(const int argc, const char** const argv) {
 			if (strcmp(text, "-v") == 0 || strcmp(text, "--version") == 0 || strcmp(text, "version") == 0) {
 				if (is_json) {
 					struct json* obj = json_new_object();
-					json_object_add_string(obj, "version", LIBRESENSE_PROJECT_VERSION);
-					json_object_add_string(obj, "name", LIBRESENSE_PROJECT_NAME);
-					json_object_add_number(obj, "max_controllers", libresense_max_controllers);
+					json_object_add_string(obj, "version", TITANIA_PROJECT_VERSION);
+					json_object_add_string(obj, "name", TITANIA_PROJECT_NAME);
+					json_object_add_number(obj, "max_controllers", titania_max_controllers);
 					char* json_text = json_print(obj);
 					printf("%s\n", json_text);
 					json_delete(obj);
 					free(json_text);
 				} else {
-					printf(LIBRESENSE_PROJECT_NAME " version %s\n", LIBRESENSE_PROJECT_VERSION);
+					printf(TITANIA_PROJECT_NAME " version %s\n", TITANIA_PROJECT_VERSION);
 				}
 				return 0;
 			}
@@ -212,7 +212,7 @@ int main(const int argc, const char** const argv) {
 
 			if (strcmp(text, "-d") == 0 || strcmp(text, "--device") == 0) {
 				const char* device_ptr = argv[++i];
-				if (filtered_controllers >= LIBRESENSECTL_CONTROLLER_COUNT) {
+				if (filtered_controllers >= TITANIACTL_CONTROLLER_COUNT) {
 					continue;
 				}
 
@@ -259,8 +259,8 @@ int main(const int argc, const char** const argv) {
 		mode = "report";
 	}
 
-	const libresensectl_mode* current_mode = &modes[0];
-	libresensectl_callback_t cb = nullptr;
+	const titaniactl_mode* current_mode = &modes[0];
+	titaniactl_callback_t cb = nullptr;
 	while (current_mode->name != nullptr) {
 		if (strcmp(current_mode->name, mode) != 0) {
 			current_mode++;
@@ -278,27 +278,27 @@ int main(const int argc, const char** const argv) {
 	}
 
 	if (!is_json) {
-		printf(LIBRESENSE_PROJECT_NAME " version %s\n", LIBRESENSE_PROJECT_VERSION);
+		printf(TITANIA_PROJECT_NAME " version %s\n", TITANIA_PROJECT_VERSION);
 	}
 
 	if (cb == nullptr) {
-		libresensectl_errorf("invalid mode", "mode not recognized");
+		titaniactl_errorf("invalid mode", "mode not recognized");
 	}
 
-	libresense_result result = libresense_init();
-	if (IS_LIBRESENSE_BAD(result)) {
-		libresense_errorf(result, "error initializing " LIBRESENSE_PROJECT_NAME);
+	titania_result result = titania_init();
+	if (IS_TITANIA_BAD(result)) {
+		titania_errorf(result, "error initializing " TITANIA_PROJECT_NAME);
 		return result;
 	}
-	libresense_query query[LIBRESENSECTL_CONTROLLER_COUNT];
-	result = libresense_get_hids(query, LIBRESENSECTL_CONTROLLER_COUNT);
-	if (IS_LIBRESENSE_BAD(result)) {
-		libresense_errorf(result, "error getting hids");
-		libresense_exit();
+	titania_query query[TITANIACTL_CONTROLLER_COUNT];
+	result = titania_get_hids(query, TITANIACTL_CONTROLLER_COUNT);
+	if (IS_TITANIA_BAD(result)) {
+		titania_errorf(result, "error getting hids");
+		titania_exit();
 		return result;
 	}
 
-	for (int hid_id = 0; hid_id < LIBRESENSECTL_CONTROLLER_COUNT; ++hid_id) {
+	for (int hid_id = 0; hid_id < TITANIACTL_CONTROLLER_COUNT; ++hid_id) {
 		if (should_stop) {
 			return 0;
 		}
@@ -329,7 +329,7 @@ int main(const int argc, const char** const argv) {
 
 		if (filtered_controllers > 0) {
 			for (int filter_id = 0; filter_id < filtered_controllers; ++filter_id) {
-				if (query[hid_id].hid_serial[0] != 0 && memcmp(filter[filter_id], query[hid_id].hid_serial, sizeof(libresense_serial)) != 0) {
+				if (query[hid_id].hid_serial[0] != 0 && memcmp(filter[filter_id], query[hid_id].hid_serial, sizeof(titania_serial)) != 0) {
 					goto pass;
 				}
 			}
@@ -342,9 +342,9 @@ int main(const int argc, const char** const argv) {
 			return 0;
 		}
 
-		result = libresense_open(query[hid_id].hid_path, query[hid_id].is_bluetooth, &context.hids[context.connected_controllers], calibrate, blocking);
-		if (IS_LIBRESENSE_BAD(result)) {
-			libresense_errorf(result, "error initializing hid");
+		result = titania_open(query[hid_id].hid_path, query[hid_id].is_bluetooth, &context.hids[context.connected_controllers], calibrate, blocking);
+		if (IS_TITANIA_BAD(result)) {
+			titania_errorf(result, "error initializing hid");
 			context.connected_controllers--;
 			continue;
 		}
@@ -353,43 +353,43 @@ int main(const int argc, const char** const argv) {
 	}
 
 	if (context.connected_controllers == 0) {
-		libresensectl_errorf("no hids", "connect a device");
-		libresense_exit();
+		titaniactl_errorf("no hids", "connect a device");
+		titania_exit();
 		return 1;
 	}
 
-	libresensectl_error error = cb(&context);
-	if (IS_LIBRESENSECTL_BAD(error)) {
-		switch (error & LIBRESENSECTL_MASK) {
-			case LIBRESENSECTL_LIBRESENSE_ERROR: break;
-			case LIBRESENSECTL_HID_ERROR: libresensectl_errorf("hid error", "errored while processing command"); break;
-			case LIBRESENSECTL_INTERRUPTED:
+	titaniactl_error error = cb(&context);
+	if (IS_TITANIACTL_BAD(error)) {
+		switch (error & TITANIACTL_MASK) {
+			case TITANIACTL_TITANIA_ERROR: break;
+			case TITANIACTL_HID_ERROR: titaniactl_errorf("hid error", "errored while processing command"); break;
+			case TITANIACTL_INTERRUPTED:
 				if (is_json) {
-					error = LIBRESENSECTL_OK_NO_JSON_INTERRUPTED;
+					error = TITANIACTL_OK_NO_JSON_INTERRUPTED;
 				} else {
-					libresensectl_errorf("caught ctrl+c", "exiting");
+					titaniactl_errorf("caught ctrl+c", "exiting");
 				}
 				break;
-			case LIBRESENSECTL_NOT_IMPLEMENTED: libresensectl_errorf("not implemented", "sorry"); break;
-			case LIBRESENSECTL_INVALID_ARGUMENTS: libresensectl_errorf("invalid arguments", "one of the arguments was invalid"); break;
-			case LIBRESENSECTL_INVALID_PAIR_ARGUMENTS: libresensectl_errorf("invalid arguments", "you need to provide a mac address and a bluetooth link key"); break;
-			case LIBRESENSECTL_INVALID_MAC_ADDRESS: libresensectl_errorf("invalid arguments", "mac address is not valid"); break;
-			case LIBRESENSECTL_INVALID_LINK_KEY: libresensectl_errorf("invalid arguments", "bluetooth link key is not 16 characters"); break;
-			case LIBRESENSECTL_INVALID_PROFILE: libresensectl_errorf("invalid profile", "profile data is not valid to import"); break;
-			case LIBRESENSECTL_EMPTY_PROFILE: libresensectl_errorf("empty profile", "profile is empty"); break;
-			case LIBRESENSECTL_FILE_READ_ERROR: libresensectl_errorf("file read error", "could not open or read file"); break;
-			case LIBRESENSECTL_FILE_WRITE_ERROR: libresensectl_errorf("file write error", "could not open or write file"); break;
-			default: libresensectl_errorf("unexpected error", "goodbye"); break;
+			case TITANIACTL_NOT_IMPLEMENTED: titaniactl_errorf("not implemented", "sorry"); break;
+			case TITANIACTL_INVALID_ARGUMENTS: titaniactl_errorf("invalid arguments", "one of the arguments was invalid"); break;
+			case TITANIACTL_INVALID_PAIR_ARGUMENTS: titaniactl_errorf("invalid arguments", "you need to provide a mac address and a bluetooth link key"); break;
+			case TITANIACTL_INVALID_MAC_ADDRESS: titaniactl_errorf("invalid arguments", "mac address is not valid"); break;
+			case TITANIACTL_INVALID_LINK_KEY: titaniactl_errorf("invalid arguments", "bluetooth link key is not 16 characters"); break;
+			case TITANIACTL_INVALID_PROFILE: titaniactl_errorf("invalid profile", "profile data is not valid to import"); break;
+			case TITANIACTL_EMPTY_PROFILE: titaniactl_errorf("empty profile", "profile is empty"); break;
+			case TITANIACTL_FILE_READ_ERROR: titaniactl_errorf("file read error", "could not open or read file"); break;
+			case TITANIACTL_FILE_WRITE_ERROR: titaniactl_errorf("file write error", "could not open or write file"); break;
+			default: titaniactl_errorf("unexpected error", "goodbye"); break;
 		}
 	}
 
 	shutdown();
 
-	if ((error & LIBRESENSECTL_MASK) == LIBRESENSECTL_LIBRESENSE_ERROR) {
+	if ((error & TITANIACTL_MASK) == TITANIACTL_TITANIA_ERROR) {
 		return error;
 	}
 
-	if (is_json && error > LIBRESENSECTL_OK_NO_JSON) {
+	if (is_json && error > TITANIACTL_OK_NO_JSON) {
 		struct json* obj = json_new_object();
 		json_object_add_bool(obj, "success", true);
 		char* json_text = json_print(obj);
@@ -398,12 +398,12 @@ int main(const int argc, const char** const argv) {
 		free(json_text);
 	}
 
-	if (error == LIBRESENSECTL_OK_NO_JSON_INTERRUPTED) {
-		return LIBRESENSECTL_INTERRUPTED;
+	if (error == TITANIACTL_OK_NO_JSON_INTERRUPTED) {
+		return TITANIACTL_INTERRUPTED;
 	}
 
-	if (error == LIBRESENSECTL_OK_NO_JSON) {
-		return LIBRESENSECTL_OK;
+	if (error == TITANIACTL_OK_NO_JSON) {
+		return TITANIACTL_OK;
 	}
 
 	return error;

@@ -1,21 +1,21 @@
-//  libresense project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  titania project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
 //  SPDX-License-Identifier: MPL-2.0
 
-#include "../libresensectl.h"
+#include "../titaniactl.h"
 
 #include <json.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-libresensectl_error libresensectl_mode_edge_import(libresense_profile_id profile, const libresense_edge_profile data, libresense_hid handle) { return LIBRESENSECTL_NOT_IMPLEMENTED; }
+titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, const titania_edge_profile data, titania_hid handle) { return TITANIACTL_NOT_IMPLEMENTED; }
 
-struct json* json_object_add_stick(struct json* obj, const char* key, const libresense_edge_stick data) {
+struct json* json_object_add_stick(struct json* obj, const char* key, const titania_edge_stick data) {
 	char strbuffer[128];
 	struct json* stick_obj = json_object_add_object(obj, key);
-	if (CHECK_ENUM_SAFE(data.template_id, libresense_edge_stick_template_msg)) {
-		json_object_add_string(stick_obj, "template", libresense_edge_stick_template_msg[data.template_id]);
+	if (CHECK_ENUM_SAFE(data.template_id, titania_edge_stick_template_msg)) {
+		json_object_add_string(stick_obj, "template", titania_edge_stick_template_msg[data.template_id]);
 	} else {
 		sprintf(strbuffer, "%d", data.template_id);
 		json_object_add_string(stick_obj, "template", strbuffer);
@@ -41,7 +41,7 @@ struct json* json_object_add_stick(struct json* obj, const char* key, const libr
 	return stick_obj;
 }
 
-struct json* json_object_add_trigger(struct json* obj, const char* key, const libresense_edge_trigger data) {
+struct json* json_object_add_trigger(struct json* obj, const char* key, const titania_edge_trigger data) {
 	struct json* trigger_obj = json_object_add_object(obj, key);
 
 	struct json* deadzone_arr = json_object_add_array(trigger_obj, "deadzone");
@@ -51,30 +51,30 @@ struct json* json_object_add_trigger(struct json* obj, const char* key, const li
 	return trigger_obj;
 }
 
-libresensectl_error libresensectl_mode_edge_export(libresense_profile_id profile, const char* const path, libresense_hid handle) {
+titaniactl_error titaniactl_mode_edge_export(titania_profile_id profile, const char* const path, titania_hid handle) {
 	if (path == nullptr) {
-		return LIBRESENSECTL_INVALID_ARGUMENTS;
+		return TITANIACTL_INVALID_ARGUMENTS;
 	}
 
 	bool is_stdout = strcmp(path, "--") == 0;
 	if (is_stdout && !is_json) {
-		return LIBRESENSECTL_INVALID_ARGUMENTS;
+		return TITANIACTL_INVALID_ARGUMENTS;
 	}
 
-	libresense_edge_profile data;
-	libresense_result result = libresense_query_edge_profile(handle.handle, profile, &data);
-	if (IS_LIBRESENSE_BAD(result)) {
-		libresense_errorf(result, "failed to query edge profile");
-		return MAKE_LIBRESENSE_ERROR(result);
+	titania_edge_profile data;
+	titania_result result = titania_query_edge_profile(handle.handle, profile, &data);
+	if (IS_TITANIA_BAD(result)) {
+		titania_errorf(result, "failed to query edge profile");
+		return MAKE_TITANIA_ERROR(result);
 	}
 
 	if (!data.valid) {
-		return LIBRESENSECTL_INVALID_PROFILE;
+		return TITANIACTL_INVALID_PROFILE;
 	}
 
 	size_t name_len = strlen(data.name);
 	if (name_len == 0) {
-		return LIBRESENSECTL_EMPTY_PROFILE;
+		return TITANIACTL_EMPTY_PROFILE;
 	}
 
 	struct json* profile_json = json_new_object();
@@ -95,15 +95,15 @@ libresensectl_error libresensectl_mode_edge_export(libresense_profile_id profile
 		sprintf(strbuffer, "%llu", (unsigned long long) data.timestamp);
 		json_object_add_string(profile_json, "timestamp", strbuffer);
 
-		if (CHECK_ENUM_SAFE(data.vibration, libresense_level_msg)) {
-			json_object_add_string(profile_json, "vibrationLevel", libresense_level_msg[data.vibration]);
+		if (CHECK_ENUM_SAFE(data.vibration, titania_level_msg)) {
+			json_object_add_string(profile_json, "vibrationLevel", titania_level_msg[data.vibration]);
 		} else {
 			sprintf(strbuffer, "%d", data.vibration);
 			json_object_add_string(profile_json, "vibrationLevel", strbuffer);
 		}
 
-		if (CHECK_ENUM_SAFE(data.trigger_effect, libresense_level_msg)) {
-			json_object_add_string(profile_json, "triggerStrength", libresense_level_msg[data.trigger_effect]);
+		if (CHECK_ENUM_SAFE(data.trigger_effect, titania_level_msg)) {
+			json_object_add_string(profile_json, "triggerStrength", titania_level_msg[data.trigger_effect]);
 		} else {
 			sprintf(strbuffer, "%d", data.trigger_effect);
 			json_object_add_string(profile_json, "triggerStrength", strbuffer);
@@ -113,24 +113,24 @@ libresensectl_error libresensectl_mode_edge_export(libresense_profile_id profile
 		json_object_add_bool(profile_json, "triggerDeadzoneMirrored", data.trigger_deadzone_mirrored);
 
 		struct json* stick_obj = json_object_add_object(profile_json, "sticks");
-		json_object_add_stick(stick_obj, "left", data.sticks[LIBRESENSE_LEFT]);
-		json_object_add_stick(stick_obj, "right", data.sticks[LIBRESENSE_RIGHT]);
+		json_object_add_stick(stick_obj, "left", data.sticks[TITANIA_LEFT]);
+		json_object_add_stick(stick_obj, "right", data.sticks[TITANIA_RIGHT]);
 
 		struct json* trigger_obj = json_object_add_object(profile_json, "triggers");
-		json_object_add_trigger(trigger_obj, "left", data.triggers[LIBRESENSE_LEFT]);
-		json_object_add_trigger(trigger_obj, "right", data.triggers[LIBRESENSE_RIGHT]);
+		json_object_add_trigger(trigger_obj, "left", data.triggers[TITANIA_LEFT]);
+		json_object_add_trigger(trigger_obj, "right", data.triggers[TITANIA_RIGHT]);
 
 		struct json* button_obj = json_object_add_object(profile_json, "buttonMap");
 		for (size_t i = 0; i < 0x10; ++i) {
 			char button_id[64];
-			if (CHECK_ENUM_SAFE(i, libresense_edge_button_id_alt_msg)) {
-				sprintf(button_id, "%s", libresense_edge_button_id_alt_msg[i]);
+			if (CHECK_ENUM_SAFE(i, titania_edge_button_id_alt_msg)) {
+				sprintf(button_id, "%s", titania_edge_button_id_alt_msg[i]);
 			} else {
 				sprintf(button_id, "%d", (int) i);
 			}
 
-			if (CHECK_ENUM_SAFE(data.buttons.values[i], libresense_edge_button_id_alt_msg)) {
-				json_object_add_string(button_obj, button_id, libresense_edge_button_id_alt_msg[data.buttons.values[i]]);
+			if (CHECK_ENUM_SAFE(data.buttons.values[i], titania_edge_button_id_alt_msg)) {
+				json_object_add_string(button_obj, button_id, titania_edge_button_id_alt_msg[data.buttons.values[i]]);
 			} else {
 				sprintf(strbuffer, "%d", data.buttons.values[i]);
 				json_object_add_string(button_obj, button_id, strbuffer);
@@ -169,13 +169,13 @@ libresensectl_error libresensectl_mode_edge_export(libresense_profile_id profile
 	char* profile_str = json_print(profile_json);
 	json_delete(profile_json);
 	if (profile_str == nullptr) {
-		return LIBRESENSECTL_FILE_WRITE_ERROR;
+		return TITANIACTL_FILE_WRITE_ERROR;
 	}
 
 	if (is_stdout) {
 		printf("%s\n", profile_str);
 		free(profile_str);
-		return LIBRESENSECTL_OK_NO_JSON;
+		return TITANIACTL_OK_NO_JSON;
 	}
 
 	const char* const suffix = ".json";
@@ -185,7 +185,7 @@ libresensectl_error libresensectl_mode_edge_export(libresense_profile_id profile
 	char* output_path = calloc(full_len, sizeof(char));
 	if (output_path == nullptr) {
 		free(profile_str);
-		return LIBRESENSECTL_FILE_WRITE_ERROR;
+		return TITANIACTL_FILE_WRITE_ERROR;
 	}
 
 	sprintf(output_path, "%s/%s%s", path, data.name, suffix);
@@ -208,7 +208,7 @@ libresensectl_error libresensectl_mode_edge_export(libresense_profile_id profile
 	if (file == nullptr) {
 		free(profile_str);
 		free(output_path);
-		return LIBRESENSECTL_FILE_WRITE_ERROR;
+		return TITANIACTL_FILE_WRITE_ERROR;
 	}
 	fwrite(profile_str, 1, strlen(profile_str), file);
 	fclose(file);
@@ -220,15 +220,15 @@ libresensectl_error libresensectl_mode_edge_export(libresense_profile_id profile
 	free(profile_str);
 	free(output_path);
 
-	return LIBRESENSECTL_OK;
+	return TITANIACTL_OK;
 }
 
-libresensectl_error libresensectl_mode_edge_delete(libresense_profile_id profile, libresense_hid handle) {
-	if (IS_LIBRESENSE_BAD(libresense_delete_edge_profile(handle.handle, profile))) {
-		return LIBRESENSECTL_HID_ERROR;
+titaniactl_error titaniactl_mode_edge_delete(titania_profile_id profile, titania_hid handle) {
+	if (IS_TITANIA_BAD(titania_delete_edge_profile(handle.handle, profile))) {
+		return TITANIACTL_HID_ERROR;
 	}
 
-	printf("deleted %s profile%s from %s\n", libresense_profile_id_msg[profile], profile == LIBRESENSE_PROFILE_ALL ? "s" : "", handle.serial.mac);
+	printf("deleted %s profile%s from %s\n", titania_profile_id_msg[profile], profile == TITANIA_PROFILE_ALL ? "s" : "", handle.serial.mac);
 
-	return LIBRESENSECTL_OK;
+	return TITANIACTL_OK;
 }

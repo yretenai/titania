@@ -1,26 +1,26 @@
-//  libresense project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  titania project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
 //  SPDX-License-Identifier: MPL-2.0
 
 #pragma once
 
-#ifndef LIBRESENSE_EDGE_H
-#define LIBRESENSE_EDGE_H
+#ifndef TITANIA_EDGE_H
+#define TITANIA_EDGE_H
 #include <assert.h>
 #include <stdint.h>
 
 #include "common.h"
 #include "enums.h"
-#include <libresense_config_internal.h>
+#include <titania_config_internal.h>
 
-#ifdef LIBRESENSE_HAS_PACK
+#ifdef TITANIA_HAS_PACK
 #define PACKED
 #pragma pack(push, 1)
 #else
 #define PACKED __attribute__((__packed__))
 #endif
 
-#ifndef LIBRESENSE_HAS_NULLPTR
+#ifndef TITANIA_HAS_NULLPTR
 #define nullptr ((void*) 0)
 #endif
 
@@ -169,7 +169,7 @@ static_assert(sizeof(dualsense_edge_profile_flags) == 4, "dualsense_edge_profile
 
 typedef struct PACKED dualsense_edge_profile_msg {
 	uint32_t version;
-	libresense_wchar name[40];
+	titania_wchar name[40];
 	dualsense_profile_uuid uuid;
 	dualsense_edge_profile_stick sticks[2];
 	dualsense_edge_profile_deadzone triggers[2];
@@ -183,14 +183,14 @@ typedef struct PACKED dualsense_edge_profile_msg {
 	uint32_t checksum;
 } dualsense_edge_profile_msg;
 
-static_assert(sizeof(dualsense_edge_profile_msg) == LIBRESENSE_MERGED_REPORT_EDGE_SIZE, "dualsense_edge_profile_msg size is not LIBRESENSE_MERGED_REPORT_EDGE_SIZE");
+static_assert(sizeof(dualsense_edge_profile_msg) == TITANIA_MERGED_REPORT_EDGE_SIZE, "dualsense_edge_profile_msg size is not TITANIA_MERGED_REPORT_EDGE_SIZE");
 
 typedef union PACKED dualsense_edge_profile {
 	dualsense_edge_profile_msg msg;
 	uint8_t buffers[3][0x3a];
 } dualsense_edge_profile;
 
-static_assert(sizeof(dualsense_edge_profile) == LIBRESENSE_MERGED_REPORT_EDGE_SIZE, "dualsense_edge_profile size is not LIBRESENSE_MERGED_REPORT_EDGE_SIZE");
+static_assert(sizeof(dualsense_edge_profile) == TITANIA_MERGED_REPORT_EDGE_SIZE, "dualsense_edge_profile size is not TITANIA_MERGED_REPORT_EDGE_SIZE");
 
 typedef struct PACKED dualsense_edge_profile_blob {
 	uint8_t report_id;
@@ -215,20 +215,20 @@ typedef struct PACKED dualsense_edge_profile_delete {
 
 static_assert(sizeof(dualsense_edge_profile_delete) == 64, "dualsense_edge_profile_delete size is not 64");
 
-typedef struct PACKED libresense_edge_template_vector {
-	libresense_vector2 min[3];
-	libresense_vector2 median[3];
-	libresense_vector2 max[3];
-} libresense_edge_template_vector;
+typedef struct PACKED titania_edge_template_vector {
+	titania_vector2 min[3];
+	titania_vector2 median[3];
+	titania_vector2 max[3];
+} titania_edge_template_vector;
 
-typedef struct PACKED libresense_edge_template {
+typedef struct PACKED titania_edge_template {
 	uint8_t interpolation_type;
-	libresense_edge_template_vector vectors;
-} libresense_edge_template;
+	titania_edge_template_vector vectors;
+} titania_edge_template;
 
-#ifdef LIBRESENSE_HAS_PACK
+#ifdef TITANIA_HAS_PACK
 #pragma pack(pop)
 #endif
 #undef PACKED
 
-#endif // LIBRESENSE_EDGE_H
+#endif // TITANIA_EDGE_H

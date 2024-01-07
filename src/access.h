@@ -1,28 +1,28 @@
-//  libresense project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  titania project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
 //  SPDX-License-Identifier: MPL-2.0
 
 #pragma once
 
-#ifndef LIBRESENSE_ACCESS_H
-#define LIBRESENSE_ACCESS_H
+#ifndef TITANIA_ACCESS_H
+#define TITANIA_ACCESS_H
 
 #include <assert.h>
 #include <stdint.h>
 
-#include <libresense_config_internal.h>
+#include <titania_config_internal.h>
 
 #include "common.h"
 #include "enums.h"
 
-#ifdef LIBRESENSE_HAS_PACK
+#ifdef TITANIA_HAS_PACK
 #define PACKED
 #pragma pack(push, 1)
 #else
 #define PACKED __attribute__((__packed__))
 #endif
 
-#ifndef LIBRESENSE_HAS_NULLPTR
+#ifndef TITANIA_HAS_NULLPTR
 #define nullptr ((void*) 0)
 #endif
 
@@ -110,9 +110,9 @@ typedef struct PACKED dualsense_access_profile_blob {
 
 static_assert(sizeof(dualsense_access_profile_blob) == 64, "dualsense_access_profile_blob size is not 64");
 
-#ifdef LIBRESENSE_HAS_PACK
+#ifdef TITANIA_HAS_PACK
 #pragma pack(pop)
 #endif
 #undef PACKED
 
-#endif // LIBRESENSE_ACCESS_H
+#endif // TITANIA_ACCESS_H

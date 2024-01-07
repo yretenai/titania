@@ -1,5 +1,5 @@
-//  libresense project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  titania project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
 //  SPDX-License-Identifier: MPL-2.0
 
 #include "structures.h"
@@ -10,7 +10,7 @@ uint32_t crc_seed_input = 0;
 uint32_t crc_seed_output = 0;
 uint32_t crc_seed_feature = 0;
 uint32_t crc_seed_feature_profile = 0;
-uint32_t crc_seed_libresense = 0;
+uint32_t crc_seed_titania = 0;
 
 uint32_t checksum(uint32_t crc, const uint8_t* buffer, const size_t size) {
 	for (size_t i = 0; i < size; ++i) {
@@ -19,7 +19,7 @@ uint32_t checksum(uint32_t crc, const uint8_t* buffer, const size_t size) {
 	return crc;
 }
 
-void libresense_init_checksum(void) {
+void titania_init_checksum(void) {
 	for (int i = 1; i < 256; ++i) {
 		uint32_t crc = i;
 		for (int j = 8; j; --j) {
@@ -36,8 +36,8 @@ void libresense_init_checksum(void) {
 	crc_seed_feature = checksum(UINT32_MAX, (uint8_t*) &crc_seed_feature, 1);
 	crc_seed_feature_profile = DUALSENSE_CRC_FEATURE_EDGE;
 	crc_seed_feature_profile = checksum(UINT32_MAX, (uint8_t*) &crc_seed_feature_profile, 1);
-	crc_seed_libresense = LIBRESENSE_CRC;
-	crc_seed_libresense = checksum(UINT32_MAX, (uint8_t*) &crc_seed_libresense, 4);
+	crc_seed_titania = TITANIA_CRC;
+	crc_seed_titania = checksum(UINT32_MAX, (uint8_t*) &crc_seed_titania, 4);
 }
 
-uint32_t libresense_calc_checksum(const uint32_t state, const uint8_t* buffer, const size_t size) { return ~checksum(state, buffer, size); }
+uint32_t titania_calc_checksum(const uint32_t state, const uint8_t* buffer, const size_t size) { return ~checksum(state, buffer, size); }

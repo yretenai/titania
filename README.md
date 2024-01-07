@@ -1,16 +1,22 @@
-# libresense
+# titania
 
 cross-platform userland driver for the sony playstation dualsense controller
 
+## why the name
+
+The PS5 memory controller is a Marvell Titania 2, that's why.
+I was looking for a replacement project name, not because there's something wrong with the name "libresense" but because the shared object name would have been "liblibresense.so."
+Now, it's libtitania.so, or titania.dll which is much nicer in my opinion.
+
 ## caveats
 
-libresense is NOT THREAD SAFE, though the library does not use any thread locals.
+titania is NOT THREAD SAFE, though the library does not use any thread locals.
 there are no protections against race conditions.
 
-this is done as a consideration for speed, if you use libresense across thread bounaries,
+this is done as a consideration for speed, if you use titania across thread bounaries,
 it is ultimately up to the library user to implement mutex guards around the calls.
 
-it's good practice to only let one thread (i.e. an "input" thread) call libresense functions.
+it's good practice to only let one thread (i.e. an "input" thread) call titania functions.
 
 ### notice
 
@@ -51,11 +57,11 @@ meson compile
 ```
 ### notice
 
-while the library is built on c2x, the `libresense.h` header is c17 (maybe c11) compatible.
+while the library is built on c2x, the `titania.h` header is c17 (maybe c11) compatible.
 
 ## usage
 
-TODO, see src/ctl/ for the source of `libresensectl`
+TODO, see src/ctl/ for the source of `titaniactl`
 
 ## acknowledgements
 
@@ -69,4 +75,4 @@ TODO, see src/ctl/ for the source of `libresensectl`
 ## license
 
 this project is licensed under MPL-2.0 (Mozilla Public License Version 2.0), you should have received a copy of this license.
-if not, an up-to-date copy is always available [here](https://www.mozilla.org/en-US/MPL/2.0/) and the repository copy is [here](https://nothg.chronovore.dev/library/libresense/tree/LICENSE).
+if not, an up-to-date copy is always available [here](https://www.mozilla.org/en-US/MPL/2.0/) and the repository copy is [here](https://nothg.chronovore.dev/library/titania/tree/LICENSE).

@@ -1,29 +1,29 @@
-//  libresense project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  titania project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
 //  SPDX-License-Identifier: MPL-2.0
 
-#include "../libresensectl.h"
+#include "../titaniactl.h"
 
 #include <hidapi.h>
 #include <stdio.h>
 
 const char* const REPORT_TYPES[3] = { "INPUT", "OUTPUT", "FEATURE" };
 
-libresensectl_error libresensectl_mode_dump(libresensectl_context* context) {
+titaniactl_error titaniactl_mode_dump(titaniactl_context* context) {
 	for (int i = 0; i < context->connected_controllers; ++i) {
 		if (should_stop) {
-			return LIBRESENSECTL_INTERRUPTED;
+			return TITANIACTL_INTERRUPTED;
 		}
 
 		char name[0x30] = { 0 };
 		sprintf(name, "report_%s_%%d.bin", context->hids[i].serial.mac);
-		libresense_report_id report_ids[0xFF];
+		titania_report_id report_ids[0xFF];
 		hid_device* device;
-		if (IS_LIBRESENSE_OKAY(libresense_debug_get_hid(context->hids[i].handle, (intptr_t*) &device)) &&
-			IS_LIBRESENSE_OKAY(libresense_debug_get_hid_report_ids(context->hids[i].handle, report_ids))) {
+		if (IS_TITANIA_OKAY(titania_debug_get_hid(context->hids[i].handle, (intptr_t*) &device)) &&
+			IS_TITANIA_OKAY(titania_debug_get_hid_report_ids(context->hids[i].handle, report_ids))) {
 			for (int j = 0; j < 0xFF; j++) {
 				if (should_stop) {
-					return LIBRESENSECTL_INTERRUPTED;
+					return TITANIACTL_INTERRUPTED;
 				}
 
 				uint8_t buffer[0x4096];
@@ -58,5 +58,5 @@ libresensectl_error libresensectl_mode_dump(libresensectl_context* context) {
 		}
 	}
 
-	return LIBRESENSECTL_OK;
+	return TITANIACTL_OK;
 }

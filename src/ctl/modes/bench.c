@@ -1,5 +1,5 @@
-//  libresense project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  titania project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
 //  SPDX-License-Identifier: MPL-2.0
 
 #define _POSIX_C_SOURCE 200809L
@@ -21,28 +21,28 @@ void nanosleep(const struct timespec* tspec, void* nullvoid) {
 }
 #endif
 
-#include "../libresensectl.h"
+#include "../titaniactl.h"
 
 #include <stdio.h>
 #include <time.h>
 
-libresensectl_error libresensectl_mode_bench(libresensectl_context* context) {
+titaniactl_error titaniactl_mode_bench(titaniactl_context* context) {
 	printf("testing latency, press CTRL+C to stop\n");
 	uint64_t max = 0;
 	uint64_t min = UINT64_MAX;
 	uint64_t avg = 0;
 	struct timespec ts1, ts2;
-	libresense_data data;
-	libresense_handle handle = context->handles[0];
+	titania_data data;
+	titania_handle handle = context->handles[0];
 	int32_t i = 0;
 	const struct timespec sleep_time = { 0, 1e+6 };
 	while (true) {
 		if (should_stop) {
-			return LIBRESENSECTL_INTERRUPTED;
+			return TITANIACTL_INTERRUPTED;
 		}
 
 		timespec_get(&ts1, TIME_UTC);
-		libresense_pull(&handle, 1, &data);
+		titania_pull(&handle, 1, &data);
 		timespec_get(&ts2, TIME_UTC);
 		const struct timespec delta_ts = { ts2.tv_sec - ts1.tv_sec, ts2.tv_nsec - ts1.tv_nsec };
 		const uint32_t delta = delta_ts.tv_sec * 1e+9 + delta_ts.tv_nsec;

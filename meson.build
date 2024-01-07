@@ -1,5 +1,5 @@
 project(
-	'libresense',
+	'titania',
 	'c',
 	default_options : [
 		'prefix=/usr',
@@ -68,20 +68,20 @@ if compiler.compiles(stdc_test, name : 'has stdc flags', args : args, werror : t
 endif
 
 config_file = configure_file(
-	output : 'libresense_config.h',
+	output : 'titania_config.h',
 	configuration : configuration_data({
-		'LIBRESENSE_MAX_CONTROLLERS' : get_option('libresense_max_controllers'),
-		'LIBRESENSE_PROJECT_NAME' : '"' + meson.project_name() + '"',
-		'LIBRESENSE_PROJECT_VERSION' : '"' + meson.project_version() + '"'
+		'TITANIA_MAX_CONTROLLERS' : get_option('titania_max_controllers'),
+		'TITANIA_PROJECT_NAME' : '"' + meson.project_name() + '"',
+		'TITANIA_PROJECT_VERSION' : '"' + meson.project_version() + '"'
 	})
 )
 
 configure_file(
-	output : 'libresense_config_internal.h',
+	output : 'titania_config_internal.h',
 	configuration : configuration_data({
-		'LIBRESENSE_HAS_NULLPTR' : has_nullptr,
-		'LIBRESENSE_HAS_PACK' : has_pack,
-		'LIBRESENSE_HAS_STDC_FLAGS': has_stdc_flags
+		'TITANIA_HAS_NULLPTR' : has_nullptr,
+		'TITANIA_HAS_PACK' : has_pack,
+		'TITANIA_HAS_STDC_FLAGS': has_stdc_flags
    })
 )
 
@@ -95,9 +95,9 @@ if not icu.found()
 	icu = dependency('icu-uc')
 endif
 
-libresense_inc = include_directories('include/')
+titania_inc = include_directories('include/')
 
-libresense_lib = library(meson.project_name(), [
+titania_lib = library(meson.project_name(), [
 		'src/access.c',
 		'src/crc.c',
 		'src/enums.c',
@@ -107,16 +107,16 @@ libresense_lib = library(meson.project_name(), [
 	],
 	dependencies : [hidapi, icu],
 	gnu_symbol_visibility: 'hidden',
-	c_args : [args, '-DLIBRESENSE_EXPORTING'],
+	c_args : [args, '-DTITANIA_EXPORTING'],
 	install : true,
-	include_directories : libresense_inc
+	include_directories : titania_inc
 )
 
-libresense_dep = declare_dependency(link_with : libresense_lib, include_directories : libresense_inc)
+titania_dep = declare_dependency(link_with : titania_lib, include_directories : titania_inc)
 
-if get_option('libresense_ctl')
+if get_option('titania_ctl')
 	json = dependency('libjson', version : '>=1.0')
-	executable('libresensectl', [
+	executable('titaniactl', [
 			'src/ctl/main.c',
 			'src/ctl/modes/access.c',
 			'src/ctl/modes/bench.c',
@@ -129,13 +129,13 @@ if get_option('libresense_ctl')
 			'src/ctl/modes/test.c'
 		],
 		c_args : args,
-		dependencies : [libresense_dep, hidapi, json],
+		dependencies : [titania_dep, hidapi, json],
 	install : true)
 endif
 
-install_headers(['include/libresense.h', config_file], preserve_path : false)
+install_headers(['include/titania.h', config_file], preserve_path : false)
 
-if get_option('libresense_man')
+if get_option('titania_man')
 	pandoc = find_program('pandoc', required : false)
 	if not pandoc.found()
 		warning('pandoc not found, building man pages will not be possible')
@@ -152,20 +152,20 @@ if get_option('libresense_man')
 		)
 
 		custom_target(
-			'libresense.1',
-			output : 'libresense.1',
-			input : 'man/libresense.1.md',
+			'titania.1',
+			output : 'titania.1',
+			input : 'man/titania.1.md',
 			build_always_stale : true,
 			install : true,
 			install_dir : join_paths(get_option('mandir'), 'man1'),
 			command : [pandoc_commands, '@OUTPUT@', '@INPUT@']
 		)
 
-		if get_option('libresense_ctl')
+		if get_option('titania_ctl')
 			custom_target(
-				'libresensectl.1',
-				output : 'libresensectl.1',
-				input : 'man/libresensectl.1.md',
+				'titaniactl.1',
+				output : 'titaniactl.1',
+				input : 'man/titaniactl.1.md',
 				build_always_stale : true,
 				install : true,
 				install_dir : join_paths(get_option('mandir'), 'man1'),

@@ -1,3 +1,3 @@
-option('libresense_ctl', type: 'boolean', value: true)
-option('libresense_max_controllers', type: 'integer', min: 4, max: 31, value: 8)
-option('libresense_man', type: 'boolean', value: true)
+option('titania_ctl', type: 'boolean', value: true)
+option('titania_max_controllers', type: 'integer', min: 4, max: 31, value: 8)
+option('titania_man', type: 'boolean', value: true)

@@ -1,21 +1,21 @@
-//  libresense project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  titania project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
 //  SPDX-License-Identifier: MPL-2.0
 
 #pragma once
 
-#ifndef LIBRESENSE_STRUCTURES_H
-#define LIBRESENSE_STRUCTURES_H
+#ifndef TITANIA_STRUCTURES_H
+#define TITANIA_STRUCTURES_H
 
 #include <assert.h>
 #include <stdint.h>
 
 #include <hidapi.h>
 
-#include <libresense.h>
+#include <titania.h>
 
-#include <libresense_config.h>
-#include <libresense_config_internal.h>
+#include <titania_config.h>
+#include <titania_config_internal.h>
 
 #ifndef _MSC_VER
 static_assert(__STDC_VERSION__ >= 202000L, "a c2x compiler is required");
@@ -25,16 +25,16 @@ static_assert(__STDC_VERSION__ >= 202000L, "a c2x compiler is required");
 #include "common.h"
 #include "edge.h"
 #include "enums.h"
-#include <libresense_config.h>
+#include <titania_config.h>
 
-#ifdef LIBRESENSE_HAS_PACK
+#ifdef TITANIA_HAS_PACK
 #define PACKED
 #pragma pack(push, 1)
 #else
 #define PACKED __attribute__((__packed__))
 #endif
 
-#ifndef LIBRESENSE_HAS_NULLPTR
+#ifndef TITANIA_HAS_NULLPTR
 #define nullptr ((void*) 0)
 #endif
 
@@ -254,7 +254,7 @@ typedef struct PACKED dualsense_effect_output {
 	uint8_t mode;
 
 	union PACKED dualsense_effect_output_params {
-		uint8_t value[LIBRESENSE_TRIGGER_GRANULARITY];
+		uint8_t value[TITANIA_TRIGGER_GRANULARITY];
 
 		struct PACKED dualsense_effect_output_multiple {
 			uint16_t id;
@@ -452,7 +452,7 @@ typedef struct PACKED dualsense_firmware_info {
 	uint32_t checksum;
 } dualsense_firmware_info;
 
-static_assert(DUALSENSE_FIRMWARE_VERSION_DATE_LEN + 1 + DUALSENSE_FIRMWARE_VERSION_TIME_LEN + 1 < LIBRESENSE_FIRMWARE_DATE_LEN, "date + space + time + null is >= libresense_firmware_info.version");
+static_assert(DUALSENSE_FIRMWARE_VERSION_DATE_LEN + 1 + DUALSENSE_FIRMWARE_VERSION_TIME_LEN + 1 < TITANIA_FIRMWARE_DATE_LEN, "date + space + time + null is >= titania_firmware_info.version");
 static_assert(sizeof(dualsense_firmware_info) == 64, "dualsense_firmware_info is not 64 bytes");
 
 typedef struct PACKED dualsense_serial_info {
@@ -465,17 +465,17 @@ typedef struct PACKED dualsense_serial_info {
 
 static_assert(sizeof(dualsense_serial_info) == 20, "dualsense_serial_info is not 20 bytes");
 
-typedef struct PACKED libresense_calibration_bit {
+typedef struct PACKED titania_calibration_bit {
 	float max;
 	float min;
 	int bias;
 	int speed;
-} libresense_calibration_bit;
+} titania_calibration_bit;
 
 typedef struct PACKED dualsense_state {
 	hid_device* hid;
-	libresense_hid hid_info;
-	libresense_calibration_bit calibration[6];
+	titania_hid hid_info;
+	titania_calibration_bit calibration[6];
 	uint32_t seq;
 
 	union PACKED dualsense_state_input {
@@ -507,7 +507,7 @@ typedef struct PACKED dualsense_bt_command_msg {
 
 static_assert(sizeof(dualsense_bt_command_msg) == 0x30, "dualsense_bt_command_msg is not 48 bytes");
 
-#ifdef LIBRESENSE_HAS_PACK
+#ifdef TITANIA_HAS_PACK
 #pragma pack(pop)
 #endif
 #undef PACKED
@@ -516,45 +516,45 @@ extern uint32_t crc_seed_input;
 extern uint32_t crc_seed_output;
 extern uint32_t crc_seed_feature;
 extern uint32_t crc_seed_feature_profile;
-extern uint32_t crc_seed_libresense;
+extern uint32_t crc_seed_titania;
 
-extern dualsense_state state[LIBRESENSE_MAX_CONTROLLERS];
+extern dualsense_state state[TITANIA_MAX_CONTROLLERS];
 extern bool is_initialized;
 
 /**
- * @brief convert dualsense input report to libresense's representation
+ * @brief convert dualsense input report to titania's representation
  * @param hid_info: hid device info
  * @param input: the input to convert
  * @param data: the data to convert into
  * @param calibration: calibration data
  */
-void libresense_convert_input(const libresense_hid hid_info, const dualsense_input_msg input, libresense_data* data, libresense_calibration_bit calibration[6]);
+void titania_convert_input(const titania_hid hid_info, const dualsense_input_msg input, titania_data* data, titania_calibration_bit calibration[6]);
 
 /**
- * @brief convert a libresense profile to dualsense edge's representation
+ * @brief convert a titania profile to dualsense edge's representation
  * @param input: the input to convert
  * @param output: the profile to convert into
  */
-libresense_result libresense_convert_edge_profile_output(libresense_edge_profile input, dualsense_edge_profile_blob output[3]);
+titania_result titania_convert_edge_profile_output(titania_edge_profile input, dualsense_edge_profile_blob output[3]);
 
 /**
- * @brief convert a libresense profile to access's representation
+ * @brief convert a titania profile to access's representation
  * @param input: the input to convert
  * @param output: the profile to convert into
  */
-libresense_result libresense_convert_access_profile_output(libresense_access_profile input, dualsense_edge_profile_blob output[0x12]);
+titania_result titania_convert_access_profile_output(titania_access_profile input, dualsense_edge_profile_blob output[0x12]);
 
 /**
  * @brief update LED state of an access controller
  * @param handle: the controller to update
  * @param data: led update data
  */
-libresense_result libresense_update_access_led(const libresense_handle handle, const libresense_led_update data);
+titania_result titania_update_access_led(const titania_handle handle, const titania_led_update data);
 
 /**
  * @brief initializes checksum tables
  */
-void libresense_init_checksum(void);
+void titania_init_checksum(void);
 
 /**
  * @brief calculates a bluetooth checksum
@@ -562,6 +562,6 @@ void libresense_init_checksum(void);
  * @param buffer: data to hash
  * @param size: sizeof(buffer)
  */
-uint32_t libresense_calc_checksum(const uint32_t state, const uint8_t* buffer, const size_t size);
+uint32_t titania_calc_checksum(const uint32_t state, const uint8_t* buffer, const size_t size);
 
 #endif

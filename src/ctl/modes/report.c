@@ -1,258 +1,258 @@
-//  libresense project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  titania project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
 //  SPDX-License-Identifier: MPL-2.0
 
 #include <stdio.h>
 
-#include "../libresensectl.h"
+#include "../titaniactl.h"
 
 #include <json.h>
 
-libresensectl_error libresensectl_mode_report_inner(libresensectl_context* context, const bool loop) {
+titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const bool loop) {
 	do {
-		libresense_data datum[LIBRESENSECTL_CONTROLLER_COUNT];
-		const libresense_result result = libresense_pull(context->handles, context->connected_controllers, datum);
-		if (IS_LIBRESENSE_BAD(result)) {
-			libresense_errorf(result, "error getting report");
-			return LIBRESENSECTL_HID_ERROR;
+		titania_data datum[TITANIACTL_CONTROLLER_COUNT];
+		const titania_result result = titania_pull(context->handles, context->connected_controllers, datum);
+		if (IS_TITANIA_BAD(result)) {
+			titania_errorf(result, "error getting report");
+			return TITANIACTL_HID_ERROR;
 		}
 
 		for (int i = 0; i < context->connected_controllers; ++i) {
-			const libresense_data data = datum[i];
-			const libresense_hid hid = context->hids[i];
+			const titania_data data = datum[i];
+			const titania_hid hid = context->hids[i];
 			// clang-format off
 			printf("hid {");
-			LIBREPRINT_X16(data.hid, product_id); LIBREPRINT_SEP();
-			LIBREPRINT_X16(data.hid, vendor_id); LIBREPRINT_SEP();
-			LIBREPRINT_STR(data.hid.serial, mac); LIBREPRINT_SEP();
-			LIBREPRINT_STR(data.hid.serial, paired_mac); LIBREPRINT_SEP();
-			LIBREPRINT_TEST(data.hid, is_bluetooth); LIBREPRINT_SEP();
-			LIBREPRINT_TEST(data.hid, is_edge); LIBREPRINT_SEP();
-			LIBREPRINT_TEST(data.hid, is_access);
+			TITANIAPRINT_X16(data.hid, product_id); TITANIAPRINT_SEP();
+			TITANIAPRINT_X16(data.hid, vendor_id); TITANIAPRINT_SEP();
+			TITANIAPRINT_STR(data.hid.serial, mac); TITANIAPRINT_SEP();
+			TITANIAPRINT_STR(data.hid.serial, paired_mac); TITANIAPRINT_SEP();
+			TITANIAPRINT_TEST(data.hid, is_bluetooth); TITANIAPRINT_SEP();
+			TITANIAPRINT_TEST(data.hid, is_edge); TITANIAPRINT_SEP();
+			TITANIAPRINT_TEST(data.hid, is_access);
 			printf(" }\n");
 
 			if(data.hid.is_bluetooth && !data.hid.is_access) {
 				printf("bt {");
-				LIBREPRINT_TEST(data.bt, has_hid); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.bt, unknown); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.bt, unknown2); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.bt, unknown3); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.bt, seq);
+				TITANIAPRINT_TEST(data.bt, has_hid); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.bt, unknown); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.bt, unknown2); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.bt, unknown3); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.bt, seq);
 				printf(" }\n");
 			}
 
 			printf("firmware {");
-			LIBREPRINT_X16(hid.firmware, type); LIBREPRINT_SEP();
-			LIBREPRINT_X16(hid.firmware, series); LIBREPRINT_SEP();
-			LIBREPRINT_FIRMWARE_HW(hid.firmware, hardware); LIBREPRINT_SEP();
-			LIBREPRINT_UPDATE(hid.firmware, update); LIBREPRINT_SEP();
-			LIBREPRINT_FIRMWARE(hid.firmware, firmware); LIBREPRINT_SEP();
-			LIBREPRINT_FIRMWARE(hid.firmware, firmware2); LIBREPRINT_SEP();
-			LIBREPRINT_FIRMWARE(hid.firmware, firmware3); LIBREPRINT_SEP();
-			LIBREPRINT_FIRMWARE(hid.firmware, device); LIBREPRINT_SEP();
-			LIBREPRINT_FIRMWARE(hid.firmware, device2); LIBREPRINT_SEP();
-			LIBREPRINT_FIRMWARE(hid.firmware, device3); LIBREPRINT_SEP();
-			LIBREPRINT_FIRMWARE(hid.firmware, mcu_firmware);
+			TITANIAPRINT_X16(hid.firmware, type); TITANIAPRINT_SEP();
+			TITANIAPRINT_X16(hid.firmware, series); TITANIAPRINT_SEP();
+			TITANIAPRINT_FIRMWARE_HW(hid.firmware, hardware); TITANIAPRINT_SEP();
+			TITANIAPRINT_UPDATE(hid.firmware, update); TITANIAPRINT_SEP();
+			TITANIAPRINT_FIRMWARE(hid.firmware, firmware); TITANIAPRINT_SEP();
+			TITANIAPRINT_FIRMWARE(hid.firmware, firmware2); TITANIAPRINT_SEP();
+			TITANIAPRINT_FIRMWARE(hid.firmware, firmware3); TITANIAPRINT_SEP();
+			TITANIAPRINT_FIRMWARE(hid.firmware, device); TITANIAPRINT_SEP();
+			TITANIAPRINT_FIRMWARE(hid.firmware, device2); TITANIAPRINT_SEP();
+			TITANIAPRINT_FIRMWARE(hid.firmware, device3); TITANIAPRINT_SEP();
+			TITANIAPRINT_FIRMWARE(hid.firmware, mcu_firmware);
 			printf(" }\n");
 
 			printf("time {");
-			LIBREPRINT_U32(data.time, system); LIBREPRINT_SEP();
-			LIBREPRINT_U32(data.time, sensor); LIBREPRINT_SEP();
-			LIBREPRINT_U32(data.time, battery); LIBREPRINT_SEP();
-			LIBREPRINT_U32(data.time, sequence); LIBREPRINT_SEP();
-			LIBREPRINT_U32(data.time, touch_sequence); LIBREPRINT_SEP();
-			LIBREPRINT_U32(data.time, driver_sequence); LIBREPRINT_SEP();
-			LIBREPRINT_U64(data.time, checksum);
+			TITANIAPRINT_U32(data.time, system); TITANIAPRINT_SEP();
+			TITANIAPRINT_U32(data.time, sensor); TITANIAPRINT_SEP();
+			TITANIAPRINT_U32(data.time, battery); TITANIAPRINT_SEP();
+			TITANIAPRINT_U32(data.time, sequence); TITANIAPRINT_SEP();
+			TITANIAPRINT_U32(data.time, touch_sequence); TITANIAPRINT_SEP();
+			TITANIAPRINT_U32(data.time, driver_sequence); TITANIAPRINT_SEP();
+			TITANIAPRINT_U64(data.time, checksum);
 			printf(" }\n");
 
 			printf("battery {");
-			LIBREPRINT_PERCENT(data.battery, level); LIBREPRINT_SEP();
-			LIBREPRINT_ENUM(data.battery, state, libresense_battery_state_msg, "state");
+			TITANIAPRINT_PERCENT(data.battery, level); TITANIAPRINT_SEP();
+			TITANIAPRINT_ENUM(data.battery, state, titania_battery_state_msg, "state");
 			printf(" }\n");
 
 			printf("buttons {");
-			LIBREPRINT_BUTTON_TEST(dpad_up); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(dpad_right); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(dpad_down); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(dpad_left); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(square); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(cross); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(circle); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(triangle); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(l1); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(r1); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(l2); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(r2); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(share); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(option); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(l3); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(r3); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(playstation); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(touchpad); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(touch); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(mute); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(edge_f1); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(edge_f2); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(edge_left_paddle); LIBREPRINT_SEP();
-			LIBREPRINT_BUTTON_TEST(edge_right_paddle); LIBREPRINT_SEP();
-			LIBREPRINT_U32(data.buttons, reserved); LIBREPRINT_SEP();
-			LIBREPRINT_U32(data.buttons, edge_reserved);
+			TITANIAPRINT_BUTTON_TEST(dpad_up); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(dpad_right); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(dpad_down); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(dpad_left); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(square); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(cross); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(circle); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(triangle); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(l1); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(r1); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(l2); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(r2); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(share); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(option); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(l3); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(r3); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(playstation); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(touchpad); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(touch); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(mute); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(edge_f1); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(edge_f2); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(edge_left_paddle); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(edge_right_paddle); TITANIAPRINT_SEP();
+			TITANIAPRINT_U32(data.buttons, reserved); TITANIAPRINT_SEP();
+			TITANIAPRINT_U32(data.buttons, edge_reserved);
 			printf(" }\n");
 
 			printf("sticks { left = {");
-			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_LEFT], x); LIBREPRINT_SEP();
-			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_LEFT], y);
+			TITANIAPRINT_FLOAT(data.sticks[TITANIA_LEFT], x); TITANIAPRINT_SEP();
+			TITANIAPRINT_FLOAT(data.sticks[TITANIA_LEFT], y);
 			printf(" }, right = {");
-			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_RIGHT], x); LIBREPRINT_SEP();
-			LIBREPRINT_FLOAT(data.sticks[LIBRESENSE_RIGHT], y);
+			TITANIAPRINT_FLOAT(data.sticks[TITANIA_RIGHT], x); TITANIAPRINT_SEP();
+			TITANIAPRINT_FLOAT(data.sticks[TITANIA_RIGHT], y);
 			printf(" } }\n");
 
 			if(!data.hid.is_access) {
 				printf("triggers { left = {");
-				LIBREPRINT_PERCENT(data.triggers[LIBRESENSE_LEFT], level); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.triggers[LIBRESENSE_LEFT], id); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.triggers[LIBRESENSE_LEFT], section); LIBREPRINT_SEP();
-				LIBREPRINT_ENUM(data.triggers[LIBRESENSE_LEFT], effect, libresense_trigger_effect_msg, "effect");
+				TITANIAPRINT_PERCENT(data.triggers[TITANIA_LEFT], level); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.triggers[TITANIA_LEFT], id); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.triggers[TITANIA_LEFT], section); TITANIAPRINT_SEP();
+				TITANIAPRINT_ENUM(data.triggers[TITANIA_LEFT], effect, titania_trigger_effect_msg, "effect");
 				printf(" }, right = {");
-				LIBREPRINT_PERCENT(data.triggers[LIBRESENSE_RIGHT], level); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.triggers[LIBRESENSE_RIGHT], id); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.triggers[LIBRESENSE_RIGHT], section); LIBREPRINT_SEP();
-				LIBREPRINT_ENUM(data.triggers[LIBRESENSE_RIGHT], effect, libresense_trigger_effect_msg, "effect");
+				TITANIAPRINT_PERCENT(data.triggers[TITANIA_RIGHT], level); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.triggers[TITANIA_RIGHT], id); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.triggers[TITANIA_RIGHT], section); TITANIAPRINT_SEP();
+				TITANIAPRINT_ENUM(data.triggers[TITANIA_RIGHT], effect, titania_trigger_effect_msg, "effect");
 				printf(" } }\n");
 
 				printf("touch { primary = {");
-				LIBREPRINT_TEST(data.touch[LIBRESENSE_PRIMARY], active); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY], id); LIBREPRINT_SEP();
+				TITANIAPRINT_TEST(data.touch[TITANIA_PRIMARY], active); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.touch[TITANIA_PRIMARY], id); TITANIAPRINT_SEP();
 				printf(" pos = {");
-				LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY].pos, x); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.touch[LIBRESENSE_PRIMARY].pos, y);
+				TITANIAPRINT_U32(data.touch[TITANIA_PRIMARY].pos, x); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.touch[TITANIA_PRIMARY].pos, y);
 				printf(" } }, secondary = {");
-				LIBREPRINT_TEST(data.touch[LIBRESENSE_SECONDARY], active); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY], id); LIBREPRINT_SEP();
+				TITANIAPRINT_TEST(data.touch[TITANIA_SECONDARY], active); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.touch[TITANIA_SECONDARY], id); TITANIAPRINT_SEP();
 				printf(" pos = {");
-				LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY].pos, x); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.touch[LIBRESENSE_SECONDARY].pos, y);
+				TITANIAPRINT_U32(data.touch[TITANIA_SECONDARY].pos, x); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.touch[TITANIA_SECONDARY].pos, y);
 				printf(" } } }\n");
 
 
 				printf("sensors {");
-				LIBREPRINT_U32(data.sensors, temperature); LIBREPRINT_SEP();
+				TITANIAPRINT_U32(data.sensors, temperature); TITANIAPRINT_SEP();
 				printf(" accelerometer = {");
-				LIBREPRINT_FLOAT(data.sensors.accelerometer, x); LIBREPRINT_SEP();
-				LIBREPRINT_FLOAT(data.sensors.accelerometer, y); LIBREPRINT_SEP();
-				LIBREPRINT_FLOAT(data.sensors.accelerometer, z);
+				TITANIAPRINT_FLOAT(data.sensors.accelerometer, x); TITANIAPRINT_SEP();
+				TITANIAPRINT_FLOAT(data.sensors.accelerometer, y); TITANIAPRINT_SEP();
+				TITANIAPRINT_FLOAT(data.sensors.accelerometer, z);
 				printf(" }, gyro = {");
-				LIBREPRINT_FLOAT(data.sensors.gyro, x); LIBREPRINT_SEP();
-				LIBREPRINT_FLOAT(data.sensors.gyro, y); LIBREPRINT_SEP();
-				LIBREPRINT_FLOAT(data.sensors.gyro, z);
+				TITANIAPRINT_FLOAT(data.sensors.gyro, x); TITANIAPRINT_SEP();
+				TITANIAPRINT_FLOAT(data.sensors.gyro, y); TITANIAPRINT_SEP();
+				TITANIAPRINT_FLOAT(data.sensors.gyro, z);
 				printf(" } }\n");
 
 				printf("state {");
-				LIBREPRINT_TEST(data.device, headphones); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.device, headset); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.device, muted); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.device, usb_data); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.device, usb_power); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.device, external_mic); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.device, haptic_filter); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.device, reserved);
+				TITANIAPRINT_TEST(data.device, headphones); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.device, headset); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.device, muted); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.device, usb_data); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.device, usb_power); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.device, external_mic); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.device, haptic_filter); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.device, reserved);
 				printf(" }\n");
 			} else {
 				for(int j = 0; j < 4; ++j) {
 					printf("access extension e%d {", j + 1);
-					LIBREPRINT_FLOAT(data.access_device.extensions[j].pos, x); LIBREPRINT_SEP();
-					LIBREPRINT_FLOAT(data.access_device.extensions[j].pos, y); LIBREPRINT_SEP();
-					LIBREPRINT_ENUM(data.access_device.extensions[j], type, libresense_access_extension_id_msg, "type");
+					TITANIAPRINT_FLOAT(data.access_device.extensions[j].pos, x); TITANIAPRINT_SEP();
+					TITANIAPRINT_FLOAT(data.access_device.extensions[j].pos, y); TITANIAPRINT_SEP();
+					TITANIAPRINT_ENUM(data.access_device.extensions[j], type, titania_access_extension_id_msg, "type");
 					printf(" }\n");
 				}
 
 				printf("access sticks { primary = {");
-				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_PRIMARY], x); LIBREPRINT_SEP();
-				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_PRIMARY], y);
+				TITANIAPRINT_FLOAT(data.access_device.sticks[TITANIA_PRIMARY], x); TITANIAPRINT_SEP();
+				TITANIAPRINT_FLOAT(data.access_device.sticks[TITANIA_PRIMARY], y);
 				printf(" }, secondary = {");
-				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_SECONDARY], x); LIBREPRINT_SEP();
-				LIBREPRINT_FLOAT(data.access_device.sticks[LIBRESENSE_SECONDARY], y);
+				TITANIAPRINT_FLOAT(data.access_device.sticks[TITANIA_SECONDARY], x); TITANIAPRINT_SEP();
+				TITANIAPRINT_FLOAT(data.access_device.sticks[TITANIA_SECONDARY], y);
 				printf(" } }\n");
 
 				printf("access buttons {");
-				LIBREPRINT_ACCESS_BUTTON_TEST(button1); LIBREPRINT_SEP();
-				LIBREPRINT_ACCESS_BUTTON_TEST(button2); LIBREPRINT_SEP();
-				LIBREPRINT_ACCESS_BUTTON_TEST(button3); LIBREPRINT_SEP();
-				LIBREPRINT_ACCESS_BUTTON_TEST(button4); LIBREPRINT_SEP();
-				LIBREPRINT_ACCESS_BUTTON_TEST(button5); LIBREPRINT_SEP();
-				LIBREPRINT_ACCESS_BUTTON_TEST(button6); LIBREPRINT_SEP();
-				LIBREPRINT_ACCESS_BUTTON_TEST(button7); LIBREPRINT_SEP();
-				LIBREPRINT_ACCESS_BUTTON_TEST(button8); LIBREPRINT_SEP();
-				LIBREPRINT_ACCESS_BUTTON_TEST(center_button); LIBREPRINT_SEP();
-				LIBREPRINT_ACCESS_BUTTON_TEST(stick_button); LIBREPRINT_SEP();
-				LIBREPRINT_ACCESS_BUTTON_TEST(playstation); LIBREPRINT_SEP();
-				LIBREPRINT_ACCESS_BUTTON_TEST(profile); LIBREPRINT_SEP();
-				LIBREPRINT_ACCESS_BUTTON_TEST(e1); LIBREPRINT_SEP();
-				LIBREPRINT_ACCESS_BUTTON_TEST(e2); LIBREPRINT_SEP();
-				LIBREPRINT_ACCESS_BUTTON_TEST(e3); LIBREPRINT_SEP();
-				LIBREPRINT_ACCESS_BUTTON_TEST(e4); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.access_device.buttons, reserved);
+				TITANIAPRINT_ACCESS_BUTTON_TEST(button1); TITANIAPRINT_SEP();
+				TITANIAPRINT_ACCESS_BUTTON_TEST(button2); TITANIAPRINT_SEP();
+				TITANIAPRINT_ACCESS_BUTTON_TEST(button3); TITANIAPRINT_SEP();
+				TITANIAPRINT_ACCESS_BUTTON_TEST(button4); TITANIAPRINT_SEP();
+				TITANIAPRINT_ACCESS_BUTTON_TEST(button5); TITANIAPRINT_SEP();
+				TITANIAPRINT_ACCESS_BUTTON_TEST(button6); TITANIAPRINT_SEP();
+				TITANIAPRINT_ACCESS_BUTTON_TEST(button7); TITANIAPRINT_SEP();
+				TITANIAPRINT_ACCESS_BUTTON_TEST(button8); TITANIAPRINT_SEP();
+				TITANIAPRINT_ACCESS_BUTTON_TEST(center_button); TITANIAPRINT_SEP();
+				TITANIAPRINT_ACCESS_BUTTON_TEST(stick_button); TITANIAPRINT_SEP();
+				TITANIAPRINT_ACCESS_BUTTON_TEST(playstation); TITANIAPRINT_SEP();
+				TITANIAPRINT_ACCESS_BUTTON_TEST(profile); TITANIAPRINT_SEP();
+				TITANIAPRINT_ACCESS_BUTTON_TEST(e1); TITANIAPRINT_SEP();
+				TITANIAPRINT_ACCESS_BUTTON_TEST(e2); TITANIAPRINT_SEP();
+				TITANIAPRINT_ACCESS_BUTTON_TEST(e3); TITANIAPRINT_SEP();
+				TITANIAPRINT_ACCESS_BUTTON_TEST(e4); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.access_device.buttons, reserved);
 				printf(" }\n");
 
 				printf("access raw stick {");
-				LIBREPRINT_FLOAT(data.access_device.raw_stick, x); LIBREPRINT_SEP();
-				LIBREPRINT_FLOAT(data.access_device.raw_stick, y);
+				TITANIAPRINT_FLOAT(data.access_device.raw_stick, x); TITANIAPRINT_SEP();
+				TITANIAPRINT_FLOAT(data.access_device.raw_stick, y);
 				printf(" }\n");
 
 
 				printf("access state {");
-				LIBREPRINT_ENUM(data.access_device, current_profile_id, libresense_profile_id_alt_msg, "profile"); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.access_device, profile_switching_disabled); LIBREPRINT_SEP();
+				TITANIAPRINT_ENUM(data.access_device, current_profile_id, titania_profile_id_alt_msg, "profile"); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.access_device, profile_switching_disabled); TITANIAPRINT_SEP();
 				printf(" unknowns = {");
-				LIBREPRINT_U32(data.access_device, unknown1); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.access_device, unknown2); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.access_device, unknown3); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.access_device, unknown4); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.access_device, unknown5); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.access_device, unknown6); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.access_device, unknown7); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.access_device, unknown8); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.access_device, unknown9);
+				TITANIAPRINT_U32(data.access_device, unknown1); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.access_device, unknown2); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.access_device, unknown3); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.access_device, unknown4); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.access_device, unknown5); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.access_device, unknown6); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.access_device, unknown7); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.access_device, unknown8); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.access_device, unknown9);
 				printf(" } }\n");
 			}
 
 			if (hid.is_edge) {
 				printf("edge buttons {");
-				LIBREPRINT_EDGE_BUTTON_TEST(dpad_up); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(dpad_right); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(dpad_down); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(dpad_left); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(square); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(cross); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(circle); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(triangle); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(share); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(option); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(playstation); LIBREPRINT_SEP();
-				LIBREPRINT_EDGE_BUTTON_TEST(mute);
+				TITANIAPRINT_EDGE_BUTTON_TEST(dpad_up); TITANIAPRINT_SEP();
+				TITANIAPRINT_EDGE_BUTTON_TEST(dpad_right); TITANIAPRINT_SEP();
+				TITANIAPRINT_EDGE_BUTTON_TEST(dpad_down); TITANIAPRINT_SEP();
+				TITANIAPRINT_EDGE_BUTTON_TEST(dpad_left); TITANIAPRINT_SEP();
+				TITANIAPRINT_EDGE_BUTTON_TEST(square); TITANIAPRINT_SEP();
+				TITANIAPRINT_EDGE_BUTTON_TEST(cross); TITANIAPRINT_SEP();
+				TITANIAPRINT_EDGE_BUTTON_TEST(circle); TITANIAPRINT_SEP();
+				TITANIAPRINT_EDGE_BUTTON_TEST(triangle); TITANIAPRINT_SEP();
+				TITANIAPRINT_EDGE_BUTTON_TEST(share); TITANIAPRINT_SEP();
+				TITANIAPRINT_EDGE_BUTTON_TEST(option); TITANIAPRINT_SEP();
+				TITANIAPRINT_EDGE_BUTTON_TEST(playstation); TITANIAPRINT_SEP();
+				TITANIAPRINT_EDGE_BUTTON_TEST(mute);
 				printf(" }\n");
 
 
 				printf("edge state { stick {");
-				LIBREPRINT_TEST(data.edge_device.stick, disconnected); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.edge_device.stick, errored); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.edge_device.stick, calibrating); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.edge_device.stick, unknown);
+				TITANIAPRINT_TEST(data.edge_device.stick, disconnected); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.edge_device.stick, errored); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.edge_device.stick, calibrating); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.edge_device.stick, unknown);
 				printf(" }, trigger {");
-				LIBREPRINT_ENUM(data.edge_device, trigger_levels[LIBRESENSE_LEFT], libresense_level_msg, "left"); LIBREPRINT_SEP();
-				LIBREPRINT_ENUM(data.edge_device, trigger_levels[LIBRESENSE_RIGHT], libresense_level_msg, "right");
+				TITANIAPRINT_ENUM(data.edge_device, trigger_levels[TITANIA_LEFT], titania_level_msg, "left"); TITANIAPRINT_SEP();
+				TITANIAPRINT_ENUM(data.edge_device, trigger_levels[TITANIA_RIGHT], titania_level_msg, "right");
 				printf(" },");
-				LIBREPRINT_ENUM(data.edge_device, current_profile_id, libresense_profile_id_msg, "profile"); LIBREPRINT_SEP();
+				TITANIAPRINT_ENUM(data.edge_device, current_profile_id, titania_profile_id_msg, "profile"); TITANIAPRINT_SEP();
 				printf(" indicator = {");
-				LIBREPRINT_TEST(data.edge_device.profile_indicator, led); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.edge_device.profile_indicator, vibration); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.edge_device.profile_indicator, switching_disabled); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.edge_device.profile_indicator, unknown1); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.edge_device.profile_indicator, unknown2);
+				TITANIAPRINT_TEST(data.edge_device.profile_indicator, led); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.edge_device.profile_indicator, vibration); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.edge_device.profile_indicator, switching_disabled); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.edge_device.profile_indicator, unknown1); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.edge_device.profile_indicator, unknown2);
 				printf(" },");
-				LIBREPRINT_ENUM(data.edge_device, brightness, libresense_level_msg, "brightness"); LIBREPRINT_SEP();
-				LIBREPRINT_TEST(data.edge_device, emulating_rumble); LIBREPRINT_SEP();
-				LIBREPRINT_U32(data.edge_device, unknown);
+				TITANIAPRINT_ENUM(data.edge_device, brightness, titania_level_msg, "brightness"); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.edge_device, emulating_rumble); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.edge_device, unknown);
 				printf(" }\n");
 			}
 			// clang-format on
@@ -263,27 +263,27 @@ libresensectl_error libresensectl_mode_report_inner(libresensectl_context* conte
 		}
 	} while (loop && !should_stop);
 
-	return LIBRESENSECTL_OK;
+	return TITANIACTL_OK;
 }
 
-libresensectl_error libresensectl_mode_report(libresensectl_context* context) { return libresensectl_mode_report_inner(context, false); }
+titaniactl_error titaniactl_mode_report(titaniactl_context* context) { return titaniactl_mode_report_inner(context, false); }
 
-libresensectl_error libresensectl_mode_report_loop(libresensectl_context* context) { return libresensectl_mode_report_inner(context, true); }
+titaniactl_error titaniactl_mode_report_loop(titaniactl_context* context) { return titaniactl_mode_report_inner(context, true); }
 
-libresensectl_error libresensectl_mode_report_json_inner(libresensectl_context* context, const bool loop) {
+titaniactl_error titaniactl_mode_report_json_inner(titaniactl_context* context, const bool loop) {
 	do {
-		libresense_data datum[LIBRESENSECTL_CONTROLLER_COUNT];
-		const libresense_result result = libresense_pull(context->handles, context->connected_controllers, datum);
-		if (IS_LIBRESENSE_BAD(result)) {
-			return LIBRESENSECTL_HID_ERROR;
+		titania_data datum[TITANIACTL_CONTROLLER_COUNT];
+		const titania_result result = titania_pull(context->handles, context->connected_controllers, datum);
+		if (IS_TITANIA_BAD(result)) {
+			return TITANIACTL_HID_ERROR;
 		}
 
 		struct json* root_obj = json_new_object();
 		json_object_add_bool(root_obj, "success", true);
 		struct json* arr = json_object_add_array(root_obj, "devices");
 		for (int i = 0; i < context->connected_controllers; ++i) {
-			const libresense_data data = datum[i];
-			const libresense_hid hid = context->hids[i];
+			const titania_data data = datum[i];
+			const titania_hid hid = context->hids[i];
 			char strbuffer[512];
 
 			struct json* obj = json_array_add_object(arr);
@@ -342,8 +342,8 @@ libresensectl_error libresensectl_mode_report_json_inner(libresensectl_context* 
 
 				struct json* battery_obj = json_object_add_object(obj, "battery");
 				json_object_add_number(battery_obj, "level", data.battery.level * 100);
-				if (CHECK_ENUM_SAFE(data.battery.state, libresense_battery_state_msg)) {
-					json_object_add_string(battery_obj, "state", libresense_battery_state_msg[data.battery.state]);
+				if (CHECK_ENUM_SAFE(data.battery.state, titania_battery_state_msg)) {
+					json_object_add_string(battery_obj, "state", titania_battery_state_msg[data.battery.state]);
 				} else {
 					sprintf(strbuffer, "%d", data.battery.state);
 					json_object_add_string(battery_obj, "state", strbuffer);
@@ -382,49 +382,49 @@ libresensectl_error libresensectl_mode_report_json_inner(libresensectl_context* 
 
 				struct json* sticks_obj = json_object_add_object(obj, "sticks");
 				struct json* left_stick_arr = json_object_add_array(sticks_obj, "left");
-				json_array_add_number(left_stick_arr, data.sticks[LIBRESENSE_LEFT].x);
-				json_array_add_number(left_stick_arr, data.sticks[LIBRESENSE_LEFT].y);
+				json_array_add_number(left_stick_arr, data.sticks[TITANIA_LEFT].x);
+				json_array_add_number(left_stick_arr, data.sticks[TITANIA_LEFT].y);
 				struct json* right_stick_arr = json_object_add_array(sticks_obj, "right");
-				json_array_add_number(right_stick_arr, data.sticks[LIBRESENSE_RIGHT].x);
-				json_array_add_number(right_stick_arr, data.sticks[LIBRESENSE_RIGHT].y);
+				json_array_add_number(right_stick_arr, data.sticks[TITANIA_RIGHT].x);
+				json_array_add_number(right_stick_arr, data.sticks[TITANIA_RIGHT].y);
 			}
 
 			if (!data.hid.is_access) {
 				struct json* triggers_obj = json_object_add_object(obj, "triggers");
 				struct json* left_trigger_arr = json_object_add_object(triggers_obj, "left");
-				json_object_add_number(left_trigger_arr, "level", data.triggers[LIBRESENSE_LEFT].level * 100.0f);
-				json_object_add_number(left_trigger_arr, "id", data.triggers[LIBRESENSE_LEFT].id);
-				json_object_add_number(left_trigger_arr, "section", data.triggers[LIBRESENSE_LEFT].section);
-				if (CHECK_ENUM_SAFE(data.triggers[LIBRESENSE_LEFT].effect, libresense_trigger_effect_msg)) {
-					json_object_add_string(left_trigger_arr, "effect", libresense_trigger_effect_msg[data.triggers[LIBRESENSE_LEFT].effect]);
+				json_object_add_number(left_trigger_arr, "level", data.triggers[TITANIA_LEFT].level * 100.0f);
+				json_object_add_number(left_trigger_arr, "id", data.triggers[TITANIA_LEFT].id);
+				json_object_add_number(left_trigger_arr, "section", data.triggers[TITANIA_LEFT].section);
+				if (CHECK_ENUM_SAFE(data.triggers[TITANIA_LEFT].effect, titania_trigger_effect_msg)) {
+					json_object_add_string(left_trigger_arr, "effect", titania_trigger_effect_msg[data.triggers[TITANIA_LEFT].effect]);
 				} else {
-					sprintf(strbuffer, "%d", data.triggers[LIBRESENSE_LEFT].effect);
+					sprintf(strbuffer, "%d", data.triggers[TITANIA_LEFT].effect);
 					json_object_add_string(left_trigger_arr, "effect", strbuffer);
 				}
 				struct json* right_trigger_arr = json_object_add_object(triggers_obj, "right");
-				json_object_add_number(right_trigger_arr, "level", data.triggers[LIBRESENSE_RIGHT].level * 100.0f);
-				json_object_add_number(right_trigger_arr, "id", data.triggers[LIBRESENSE_RIGHT].id);
-				json_object_add_number(right_trigger_arr, "section", data.triggers[LIBRESENSE_RIGHT].section);
-				if (CHECK_ENUM_SAFE(data.triggers[LIBRESENSE_RIGHT].effect, libresense_trigger_effect_msg)) {
-					json_object_add_string(right_trigger_arr, "effect", libresense_trigger_effect_msg[data.triggers[LIBRESENSE_RIGHT].effect]);
+				json_object_add_number(right_trigger_arr, "level", data.triggers[TITANIA_RIGHT].level * 100.0f);
+				json_object_add_number(right_trigger_arr, "id", data.triggers[TITANIA_RIGHT].id);
+				json_object_add_number(right_trigger_arr, "section", data.triggers[TITANIA_RIGHT].section);
+				if (CHECK_ENUM_SAFE(data.triggers[TITANIA_RIGHT].effect, titania_trigger_effect_msg)) {
+					json_object_add_string(right_trigger_arr, "effect", titania_trigger_effect_msg[data.triggers[TITANIA_RIGHT].effect]);
 				} else {
-					sprintf(strbuffer, "%d", data.triggers[LIBRESENSE_RIGHT].effect);
+					sprintf(strbuffer, "%d", data.triggers[TITANIA_RIGHT].effect);
 					json_object_add_string(right_trigger_arr, "effect", strbuffer);
 				}
 
 				struct json* touch_obj = json_object_add_object(obj, "touch");
 				struct json* primary_touch_obj = json_object_add_object(touch_obj, "primary");
-				json_object_add_bool(primary_touch_obj, "active", data.touch[LIBRESENSE_PRIMARY].active);
-				json_object_add_number(primary_touch_obj, "id", data.touch[LIBRESENSE_PRIMARY].id);
+				json_object_add_bool(primary_touch_obj, "active", data.touch[TITANIA_PRIMARY].active);
+				json_object_add_number(primary_touch_obj, "id", data.touch[TITANIA_PRIMARY].id);
 				struct json* primary_touch_pos_arr = json_object_add_array(primary_touch_obj, "pos");
-				json_array_add_number(primary_touch_pos_arr, data.touch[LIBRESENSE_PRIMARY].pos.x);
-				json_array_add_number(primary_touch_pos_arr, data.touch[LIBRESENSE_PRIMARY].pos.y);
+				json_array_add_number(primary_touch_pos_arr, data.touch[TITANIA_PRIMARY].pos.x);
+				json_array_add_number(primary_touch_pos_arr, data.touch[TITANIA_PRIMARY].pos.y);
 				struct json* secondary_touch_obj = json_object_add_object(touch_obj, "secondary");
-				json_object_add_bool(secondary_touch_obj, "active", data.touch[LIBRESENSE_SECONDARY].active);
-				json_object_add_number(secondary_touch_obj, "id", data.touch[LIBRESENSE_SECONDARY].id);
+				json_object_add_bool(secondary_touch_obj, "active", data.touch[TITANIA_SECONDARY].active);
+				json_object_add_number(secondary_touch_obj, "id", data.touch[TITANIA_SECONDARY].id);
 				struct json* secondary_touch_pos_arr = json_object_add_array(secondary_touch_obj, "pos");
-				json_array_add_number(secondary_touch_pos_arr, data.touch[LIBRESENSE_SECONDARY].pos.x);
-				json_array_add_number(secondary_touch_pos_arr, data.touch[LIBRESENSE_SECONDARY].pos.y);
+				json_array_add_number(secondary_touch_pos_arr, data.touch[TITANIA_SECONDARY].pos.x);
+				json_array_add_number(secondary_touch_pos_arr, data.touch[TITANIA_SECONDARY].pos.y);
 
 				struct json* sensors_obj = json_object_add_object(obj, "sensors");
 				json_object_add_number(sensors_obj, "temperature", data.sensors.temperature);
@@ -451,8 +451,8 @@ libresensectl_error libresensectl_mode_report_json_inner(libresensectl_context* 
 				struct json* access_extension_arr = json_object_add_array(access_obj, "extensions");
 				for (int j = 0; j < 4; ++j) {
 					struct json* access_extension_obj = json_array_add_object(access_extension_arr);
-					if (CHECK_ENUM_SAFE(data.access_device.extensions[j].type, libresense_access_extension_id_msg)) {
-						json_object_add_string(access_extension_obj, "type", libresense_access_extension_id_msg[data.access_device.extensions[j].type]);
+					if (CHECK_ENUM_SAFE(data.access_device.extensions[j].type, titania_access_extension_id_msg)) {
+						json_object_add_string(access_extension_obj, "type", titania_access_extension_id_msg[data.access_device.extensions[j].type]);
 					} else {
 						sprintf(strbuffer, "%d", data.access_device.extensions[j].type);
 						json_object_add_string(access_extension_obj, "type", strbuffer);
@@ -464,11 +464,11 @@ libresensectl_error libresensectl_mode_report_json_inner(libresensectl_context* 
 
 				struct json* access_sticks_obj = json_object_add_object(access_obj, "sticks");
 				struct json* access_left_stick_arr = json_object_add_array(access_sticks_obj, "left");
-				json_array_add_number(access_left_stick_arr, data.access_device.sticks[LIBRESENSE_LEFT].x);
-				json_array_add_number(access_left_stick_arr, data.access_device.sticks[LIBRESENSE_LEFT].y);
+				json_array_add_number(access_left_stick_arr, data.access_device.sticks[TITANIA_LEFT].x);
+				json_array_add_number(access_left_stick_arr, data.access_device.sticks[TITANIA_LEFT].y);
 				struct json* access_right_stick_arr = json_object_add_array(access_sticks_obj, "right");
-				json_array_add_number(access_right_stick_arr, data.access_device.sticks[LIBRESENSE_RIGHT].x);
-				json_array_add_number(access_right_stick_arr, data.access_device.sticks[LIBRESENSE_RIGHT].y);
+				json_array_add_number(access_right_stick_arr, data.access_device.sticks[TITANIA_RIGHT].x);
+				json_array_add_number(access_right_stick_arr, data.access_device.sticks[TITANIA_RIGHT].y);
 				struct json* access_raw_stick_arr = json_object_add_array(access_sticks_obj, "raw");
 				json_array_add_number(access_raw_stick_arr, data.access_device.raw_stick.x);
 				json_array_add_number(access_raw_stick_arr, data.access_device.raw_stick.y);
@@ -494,8 +494,8 @@ libresensectl_error libresensectl_mode_report_json_inner(libresensectl_context* 
 
 				struct json* access_state_obj = json_object_add_object(access_obj, "state");
 
-				if (CHECK_ENUM_SAFE(data.access_device.current_profile_id, libresense_profile_id_alt_msg)) {
-					json_object_add_string(access_state_obj, "profile", libresense_profile_id_alt_msg[data.access_device.current_profile_id]);
+				if (CHECK_ENUM_SAFE(data.access_device.current_profile_id, titania_profile_id_alt_msg)) {
+					json_object_add_string(access_state_obj, "profile", titania_profile_id_alt_msg[data.access_device.current_profile_id]);
 				} else {
 					sprintf(strbuffer, "%d", data.access_device.current_profile_id);
 					json_object_add_string(access_state_obj, "profile", strbuffer);
@@ -537,16 +537,16 @@ libresensectl_error libresensectl_mode_report_json_inner(libresensectl_context* 
 				json_object_add_bool(edge_stick_obj, "unknown", data.edge_device.stick.unknown);
 
 				struct json* edge_trigger_obj = json_object_add_object(edge_obj, "trigger");
-				if (CHECK_ENUM_SAFE(data.edge_device.trigger_levels[LIBRESENSE_LEFT], libresense_level_msg)) {
-					json_object_add_string(edge_trigger_obj, "left", libresense_level_msg[data.edge_device.trigger_levels[LIBRESENSE_LEFT]]);
+				if (CHECK_ENUM_SAFE(data.edge_device.trigger_levels[TITANIA_LEFT], titania_level_msg)) {
+					json_object_add_string(edge_trigger_obj, "left", titania_level_msg[data.edge_device.trigger_levels[TITANIA_LEFT]]);
 				} else {
-					sprintf(strbuffer, "%d", data.edge_device.trigger_levels[LIBRESENSE_LEFT]);
+					sprintf(strbuffer, "%d", data.edge_device.trigger_levels[TITANIA_LEFT]);
 					json_object_add_string(edge_trigger_obj, "left", strbuffer);
 				}
-				if (CHECK_ENUM_SAFE(data.edge_device.trigger_levels[LIBRESENSE_RIGHT], libresense_level_msg)) {
-					json_object_add_string(edge_trigger_obj, "right", libresense_level_msg[data.edge_device.trigger_levels[LIBRESENSE_RIGHT]]);
+				if (CHECK_ENUM_SAFE(data.edge_device.trigger_levels[TITANIA_RIGHT], titania_level_msg)) {
+					json_object_add_string(edge_trigger_obj, "right", titania_level_msg[data.edge_device.trigger_levels[TITANIA_RIGHT]]);
 				} else {
-					sprintf(strbuffer, "%d", data.edge_device.trigger_levels[LIBRESENSE_RIGHT]);
+					sprintf(strbuffer, "%d", data.edge_device.trigger_levels[TITANIA_RIGHT]);
 					json_object_add_string(edge_trigger_obj, "right", strbuffer);
 				}
 
@@ -557,15 +557,15 @@ libresensectl_error libresensectl_mode_report_json_inner(libresensectl_context* 
 				json_object_add_bool(edge_indicator_obj, "unknown2", data.edge_device.profile_indicator.unknown2);
 
 				struct json* edge_state_obj = json_object_add_object(edge_obj, "state");
-				if (CHECK_ENUM_SAFE(data.edge_device.current_profile_id, libresense_profile_id_msg)) {
-					json_object_add_string(edge_state_obj, "profile", libresense_profile_id_msg[data.edge_device.current_profile_id]);
+				if (CHECK_ENUM_SAFE(data.edge_device.current_profile_id, titania_profile_id_msg)) {
+					json_object_add_string(edge_state_obj, "profile", titania_profile_id_msg[data.edge_device.current_profile_id]);
 				} else {
 					sprintf(strbuffer, "%d", data.edge_device.current_profile_id);
 					json_object_add_string(edge_state_obj, "profile", strbuffer);
 				}
 				json_object_add_bool(edge_state_obj, "profileSwitchingDisabled", data.edge_device.profile_indicator.switching_disabled);
-				if (CHECK_ENUM_SAFE(data.edge_device.brightness, libresense_level_msg)) {
-					json_object_add_string(edge_state_obj, "brightness", libresense_level_msg[data.edge_device.brightness]);
+				if (CHECK_ENUM_SAFE(data.edge_device.brightness, titania_level_msg)) {
+					json_object_add_string(edge_state_obj, "brightness", titania_level_msg[data.edge_device.brightness]);
 				} else {
 					sprintf(strbuffer, "%d", data.edge_device.brightness);
 					json_object_add_string(edge_state_obj, "brightness", strbuffer);
@@ -585,16 +585,16 @@ libresensectl_error libresensectl_mode_report_json_inner(libresensectl_context* 
 		free(json_text);
 	} while (loop && !should_stop);
 
-	return LIBRESENSECTL_OK_NO_JSON;
+	return TITANIACTL_OK_NO_JSON;
 }
 
-libresensectl_error libresensectl_mode_report_json(libresensectl_context* context) { return libresensectl_mode_report_json_inner(context, false); }
+titaniactl_error titaniactl_mode_report_json(titaniactl_context* context) { return titaniactl_mode_report_json_inner(context, false); }
 
-libresensectl_error libresensectl_mode_report_loop_json(libresensectl_context* context) { return libresensectl_mode_report_json_inner(context, true); }
+titaniactl_error titaniactl_mode_report_loop_json(titaniactl_context* context) { return titaniactl_mode_report_json_inner(context, true); }
 
-libresensectl_error libresensectl_mode_list(libresensectl_context* context) {
+titaniactl_error titaniactl_mode_list(titaniactl_context* context) {
 	for (int i = 0; i < context->connected_controllers; ++i) {
-		libresense_hid hid = context->hids[i];
+		titania_hid hid = context->hids[i];
 		if (hid.is_edge) {
 			printf("DualSense Edge Controller (");
 		} else if (hid.is_access) {
@@ -620,15 +620,15 @@ libresensectl_error libresensectl_mode_list(libresensectl_context* context) {
 		printf("Version %04x (VID 0x%04x, PID 0x%04x, %s)\n", hid.firmware.update.major, hid.vendor_id, hid.product_id, hid.serial.mac);
 	}
 
-	return LIBRESENSECTL_OK;
+	return TITANIACTL_OK;
 }
 
-libresensectl_error libresensectl_mode_list_json(libresensectl_context* context) {
+titaniactl_error titaniactl_mode_list_json(titaniactl_context* context) {
 	struct json* root_obj = json_new_object();
 	json_object_add_bool(root_obj, "success", true);
 	struct json* arr = json_object_add_array(root_obj, "devices");
 	for (int i = 0; i < context->connected_controllers; ++i) {
-		const libresense_hid hid = context->hids[i];
+		const titania_hid hid = context->hids[i];
 		struct json* obj = json_array_add_object(arr);
 		json_object_add_bool(obj, "isEdge", hid.is_edge);
 		json_object_add_bool(obj, "isAccess", hid.is_access);
@@ -646,11 +646,11 @@ libresensectl_error libresensectl_mode_list_json(libresensectl_context* context)
 	char* json_text = json_print(arr);
 	json_delete(arr);
 	if (json_text == nullptr) {
-		return LIBRESENSECTL_OK_NO_JSON;
+		return TITANIACTL_OK_NO_JSON;
 	}
 
 	printf("%s\n", json_text);
 	free(json_text);
 
-	return LIBRESENSECTL_OK_NO_JSON;
+	return TITANIACTL_OK_NO_JSON;
 }

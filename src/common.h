@@ -1,25 +1,25 @@
-//  libresense project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  titania project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
 //  SPDX-License-Identifier: MPL-2.0
 
 #pragma once
 
-#ifndef LIBRESENSE_COMMON_H
-#define LIBRESENSE_COMMON_H
+#ifndef TITANIA_COMMON_H
+#define TITANIA_COMMON_H
 
 #include <assert.h>
 #include <stdint.h>
 
-#include <libresense_config_internal.h>
+#include <titania_config_internal.h>
 
-#ifdef LIBRESENSE_HAS_PACK
+#ifdef TITANIA_HAS_PACK
 #define PACKED
 #pragma pack(push, 1)
 #else
 #define PACKED __attribute__((__packed__))
 #endif
 
-#ifndef LIBRESENSE_HAS_NULLPTR
+#ifndef TITANIA_HAS_NULLPTR
 #define nullptr ((void*) 0)
 #endif
 
@@ -39,7 +39,7 @@
 #define DUALSENSE_CRC_OUTPUT (0xA2)
 #define DUALSENSE_CRC_FEATURE (0xA3)
 #define DUALSENSE_CRC_FEATURE_EDGE (0x53)
-#define LIBRESENSE_CRC (0xDEE2CAFE)
+#define TITANIA_CRC (0xDEE2CAFE)
 #define DUALSENSE_TRIGGER_MAX (0xEE)
 #define DUALSENSE_TRIGGER_AMPLITUDE_MAX (0x3F)
 #define DUALSENSE_TRIGGER_VIBRATION_MAX (0xA8)
@@ -76,18 +76,18 @@
 // Check if the library is initialized
 #define CHECK_INIT()     \
 	if (!is_initialized) \
-	return LIBRESENSE_NOT_INITIALIZED
+	return TITANIA_NOT_INITIALIZED
 
 // Check if a handle is a valid number.
 #define CHECK_HANDLE(h)                                                             \
-	if (h == LIBRESENSE_INVALID_HANDLE || h < 0 || h >= LIBRESENSE_MAX_CONTROLLERS) \
-	return LIBRESENSE_INVALID_HANDLE
+	if (h == TITANIA_INVALID_HANDLE || h < 0 || h >= TITANIA_MAX_CONTROLLERS) \
+	return TITANIA_INVALID_HANDLE
 
 // Check if a handle is a valid number, and that it has been initialized.
 #define CHECK_HANDLE_VALID(h)    \
 	CHECK_HANDLE(h);             \
 	if (state[h].hid == nullptr) \
-	return LIBRESENSE_INVALID_HANDLE
+	return TITANIA_INVALID_HANDLE
 
 #define HID_FAIL(s) (s == -1)
 #define HID_PASS(s) (s != -1)
@@ -97,11 +97,11 @@
 
 #define CHECK_EDGE(h)                \
 	if (!IS_EDGE(state[h].hid_info)) \
-	return LIBRESENSE_NOT_EDGE
+	return TITANIA_NOT_EDGE
 
 #define CHECK_ACCESS(h)                \
 	if (!IS_ACCESS(state[h].hid_info)) \
-	return LIBRESENSE_NOT_ACCESS
+	return TITANIA_NOT_ACCESS
 
 typedef struct PACKED dualsense_vector3 {
 	int16_t x;
@@ -155,18 +155,18 @@ typedef struct PACKED dualsense_minmax {
 
 static_assert(sizeof(dualsense_minmax) == 4, "dualsense_minmax is not 4 bytes");
 
-typedef struct PACKED libresense_device_info {
+typedef struct PACKED titania_device_info {
 	uint16_t vendor_id;
 	uint16_t product_id;
-} libresense_device_info;
+} titania_device_info;
 
 typedef uint8_t dualsense_profile_uuid[0x10];
 
-static_assert(sizeof(libresense_wchar) == 2, "libresense_wchar size is not 2");
+static_assert(sizeof(titania_wchar) == 2, "titania_wchar size is not 2");
 
-#ifdef LIBRESENSE_HAS_PACK
+#ifdef TITANIA_HAS_PACK
 #pragma pack(pop)
 #endif
 #undef PACKED
 
-#endif // LIBRESENSE_COMMON_H
+#endif // TITANIA_COMMON_H

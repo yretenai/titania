@@ -1,12 +1,12 @@
-//  libresense project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  titania project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
 //  SPDX-License-Identifier: MPL-2.0
 
 #include "structures.h"
 
-#include <libresense_config_internal.h>
+#include <titania_config_internal.h>
 
-#ifdef LIBRESENSE_HAS_STDC_FLAGS
+#ifdef TITANIA_HAS_STDC_FLAGS
 #pragma STDC FP_CONTRACT ON
 #pragma STDC CX_LIMITED_RANGE ON
 #endif
@@ -20,9 +20,9 @@
 
 #define CALIBRATE_BIAS(value, slot) CALIBRATE(value - calibration[slot].bias, slot)
 
-void libresense_convert_input_access(const libresense_hid hid_info, const dualsense_input_msg input, libresense_data* data) {
+void titania_convert_input_access(const titania_hid hid_info, const dualsense_input_msg input, titania_data* data) {
 	data->battery.state = input.access.battery.state + 1;
-	if (data->battery.state == LIBRESENSE_BATTERY_FULL) {
+	if (data->battery.state == TITANIA_BATTERY_FULL) {
 		data->battery.level = 1.0f;
 	} else {
 		data->battery.level = input.access.battery.level * 0.1 + 0.10;
@@ -49,29 +49,29 @@ void libresense_convert_input_access(const libresense_hid hid_info, const dualse
 	data->access_device.raw_stick.x = DENORM_CLAMP_INT8(input.access.raw_stick.x);
 	data->access_device.raw_stick.y = DENORM_CLAMP_INT8(input.access.raw_stick.y);
 
-	data->access_device.sticks[LIBRESENSE_PRIMARY].x = DENORM_CLAMP_INT8(input.access.stick1.x);
-	data->access_device.sticks[LIBRESENSE_PRIMARY].y = DENORM_CLAMP_INT8(input.access.stick1.y);
-	data->access_device.sticks[LIBRESENSE_SECONDARY].x = DENORM_CLAMP_INT8(input.access.stick2.x);
-	data->access_device.sticks[LIBRESENSE_SECONDARY].y = DENORM_CLAMP_INT8(input.access.stick2.y);
+	data->access_device.sticks[TITANIA_PRIMARY].x = DENORM_CLAMP_INT8(input.access.stick1.x);
+	data->access_device.sticks[TITANIA_PRIMARY].y = DENORM_CLAMP_INT8(input.access.stick1.y);
+	data->access_device.sticks[TITANIA_SECONDARY].x = DENORM_CLAMP_INT8(input.access.stick2.x);
+	data->access_device.sticks[TITANIA_SECONDARY].y = DENORM_CLAMP_INT8(input.access.stick2.y);
 
 	data->access_device.current_profile_id = input.access.profile_id + 1;
 	data->access_device.profile_switching_disabled = input.access.profile_switching_disabled;
 
-	data->access_device.extensions[LIBRESENSE_EXTENSION1].pos.x = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION1].x);
-	data->access_device.extensions[LIBRESENSE_EXTENSION1].pos.y = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION1].y);
-	data->access_device.extensions[LIBRESENSE_EXTENSION1].type = input.access.e1e2.left_port;
+	data->access_device.extensions[TITANIA_EXTENSION1].pos.x = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION1].x);
+	data->access_device.extensions[TITANIA_EXTENSION1].pos.y = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION1].y);
+	data->access_device.extensions[TITANIA_EXTENSION1].type = input.access.e1e2.left_port;
 
-	data->access_device.extensions[LIBRESENSE_EXTENSION2].pos.x = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION2].x);
-	data->access_device.extensions[LIBRESENSE_EXTENSION2].pos.y = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION2].y);
-	data->access_device.extensions[LIBRESENSE_EXTENSION2].type = input.access.e1e2.right_port;
+	data->access_device.extensions[TITANIA_EXTENSION2].pos.x = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION2].x);
+	data->access_device.extensions[TITANIA_EXTENSION2].pos.y = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION2].y);
+	data->access_device.extensions[TITANIA_EXTENSION2].type = input.access.e1e2.right_port;
 
-	data->access_device.extensions[LIBRESENSE_EXTENSION3].pos.x = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION3].x);
-	data->access_device.extensions[LIBRESENSE_EXTENSION3].pos.y = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION3].y);
-	data->access_device.extensions[LIBRESENSE_EXTENSION3].type = input.access.e3e4.left_port;
+	data->access_device.extensions[TITANIA_EXTENSION3].pos.x = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION3].x);
+	data->access_device.extensions[TITANIA_EXTENSION3].pos.y = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION3].y);
+	data->access_device.extensions[TITANIA_EXTENSION3].type = input.access.e3e4.left_port;
 
-	data->access_device.extensions[LIBRESENSE_EXTENSION4].pos.x = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION4].x);
-	data->access_device.extensions[LIBRESENSE_EXTENSION4].pos.y = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION4].y);
-	data->access_device.extensions[LIBRESENSE_EXTENSION4].type = input.access.e3e4.right_port;
+	data->access_device.extensions[TITANIA_EXTENSION4].pos.x = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION4].x);
+	data->access_device.extensions[TITANIA_EXTENSION4].pos.y = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION4].y);
+	data->access_device.extensions[TITANIA_EXTENSION4].type = input.access.e3e4.right_port;
 
 	data->access_device.unknown1 = input.access.unknown1;
 	data->access_device.unknown2 = input.access.unknown2;
@@ -84,8 +84,8 @@ void libresense_convert_input_access(const libresense_hid hid_info, const dualse
 	data->access_device.unknown9 = input.access.unknown9;
 }
 
-void libresense_convert_input(const libresense_hid hid_info, const dualsense_input_msg input, libresense_data* data, libresense_calibration_bit calibration[6]) {
-	*data = (libresense_data) { 0 };
+void titania_convert_input(const titania_hid hid_info, const dualsense_input_msg input, titania_data* data, titania_calibration_bit calibration[6]) {
+	*data = (titania_data) { 0 };
 	data->hid = hid_info;
 
 	data->time.checksum = input.checksum;
@@ -118,13 +118,13 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 	data->buttons.edge_right_paddle = input.buttons.edge_right_paddle;
 	data->buttons.edge_reserved = input.buttons.edge_reserved;
 
-	data->sticks[LIBRESENSE_LEFT].x = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_LEFT].x);
-	data->sticks[LIBRESENSE_LEFT].y = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_LEFT].y);
-	data->sticks[LIBRESENSE_RIGHT].x = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_RIGHT].x);
-	data->sticks[LIBRESENSE_RIGHT].y = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_RIGHT].y);
+	data->sticks[TITANIA_LEFT].x = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_LEFT].x);
+	data->sticks[TITANIA_LEFT].y = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_LEFT].y);
+	data->sticks[TITANIA_RIGHT].x = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_RIGHT].x);
+	data->sticks[TITANIA_RIGHT].y = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_RIGHT].y);
 
 	if (IS_ACCESS(hid_info)) {
-		libresense_convert_input_access(hid_info, input, data);
+		titania_convert_input_access(hid_info, input, data);
 		return;
 	}
 
@@ -135,31 +135,31 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 
 	data->state_id = input.state_id;
 
-	data->triggers[LIBRESENSE_LEFT].level = DENORM_CLAMP_UINT8(input.triggers[DUALSENSE_LEFT]);
-	data->triggers[LIBRESENSE_LEFT].id = input.adaptive_triggers[ADAPTIVE_TRIGGER_LEFT].id;
-	data->triggers[LIBRESENSE_LEFT].section = input.adaptive_triggers[ADAPTIVE_TRIGGER_LEFT].level;
-	data->triggers[LIBRESENSE_LEFT].effect = input.state.trigger.left;
-	data->triggers[LIBRESENSE_RIGHT].level = DENORM_CLAMP_UINT8(input.triggers[DUALSENSE_RIGHT]);
-	data->triggers[LIBRESENSE_RIGHT].id = input.adaptive_triggers[ADAPTIVE_TRIGGER_RIGHT].id;
-	data->triggers[LIBRESENSE_RIGHT].section = input.adaptive_triggers[ADAPTIVE_TRIGGER_RIGHT].level;
-	data->triggers[LIBRESENSE_RIGHT].effect = input.state.trigger.right;
+	data->triggers[TITANIA_LEFT].level = DENORM_CLAMP_UINT8(input.triggers[DUALSENSE_LEFT]);
+	data->triggers[TITANIA_LEFT].id = input.adaptive_triggers[ADAPTIVE_TRIGGER_LEFT].id;
+	data->triggers[TITANIA_LEFT].section = input.adaptive_triggers[ADAPTIVE_TRIGGER_LEFT].level;
+	data->triggers[TITANIA_LEFT].effect = input.state.trigger.left;
+	data->triggers[TITANIA_RIGHT].level = DENORM_CLAMP_UINT8(input.triggers[DUALSENSE_RIGHT]);
+	data->triggers[TITANIA_RIGHT].id = input.adaptive_triggers[ADAPTIVE_TRIGGER_RIGHT].id;
+	data->triggers[TITANIA_RIGHT].section = input.adaptive_triggers[ADAPTIVE_TRIGGER_RIGHT].level;
+	data->triggers[TITANIA_RIGHT].effect = input.state.trigger.right;
 
-	data->touch[LIBRESENSE_PRIMARY].id = input.touch[DUALSENSE_LEFT].id.value;
-	data->touch[LIBRESENSE_PRIMARY].active = !input.touch[DUALSENSE_LEFT].id.idle;
-	data->touch[LIBRESENSE_SECONDARY].id = input.touch[DUALSENSE_RIGHT].id.value;
-	data->touch[LIBRESENSE_SECONDARY].active = !input.touch[DUALSENSE_RIGHT].id.idle;
+	data->touch[TITANIA_PRIMARY].id = input.touch[DUALSENSE_LEFT].id.value;
+	data->touch[TITANIA_PRIMARY].active = !input.touch[DUALSENSE_LEFT].id.idle;
+	data->touch[TITANIA_SECONDARY].id = input.touch[DUALSENSE_RIGHT].id.value;
+	data->touch[TITANIA_SECONDARY].active = !input.touch[DUALSENSE_RIGHT].id.idle;
 #ifdef _WIN32
-	data->touch[LIBRESENSE_PRIMARY].pos.x = ((uint16_t) input.touch[DUALSENSE_LEFT].pos.x1) | ((uint16_t) input.touch[DUALSENSE_LEFT].pos.x2 << 8);
-	data->touch[LIBRESENSE_PRIMARY].pos.x = ((uint16_t) input.touch[DUALSENSE_LEFT].pos.y1) | ((uint16_t) input.touch[DUALSENSE_LEFT].pos.y2 << 4);
-	data->touch[LIBRESENSE_SECONDARY].pos.x = ((uint16_t) input.touch[DUALSENSE_RIGHT].pos.x1) | ((uint16_t) input.touch[DUALSENSE_RIGHT].pos.x2 << 8);
-	data->touch[LIBRESENSE_SECONDARY].pos.x = ((uint16_t) input.touch[DUALSENSE_RIGHT].pos.y1) | ((uint16_t) input.touch[DUALSENSE_RIGHT].pos.y2 << 4);
+	data->touch[TITANIA_PRIMARY].pos.x = ((uint16_t) input.touch[DUALSENSE_LEFT].pos.x1) | ((uint16_t) input.touch[DUALSENSE_LEFT].pos.x2 << 8);
+	data->touch[TITANIA_PRIMARY].pos.x = ((uint16_t) input.touch[DUALSENSE_LEFT].pos.y1) | ((uint16_t) input.touch[DUALSENSE_LEFT].pos.y2 << 4);
+	data->touch[TITANIA_SECONDARY].pos.x = ((uint16_t) input.touch[DUALSENSE_RIGHT].pos.x1) | ((uint16_t) input.touch[DUALSENSE_RIGHT].pos.x2 << 8);
+	data->touch[TITANIA_SECONDARY].pos.x = ((uint16_t) input.touch[DUALSENSE_RIGHT].pos.y1) | ((uint16_t) input.touch[DUALSENSE_RIGHT].pos.y2 << 4);
 #else
-	data->touch[LIBRESENSE_PRIMARY].pos.x = input.touch[DUALSENSE_LEFT].pos.x;
-	data->touch[LIBRESENSE_PRIMARY].pos.y = input.touch[DUALSENSE_LEFT].pos.y;
-	data->touch[LIBRESENSE_SECONDARY].pos.x = input.touch[DUALSENSE_RIGHT].pos.x;
-	data->touch[LIBRESENSE_SECONDARY].pos.y = input.touch[DUALSENSE_RIGHT].pos.y;
+	data->touch[TITANIA_PRIMARY].pos.x = input.touch[DUALSENSE_LEFT].pos.x;
+	data->touch[TITANIA_PRIMARY].pos.y = input.touch[DUALSENSE_LEFT].pos.y;
+	data->touch[TITANIA_SECONDARY].pos.x = input.touch[DUALSENSE_RIGHT].pos.x;
+	data->touch[TITANIA_SECONDARY].pos.y = input.touch[DUALSENSE_RIGHT].pos.y;
 #endif
-	data->buttons.touchpad = data->touch[LIBRESENSE_PRIMARY].active || data->touch[LIBRESENSE_SECONDARY].active;
+	data->buttons.touchpad = data->touch[TITANIA_PRIMARY].active || data->touch[TITANIA_SECONDARY].active;
 
 	data->sensors.accelerometer.x = CALIBRATE(input.sensors.accelerometer.x, CALIBRATION_ACCELEROMETER_X) / DUALSENSE_ACCELEROMETER_RESOLUTION / G_CONST;
 	data->sensors.accelerometer.y = CALIBRATE(input.sensors.accelerometer.y, CALIBRATION_ACCELEROMETER_Y) / DUALSENSE_ACCELEROMETER_RESOLUTION / G_CONST;
@@ -179,7 +179,7 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 	data->device.reserved = (uint16_t) input.state.device.reserved1 | (uint16_t) input.state.device.reserved2 << 3;
 
 	data->battery.state = input.state.battery.state + 1;
-	if (data->battery.state == LIBRESENSE_BATTERY_FULL) {
+	if (data->battery.state == TITANIA_BATTERY_FULL) {
 		data->battery.level = 1.0f;
 	} else {
 		data->battery.level = input.state.battery.level * 0.1 + 0.10;
@@ -212,8 +212,8 @@ void libresense_convert_input(const libresense_hid hid_info, const dualsense_inp
 		data->edge_device.stick.errored = input.state.edge.input.stick_error;
 		data->edge_device.stick.calibrating = input.state.edge.input.stick_calibrating;
 		data->edge_device.stick.unknown = input.state.edge.input.stick_unknown;
-		data->edge_device.trigger_levels[LIBRESENSE_LEFT] = input.state.edge.input.left_trigger_level;
-		data->edge_device.trigger_levels[LIBRESENSE_RIGHT] = input.state.edge.input.right_trigger_level;
+		data->edge_device.trigger_levels[TITANIA_LEFT] = input.state.edge.input.left_trigger_level;
+		data->edge_device.trigger_levels[TITANIA_RIGHT] = input.state.edge.input.right_trigger_level;
 		data->edge_device.current_profile_id = input.state.edge.profile.id;
 		data->edge_device.profile_indicator.switching_disabled = input.state.edge.profile.disable_switching;
 		data->edge_device.profile_indicator.led = input.state.edge.profile.led_indicator;

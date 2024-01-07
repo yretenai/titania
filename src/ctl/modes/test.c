@@ -1,5 +1,5 @@
-//  libresense project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/libresense/>
+//  titania project
+//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
 //  SPDX-License-Identifier: MPL-2.0
 
 #define _POSIX_C_SOURCE 200809L
@@ -8,22 +8,22 @@
 #include <unistd.h>
 #endif
 
-#include "../libresensectl.h"
+#include "../titaniactl.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 
-bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, useconds_t useconds, const useconds_t delay) {
+bool report_hid_trigger(titania_handle* handles, const size_t handle_count, useconds_t useconds, const useconds_t delay) {
 	bool should_exit = false;
 	while (true) {
 		if (should_stop) {
 			return true;
 		}
 
-		libresense_data data[LIBRESENSECTL_CONTROLLER_COUNT];
-		const libresense_result result = libresense_pull(handles, handle_count, data);
-		if (IS_LIBRESENSE_BAD(result)) {
+		titania_data data[TITANIACTL_CONTROLLER_COUNT];
+		const titania_result result = titania_pull(handles, handle_count, data);
+		if (IS_TITANIA_BAD(result)) {
 			printf("invalid pull response");
 			return true;
 		}
@@ -61,16 +61,16 @@ bool report_hid_trigger(libresense_handle* handles, const size_t handle_count, u
 	return should_exit;
 }
 
-bool report_hid_close(libresense_handle* handles, const size_t handle_count, useconds_t useconds, const useconds_t delay) {
+bool report_hid_close(titania_handle* handles, const size_t handle_count, useconds_t useconds, const useconds_t delay) {
 	bool should_exit = false;
 	while (true) {
 		if (should_stop) {
 			return true;
 		}
 
-		libresense_data data[LIBRESENSECTL_CONTROLLER_COUNT];
-		const libresense_result result = libresense_pull(handles, handle_count, data);
-		if (IS_LIBRESENSE_BAD(result)) {
+		titania_data data[TITANIACTL_CONTROLLER_COUNT];
+		const titania_result result = titania_pull(handles, handle_count, data);
+		if (IS_TITANIA_BAD(result)) {
 			printf("invalid pull response");
 			return true;
 		}
@@ -97,15 +97,15 @@ bool report_hid_close(libresense_handle* handles, const size_t handle_count, use
 	return should_exit;
 }
 
-void wait_until_options_clear(libresense_handle* handles, const size_t handle_count, useconds_t timeout) {
+void wait_until_options_clear(titania_handle* handles, const size_t handle_count, useconds_t timeout) {
 	while (true) {
 		if (should_stop) {
 			return;
 		}
 
-		libresense_data data[LIBRESENSECTL_CONTROLLER_COUNT];
-		const libresense_result result = libresense_pull(handles, handle_count, data);
-		if (IS_LIBRESENSE_BAD(result)) {
+		titania_data data[TITANIACTL_CONTROLLER_COUNT];
+		const titania_result result = titania_pull(handles, handle_count, data);
+		if (IS_TITANIA_BAD(result)) {
 			return;
 		}
 		for (size_t i = 0; i < handle_count; ++i) {
@@ -126,20 +126,20 @@ void wait_until_options_clear(libresense_handle* handles, const size_t handle_co
 	}
 }
 
-libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
+titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 	printf("press OPTIONS to skip test\n");
 
-	libresense_data datum[LIBRESENSECTL_CONTROLLER_COUNT];
-	const libresense_result result = libresense_pull(context->handles, context->connected_controllers, datum);
-	if (IS_LIBRESENSE_BAD(result)) {
-		libresense_errorf(result, "error getting report");
-		return LIBRESENSECTL_HID_ERROR;
+	titania_data datum[TITANIACTL_CONTROLLER_COUNT];
+	const titania_result result = titania_pull(context->handles, context->connected_controllers, datum);
+	if (IS_TITANIA_BAD(result)) {
+		titania_errorf(result, "error getting report");
+		return TITANIACTL_HID_ERROR;
 	}
 
 	bool is_only_access = true;
 	bool has_access = false;
 	if (context->connected_controllers == 0) {
-		return LIBRESENSECTL_OK;
+		return TITANIACTL_OK;
 	}
 
 	for (int i = 0; i < context->connected_controllers; ++i) {
@@ -156,9 +156,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 	if (!is_only_access && (all_tests || strcmp(selected_test, "triggers") == 0)) {
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing adaptive triggers\n");
-		libresense_effect_update update = { 0 };
+		titania_effect_update update = { 0 };
 
-		update.mode = LIBRESENSE_EFFECT_UNIFORM;
+		update.mode = TITANIA_EFFECT_UNIFORM;
 		update.effect.uniform.position = 0.5;
 		update.effect.uniform.resistance = 1.0;
 		printf("uniform\n");
@@ -166,14 +166,14 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			libresense_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		update.mode = LIBRESENSE_EFFECT_SECTION;
+		update.mode = TITANIA_EFFECT_SECTION;
 		update.effect.section.position.x = 0.25;
 		update.effect.section.position.y = 0.75;
 		update.effect.section.resistance = 1.0;
@@ -182,14 +182,14 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			libresense_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		update.mode = LIBRESENSE_EFFECT_MUTIPLE_SECTIONS;
+		update.mode = TITANIA_EFFECT_MUTIPLE_SECTIONS;
 		update.effect.multiple_sections.resistance[0] = 0;
 		update.effect.multiple_sections.resistance[1] = 0;
 		update.effect.multiple_sections.resistance[2] = 0.3f;
@@ -205,14 +205,14 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			libresense_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		update.mode = LIBRESENSE_EFFECT_TRIGGER;
+		update.mode = TITANIA_EFFECT_TRIGGER;
 		update.effect.trigger.position.x = 0.50f;
 		update.effect.trigger.position.y = 1.00f;
 		update.effect.trigger.resistance = 0.5f;
@@ -221,14 +221,14 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			libresense_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		update.mode = LIBRESENSE_EFFECT_SLOPE;
+		update.mode = TITANIA_EFFECT_SLOPE;
 		update.effect.slope.position.x = 0.20;
 		update.effect.slope.position.y = 1.00;
 		update.effect.slope.resistance.x = 0.25f;
@@ -238,14 +238,14 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			libresense_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		update.mode = LIBRESENSE_EFFECT_VIBRATE;
+		update.mode = TITANIA_EFFECT_VIBRATE;
 		update.effect.vibrate.position = 0.33;
 		update.effect.vibrate.amplitude = 0.75;
 		update.effect.vibrate.frequency = 201;
@@ -254,14 +254,14 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			libresense_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		update.mode = LIBRESENSE_EFFECT_VIBRATE_SLOPE;
+		update.mode = TITANIA_EFFECT_VIBRATE_SLOPE;
 		update.effect.vibrate_slope.position.x = 0.20;
 		update.effect.vibrate_slope.position.y = 1.00;
 		update.effect.vibrate_slope.amplitude.x = 0.25f;
@@ -273,14 +273,14 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			libresense_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		update.mode = LIBRESENSE_EFFECT_MUTIPLE_VIBRATE;
+		update.mode = TITANIA_EFFECT_MUTIPLE_VIBRATE;
 		update.effect.multiple_vibrate.amplitude[0] = 0;
 		update.effect.multiple_vibrate.amplitude[1] = 0;
 		update.effect.multiple_vibrate.amplitude[2] = 0.3f;
@@ -298,14 +298,14 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			libresense_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		update.mode = LIBRESENSE_EFFECT_MUTIPLE_VIBRATE_SECTIONS;
+		update.mode = TITANIA_EFFECT_MUTIPLE_VIBRATE_SECTIONS;
 		update.effect.multiple_vibrate_sections.amplitude[0] = 0;
 		update.effect.multiple_vibrate_sections.amplitude[1] = 0;
 		update.effect.multiple_vibrate_sections.amplitude[2] = 0.3f;
@@ -331,26 +331,26 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			libresense_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
 	reset_trigger:
 		if (should_stop) {
-			return LIBRESENSECTL_INTERRUPTED;
+			return TITANIACTL_INTERRUPTED;
 		}
 
-		update.mode = LIBRESENSE_EFFECT_OFF;
+		update.mode = TITANIA_EFFECT_OFF;
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			libresense_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, 0.0f);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 		struct timespec delayspec = { 0, 1e+8 };
 		nanosleep(&delayspec, nullptr);
 	}
@@ -367,9 +367,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 				if (context->hids[i].is_access) {
 					continue;
 				}
-				libresense_update_rumble(context->handles[i], rumble, 0.0f, 0.0f, false);
+				titania_update_rumble(context->handles[i], rumble, 0.0f, 0.0f, false);
 			}
-			libresense_push(context->handles, context->connected_controllers);
+			titania_push(context->handles, context->connected_controllers);
 			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
 				goto reset_motor;
 			}
@@ -381,9 +381,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 				if (context->hids[i].is_access) {
 					continue;
 				}
-				libresense_update_rumble(context->handles[i], 0, rumble, 0.0f, false);
+				titania_update_rumble(context->handles[i], 0, rumble, 0.0f, false);
 			}
-			libresense_push(context->handles, context->connected_controllers);
+			titania_push(context->handles, context->connected_controllers);
 			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
 				goto reset_motor;
 			}
@@ -395,9 +395,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 				if (context->hids[i].is_access) {
 					continue;
 				}
-				libresense_update_rumble(context->handles[i], rumble, rumble, 0.0f, false);
+				titania_update_rumble(context->handles[i], rumble, rumble, 0.0f, false);
 			}
-			libresense_push(context->handles, context->connected_controllers);
+			titania_push(context->handles, context->connected_controllers);
 			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
 				goto reset_motor;
 			}
@@ -410,9 +410,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 				if (context->hids[i].is_access) {
 					continue;
 				}
-				libresense_update_rumble(context->handles[i], level, level, 0.0f, false);
+				titania_update_rumble(context->handles[i], level, level, 0.0f, false);
 			}
-			libresense_push(context->handles, context->connected_controllers);
+			titania_push(context->handles, context->connected_controllers);
 			if (report_hid_close(context->handles, context->connected_controllers, 250000, 10000)) {
 				goto reset_motor;
 			}
@@ -424,9 +424,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 				if (context->hids[i].is_access) {
 					continue;
 				}
-				libresense_update_rumble(context->handles[i], rumble, 0.0f, 0.0f, true);
+				titania_update_rumble(context->handles[i], rumble, 0.0f, 0.0f, true);
 			}
-			libresense_push(context->handles, context->connected_controllers);
+			titania_push(context->handles, context->connected_controllers);
 			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
 				goto reset_motor;
 			}
@@ -438,9 +438,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 				if (context->hids[i].is_access) {
 					continue;
 				}
-				libresense_update_rumble(context->handles[i], 0, rumble, 0.0f, true);
+				titania_update_rumble(context->handles[i], 0, rumble, 0.0f, true);
 			}
-			libresense_push(context->handles, context->connected_controllers);
+			titania_push(context->handles, context->connected_controllers);
 			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
 				goto reset_motor;
 			}
@@ -452,9 +452,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 				if (context->hids[i].is_access) {
 					continue;
 				}
-				libresense_update_rumble(context->handles[i], rumble, rumble, 0.0f, true);
+				titania_update_rumble(context->handles[i], rumble, rumble, 0.0f, true);
 			}
-			libresense_push(context->handles, context->connected_controllers);
+			titania_push(context->handles, context->connected_controllers);
 			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
 				goto reset_motor;
 			}
@@ -467,9 +467,9 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 				if (context->hids[i].is_access) {
 					continue;
 				}
-				libresense_update_rumble(context->handles[i], level, level, 0.0f, true);
+				titania_update_rumble(context->handles[i], level, level, 0.0f, true);
 			}
-			libresense_push(context->handles, context->connected_controllers);
+			titania_push(context->handles, context->connected_controllers);
 			if (report_hid_close(context->handles, context->connected_controllers, 250000, 10000)) {
 				goto reset_motor;
 			}
@@ -477,16 +477,16 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 
 	reset_motor:
 		if (should_stop) {
-			return LIBRESENSECTL_INTERRUPTED;
+			return TITANIACTL_INTERRUPTED;
 		}
 
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			libresense_update_rumble(context->handles[i], 0, 0, 0.0f, false);
+			titania_update_rumble(context->handles[i], 0, 0, 0.0f, false);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 		struct timespec delayspec = { 0, 1e+8 };
 		nanosleep(&delayspec, nullptr);
 	}
@@ -494,68 +494,68 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 	if (!is_only_access && (all_tests || strcmp(selected_test, "mic") == 0)) {
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing mic led...\n");
-		libresense_audio_update update = { 0 };
+		titania_audio_update update = { 0 };
 		update.jack_volume = 1.0;
 		update.speaker_volume = 1.0;
 		update.microphone_volume = 1.0;
-		update.mic_selection = LIBRESENSE_MIC_AUTO;
-		update.mic_balance = LIBRESENSE_MIC_AUTO;
+		update.mic_selection = TITANIA_MIC_AUTO;
+		update.mic_balance = TITANIA_MIC_AUTO;
 		update.disable_audio_jack = false;
 		update.force_enable_speaker = false;
-		update.mic_led = LIBRESENSE_MIC_LED_ON;
+		update.mic_led = TITANIA_MIC_LED_ON;
 
 		printf("mic led should be on...\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			libresense_update_audio(context->handles[i], update);
+			titania_update_audio(context->handles[i], update);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_close(context->handles, context->connected_controllers, 5000000, 10000)) {
 			goto reset_mic;
 		}
 
-		update.mic_led = LIBRESENSE_MIC_LED_FLASH;
+		update.mic_led = TITANIA_MIC_LED_FLASH;
 		printf("mic led should be flashing...\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			libresense_update_audio(context->handles[i], update);
+			titania_update_audio(context->handles[i], update);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_close(context->handles, context->connected_controllers, 5000000, 10000)) {
 			goto reset_mic;
 		}
 
-		update.mic_led = LIBRESENSE_MIC_LED_FAST_FLASH;
+		update.mic_led = TITANIA_MIC_LED_FAST_FLASH;
 		printf("mic led should be flashing faster (maybe)...\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			libresense_update_audio(context->handles[i], update);
+			titania_update_audio(context->handles[i], update);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_close(context->handles, context->connected_controllers, 5000000, 10000)) {
 			goto reset_mic;
 		}
 
-		update.mic_led = LIBRESENSE_MIC_LED_OFF;
+		update.mic_led = TITANIA_MIC_LED_OFF;
 		printf("mic led should be off...\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			libresense_update_audio(context->handles[i], update);
+			titania_update_audio(context->handles[i], update);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 		report_hid_close(context->handles, context->connected_controllers, 5000000, 10000);
 
 	reset_mic:
 		if (should_stop) {
-			return LIBRESENSECTL_INTERRUPTED;
+			return TITANIACTL_INTERRUPTED;
 		}
 
 		printf("restoring mic based on state...\n");
@@ -563,68 +563,68 @@ libresensectl_error libresensectl_mode_test(libresensectl_context* context) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			update.mic_led = (libresense_mic_led) datum[i].device.muted;
-			libresense_update_audio(context->handles[i], update);
+			update.mic_led = (titania_mic_led) datum[i].device.muted;
+			titania_update_audio(context->handles[i], update);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 	}
 
 	if (!is_only_access && (all_tests || strcmp(selected_test, "led") == 0)) {
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing touchpad leds...\n");
 
-		libresense_led_update update = { 0 };
+		titania_led_update update = { 0 };
 		update.color.x = 1.0;
 		update.color.y = 0.0;
 		update.color.z = 1.0;
-		update.led = LIBRESENSE_LED_NO_UPDATE;
+		update.led = TITANIA_LED_NO_UPDATE;
 		int i = 0;
 		while (true) {
 			if (i < 6) {
 				if (i == 1) {
-					update.led = LIBRESENSE_LED_PLAYER_1;
+					update.led = TITANIA_LED_PLAYER_1;
 				} else if (i == 2) {
-					update.led = LIBRESENSE_LED_PLAYER_2;
+					update.led = TITANIA_LED_PLAYER_2;
 				} else if (i == 3) {
-					update.led = LIBRESENSE_LED_PLAYER_3;
+					update.led = TITANIA_LED_PLAYER_3;
 				} else if (i == 4) {
-					update.led = LIBRESENSE_LED_PLAYER_4;
+					update.led = TITANIA_LED_PLAYER_4;
 				} else if (i == 5) {
-					update.led = LIBRESENSE_LED_ALL;
+					update.led = TITANIA_LED_ALL;
 				}
 			} else if (i < 38) {
 				update.led = i - 6;
 			} else {
 				const int v = (i - 39) % 8;
 				if (v == 0) {
-					update.led = LIBRESENSE_LED_1;
+					update.led = TITANIA_LED_1;
 				} else if (v == 1) {
-					update.led = LIBRESENSE_LED_2;
+					update.led = TITANIA_LED_2;
 				} else if (v == 2) {
-					update.led = LIBRESENSE_LED_3;
+					update.led = TITANIA_LED_3;
 				} else if (v == 3) {
-					update.led = LIBRESENSE_LED_4;
+					update.led = TITANIA_LED_4;
 				} else if (v == 4) {
-					update.led = LIBRESENSE_LED_5;
+					update.led = TITANIA_LED_5;
 				} else if (v == 5) {
-					update.led = LIBRESENSE_LED_4;
+					update.led = TITANIA_LED_4;
 				} else if (v == 6) {
-					update.led = LIBRESENSE_LED_3;
+					update.led = TITANIA_LED_3;
 				} else if (v == 7) {
-					update.led = LIBRESENSE_LED_2;
+					update.led = TITANIA_LED_2;
 				}
 			}
 
-			update.led |= LIBRESENSE_LED_INSTANT;
+			update.led |= TITANIA_LED_INSTANT;
 
 			for (int j = 0; j < context->connected_controllers; ++j) {
 				if (context->hids[j].is_access) {
 					continue;
 				}
-				libresense_update_led(context->handles[j], update);
+				titania_update_led(context->handles[j], update);
 			}
-			libresense_push(context->handles, context->connected_controllers);
-			const libresense_vector3 color = update.color;
+			titania_push(context->handles, context->connected_controllers);
+			const titania_vector3 color = update.color;
 			update.color.x = color.z;
 			update.color.y = color.x;
 			update.color.z = color.y;
@@ -644,22 +644,22 @@ skip_led:
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing access leds...\n");
 
-		libresense_led_update update = { 0 };
+		titania_led_update update = { 0 };
 		update.color.x = 1.0;
 		update.color.y = 0.0;
 		update.color.z = 1.0;
-		update.led = LIBRESENSE_LED_NO_UPDATE;
+		update.led = TITANIA_LED_NO_UPDATE;
 		int i = 0;
 		while (true) {
 			const int v = i % 4;
 			if (v == 0) {
-				update.led = LIBRESENSE_LED_ACCESS_1;
+				update.led = TITANIA_LED_ACCESS_1;
 			} else if (v == 1) {
-				update.led = LIBRESENSE_LED_ACCESS_2;
+				update.led = TITANIA_LED_ACCESS_2;
 			} else if (v == 2) {
-				update.led = LIBRESENSE_LED_ACCESS_3;
+				update.led = TITANIA_LED_ACCESS_3;
 			} else if (v == 3) {
-				update.led = LIBRESENSE_LED_ACCESS_4;
+				update.led = TITANIA_LED_ACCESS_4;
 			}
 
 			update.access.enable_profile_led = true;
@@ -674,11 +674,11 @@ skip_led:
 					continue;
 				}
 
-				libresense_update_led(context->handles[j], update);
+				titania_update_led(context->handles[j], update);
 			}
 
-			libresense_push(context->handles, context->connected_controllers);
-			const libresense_vector3 color = update.color;
+			titania_push(context->handles, context->connected_controllers);
+			const titania_vector3 color = update.color;
 			update.color.x = color.z;
 			update.color.y = color.x;
 			update.color.z = color.y;
@@ -696,10 +696,10 @@ skip_led:
 reset_led:
 	{
 		if (should_stop) {
-			return LIBRESENSECTL_INTERRUPTED;
+			return TITANIACTL_INTERRUPTED;
 		}
 
-		libresense_led_update update;
+		titania_led_update update;
 		update.color.x = 1.0;
 		update.color.y = 0.0;
 		update.color.z = 1.0;
@@ -710,28 +710,28 @@ reset_led:
 		for (int j = 0; j < context->connected_controllers; ++j) {
 			if (datum[j].hid.is_access) {
 				switch (j) {
-					case 0: update.led = LIBRESENSE_LED_ACCESS_1; break;
-					case 1: update.led = LIBRESENSE_LED_ACCESS_2; break;
-					case 2: update.led = LIBRESENSE_LED_ACCESS_3; break;
-					case 3: update.led = LIBRESENSE_LED_ACCESS_4; break;
-					default: update.led = LIBRESENSE_LED_ACCESS_4; break;
+					case 0: update.led = TITANIA_LED_ACCESS_1; break;
+					case 1: update.led = TITANIA_LED_ACCESS_2; break;
+					case 2: update.led = TITANIA_LED_ACCESS_3; break;
+					case 3: update.led = TITANIA_LED_ACCESS_4; break;
+					default: update.led = TITANIA_LED_ACCESS_4; break;
 				}
 				update.access.profile_led = datum[j].access_device.current_profile_id;
 			} else {
 				switch (j) {
-					case 0: update.led = LIBRESENSE_LED_PLAYER_1; break;
-					case 1: update.led = LIBRESENSE_LED_PLAYER_2; break;
-					case 2: update.led = LIBRESENSE_LED_PLAYER_3; break;
-					case 3: update.led = LIBRESENSE_LED_PLAYER_4; break;
-					default: update.led = LIBRESENSE_LED_ALL; break;
+					case 0: update.led = TITANIA_LED_PLAYER_1; break;
+					case 1: update.led = TITANIA_LED_PLAYER_2; break;
+					case 2: update.led = TITANIA_LED_PLAYER_3; break;
+					case 3: update.led = TITANIA_LED_PLAYER_4; break;
+					default: update.led = TITANIA_LED_ALL; break;
 				}
 				update.access.profile_led = 0;
 			}
 
-			libresense_update_led(context->handles[j], update);
+			titania_update_led(context->handles[j], update);
 		}
-		libresense_push(context->handles, context->connected_controllers);
+		titania_push(context->handles, context->connected_controllers);
 	}
 
-	return LIBRESENSECTL_OK;
+	return TITANIACTL_OK;
 }
