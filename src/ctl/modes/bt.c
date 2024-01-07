@@ -28,8 +28,10 @@ libresensectl_error libresensectl_mode_bt_pair(libresensectl_context* context) {
 			return LIBRESENSECTL_INTERRUPTED;
 		}
 
-		if (IS_LIBRESENSE_BAD(libresense_bt_pair(context->handles[i], mac, key))) {
-			return LIBRESENSECTL_HID_ERROR;
+		const libresense_result result = libresense_bt_pair(context->handles[i], mac, key);
+		if (IS_LIBRESENSE_BAD(result)) {
+			libresense_errorf(result, "failed to update pairing data");
+			return MAKE_LIBRESENSE_ERROR(result);
 		}
 	}
 
@@ -42,8 +44,10 @@ libresensectl_error libresensectl_mode_bt_connect(libresensectl_context* context
 			return LIBRESENSECTL_INTERRUPTED;
 		}
 
-		if (IS_LIBRESENSE_BAD(libresense_bt_connect(context->handles[i]))) {
-			return LIBRESENSECTL_HID_ERROR;
+		const libresense_result result = libresense_bt_connect(context->handles[i]);
+		if (IS_LIBRESENSE_BAD(result)) {
+			libresense_errorf(result, "failed to issue connect command");
+			return MAKE_LIBRESENSE_ERROR(result);
 		}
 	}
 
@@ -56,8 +60,10 @@ libresensectl_error libresensectl_mode_bt_disconnect(libresensectl_context* cont
 			return LIBRESENSECTL_INTERRUPTED;
 		}
 
-		if (IS_LIBRESENSE_BAD(libresense_bt_disconnect(context->handles[i]))) {
-			return LIBRESENSECTL_HID_ERROR;
+		const libresense_result result = libresense_bt_disconnect(context->handles[i]);
+		if (IS_LIBRESENSE_BAD(result)) {
+			libresense_errorf(result, "failed to issue disconnect command");
+			return MAKE_LIBRESENSE_ERROR(result);
 		}
 	}
 

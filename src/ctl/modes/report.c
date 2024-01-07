@@ -576,8 +576,12 @@ libresensectl_error libresensectl_mode_report_json_inner(libresensectl_context* 
 		}
 
 		char* json_text = json_print(arr);
-		printf("%s\n", json_text);
 		json_delete(arr);
+		if (json_text == nullptr) {
+			continue;
+		}
+
+		printf("%s\n", json_text);
 		free(json_text);
 	} while (loop && !should_stop);
 
@@ -640,8 +644,12 @@ libresensectl_error libresensectl_mode_list_json(libresensectl_context* context)
 	}
 
 	char* json_text = json_print(arr);
-	printf("%s\n", json_text);
 	json_delete(arr);
+	if (json_text == nullptr) {
+		return LIBRESENSECTL_OK_NO_JSON;
+	}
+
+	printf("%s\n", json_text);
 	free(json_text);
 
 	return LIBRESENSECTL_OK_NO_JSON;

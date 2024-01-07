@@ -102,12 +102,44 @@ const char* const libresense_edge_button_id_msg[LIBRESENSE_BUTTON_ID_MAX + 1] = 
 	nullptr
 };
 
+const char* const libresense_edge_button_id_alt_msg[LIBRESENSE_BUTTON_ID_MAX + 1] = {
+	"up",
+	"left",
+	"down",
+	"right",
+	"circle",
+	"cross",
+	"square",
+	"triangle",
+	"r1",
+	"r2",
+	"r3",
+	"l1",
+	"l2",
+	"l3",
+	"leftPaddle",
+	"rightPaddle",
+	"option",
+	"touch",
+	nullptr
+};
+
 const char* const libresense_access_extension_id_msg[LIBRESENSE_ACCESS_EXTENSION_MAX + 1] = {
 	"disconnected",
 	"button",
 	"trigger",
 	"stick",
 	"invalid",
+	nullptr
+};
+
+const char* const libresense_edge_stick_template_msg[LIBRESENSE_EDGE_STICK_TEMPLATE_MAX + 1] = {
+	"default",
+	"quick",
+	"precise",
+	"steady",
+	"digital",
+	"dynamic",
 	nullptr
 };
 // clang-format on

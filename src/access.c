@@ -88,25 +88,23 @@ libresense_result libresense_debug_get_access_profile(const libresense_handle ha
 	return LIBRESENSE_OK;
 }
 
-libresense_result libresense_query_access_profile(const libresense_handle handle, libresense_access_profile profiles[LIBRESENSE_PROFILE_COUNT]) {
+libresense_result libresense_query_access_profile(const libresense_handle handle, const libresense_profile_id profile_id, libresense_access_profile* profile) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 	CHECK_ACCESS(handle);
 
-	const libresense_profile_id profile_ids[LIBRESENSE_PROFILE_COUNT] = { LIBRESENSE_PROFILE_DEFAULT, LIBRESENSE_PROFILE_1, LIBRESENSE_PROFILE_2, LIBRESENSE_PROFILE_3 };
-
-	for (int i = 0; i < LIBRESENSE_PROFILE_COUNT; ++i) {
-		uint8_t profile_data[LIBRESENSE_MERGED_REPORT_ACCESS_SIZE];
-		if (IS_LIBRESENSE_BAD(libresense_debug_get_access_profile(handle, profile_ids[i], profile_data))) {
-			profiles[i].valid = false;
-			continue;
-		}
-
-		if (IS_LIBRESENSE_BAD(libresense_convert_access_profile_input(profile_data, &profiles[i]))) {
-			memset(&profiles[i], 0, sizeof(libresense_access_profile));
-			profiles[i].valid = false;
-		}
+	uint8_t profile_data[LIBRESENSE_MERGED_REPORT_ACCESS_SIZE];
+	libresense_result result = libresense_debug_get_access_profile(handle, profile_id, profile_data);
+	if (IS_LIBRESENSE_BAD(result)) {
+		profile->valid = false;
+		return result;
 	}
 
-	return LIBRESENSE_OK;
+	result = libresense_convert_access_profile_input(profile_data, profile);
+	if (IS_LIBRESENSE_BAD(result)) {
+		memset(profile, 0, sizeof(libresense_access_profile));
+		profile->valid = false;
+	}
+
+	return result;
 }

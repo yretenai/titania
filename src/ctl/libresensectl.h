@@ -17,6 +17,8 @@
 #define nullptr ((void*) 0)
 #endif
 
+#define MAKE_LIBRESENSE_ERROR(result) (LIBRESENSECTL_LIBRESENSE_ERROR | ((libresensectl_error) result << 16))
+
 typedef struct {
 	int connected_controllers;
 	libresense_hid hids[LIBRESENSECTL_CONTROLLER_COUNT];
@@ -36,6 +38,12 @@ typedef enum {
 	LIBRESENSECTL_INVALID_PAIR_ARGUMENTS,
 	LIBRESENSECTL_INVALID_MAC_ADDRESS,
 	LIBRESENSECTL_INVALID_LINK_KEY,
+	LIBRESENSECTL_INVALID_PROFILE,
+	LIBRESENSECTL_EMPTY_PROFILE,
+	LIBRESENSECTL_FILE_WRITE_ERROR,
+	LIBRESENSECTL_FILE_READ_ERROR,
+	LIBRESENSECTL_LIBRESENSE_ERROR = 0xFFFF,
+	LIBRESENSECTL_MASK = 0xFFFF,
 	LIBRESENSECTL_ERROR_MAX
 } libresensectl_error;
 
@@ -71,11 +79,11 @@ libresensectl_error libresensectl_mode_list_json(libresensectl_context* context)
 libresensectl_error libresensectl_mode_report_json(libresensectl_context* context);
 libresensectl_error libresensectl_mode_report_loop_json(libresensectl_context* context);
 
-libresensectl_error libresensectl_mode_edge_import(libresense_profile_id profile, void* data, libresense_hid handle);
+libresensectl_error libresensectl_mode_edge_import(libresense_profile_id profile, libresense_edge_profile data, libresense_hid handle);
 libresensectl_error libresensectl_mode_edge_export(libresense_profile_id profile, const char* path, libresense_hid handle);
 libresensectl_error libresensectl_mode_edge_delete(libresense_profile_id profile, libresense_hid handle);
 
-libresensectl_error libresensectl_mode_access_import(libresense_profile_id profile, void* data, libresense_hid handle);
+libresensectl_error libresensectl_mode_access_import(libresense_profile_id profile, libresense_access_profile data, libresense_hid handle);
 libresensectl_error libresensectl_mode_access_export(libresense_profile_id profile, const char* path, libresense_hid handle);
 libresensectl_error libresensectl_mode_access_delete(libresense_profile_id profile, libresense_hid handle);
 

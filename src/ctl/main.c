@@ -36,7 +36,7 @@ const libresensectl_mode modes[] = { { "report", libresensectl_mode_report, libr
 	{ "disconnect", libresensectl_mode_bt_disconnect, libresensectl_mode_bt_disconnect, nullptr, nullptr },
 	{ "connect", libresensectl_mode_bt_connect, libresensectl_mode_bt_connect, nullptr, nullptr },
 	// Edge, Access
-	{ "profile", libresensectl_mode_profile_funnel, nullptr, nullptr, nullptr },
+	{ "profile", libresensectl_mode_profile_funnel, libresensectl_mode_profile_funnel, nullptr, nullptr },
 	{ "profile convert", nullptr, nullptr, "convert merged dualsense edge profile from or to json", "path/to/report.{bin, json}" },
 	{ "profile import", nullptr, nullptr, "import a controller profile to the specified slot", "{square, cross, triangle, 1, 2, 3} path/to/profile.json" },
 	{ "profile export", nullptr, nullptr, "export a controller profile to json", "{triangle, square, cross, triangle, 0, 1, 2, 3} path/to/profile.json" },
@@ -97,7 +97,13 @@ void libresensectl_errorf(const char* error, const char* message) {
 	fprintf(stderr, "%s: %s\n", message, error);
 }
 
-void libresense_errorf(const libresense_result result, const char* message) { libresensectl_errorf(libresense_error_msg[result], message); }
+void libresense_errorf(const libresense_result result, const char* message) {
+	if (CHECK_ENUM_SAFE(result, libresense_error_msg)) {
+		libresensectl_errorf(libresense_error_msg[result], message);
+	} else {
+		libresensectl_errorf("malformed libresense error", message);
+	}
+}
 
 int main(const int argc, const char** const argv) {
 #ifdef _WIN32
@@ -352,11 +358,10 @@ int main(const int argc, const char** const argv) {
 		return 1;
 	}
 
-	libresense_delete_access_profile(context.handles[0], LIBRESENSE_PROFILE_1);
-
 	libresensectl_error error = cb(&context);
 	if (IS_LIBRESENSECTL_BAD(error)) {
-		switch (error) {
+		switch (error & LIBRESENSECTL_MASK) {
+			case LIBRESENSECTL_LIBRESENSE_ERROR: break;
 			case LIBRESENSECTL_HID_ERROR: libresensectl_errorf("hid error", "errored while processing command"); break;
 			case LIBRESENSECTL_INTERRUPTED:
 				if (is_json) {
@@ -370,11 +375,19 @@ int main(const int argc, const char** const argv) {
 			case LIBRESENSECTL_INVALID_PAIR_ARGUMENTS: libresensectl_errorf("invalid arguments", "you need to provide a mac address and a bluetooth link key"); break;
 			case LIBRESENSECTL_INVALID_MAC_ADDRESS: libresensectl_errorf("invalid arguments", "mac address is not valid");
 			case LIBRESENSECTL_INVALID_LINK_KEY: libresensectl_errorf("invalid arguments", "bluetooth link key is not 16 characters");
+			case LIBRESENSECTL_INVALID_PROFILE: libresensectl_errorf("invalid profile", "profile data is not valid to import"); break;
+			case LIBRESENSECTL_EMPTY_PROFILE: libresensectl_errorf("empty profile", "profile is empty"); break;
+			case LIBRESENSECTL_FILE_READ_ERROR: libresensectl_errorf("file read error", "could not open or read file"); break;
+			case LIBRESENSECTL_FILE_WRITE_ERROR: libresensectl_errorf("file write error", "could not open or write file"); break;
 			default: libresensectl_errorf("unexpected error", "goodbye"); break;
 		}
 	}
 
 	shutdown();
+
+	if ((error & LIBRESENSECTL_MASK) == LIBRESENSECTL_LIBRESENSE_ERROR) {
+		return error;
+	}
 
 	if (is_json && error > LIBRESENSECTL_OK_NO_JSON) {
 		struct json* obj = json_new_object();

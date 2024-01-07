@@ -154,6 +154,27 @@ typedef enum {
 	LIBRESENSE_BUTTON_ID_MAX
 } libresense_edge_button_id;
 
+typedef enum {
+	LIBRESENSE_EDGE_STICK_TEMPLATE_DEFAULT,
+	LIBRESENSE_EDGE_STICK_TEMPLATE_QUICK,
+	LIBRESENSE_EDGE_STICK_TEMPLATE_PRECISE,
+	LIBRESENSE_EDGE_STICK_TEMPLATE_STEADY,
+	LIBRESENSE_EDGE_STICK_TEMPLATE_DIGITAL,
+	LIBRESENSE_EDGE_STICK_TEMPLATE_DYNAMIC,
+	LIBRESENSE_EDGE_STICK_TEMPLATE_MAX
+} libresense_edge_stick_template;
+
+// NOTE: 1 and 2 may be valid, but it is untested!
+// Also I don't know if this is actually interpolation!
+// Only two templates that have Smooth is Precise and Steady
+typedef enum {
+	LIBRESENSE_EDGE_INTERPOLATION_TYPE_NONE = 0,
+	LIBRESENSE_EDGE_INTERPOLATION_TYPE_UNKNOWN1 = 1,
+	LIBRESENSE_EDGE_INTERPOLATION_TYPE_UNKNOWN2 = 2,
+	LIBRESENSE_EDGE_INTERPOLATION_TYPE_LINEAR = 3,
+	LIBRESENSE_EDGE_INTERPOLATION_TYPE_SMOOTH = 4
+} libresense_edge_interpolation_type;
+
 LIBRESENSE_EXPORT extern const char* const libresense_error_msg[LIBRESENSE_ERROR_MAX + 1];
 LIBRESENSE_EXPORT extern const char* const libresense_battery_state_msg[LIBRESENSE_BATTERY_MAX + 1];
 LIBRESENSE_EXPORT extern const char* const libresense_profile_id_msg[LIBRESENSE_PROFILE_MAX_META + 1];
@@ -161,7 +182,9 @@ LIBRESENSE_EXPORT extern const char* const libresense_profile_id_alt_msg[LIBRESE
 LIBRESENSE_EXPORT extern const char* const libresense_level_msg[LIBRESENSE_LEVEL_LOW + 2];
 LIBRESENSE_EXPORT extern const char* const libresense_trigger_effect_msg[LIBRESENSE_TRIGGER_EFFECT_MAX + 1];
 LIBRESENSE_EXPORT extern const char* const libresense_edge_button_id_msg[LIBRESENSE_BUTTON_ID_MAX + 1];
+LIBRESENSE_EXPORT extern const char* const libresense_edge_button_id_alt_msg[LIBRESENSE_BUTTON_ID_MAX + 1];
 LIBRESENSE_EXPORT extern const char* const libresense_access_extension_id_msg[LIBRESENSE_ACCESS_EXTENSION_MAX + 1];
+LIBRESENSE_EXPORT extern const char* const libresense_edge_stick_template_msg[LIBRESENSE_EDGE_STICK_TEMPLATE_MAX + 1];
 LIBRESENSE_EXPORT extern const int libresense_max_controllers;
 
 #define IS_LIBRESENSE_OKAY(result) (result == LIBRESENSE_OK)
@@ -322,27 +345,6 @@ typedef struct {
 	libresense_mac paired_mac;
 	uint32_t unknown;
 } libresense_serial_info;
-
-typedef enum {
-	LIBRESENSE_EDGE_STICK_TEMPLATE_DEFAULT,
-	LIBRESENSE_EDGE_STICK_TEMPLATE_QUICK,
-	LIBRESENSE_EDGE_STICK_TEMPLATE_PRECISE,
-	LIBRESENSE_EDGE_STICK_TEMPLATE_STEADY,
-	LIBRESENSE_EDGE_STICK_TEMPLATE_DIGITAL,
-	LIBRESENSE_EDGE_STICK_TEMPLATE_DYNAMIC,
-	LIBRESENSE_EDGE_STICK_TEMPLATE_MAX
-} libresense_edge_stick_template;
-
-// NOTE: 1 and 2 may be valid, but it is untested!
-// Also I don't know if this is actually interpolation!
-// Only two templates that have this is Precise and Steady
-typedef enum {
-	LIBRESENSE_EDGE_INTERPOLATION_TYPE_NONE = 0,
-	LIBRESENSE_EDGE_INTERPOLATION_TYPE_UNKNOWN1 = 1,
-	LIBRESENSE_EDGE_INTERPOLATION_TYPE_UNKNOWN2 = 2,
-	LIBRESENSE_EDGE_INTERPOLATION_TYPE_LINEAR = 3,
-	LIBRESENSE_EDGE_INTERPOLATION_TYPE_SMOOTH = 4
-} libresense_edge_interpolation_type;
 
 typedef struct {
 	libresense_edge_stick_template template_id;
@@ -834,16 +836,18 @@ LIBRESENSE_EXPORT libresense_result libresense_update_access_profile(const libre
 /**
  * @brief fetches all dualsense edge profiles
  * @param handle: the controller to query
- * @param profiles: the profile data
+ * @param profile_id: profile id to query
+ * @param profile: the profile data
  */
-LIBRESENSE_EXPORT libresense_result libresense_query_edge_profile(const libresense_handle handle, libresense_edge_profile profiles[LIBRESENSE_PROFILE_COUNT]);
+LIBRESENSE_EXPORT libresense_result libresense_query_edge_profile(const libresense_handle handle, const libresense_profile_id profile_id, libresense_edge_profile* profile);
 
 /**
  * @brief fetches all access profiles
  * @param handle: the controller to query
- * @param profiles: the profile data
+ * @param profile_id: profile id to query
+ * @param profile: the profile data
  */
-LIBRESENSE_EXPORT libresense_result libresense_query_access_profile(const libresense_handle handle, libresense_access_profile profiles[LIBRESENSE_PROFILE_COUNT]);
+LIBRESENSE_EXPORT libresense_result libresense_query_access_profile(const libresense_handle handle, const libresense_profile_id profile_id, libresense_access_profile* profile);
 
 /**
  * @brief reset a stick template to a specific template

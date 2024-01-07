@@ -355,25 +355,23 @@ libresense_result libresense_debug_get_edge_profile(const libresense_handle hand
 	return LIBRESENSE_OK;
 }
 
-libresense_result libresense_query_edge_profile(const libresense_handle handle, libresense_edge_profile profiles[LIBRESENSE_PROFILE_COUNT]) {
+libresense_result libresense_query_edge_profile(const libresense_handle handle, const libresense_profile_id profile_id, libresense_edge_profile* profile) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 	CHECK_EDGE(handle);
 
-	const libresense_profile_id profile_ids[LIBRESENSE_PROFILE_COUNT] = { LIBRESENSE_PROFILE_TRIANGLE, LIBRESENSE_PROFILE_SQUARE, LIBRESENSE_PROFILE_CROSS, LIBRESENSE_PROFILE_CIRCLE };
-
-	for (int i = 0; i < LIBRESENSE_PROFILE_COUNT; ++i) {
-		uint8_t profile_data[LIBRESENSE_MERGED_REPORT_EDGE_SIZE];
-		if (IS_LIBRESENSE_BAD(libresense_debug_get_edge_profile(handle, profile_ids[i], profile_data))) {
-			profiles[i].valid = false;
-			continue;
-		}
-
-		if (IS_LIBRESENSE_BAD(libresense_convert_edge_profile_input(profile_data, &profiles[i]))) {
-			memset(&profiles[i], 0, sizeof(libresense_edge_profile));
-			profiles[i].valid = false;
-		}
+	uint8_t profile_data[LIBRESENSE_MERGED_REPORT_EDGE_SIZE];
+	libresense_result result = libresense_debug_get_edge_profile(handle, profile_id, profile_data);
+	if (IS_LIBRESENSE_BAD(result)) {
+		profile->valid = false;
+		return LIBRESENSE_INVALID_DATA;
 	}
 
-	return LIBRESENSE_OK;
+	result = libresense_convert_edge_profile_input(profile_data, profile);
+	if (IS_LIBRESENSE_BAD(result)) {
+		memset(profile, 0, sizeof(libresense_edge_profile));
+		profile->valid = false;
+	}
+
+	return result;
 }

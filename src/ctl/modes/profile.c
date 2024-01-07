@@ -93,9 +93,90 @@ libresensectl_error libresensectl_mode_profile_dump(libresensectl_context* conte
 	return LIBRESENSECTL_OK;
 }
 
-libresensectl_error libresensectl_mode_profile_import_selector(libresensectl_context* context) { return LIBRESENSECTL_NOT_IMPLEMENTED; }
+enum imported_profile_type {
+	PROFILE_TYPE_INVALID,
+	PROFILE_TYPE_EDGE,
+	PROFILE_TYPE_ACCESS
+};
 
-libresensectl_error libresensectl_mode_profile_export_selector(libresensectl_context* context) { return LIBRESENSECTL_NOT_IMPLEMENTED; }
+struct imported_profile {
+	enum imported_profile_type type;
+
+	union {
+		libresense_edge_profile edge;
+		libresense_access_profile access;
+	};
+};
+
+libresensectl_error libresensectl_mode_profile_import_selector(libresensectl_context* context) {
+	if (context->argc < 3) {
+		return LIBRESENSECTL_INVALID_ARGUMENTS;
+	}
+
+	const libresense_profile_id profile = convert_profile_id(context->argv[1]);
+	const char* const path = context->argv[2];
+
+	if (profile == LIBRESENSE_PROFILE_ALL || profile == LIBRESENSE_PROFILE_NONE || profile == LIBRESENSE_PROFILE_DEFAULT) {
+		return LIBRESENSECTL_INVALID_ARGUMENTS;
+	}
+
+	struct imported_profile data = { 0 };
+
+	libresensectl_error result = LIBRESENSECTL_OK;
+	for (int i = 0; i < context->connected_controllers; ++i) {
+		if (context->hids[i].is_edge && data.type == PROFILE_TYPE_EDGE) {
+			result = libresensectl_mode_edge_import(profile, data.edge, context->hids[i]);
+		} else if (context->hids[i].is_access && data.type == PROFILE_TYPE_ACCESS) {
+			result = libresensectl_mode_access_import(profile, data.access, context->hids[i]);
+		} else {
+			continue;
+		}
+
+		if (result == LIBRESENSECTL_NOT_IMPLEMENTED) {
+			continue;
+		}
+
+		if (IS_LIBRESENSECTL_BAD(result)) {
+			return result;
+		}
+	}
+
+	return result;
+}
+
+libresensectl_error libresensectl_mode_profile_export_selector(libresensectl_context* context) {
+	if (context->argc < 2) {
+		return LIBRESENSECTL_INVALID_ARGUMENTS;
+	}
+
+	const libresense_profile_id profile = convert_profile_id(context->argv[1]);
+	const char* const path = context->argc > 2 ? context->argv[2] : "./";
+
+	if (profile == LIBRESENSE_PROFILE_ALL || profile == LIBRESENSE_PROFILE_NONE) {
+		return LIBRESENSECTL_INVALID_ARGUMENTS;
+	}
+
+	libresensectl_error result = LIBRESENSECTL_OK;
+	for (int i = 0; i < context->connected_controllers; ++i) {
+		if (context->hids[i].is_edge) {
+			result = libresensectl_mode_edge_export(profile, path, context->hids[i]);
+		} else if (context->hids[i].is_access) {
+			result = libresensectl_mode_access_export(profile, path, context->hids[i]);
+		} else {
+			continue;
+		}
+
+		if (result == LIBRESENSECTL_NOT_IMPLEMENTED) {
+			continue;
+		}
+
+		if (IS_LIBRESENSECTL_BAD(result)) {
+			return result;
+		}
+	}
+
+	return result;
+}
 
 libresensectl_error libresensectl_mode_profile_delete_selector(libresensectl_context* context) {
 	libresense_profile_id profile = LIBRESENSE_PROFILE_ALL;
@@ -103,8 +184,8 @@ libresensectl_error libresensectl_mode_profile_delete_selector(libresensectl_con
 		profile = convert_profile_id(context->argv[1]);
 	}
 
+	libresensectl_error result = LIBRESENSECTL_OK;
 	for (int i = 0; i < context->connected_controllers; ++i) {
-		libresensectl_error result;
 		if (context->hids[i].is_edge) {
 			result = libresensectl_mode_edge_delete(profile, context->hids[i]);
 		} else if (context->hids[i].is_access) {
@@ -118,25 +199,20 @@ libresensectl_error libresensectl_mode_profile_delete_selector(libresensectl_con
 		}
 
 		if (IS_LIBRESENSECTL_BAD(result)) {
-			return LIBRESENSECTL_HID_ERROR;
+			return result;
 		}
 	}
 
-	return LIBRESENSECTL_OK;
+	return result;
 }
 
 libresensectl_error libresensectl_mode_profile_funnel(libresensectl_context* context) {
-	profile_mode mode = PROFILE_MODE_INVALID;
-	if (context->argc > 0) {
-		mode = (profile_mode) tolower(context->argv[0][0]);
-	}
-
-	if (mode != PROFILE_MODE_CONVERT && mode != PROFILE_MODE_IMPORT && mode != PROFILE_MODE_EXPORT && mode != PROFILE_MODE_DELETE && mode != PROFILE_MODE_DEBUG_DUMP) {
+	if (context->argc < 1) {
 		return LIBRESENSECTL_INVALID_ARGUMENTS;
 	}
 
-	libresensectl_error result;
-	switch (mode) {
+	libresensectl_error result = LIBRESENSECTL_OK;
+	switch ((profile_mode) tolower(context->argv[0][0])) {
 		case PROFILE_MODE_INVALID: break; // unreachable but llvm complains.
 		case PROFILE_MODE_CONVERT: return LIBRESENSECTL_NOT_IMPLEMENTED;
 		case PROFILE_MODE_IMPORT:
@@ -163,7 +239,12 @@ libresensectl_error libresensectl_mode_profile_funnel(libresensectl_context* con
 				return result;
 			}
 			break;
+		default: return LIBRESENSECTL_INVALID_ARGUMENTS;
 	}
 
-	return LIBRESENSECTL_OK;
+	if (result == LIBRESENSECTL_NOT_IMPLEMENTED) {
+		return LIBRESENSECTL_OK;
+	}
+
+	return result;
 }
