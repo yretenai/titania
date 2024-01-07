@@ -74,6 +74,15 @@ titania_result titania_init_checked(const size_t size) {
 
 titania_result titania_get_hids(titania_query* hids, const size_t hids_length) {
 	CHECK_INIT();
+	if (hids_length == 0) {
+		return TITANIA_OK;
+	}
+
+	for (size_t i = 0; i < hids_length; i++) {
+		hids[i].hid_serial[0] = 0;
+		hids[i].hid_path[0] = 0;
+	}
+
 	size_t index = 0;
 
 	for (size_t i = 0; i < sizeof(device_infos) / sizeof(titania_device_info); i++) {
@@ -115,10 +124,6 @@ titania_result titania_get_hids(titania_query* hids, const size_t hids_length) {
 			dev = dev->next;
 		}
 		hid_free_enumeration(root);
-	}
-
-	for (size_t i = index; i < hids_length; i++) {
-		hids[i].hid_serial[0] = 0;
 	}
 
 	return TITANIA_OK;

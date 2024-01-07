@@ -345,14 +345,13 @@ int main(const int argc, const char** const argv) {
 		result = titania_open(query[hid_id].hid_path, query[hid_id].is_bluetooth, &context.hids[context.connected_controllers], calibrate, blocking);
 		if (IS_TITANIA_BAD(result)) {
 			titania_errorf(result, "error initializing hid");
-			context.connected_controllers--;
 			continue;
 		}
 		context.handles[context.connected_controllers] = context.hids[context.connected_controllers].handle;
 		context.connected_controllers++;
 	}
 
-	if (context.connected_controllers == 0) {
+	if (context.connected_controllers < 1) {
 		titaniactl_errorf("no hids", "connect a device");
 		titania_exit();
 		return 1;
