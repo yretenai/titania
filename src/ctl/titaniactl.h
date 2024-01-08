@@ -112,16 +112,31 @@ static inline uint8_t titania_parse_octet(const char ch) {
 	return value;
 }
 
-static inline uint32_t titania_rand(uint32_t* seed) {
+// cringe.
+#if RAND_MAX < 2147483647
+static inline uint16_t titania_rand16(uint32_t* seed) {
 	uint32_t value = *seed;
 	srand(value);
-	value = ((value + rand()) << 15) ^ ((rand() - value) >> 17);
-	value = ((value + rand()) << 25) ^ ((rand() - value) >> 7);
-	value = ((value + rand()) << 3) ^ ((rand() - value) >> 29);
-	value = ((value + rand()) << 19) ^ ((rand() - value) >> 13);
+	value = ((value + rand()) << 15) ^ ((rand() - value) >> 1);
+	value = ((value + rand()) << 9) ^ ((rand() - value) >> 7);
+	value = ((value + rand()) << 3) ^ ((rand() - value) >> 13);
+	value = ((value + rand()) << 11) ^ ((rand() - value) >> 5);
 	*seed = value;
-	return value;
+	return value & 0xFFFF;
 }
+
+static inline uint32_t titania_rand(uint32_t* seed) {
+	uint16_t lo = titania_rand16(seed);
+	uint16_t hi = titania_rand16(seed);
+	return (hi << 16) | lo; // full 32-bits
+}
+#else
+static inline uint32_t titania_rand(uint32_t* seed) {
+	srand(*seed);
+	*seed = (rand() << 1) | (rand() & 1); // full 32-bits.
+	return *seed;
+}
+#endif
 
 #include "titaniaprint.h"
 
