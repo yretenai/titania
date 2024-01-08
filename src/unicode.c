@@ -58,7 +58,7 @@ titania_unicode_result titania_utf8_to_utf32(const titania_char8* utf8, const si
 		return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 	}
 
-	utf32[size++] = 0;
+	utf32[size] = 0;
 
 	return (titania_unicode_result) { .size = size };
 }
@@ -93,7 +93,7 @@ titania_unicode_result titania_utf16_to_utf32(const titania_char16* utf16, const
 		return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 	}
 
-	utf32[size++] = 0;
+	utf32[size] = 0;
 
 	return (titania_unicode_result) { .size = size };
 }
@@ -149,7 +149,7 @@ titania_unicode_result titania_utf32_to_utf8(const titania_char32* utf32, const 
 		return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 	}
 
-	utf8[size++] = 0;
+	utf8[size] = 0;
 
 	return (titania_unicode_result) { .size = size };
 }
@@ -191,7 +191,7 @@ titania_unicode_result titania_utf32_to_utf16(const titania_char32* utf32, const
 		return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 	}
 
-	utf16[size++] = 0;
+	utf16[size] = 0;
 
 	return (titania_unicode_result) { .size = size };
 }
