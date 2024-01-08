@@ -1,5 +1,5 @@
 //  titania project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
+//  https://nothg.chronovore.dev/library/titania/
 //  SPDX-License-Identifier: MPL-2.0
 
 #include "structures.h"
@@ -15,7 +15,7 @@ const char* const titania_error_msg[TITANIA_ERROR_MAX + 1] = {
 	"invalid profile",
 	"invalid argument",
 	"hid failure",
-	"charset conversion failure",
+	"unicode error",
 	"out of range",
 	"not implemented",
 	"no available slots",

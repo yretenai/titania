@@ -1,5 +1,5 @@
 //  titania project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
+//  https://nothg.chronovore.dev/library/titania/
 //  SPDX-License-Identifier: MPL-2.0
 
 #include <stdio.h>
