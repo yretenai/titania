@@ -145,6 +145,7 @@ static inline uint64_t xoroshiro_next(void) {
 
 extern bool should_stop;
 extern bool is_json;
+extern bool preserve_data;
 
 #ifdef _WIN32
 #include <time.h>

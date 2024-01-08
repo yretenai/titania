@@ -67,7 +67,7 @@ titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, const s
 
 	const char* id = titania_json_object_get_string(data, "id", nullptr);
 	bool should_gen_id = true;
-	if (id != nullptr && strlen(id) < 32) {
+	if (preserve_data && id != nullptr && strlen(id) == 32 && strcmp(id, "00000000000000000000000000000000") != 0) {
 		should_gen_id = false;
 		for (int i = 0; i < 0x10; ++i) {
 			uint16_t a = titania_parse_octet_safe(id[i * 2]);
@@ -93,7 +93,13 @@ titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, const s
 		id64[1] = xoroshiro_s[1];
 	}
 
-	profile_data.timestamp = titania_json_object_get_uint64(data, "timestamp", timestamp);
+	profile_data.timestamp = timestamp;
+
+	uint64_t incoming_timestamp = titania_json_object_get_uint64(data, "timestamp", timestamp);;
+	if(preserve_data && incoming_timestamp > 0) {
+		profile_data.timestamp = incoming_timestamp;
+	}
+
 	profile_data.vibration = titania_json_object_get_enum(data, "vibrationLevel", titania_level_msg, TITANIA_LEVEL_HIGH);
 	profile_data.trigger_effect = titania_json_object_get_enum(data, "triggerStrength", titania_level_msg, TITANIA_LEVEL_HIGH);
 	profile_data.sticks_swapped = titania_json_object_get_bool(data, "sticksSwapped");

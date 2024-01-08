@@ -80,6 +80,7 @@ void handle_sigint(int signal) { shutdown(); }
 #endif
 
 bool is_json = false;
+bool preserve_data = false;
 
 void titaniactl_errorf(const char* error, const char* message) {
 	if (is_json) {
@@ -153,6 +154,7 @@ int main(const int argc, const char** const argv) {
 				printf("\t-b, --no-bt: disable bluetooth controllers from being considered\n");
 				printf("\t-u, --no-usb: disable usb controllers from being considered\n");
 				printf("\t-z, --non-blocking: disable blocking reads\n");
+				printf("\t-p, --preserve: preserve ids and timestamps when importing\n");
 				printf("\n");
 				printf("available modes:\n");
 				for (size_t j = 0; j < sizeof(modes) / sizeof(titaniactl_mode); ++j) {
@@ -208,6 +210,10 @@ int main(const int argc, const char** const argv) {
 
 			if (strcmp(text, "-j") == 0 || strcmp(text, "--json") == 0) {
 				is_json = true;
+			}
+
+			if (strcmp(text, "-p") == 0 || strcmp(text, "--preserve") == 0) {
+				preserve_data = true;
 			}
 
 			if (strcmp(text, "-d") == 0 || strcmp(text, "--device") == 0) {
