@@ -440,7 +440,7 @@ typedef union titania_edge_button_remap {
 typedef struct titania_edge_profile {
 	bool valid;
 	uint32_t version;
-	char name[0x81];
+	char name[0xA1];
 	uint8_t id[0x10];
 	titania_edge_stick sticks[2];
 	titania_edge_trigger triggers[2];
