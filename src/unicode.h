@@ -10,24 +10,43 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <titania_config_internal.h>
+
 typedef uint32_t titania_char32;
 typedef uint16_t titania_char16;
 typedef uint8_t titania_char8;
 
 typedef enum titania_unicode_error {
 	TITANIA_UNICODE_EMPTY = 0,
-	TITANIA_UNICODE_EXPECTED_CONTINUATION_CHAR = -1,
-	TITANIA_UNICODE_EXPECTED_REGULAR_CHAR = -2,
-	TITANIA_UNICODE_EXPECTED_SURROGATE_HIGH = -3,
-	TITANIA_UNICODE_EXPECTED_SURROGATE_LOW = -4,
-	TITANIA_UNICODE_MALFORMED = -5,
-	TITANIA_UNICODE_OUT_OF_SPACE = -6
+	TITANIA_UNICODE_EXPECTED_CONTINUATION_CHAR = 1,
+	TITANIA_UNICODE_EXPECTED_REGULAR_CHAR = 2,
+	TITANIA_UNICODE_EXPECTED_SURROGATE_HIGH = 3,
+	TITANIA_UNICODE_EXPECTED_SURROGATE_LOW = 4,
+	TITANIA_UNICODE_MALFORMED = 5,
+	TITANIA_UNICODE_OUT_OF_SPACE = 6
 } titania_unicode_error;
 
+#ifdef TITANIA_HAS_PACK
+#define PACKED
+#pragma pack(push, 1)
+#else
+#define PACKED __attribute__((__packed__))
+#endif
+
 typedef union titania_unicode_result {
-	titania_unicode_error error;
+	struct PACKED {
+		titania_unicode_error error : sizeof(titania_unicode_error) - 1;
+		uint32_t : sizeof(size_t) - sizeof(titania_unicode_error);
+		bool failed : 1;
+	};
+
 	size_t size;
 } titania_unicode_result;
+
+#ifdef TITANIA_HAS_PACK
+#pragma pack(pop)
+#endif
+#undef PACKED
 
 titania_unicode_result titania_utf8_to_utf32(const titania_char8* utf8, const size_t utf8_size, titania_char32* utf32, const size_t utf32_size);
 
