@@ -73,7 +73,9 @@ config_file = configure_file(
 		'TITANIA_MAX_CONTROLLERS' : get_option('titania_max_controllers'),
 		'TITANIA_PROJECT_NAME' : '"' + meson.project_name() + '"',
 		'TITANIA_PROJECT_VERSION' : '"' + meson.project_version() + '"'
-	})
+	}),
+	install : true,
+	install_dir : get_option('includedir')
 )
 
 configure_file(
@@ -133,7 +135,7 @@ if get_option('titania_ctl')
 	install : true)
 endif
 
-install_headers(['include/titania.h', config_file], preserve_path : false)
+install_headers(['include/titania.h'], preserve_path : false)
 
 if get_option('titania_man')
 	pandoc = find_program('pandoc', required : false)
