@@ -6,7 +6,10 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+#include <json.h>
 
 typedef enum profile_mode {
 	PROFILE_MODE_INVALID,
@@ -93,41 +96,49 @@ titaniactl_error titaniactl_mode_profile_dump(titaniactl_context* context) {
 	return TITANIACTL_OK;
 }
 
-enum imported_profile_type {
-	PROFILE_TYPE_INVALID,
-	PROFILE_TYPE_EDGE,
-	PROFILE_TYPE_ACCESS
-};
-
-struct imported_profile {
-	enum imported_profile_type type;
-
-	union {
-		titania_edge_profile edge;
-		titania_access_profile access;
-	};
-};
-
 titaniactl_error titaniactl_mode_profile_import_selector(titaniactl_context* context) {
 	if (context->argc < 3) {
 		return TITANIACTL_INVALID_ARGUMENTS;
 	}
 
 	const titania_profile_id profile = convert_profile_id(context->argv[1]);
-	const char* const path = context->argv[2];
 
 	if (profile == TITANIA_PROFILE_ALL || profile == TITANIA_PROFILE_NONE || profile == TITANIA_PROFILE_DEFAULT) {
 		return TITANIACTL_INVALID_ARGUMENTS;
 	}
 
-	struct imported_profile data = { 0 };
+	const char* const path = context->argv[2];
+
+	FILE* file = fopen(path, "r");
+	if (file == nullptr) {
+		return TITANIACTL_INVALID_PROFILE;
+	}
+
+	fseek(file, 0, SEEK_END);
+	const size_t size = ftell(file);
+	fseek(file, 0, SEEK_SET);
+
+	char* json_data = calloc(1, size + 1);
+	if (json_data == nullptr) {
+		fclose(file);
+		return TITANIACTL_INVALID_PROFILE;
+	}
+
+	fread(json_data, 1, size, file);
+	fclose(file);
+
+	struct json* json = json_parse_len(json_data, size);
+	if (json == nullptr) {
+		free(json_data);
+		return TITANIACTL_INVALID_PROFILE;
+	}
 
 	titaniactl_error result = TITANIACTL_OK;
 	for (int i = 0; i < context->connected_controllers; ++i) {
-		if (context->hids[i].is_edge && data.type == PROFILE_TYPE_EDGE) {
-			result = titaniactl_mode_edge_import(profile, data.edge, context->hids[i]);
-		} else if (context->hids[i].is_access && data.type == PROFILE_TYPE_ACCESS) {
-			result = titaniactl_mode_access_import(profile, data.access, context->hids[i]);
+		if (context->hids[i].is_edge) {
+			result = titaniactl_mode_edge_import(profile, json, context->hids[i]);
+		} else if (context->hids[i].is_access) {
+			result = titaniactl_mode_access_import(profile, json, context->hids[i]);
 		} else {
 			continue;
 		}
@@ -137,10 +148,14 @@ titaniactl_error titaniactl_mode_profile_import_selector(titaniactl_context* con
 		}
 
 		if (IS_TITANIACTL_BAD(result)) {
+			free(json_data);
+			json_delete(json);
 			return result;
 		}
 	}
 
+	free(json_data);
+	json_delete(json);
 	return result;
 }
 

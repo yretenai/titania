@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-int parse_octet(const char ch) {
+uint16_t titania_parse_octet_safe(const char ch) {
 	uint8_t value = ch;
 	if (value >= '0' && value <= '9') {
 		return value - '0';
@@ -19,7 +19,15 @@ int parse_octet(const char ch) {
 		return 9 + (value & 0xF);
 	}
 
-	return 0;
+	return 0x100;
+}
+
+uint8_t titania_parse_octet(const char ch) {
+	const uint16_t value = titania_parse_octet_safe(ch);
+	if (value > 0xFF) {
+		return 0;
+	}
+	return value;
 }
 
 titaniactl_error titaniactl_mode_led(titaniactl_context* context) {
@@ -56,14 +64,14 @@ titaniactl_error titaniactl_mode_led(titaniactl_context* context) {
 		uint8_t g8 = 0;
 		uint8_t b8 = 0;
 		if (len >= 2) {
-			r8 = parse_octet(color[0]);
-			r8 = r8 << 4 | parse_octet(color[1]);
+			r8 = titania_parse_octet(color[0]);
+			r8 = r8 << 4 | titania_parse_octet(color[1]);
 			if (len >= 4) {
-				g8 = parse_octet(color[2]);
-				g8 = g8 << 4 | parse_octet(color[3]);
+				g8 = titania_parse_octet(color[2]);
+				g8 = g8 << 4 | titania_parse_octet(color[3]);
 				if (len >= 6) {
-					b8 = parse_octet(color[4]);
-					b8 = b8 << 4 | parse_octet(color[5]);
+					b8 = titania_parse_octet(color[4]);
+					b8 = b8 << 4 | titania_parse_octet(color[5]);
 				}
 			}
 		}

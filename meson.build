@@ -1,14 +1,12 @@
-project(
-	'titania',
-	'c',
+project('titania', 'c',
+	license : 'MPL-2',
+	meson_version : '>=1.3.0',
+	version : '1.5.0',
 	default_options : [
 		'c_std=c2x',
 		'warning_level=3',
 		'default_library=both'
-	],
-	license : 'MPL-2',
-	meson_version : '>=1.3.0',
-	version : '1.1.0'
+	]
 )
 
 compiler = meson.get_compiler('c')
@@ -104,8 +102,9 @@ titania_lib = library(meson.project_name(), [
 	],
 	dependencies : [hidapi],
 	gnu_symbol_visibility: 'hidden',
-	c_args : [args, '-DTITANIA_EXPORTING'],
+	c_args : [args, '-DTITANIA_EXPORTING', '-D_TIME_BITS=64'],
 	install : true,
+	soversion : 1,
 	include_directories : titania_inc
 )
 
@@ -125,7 +124,7 @@ if get_option('titania_ctl')
 			'src/ctl/modes/report.c',
 			'src/ctl/modes/test.c'
 		],
-		c_args : args,
+		c_args : [args, '-D_TIME_BITS=64'],
 		dependencies : [titania_dep, hidapi, json],
 	install : true)
 endif
@@ -171,3 +170,9 @@ if get_option('titania_man')
 		endif
 	endif
 endif
+
+import('pkgconfig').generate(
+	titania_lib,
+	description: 'unofficial dualsense and access driver',
+	url: 'https://nothg.chronovore.dev/library/titania/'
+)

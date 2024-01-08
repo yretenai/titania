@@ -4,12 +4,153 @@
 
 #include "../titaniactl.h"
 
-#include <json.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
-titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, const titania_edge_profile data, titania_hid handle) { return TITANIACTL_NOT_IMPLEMENTED; }
+#include <json.h>
+
+#include "json_helpers.h"
+
+void json_object_get_stick(const struct json* obj, const char* key, titania_edge_stick* data) {
+	const struct json* stick_obj = json_object_get(obj, key);
+
+	data->template_id = titania_json_object_get_enum(stick_obj, "template", titania_edge_stick_template_msg, TITANIA_EDGE_STICK_TEMPLATE_DEFAULT);
+	data->interpolation_type = titania_json_object_get_uint32(stick_obj, "interpolationType", TITANIA_EDGE_INTERPOLATION_TYPE_LINEAR);
+	data->disabled = titania_json_object_get_bool(stick_obj, "disabled");
+
+	const struct json* deadzone_arr = json_object_get(stick_obj, "deadzone");
+	data->deadzone.min = titania_json_array_get_float(deadzone_arr, 0, 0.0);
+	data->deadzone.max = titania_json_array_get_float(deadzone_arr, 1, 1.0);
+
+	const struct json* curve_arr = json_object_get(stick_obj, "curve");
+	const float default_curve[3] = { 0.501961f, 0.768627f, 0.882353f };
+
+	for (int i = 0; i < 3; ++i) {
+		const struct json* curve = json_array_get(curve_arr, i);
+		data->curve_points[i].min = titania_json_array_get_float(curve, 0, default_curve[i]);
+		data->curve_points[i].max = titania_json_array_get_float(curve, 1, default_curve[i]);
+	}
+
+	data->unknown = titania_json_object_get_uint32(stick_obj, "unknown", 0);
+}
+
+void json_object_get_trigger(const struct json* obj, const char* key, titania_edge_trigger* data) {
+	const struct json* trigger_obj = json_object_get(obj, key);
+
+	const struct json* deadzone_arr = json_object_get(trigger_obj, "deadzone");
+	data->deadzone.min = titania_json_array_get_float(deadzone_arr, 0, 0.0);
+	data->deadzone.max = titania_json_array_get_float(deadzone_arr, 1, 1.0);
+}
+
+titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, const struct json* data, titania_hid handle) {
+	if (strcmp(titania_json_object_get_string(data, "type", "(null)"), "edge") != 0) {
+		return TITANIACTL_INVALID_PROFILE;
+	}
+
+	if (titania_json_object_get_uint32(data, "version", 0) != 1) {
+		return TITANIACTL_INVALID_PROFILE;
+	}
+
+	titania_edge_profile profile_data = { 0 };
+
+	const char* name = titania_json_object_get_string(data, "name", "Unnamed Profile");
+	const size_t name_len = strlen(name);
+	if (name_len >= sizeof(profile_data.name)) {
+		return TITANIACTL_INVALID_PROFILE;
+	}
+	memset(profile_data.name, 0, sizeof(profile_data.name));
+	memcpy(profile_data.name, name, name_len);
+	profile_data.name[name_len] = 0;
+	profile_data.version = 1;
+
+	const char* id = titania_json_object_get_string(data, "id", nullptr);
+	bool should_gen_id = true;
+	if (id != nullptr && strlen(id) < 32) {
+		should_gen_id = false;
+		for (int i = 0; i < 0x10; ++i) {
+			uint16_t a = titania_parse_octet_safe(id[i * 2]);
+			uint16_t b = titania_parse_octet_safe(id[i * 2 + 1]);
+			if (a > 0xFF || b > 0xFF) {
+				should_gen_id = true;
+				break;
+			}
+
+			profile_data.id[i] = a << 4 | b;
+		}
+	}
+
+	if (should_gen_id) {
+		int32_t* id32 = (int32_t*) &profile_data.id;
+		id32[0] = rand();
+		id32[1] = rand();
+		id32[2] = rand();
+		id32[3] = rand();
+	}
+
+	profile_data.timestamp = titania_json_object_get_uint64(data, "timestamp", (uint64_t) time(nullptr));
+	profile_data.vibration = titania_json_object_get_enum(data, "vibrationLevel", titania_level_msg, TITANIA_LEVEL_HIGH);
+	profile_data.trigger_effect = titania_json_object_get_enum(data, "triggerStrength", titania_level_msg, TITANIA_LEVEL_HIGH);
+	profile_data.sticks_swapped = titania_json_object_get_bool(data, "sticksSwapped");
+	profile_data.trigger_deadzone_mirrored = titania_json_object_get_bool(data, "triggerDeadzoneMirrored");
+
+	const struct json* stick_obj = json_object_get(data, "sticks");
+	json_object_get_stick(stick_obj, "left", &profile_data.sticks[TITANIA_LEFT]);
+	json_object_get_stick(stick_obj, "right", &profile_data.sticks[TITANIA_RIGHT]);
+
+	const struct json* trigger_obj = json_object_get(data, "triggers");
+	json_object_get_trigger(trigger_obj, "left", &profile_data.triggers[TITANIA_LEFT]);
+	json_object_get_trigger(trigger_obj, "right", &profile_data.triggers[TITANIA_RIGHT]);
+
+	struct json* button_obj = json_object_get(data, "buttonMap");
+	for (size_t i = 0; i < 0x10; ++i) {
+		char button_id[64];
+		if (CHECK_ENUM_SAFE(i, titania_edge_button_id_alt_msg)) {
+			sprintf(button_id, "%s", titania_edge_button_id_alt_msg[i]);
+		} else {
+			sprintf(button_id, "%d", (int) i);
+		}
+
+		profile_data.buttons.values[i] = titania_json_object_get_enum(button_obj, button_id, titania_edge_button_id_alt_msg, i);
+	}
+
+	struct json* disabled_button_obj = json_object_get(data, "disabledButtons");
+	profile_data.disabled_buttons.dpad_up = titania_json_object_get_bool(disabled_button_obj, "dpad_up");
+	profile_data.disabled_buttons.dpad_left = titania_json_object_get_bool(disabled_button_obj, "dpad_left");
+	profile_data.disabled_buttons.dpad_down = titania_json_object_get_bool(disabled_button_obj, "dpad_down");
+	profile_data.disabled_buttons.dpad_right = titania_json_object_get_bool(disabled_button_obj, "dpad_right");
+	profile_data.disabled_buttons.square = titania_json_object_get_bool(disabled_button_obj, "square");
+	profile_data.disabled_buttons.cross = titania_json_object_get_bool(disabled_button_obj, "cross");
+	profile_data.disabled_buttons.circle = titania_json_object_get_bool(disabled_button_obj, "circle");
+	profile_data.disabled_buttons.triangle = titania_json_object_get_bool(disabled_button_obj, "triangle");
+	profile_data.disabled_buttons.share = titania_json_object_get_bool(disabled_button_obj, "share");
+	profile_data.disabled_buttons.option = titania_json_object_get_bool(disabled_button_obj, "option");
+	profile_data.disabled_buttons.playstation = titania_json_object_get_bool(disabled_button_obj, "playstation");
+	profile_data.disabled_buttons.touchpad = titania_json_object_get_bool(disabled_button_obj, "touchpad");
+	profile_data.disabled_buttons.touch = titania_json_object_get_bool(disabled_button_obj, "touch");
+	profile_data.disabled_buttons.mute = titania_json_object_get_bool(disabled_button_obj, "mute");
+	profile_data.disabled_buttons.l1 = titania_json_object_get_bool(disabled_button_obj, "l1");
+	profile_data.disabled_buttons.l2 = titania_json_object_get_bool(disabled_button_obj, "l2");
+	profile_data.disabled_buttons.l3 = titania_json_object_get_bool(disabled_button_obj, "l3");
+	profile_data.disabled_buttons.r1 = titania_json_object_get_bool(disabled_button_obj, "r1");
+	profile_data.disabled_buttons.r2 = titania_json_object_get_bool(disabled_button_obj, "r2");
+	profile_data.disabled_buttons.r3 = titania_json_object_get_bool(disabled_button_obj, "r3");
+	profile_data.disabled_buttons.edge_f1 = titania_json_object_get_bool(disabled_button_obj, "f1");
+	profile_data.disabled_buttons.edge_f2 = titania_json_object_get_bool(disabled_button_obj, "f2");
+	profile_data.disabled_buttons.edge_left_paddle = titania_json_object_get_bool(disabled_button_obj, "leftPaddle");
+	profile_data.disabled_buttons.edge_right_paddle = titania_json_object_get_bool(disabled_button_obj, "rightPaddle");
+
+	profile_data.unknown = titania_json_object_get_uint32(data, "unknown", 0);
+
+	titania_result result = titania_update_edge_profile(handle.handle, profile, profile_data);
+	if (IS_TITANIA_BAD(result)) {
+		titania_errorf(result, "failed to update edge profile");
+		return MAKE_TITANIA_ERROR(result);
+	}
+
+	return TITANIACTL_OK;
+}
 
 struct json* json_object_add_stick(struct json* obj, const char* key, const titania_edge_stick data) {
 	char strbuffer[128];

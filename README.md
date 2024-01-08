@@ -1,6 +1,6 @@
 # titania
 
-Cross-platform userland driver for the Sony PlayStation DualSense Controller, and the PlayStation Access Controller.
+Cross-platform unofficial userland driver for the Sony PlayStation DualSense Controller, and the PlayStation Access Controller.
 
 ### Brief explanation about the name
 
