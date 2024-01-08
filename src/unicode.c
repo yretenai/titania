@@ -18,6 +18,15 @@ titania_unicode_result titania_utf8_to_utf32(const titania_char8* utf8, const si
 		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_MALFORMED };
 	}
 
+	if (utf32_size == 0) {
+		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+	}
+
+	if (utf8_size == 0) {
+		utf32[0] = 0;
+		return (titania_unicode_result) { .size = 0 };
+	}
+
 	size_t size = 0;
 	const titania_char8* endp = utf8 + utf8_size;
 	do {
@@ -63,9 +72,22 @@ titania_unicode_result titania_utf8_to_utf32(const titania_char8* utf8, const si
 	return (titania_unicode_result) { .size = size };
 }
 
-titania_unicode_result titania_utf16_to_utf32(const titania_char16* utf16, const size_t utf8_size, titania_char32* utf32, const size_t utf32_size) {
+titania_unicode_result titania_utf16_to_utf32(const titania_char16* utf16, const size_t utf16_size, titania_char32* utf32, const size_t utf32_size) {
+	if (utf16 == nullptr || utf32 == nullptr) {
+		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_MALFORMED };
+	}
+
+	if (utf32_size == 0) {
+		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+	}
+
+	if (utf16_size == 0) {
+		utf32[0] = 0;
+		return (titania_unicode_result) { .size = 0 };
+	}
+
 	size_t size = 0;
-	const titania_char16* endp = utf16 + utf8_size;
+	const titania_char16* endp = utf16 + utf16_size;
 	do {
 		const titania_char16 char0 = *utf16;
 		if (char0 < 0xD800 || char0 > 0xDFFF) { // Non-surrogate
@@ -99,6 +121,19 @@ titania_unicode_result titania_utf16_to_utf32(const titania_char16* utf16, const
 }
 
 titania_unicode_result titania_utf32_to_utf8(const titania_char32* utf32, const size_t utf32_size, titania_char8* utf8, const size_t utf8_size) {
+	if (utf32 == nullptr || utf8 == nullptr) {
+		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_MALFORMED };
+	}
+
+	if (utf8_size == 0) {
+		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+	}
+
+	if (utf32_size == 0) {
+		utf8[0] = 0;
+		return (titania_unicode_result) { .size = 0 };
+	}
+
 	size_t size = 0;
 	const titania_char32* endp = utf32 + utf32_size;
 	do {
@@ -155,6 +190,19 @@ titania_unicode_result titania_utf32_to_utf8(const titania_char32* utf32, const 
 }
 
 titania_unicode_result titania_utf32_to_utf16(const titania_char32* utf32, const size_t utf32_size, titania_char16* utf16, const size_t utf16_size) {
+	if (utf32 == nullptr || utf16 == nullptr) {
+		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_MALFORMED };
+	}
+
+	if (utf16_size == 0) {
+		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+	}
+
+	if (utf32_size == 0) {
+		utf16[0] = 0;
+		return (titania_unicode_result) { .size = 0 };
+	}
+
 	size_t size = 0;
 	const titania_char32* endp = utf32 + utf32_size;
 	do {
