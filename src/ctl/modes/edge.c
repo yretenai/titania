@@ -81,15 +81,20 @@ titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, const s
 		}
 	}
 
+	struct timespec ts;
+	timespec_get(&ts, TIME_UTC);
+	uint64_t timestamp = (ts.tv_sec * 1000) + (ts.tv_nsec / 1000);
+
 	if (should_gen_id) {
 		int32_t* id32 = (int32_t*) &profile_data.id;
-		id32[0] = rand();
-		id32[1] = rand();
-		id32[2] = rand();
-		id32[3] = rand();
+		uint32_t seed = (timestamp & 0xFFFFFFFF) ^ (timestamp >> 32);
+		id32[0] = titania_rand(&seed);
+		id32[1] = titania_rand(&seed);
+		id32[2] = titania_rand(&seed);
+		id32[3] = titania_rand(&seed);
 	}
 
-	profile_data.timestamp = titania_json_object_get_uint64(data, "timestamp", (uint64_t) time(nullptr));
+	profile_data.timestamp = titania_json_object_get_uint64(data, "timestamp", timestamp);
 	profile_data.vibration = titania_json_object_get_enum(data, "vibrationLevel", titania_level_msg, TITANIA_LEVEL_HIGH);
 	profile_data.trigger_effect = titania_json_object_get_enum(data, "triggerStrength", titania_level_msg, TITANIA_LEVEL_HIGH);
 	profile_data.sticks_swapped = titania_json_object_get_bool(data, "sticksSwapped");
@@ -147,6 +152,10 @@ titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, const s
 	if (IS_TITANIA_BAD(result)) {
 		titania_errorf(result, "failed to update edge profile");
 		return MAKE_TITANIA_ERROR(result);
+	}
+
+	if (!is_json) {
+		printf("successfully uploaded profile");
 	}
 
 	return TITANIACTL_OK;
@@ -352,6 +361,7 @@ titaniactl_error titaniactl_mode_edge_export(titania_profile_id profile, const c
 		return TITANIACTL_FILE_WRITE_ERROR;
 	}
 	fwrite(profile_str, 1, strlen(profile_str), file);
+	fwrite("\n", 1, 1, file);
 	fclose(file);
 
 	if (!is_json) {

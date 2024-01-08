@@ -7,29 +7,6 @@
 #include <stdio.h>
 #include <string.h>
 
-uint16_t titania_parse_octet_safe(const char ch) {
-	uint8_t value = ch;
-	if (value >= '0' && value <= '9') {
-		return value - '0';
-	}
-
-	value |= 0x20;
-
-	if (value >= 'a' && value <= 'f') {
-		return 9 + (value & 0xF);
-	}
-
-	return 0x100;
-}
-
-uint8_t titania_parse_octet(const char ch) {
-	const uint16_t value = titania_parse_octet_safe(ch);
-	if (value > 0xFF) {
-		return 0;
-	}
-	return value;
-}
-
 titaniactl_error titaniactl_mode_led(titaniactl_context* context) {
 	titania_led_index led = TITANIA_LED_NO_UPDATE;
 	float r = 1.0f;

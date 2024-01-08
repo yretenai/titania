@@ -165,7 +165,7 @@ titaniactl_error titaniactl_mode_profile_export_selector(titaniactl_context* con
 	}
 
 	const titania_profile_id profile = convert_profile_id(context->argv[1]);
-	const char* const path = context->argc > 2 ? context->argv[2] : "./";
+	const char* const path = context->argc > 2 ? context->argv[2] : ".";
 
 	if (profile == TITANIA_PROFILE_ALL || profile == TITANIA_PROFILE_NONE) {
 		return TITANIACTL_INVALID_ARGUMENTS;

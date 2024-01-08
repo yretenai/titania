@@ -133,7 +133,7 @@ static inline uint32_t titania_json_object_get_uint32(const struct json* obj, co
 		return default_value;
 	}
 
-	if (obj->type == JSON_STRING) {
+	if (value->type == JSON_STRING) {
 		uint32_t temp;
 		if (sscanf(value->string, "%u", &temp) == 0) {
 			return default_value;
@@ -141,7 +141,7 @@ static inline uint32_t titania_json_object_get_uint32(const struct json* obj, co
 		return temp;
 	}
 
-	if (obj->type != JSON_NUMBER) {
+	if (value->type != JSON_NUMBER) {
 		return default_value;
 	}
 
@@ -158,7 +158,7 @@ static inline uint64_t titania_json_object_get_uint64(const struct json* obj, co
 		return default_value;
 	}
 
-	if (obj->type == JSON_STRING) {
+	if (value->type == JSON_STRING) {
 		unsigned long long temp;
 		if (sscanf(value->string, "%llu", &temp) == 0) {
 			return default_value;
@@ -166,7 +166,7 @@ static inline uint64_t titania_json_object_get_uint64(const struct json* obj, co
 		return (uint64_t) temp;
 	}
 
-	if (obj->type != JSON_NUMBER) {
+	if (value->type != JSON_NUMBER) {
 		return default_value;
 	}
 
@@ -183,7 +183,7 @@ static inline double titania_json_array_get_float(const struct json* obj, const 
 		return default_value;
 	}
 
-	if (obj->type != JSON_NUMBER) {
+	if (value->type != JSON_NUMBER) {
 		return default_value;
 	}
 
@@ -200,7 +200,7 @@ static inline int32_t titania_json_array_get_int32(const struct json* obj, const
 		return default_value;
 	}
 
-	if (obj->type == JSON_STRING) {
+	if (value->type == JSON_STRING) {
 		int32_t temp;
 		if (sscanf(value->string, "%d", &temp) == 0) {
 			return default_value;
@@ -208,7 +208,7 @@ static inline int32_t titania_json_array_get_int32(const struct json* obj, const
 		return temp;
 	}
 
-	if (obj->type != JSON_NUMBER) {
+	if (value->type != JSON_NUMBER) {
 		return default_value;
 	}
 
@@ -225,7 +225,7 @@ static inline int64_t titania_json_array_get_int64(const struct json* obj, const
 		return default_value;
 	}
 
-	if (obj->type == JSON_STRING) {
+	if (value->type == JSON_STRING) {
 		long long temp;
 		if (sscanf(value->string, "%lld", &temp) == 0) {
 			return default_value;
@@ -233,7 +233,7 @@ static inline int64_t titania_json_array_get_int64(const struct json* obj, const
 		return (int64_t) temp;
 	}
 
-	if (obj->type != JSON_NUMBER) {
+	if (value->type != JSON_NUMBER) {
 		return default_value;
 	}
 
@@ -250,7 +250,7 @@ static inline uint32_t titania_json_array_get_uint32(const struct json* obj, con
 		return default_value;
 	}
 
-	if (obj->type == JSON_STRING) {
+	if (value->type == JSON_STRING) {
 		uint32_t temp;
 		if (sscanf(value->string, "%u", &temp) == 0) {
 			return default_value;
@@ -258,7 +258,7 @@ static inline uint32_t titania_json_array_get_uint32(const struct json* obj, con
 		return temp;
 	}
 
-	if (obj->type != JSON_NUMBER) {
+	if (value->type != JSON_NUMBER) {
 		return default_value;
 	}
 
@@ -275,7 +275,7 @@ static inline uint64_t titania_json_array_get_uint64(const struct json* obj, con
 		return default_value;
 	}
 
-	if (obj->type == JSON_STRING) {
+	if (value->type == JSON_STRING) {
 		unsigned long long temp;
 		if (sscanf(value->string, "%llu", &temp) == 0) {
 			return default_value;
@@ -283,7 +283,7 @@ static inline uint64_t titania_json_array_get_uint64(const struct json* obj, con
 		return (uint64_t) temp;
 	}
 
-	if (obj->type != JSON_NUMBER) {
+	if (value->type != JSON_NUMBER) {
 		return default_value;
 	}
 

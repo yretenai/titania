@@ -1,7 +1,7 @@
 project('titania', 'c',
 	license : 'MPL-2',
 	meson_version : '>=1.3.0',
-	version : '1.5.0',
+	version : '1.5.1',
 	default_options : [
 		'c_std=c2x',
 		'warning_level=3',
@@ -102,7 +102,7 @@ titania_lib = library(meson.project_name(), [
 	],
 	dependencies : [hidapi],
 	gnu_symbol_visibility: 'hidden',
-	c_args : [args, '-DTITANIA_EXPORTING', '-D_TIME_BITS=64'],
+	c_args : [args, '-DTITANIA_EXPORTING'],
 	install : true,
 	soversion : 1,
 	include_directories : titania_inc
@@ -124,7 +124,7 @@ if get_option('titania_ctl')
 			'src/ctl/modes/report.c',
 			'src/ctl/modes/test.c'
 		],
-		c_args : [args, '-D_TIME_BITS=64'],
+		c_args : [args],
 		dependencies : [titania_dep, hidapi, json],
 	install : true)
 endif

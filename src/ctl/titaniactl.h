@@ -89,8 +89,39 @@ titaniactl_error titaniactl_mode_access_import(titania_profile_id profile, const
 titaniactl_error titaniactl_mode_access_export(titania_profile_id profile, const char* path, titania_hid handle);
 titaniactl_error titaniactl_mode_access_delete(titania_profile_id profile, titania_hid handle);
 
-uint16_t titania_parse_octet_safe(const char ch);
-uint8_t titania_parse_octet(const char ch);
+static inline uint16_t titania_parse_octet_safe(const char ch) {
+	uint8_t value = ch;
+	if (value >= '0' && value <= '9') {
+		return value - '0';
+	}
+
+	value |= 0x20;
+
+	if (value >= 'a' && value <= 'f') {
+		return 9 + (value & 0xF);
+	}
+
+	return 0x100;
+}
+
+static inline uint8_t titania_parse_octet(const char ch) {
+	const uint16_t value = titania_parse_octet_safe(ch);
+	if (value > 0xFF) {
+		return 0;
+	}
+	return value;
+}
+
+static inline uint32_t titania_rand(uint32_t* seed) {
+	uint32_t value = *seed;
+	srand(value);
+	value = ((value + rand()) << 15) ^ ((rand() - value) >> 17);
+	value = ((value + rand()) << 25) ^ ((rand() - value) >> 7);
+	value = ((value + rand()) << 3) ^ ((rand() - value) >> 29);
+	value = ((value + rand()) << 19) ^ ((rand() - value) >> 13);
+	*seed = value;
+	return value;
+}
 
 #include "titaniaprint.h"
 
