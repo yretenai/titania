@@ -1,38 +1,27 @@
 //  titania project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
+//  https://nothg.chronovore.dev/library/titania/
 //  SPDX-License-Identifier: MPL-2.0
 
-#include "titania.h"
-#include "structures.h"
-
 #include <string.h>
-#include <unicode/ucnv.h>
+
+#include "structures.h"
+#include "titania.h"
+#include "unicode.h"
 
 titania_result titania_convert_edge_profile_input(uint8_t profile_data[TITANIA_MERGED_REPORT_EDGE_SIZE], titania_edge_profile* output) {
 	memset(output, 0, sizeof(titania_edge_profile));
 
 	const dualsense_edge_profile profile = *(dualsense_edge_profile*) profile_data;
 
-	UErrorCode err = U_ZERO_ERROR;
-
-	UConverter* utf16leConverter = ucnv_open("UTF-16LE", &err);
-	if (U_FAILURE(err)) {
-		return TITANIA_ICU_FAIL;
+	titania_char32 unicode[41];
+	titania_unicode_result unicode_result = titania_utf16_to_utf32((const titania_char16*) &profile.msg.name, sizeof(profile.msg.name), unicode, sizeof(unicode));
+	if (unicode_result.error < 0) {
+		return TITANIA_UNICODE_ERROR;
 	}
 
-	UConverter* utf8Converter = ucnv_open("UTF-8", &err);
-	if (U_FAILURE(err)) {
-		ucnv_close(utf16leConverter);
-		return TITANIA_ICU_FAIL;
-	}
-
-	ucnv_convert("UTF-8", "UTF-16-LE", (char*) &output->name, sizeof(output->name), (const char*) &profile.msg.name, sizeof(profile.msg.name), &err);
-
-	ucnv_close(utf16leConverter);
-	ucnv_close(utf8Converter);
-
-	if (U_FAILURE(err)) {
-		return TITANIA_ICU_FAIL;
+	unicode_result = titania_utf32_to_utf8(unicode, sizeof(unicode), (titania_char8*) &output->name, sizeof(output->name));
+	if (unicode_result.error < 0) {
+		return TITANIA_UNICODE_ERROR;
 	}
 
 	output->version = profile.msg.version;
@@ -122,28 +111,15 @@ titania_result titania_convert_edge_profile_output(titania_edge_profile input, d
 
 	profile.msg.version = 1;
 
-	UErrorCode err = U_ZERO_ERROR;
-
-	UConverter* utf16leConverter = ucnv_open("UTF-16LE", &err);
-	if (U_FAILURE(err)) {
-		return TITANIA_ICU_FAIL;
+	titania_char32 unicode[41];
+	titania_unicode_result unicode_result = titania_utf8_to_utf32((const titania_char8*) &input.name, sizeof(input.name), unicode, sizeof(unicode));
+	if (unicode_result.error < 0) {
+		return TITANIA_UNICODE_ERROR;
 	}
 
-	UConverter* utf8Converter = ucnv_open("UTF-8", &err);
-	if (U_FAILURE(err)) {
-		ucnv_close(utf16leConverter);
-		return TITANIA_ICU_FAIL;
-	}
-
-	input.name[sizeof(input.name) - 1] = 0;
-	size_t length = strlen(input.name);
-	ucnv_convert("UTF-16-LE", "UTF-8", (char*) &profile.msg.name, sizeof(profile.msg.name), (const char*) &input.name, length, &err);
-
-	ucnv_close(utf16leConverter);
-	ucnv_close(utf8Converter);
-
-	if (U_FAILURE(err)) {
-		return TITANIA_ICU_FAIL;
+	unicode_result = titania_utf32_to_utf16(unicode, sizeof(unicode), (titania_char16*) &profile.msg.name, sizeof(profile.msg.name));
+	if (unicode_result.error < 0) {
+		return TITANIA_UNICODE_ERROR;
 	}
 
 	const uint8_t left_right[4] = { TITANIA_LEFT, DUALSENSE_LEFT, TITANIA_RIGHT, TITANIA_RIGHT };

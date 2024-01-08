@@ -91,11 +91,6 @@ if not hidapi.found()
 	hidapi = dependency('hidapi')
 endif
 
-icu = dependency('icu-uc', version : '>=73.2', required : false)
-if not icu.found()
-	icu = dependency('icu-uc')
-endif
-
 titania_inc = include_directories('include/')
 
 titania_lib = library(meson.project_name(), [
@@ -104,9 +99,10 @@ titania_lib = library(meson.project_name(), [
 		'src/enums.c',
 		'src/edge.c',
 		'src/hid.c',
-		'src/trans.c'
+		'src/trans.c',
+		'src/unicode.c'
 	],
-	dependencies : [hidapi, icu],
+	dependencies : [hidapi],
 	gnu_symbol_visibility: 'hidden',
 	c_args : [args, '-DTITANIA_EXPORTING'],
 	install : true,

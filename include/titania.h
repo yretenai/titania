@@ -1,5 +1,5 @@
 //  titania project
-//  Copyright (c) 2023 <https://nothg.chronovore.dev/library/titania/>
+//  https://nothg.chronovore.dev/library/titania/
 //  SPDX-License-Identifier: MPL-2.0
 
 #pragma once
@@ -60,7 +60,7 @@ typedef enum titania_result {
 	TITANIA_INVALID_PROFILE,
 	TITANIA_INVALID_ARGUMENT,
 	TITANIA_HIDAPI_FAIL,
-	TITANIA_ICU_FAIL,
+	TITANIA_UNICODE_ERROR,
 	TITANIA_OUT_OF_RANGE,
 	TITANIA_NOT_IMPLEMENTED,
 	TITANIA_NO_SLOTS,
