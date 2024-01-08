@@ -10,8 +10,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <titania_config_internal.h>
-
 typedef uint32_t titania_char32;
 typedef uint16_t titania_char16;
 typedef uint8_t titania_char8;
@@ -26,26 +24,14 @@ typedef enum titania_unicode_error {
 	TITANIA_UNICODE_OUT_OF_SPACE = 6
 } titania_unicode_error;
 
-#ifdef TITANIA_HAS_PACK
-#define PACKED
-#pragma pack(push, 1)
-#else
-#define PACKED __attribute__((__packed__))
-#endif
-
 typedef union titania_unicode_result {
-	struct PACKED {
+	struct {
 		titania_unicode_error error;
 		bool failed;
 	};
 
 	size_t size;
 } titania_unicode_result;
-
-#ifdef TITANIA_HAS_PACK
-#pragma pack(pop)
-#endif
-#undef PACKED
 
 titania_unicode_result titania_utf8_to_utf32(const titania_char8* utf8, const size_t utf8_size, titania_char32* utf32, const size_t utf32_size);
 
