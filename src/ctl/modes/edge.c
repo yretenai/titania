@@ -86,12 +86,11 @@ titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, const s
 	uint64_t timestamp = (ts.tv_sec * 1000) + (ts.tv_nsec / 1000);
 
 	if (should_gen_id) {
-		int32_t* id32 = (int32_t*) &profile_data.id;
-		uint32_t seed = (timestamp & 0xFFFFFFFF) ^ (timestamp >> 32);
-		id32[0] = titania_rand(&seed);
-		id32[1] = titania_rand(&seed);
-		id32[2] = titania_rand(&seed);
-		id32[3] = titania_rand(&seed);
+		int64_t* id64 = (int64_t*) &profile_data.id;
+		xoroshiro_init(timestamp);
+		xoroshiro_next();
+		id64[0] = xoroshiro_s[0];
+		id64[1] = xoroshiro_s[1];
 	}
 
 	profile_data.timestamp = titania_json_object_get_uint64(data, "timestamp", timestamp);

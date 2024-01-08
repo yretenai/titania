@@ -112,42 +112,34 @@ static inline uint8_t titania_parse_octet(const char ch) {
 	return value;
 }
 
-// cringe.
-#if RAND_MAX < 2147483647
-static inline uint16_t titania_rand16(uint32_t* seed) {
-	uint32_t value = *seed;
-	srand(value);
-	value = ((value + rand()) << 15) ^ ((rand() - value) >> 1);
-	value = ((value + rand()) << 9) ^ ((rand() - value) >> 7);
-	value = ((value + rand()) << 3) ^ ((rand() - value) >> 13);
-	value = ((value + rand()) << 11) ^ ((rand() - value) >> 5);
-	*seed = value;
-	return (*seed & 0xFFFF) ^ (*seed >> 16);
+static uint64_t xoroshiro_s[2];
+
+// https://prng.di.unimi.it/splitmix64.c
+static inline void xoroshiro_init(uint64_t seed) {
+	uint64_t z = (seed += 0x9e3779b9'7f4a7c15);
+	z = (z ^ (z >> 30)) * 0xbf58476d'1ce4e5b9;
+	z = (z ^ (z >> 27)) * 0x94d049bb'133111eb;
+	xoroshiro_s[0] = z ^ (z >> 31);
+	z = (xoroshiro_s[0] += 0x9e3779b9'7f4a7c15);
+	z = (z ^ (z >> 30)) * 0xbf58476d'1ce4e5b9;
+	z = (z ^ (z >> 27)) * 0x94d049bb'133111eb;
+	xoroshiro_s[1] = z ^ (z >> 31);
 }
 
-static inline uint32_t titania_rand(uint32_t* seed) {
-	const uint16_t lo = titania_rand16(seed);
-	const uint16_t hi = titania_rand16(seed);
-	return (hi << 16) | lo; // full 32-bits
-}
-#else
-static inline uint16_t titania_rand16(uint32_t* seed) {
-	srand(*seed);
-	*seed = rand();
-	return (*seed & 0xFFFF) ^ (*seed >> 16);
-}
+// https://prng.di.unimi.it/xoroshiro128plusplus.c
+static inline uint64_t rotl(const uint64_t x, int k) { return (x << k) | (x >> (64 - k)); }
 
-static inline uint32_t titania_rand(uint32_t* seed) {
-	uint32_t value = *seed;
-	srand(value);
-	value = ((value + rand()) << 15) ^ ((rand() - value) >> 17);
-	value = ((value + rand()) << 25) ^ ((rand() - value) >> 7);
-	value = ((value + rand()) << 3) ^ ((rand() - value) >> 29);
-	value = ((value + rand()) << 19) ^ ((rand() - value) >> 13);
-	*seed = value;
-	return value;
+static inline uint64_t xoroshiro_next(void) {
+	const uint64_t s0 = xoroshiro_s[0];
+	uint64_t s1 = xoroshiro_s[1];
+	const uint64_t result = rotl(s0 + s1, 17) + s0;
+
+	s1 ^= s0;
+	xoroshiro_s[0] = rotl(s0, 49) ^ s1 ^ (s1 << 21); // a, b
+	xoroshiro_s[1] = rotl(s1, 28); // c
+
+	return result;
 }
-#endif
 
 #include "titaniaprint.h"
 
