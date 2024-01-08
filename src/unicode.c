@@ -4,9 +4,9 @@
 
 #include "unicode.h"
 
-#define TEST_CONTINUATION_CHAR(t, buf, n)                                                        \
-	const t n = *++buf;                                                                          \
-	if ((n & 0xC0) != 0x80 || n == 0) {                                                          \
+#define TEST_CONTINUATION_CHAR(t, buf, n) \
+	const t n = *++buf; \
+	if ((n & 0xC0) != 0x80 || n == 0) { \
 		return (titania_unicode_result) { .error = TITANIA_UNICODE_EXPECTED_CONTINUATION_CHAR }; \
 	}
 

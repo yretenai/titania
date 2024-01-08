@@ -74,18 +74,18 @@
 #define DENORM_CLAMP_INT8(value) (DENORM_CLAMP(value, INT8_MAX + 1) / 2.0f)
 
 // Check if the library is initialized
-#define CHECK_INIT()     \
+#define CHECK_INIT() \
 	if (!is_initialized) \
 	return TITANIA_NOT_INITIALIZED
 
 // Check if a handle is a valid number.
-#define CHECK_HANDLE(h)                                                             \
+#define CHECK_HANDLE(h) \
 	if (h == TITANIA_INVALID_HANDLE || h < 0 || h >= TITANIA_MAX_CONTROLLERS) \
 	return TITANIA_INVALID_HANDLE
 
 // Check if a handle is a valid number, and that it has been initialized.
-#define CHECK_HANDLE_VALID(h)    \
-	CHECK_HANDLE(h);             \
+#define CHECK_HANDLE_VALID(h) \
+	CHECK_HANDLE(h); \
 	if (state[h].hid == nullptr) \
 	return TITANIA_INVALID_HANDLE
 
@@ -95,11 +95,11 @@
 #define IS_EDGE(h) (h.vendor_id == 0x054C && h.product_id == 0x0DF2)
 #define IS_ACCESS(h) (h.vendor_id == 0x054C && h.product_id == 0x0E5F)
 
-#define CHECK_EDGE(h)                \
+#define CHECK_EDGE(h) \
 	if (!IS_EDGE(state[h].hid_info)) \
 	return TITANIA_NOT_EDGE
 
-#define CHECK_ACCESS(h)                \
+#define CHECK_ACCESS(h) \
 	if (!IS_ACCESS(state[h].hid_info)) \
 	return TITANIA_NOT_ACCESS
 

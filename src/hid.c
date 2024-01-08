@@ -31,18 +31,18 @@ static titania_device_info device_infos[] = {
 
 #define CALIBRATION_ACCELEROMETER_BIAS(slot) calibration.accelerometer[slot].max - (calibration.accelerometer[slot].max - calibration.accelerometer[slot].min) / 2
 
-#define COPY_VERSION_HARDWARE(name)                                       \
-	handle->firmware.name.reserved = firmware.name.hardware.reserved;     \
-	handle->firmware.name.variation = firmware.name.hardware.variation;   \
+#define COPY_VERSION_HARDWARE(name) \
+	handle->firmware.name.reserved = firmware.name.hardware.reserved; \
+	handle->firmware.name.variation = firmware.name.hardware.variation; \
 	handle->firmware.name.generation = firmware.name.hardware.generation; \
 	handle->firmware.name.revision = firmware.name.hardware.revision
 
-#define COPY_VERSION_UPDATE(name)                             \
+#define COPY_VERSION_UPDATE(name) \
 	handle->firmware.name.major = firmware.name.update.major; \
 	handle->firmware.name.minor = firmware.name.update.minor; \
 	handle->firmware.name.revision = firmware.name.update.revision
 
-#define COPY_VERSION_FIRMWARE(name)                             \
+#define COPY_VERSION_FIRMWARE(name) \
 	handle->firmware.name.major = firmware.name.firmware.major; \
 	handle->firmware.name.minor = firmware.name.firmware.minor; \
 	handle->firmware.name.revision = firmware.name.firmware.revision
