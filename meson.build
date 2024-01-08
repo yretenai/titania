@@ -2,7 +2,6 @@ project(
 	'titania',
 	'c',
 	default_options : [
-		'prefix=/usr',
 		'c_std=c2x',
 		'warning_level=3',
 		'default_library=both'
