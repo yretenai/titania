@@ -5,7 +5,10 @@
 #include "unicode.h"
 
 #define TEST_CONTINUATION_CHAR(t, buf, n) \
-	const t n = *++buf; \
+	if (++buf >= endp) { \
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE }; \
+	} \
+	const t n = *buf; \
 	if ((n & 0xC0) != 0x80 || n == 0) { \
 		return (titania_unicode_result) { .error = TITANIA_UNICODE_EXPECTED_CONTINUATION_CHAR }; \
 	}
@@ -72,6 +75,10 @@ titania_unicode_result titania_utf16_to_utf32(const titania_char16* utf16, const
 
 		if (char0 > 0xDBFF) {
 			return (titania_unicode_result) { .error = TITANIA_UNICODE_EXPECTED_SURROGATE_HIGH };
+		}
+
+		if (++utf16 >= endp) {
+			return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 		}
 
 		const titania_char16 char1 = *++utf16;
