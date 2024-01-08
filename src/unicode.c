@@ -104,7 +104,7 @@ titania_unicode_result titania_utf16_to_utf32(const titania_char16* utf16, const
 		}
 
 		const titania_char16 char1 = *++utf16;
-		if (char0 < 0xDC00 || char0 > 0xDFFF) {
+		if (char1 < 0xDC00 || char1 > 0xDFFF) {
 			return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_EXPECTED_SURROGATE_LOW };
 		}
 
