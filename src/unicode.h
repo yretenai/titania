@@ -35,9 +35,8 @@ typedef enum titania_unicode_error {
 
 typedef union titania_unicode_result {
 	struct PACKED {
-		titania_unicode_error error : sizeof(titania_unicode_error) - 1;
-		uint32_t : sizeof(size_t) - sizeof(titania_unicode_error);
-		bool failed : 1;
+		titania_unicode_error error;
+		bool failed;
 	};
 
 	size_t size;
