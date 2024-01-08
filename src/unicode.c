@@ -113,6 +113,7 @@ titania_unicode_result titania_utf32_to_utf8(const titania_char32* utf32, const 
 			if (size + 2 >= utf8_size) {
 				return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 			}
+
 			utf8[size++] = 0xC0 | (char0 >> 6);
 			utf8[size++] = 0x80 | (char0 & 0x3F);
 			continue;
@@ -122,6 +123,7 @@ titania_unicode_result titania_utf32_to_utf8(const titania_char32* utf32, const 
 			if (size + 3 >= utf8_size) {
 				return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 			}
+
 			utf8[size++] = 0xC0 | (char0 >> 12);
 			utf8[size++] = 0x80 | (char0 >> 6 & 0x3F);
 			utf8[size++] = 0x80 | (char0 & 0x3F);
