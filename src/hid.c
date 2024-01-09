@@ -887,7 +887,7 @@ titania_result titania_delete_access_profile(const titania_handle handle, const 
 
 	dualsense_access_profile_blob del = { 0 };
 	del.report_id = DUALSENSE_REPORT_ACCESS_SET_PROFILE;
-	del.page_id = DUALSENSE_ACCESS_DELETE_PROFILE;
+	del.command_id = DUALSENSE_ACCESS_DELETE_PROFILE;
 	if (id == TITANIA_PROFILE_ALL) {
 		del.profile_id = 0xFF;
 	} else {

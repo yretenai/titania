@@ -62,10 +62,10 @@ titania_result titania_debug_get_access_profile(const titania_handle handle, con
 
 	data.report_id = DUALSENSE_REPORT_ACCESS_SET_PROFILE;
 	switch (profile_id) {
-		case TITANIA_PROFILE_DEFAULT: data.page_id = DUALSENSE_ACCESS_QUERY_PROFILE_0; break;
-		case TITANIA_PROFILE_1: data.page_id = DUALSENSE_ACCESS_QUERY_PROFILE_1; break;
-		case TITANIA_PROFILE_2: data.page_id = DUALSENSE_ACCESS_QUERY_PROFILE_2; break;
-		case TITANIA_PROFILE_3: data.page_id = DUALSENSE_ACCESS_QUERY_PROFILE_3; break;
+		case TITANIA_PROFILE_DEFAULT: data.command_id = DUALSENSE_ACCESS_QUERY_PROFILE_0; break;
+		case TITANIA_PROFILE_1: data.command_id = DUALSENSE_ACCESS_QUERY_PROFILE_1; break;
+		case TITANIA_PROFILE_2: data.command_id = DUALSENSE_ACCESS_QUERY_PROFILE_2; break;
+		case TITANIA_PROFILE_3: data.command_id = DUALSENSE_ACCESS_QUERY_PROFILE_3; break;
 		default: return TITANIA_INVALID_PROFILE;
 	}
 
@@ -74,15 +74,21 @@ titania_result titania_debug_get_access_profile(const titania_handle handle, con
 	}
 
 	for (int i = 0; i < 0x12; ++i) {
+		data.report_id = DUALSENSE_REPORT_ACCESS_GET_PROFILE;
 		if (HID_FAIL(hid_get_feature_report(state[handle].hid, (uint8_t*) &data, sizeof(dualsense_access_profile_blob)))) {
 			return TITANIA_INVALID_DATA;
 		}
 
+		size_t s = sizeof(data.blob);
 		if (sizeof(data.blob) * (i + 1) > TITANIA_MERGED_REPORT_ACCESS_SIZE) {
-			return TITANIA_INVALID_DATA;
+			if(i == 0x11) { // last profile, truncated.
+				s = TITANIA_MERGED_REPORT_ACCESS_SIZE - (sizeof(data.blob) * i);
+			} else {
+				return TITANIA_INVALID_DATA;
+			}
 		}
 
-		memcpy(&profile_data[sizeof(data.blob) * i], data.blob, sizeof(data.blob));
+		memcpy(&profile_data[sizeof(data.blob) * i], data.blob, s);
 	}
 
 	return TITANIA_OK;

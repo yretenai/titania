@@ -2,14 +2,14 @@
 //  https://nothg.chronovore.dev/library/titania/
 //  SPDX-License-Identifier: MPL-2.0
 
-#include "../titaniactl.h"
-
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <json.h>
+
+#include "../titaniactl.h"
 
 typedef enum profile_mode {
 	PROFILE_MODE_INVALID,
@@ -92,6 +92,83 @@ titaniactl_error titaniactl_mode_profile_dump(titaniactl_context* context) {
 			fclose(file);
 		}
 	}
+
+	return TITANIACTL_OK;
+}
+
+titaniactl_error titaniactl_mode_profile_convert_selector(titaniactl_context* context) {
+	if (context->argc < 2) {
+		return TITANIACTL_INVALID_ARGUMENTS;
+	}
+
+	const char* const report_name = context->argv[1];
+	const char* const output_path = context->argc > 2 ? context->argv[2] : ".";
+
+	const bool is_stdout = strcmp(output_path, "--") == 0;
+	if (is_stdout && !is_json) {
+		return TITANIACTL_INVALID_ARGUMENTS;
+	}
+
+	uint8_t buffer[TITANIA_MERGED_REPORT_ACCESS_SIZE];
+	FILE* file = fopen(report_name, "r+b");
+	if (file == nullptr) {
+		return TITANIACTL_FILE_READ_ERROR;
+	}
+
+	const size_t n = fread(buffer, 1, TITANIA_MERGED_REPORT_ACCESS_SIZE, file);
+	fclose(file);
+
+	struct json* profile_json;
+	if (n == TITANIA_MERGED_REPORT_ACCESS_SIZE) {
+		titania_access_profile profile;
+		const titania_result result = titania_convert_access_profile_input(buffer, &profile);
+		if (IS_TITANIA_BAD(result)) {
+			titania_errorf(result, "failed to convert access profile");
+			return MAKE_TITANIA_ERROR(result);
+		}
+		profile_json = titaniactl_mode_access_convert(profile, is_stdout);
+	} else if (n == TITANIA_MERGED_REPORT_EDGE_SIZE) {
+		titania_edge_profile profile;
+		const titania_result result = titania_convert_edge_profile_input(buffer, &profile);
+		if (IS_TITANIA_BAD(result)) {
+			titania_errorf(result, "failed to convert edge profile");
+			return MAKE_TITANIA_ERROR(result);
+		}
+		profile_json = titaniactl_mode_edge_convert(profile, is_stdout);
+	} else {
+		return TITANIACTL_INVALID_PROFILE;
+	}
+
+	if (profile_json == nullptr) {
+		return TITANIACTL_INVALID_PROFILE;
+	}
+
+	char* profile_str = json_print(profile_json);
+	json_delete(profile_json);
+	if (profile_str == nullptr) {
+		return TITANIACTL_FILE_WRITE_ERROR;
+	}
+
+	if (is_stdout) {
+		printf("%s\n", profile_str);
+		free(profile_str);
+		return TITANIACTL_OK_NO_JSON;
+	}
+
+	file = fopen(output_path, "w");
+	if (file == nullptr) {
+		free(profile_str);
+		return TITANIACTL_FILE_WRITE_ERROR;
+	}
+	fwrite(profile_str, 1, strlen(profile_str), file);
+	fwrite("\n", 1, 1, file);
+	fclose(file);
+
+	if (!is_json) {
+		printf("successfully wrote profile %s\n", output_path);
+	}
+
+	free(profile_str);
 
 	return TITANIACTL_OK;
 }
@@ -229,7 +306,12 @@ titaniactl_error titaniactl_mode_profile_funnel(titaniactl_context* context) {
 	titaniactl_error result = TITANIACTL_OK;
 	switch ((profile_mode) tolower(context->argv[0][0])) {
 		case PROFILE_MODE_INVALID: break; // unreachable but llvm complains.
-		case PROFILE_MODE_CONVERT: return TITANIACTL_NOT_IMPLEMENTED;
+		case PROFILE_MODE_CONVERT:
+			result = titaniactl_mode_profile_convert_selector(context);
+			if (IS_TITANIACTL_BAD(result)) {
+				return result;
+			}
+			break;
 		case PROFILE_MODE_IMPORT:
 			result = titaniactl_mode_profile_import_selector(context);
 			if (IS_TITANIACTL_BAD(result)) {
@@ -255,10 +337,6 @@ titaniactl_error titaniactl_mode_profile_funnel(titaniactl_context* context) {
 			}
 			break;
 		default: return TITANIACTL_INVALID_ARGUMENTS;
-	}
-
-	if (result == TITANIACTL_NOT_IMPLEMENTED) {
-		return TITANIACTL_OK;
 	}
 
 	return result;

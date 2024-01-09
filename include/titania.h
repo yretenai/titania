@@ -48,7 +48,7 @@ extern "C" {
 #define TITANIA_TRIGGER_GRANULARITY (10)
 #define TITANIA_FIRMWARE_DATE_LEN (0x20)
 #define TITANIA_MERGED_REPORT_EDGE_SIZE (174)
-#define TITANIA_MERGED_REPORT_ACCESS_SIZE (1024) // todo: calculate max access report size.
+#define TITANIA_MERGED_REPORT_ACCESS_SIZE (960)
 
 typedef enum titania_result {
 	TITANIA_OK = 0,

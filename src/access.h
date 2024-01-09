@@ -97,15 +97,16 @@ static_assert(sizeof(dualsense_access_led_flags) == 2, "dualsense_access_led_fla
 
 typedef struct PACKED dualsense_access_profile_blob {
 	uint8_t report_id;
-	uint8_t page_id;
+	uint8_t command_id;
 	uint8_t profile_id;
+	uint8_t page_id;
 
 	union PACKED {
 		struct {
 			uint32_t version;
-			uint8_t _padding[0x35];
+			uint8_t _padding[0x34];
 		};
-		uint8_t blob[0x39];
+		uint8_t blob[0x38];
 	};
 
 	uint32_t checksum;

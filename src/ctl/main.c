@@ -289,6 +289,7 @@ int main(const int argc, const char** const argv) {
 
 	if (cb == nullptr) {
 		titaniactl_errorf("invalid mode", "mode not recognized");
+		return TITANIA_INVALID_ARGUMENT;
 	}
 
 	titania_result result = titania_init();

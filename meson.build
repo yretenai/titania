@@ -1,7 +1,7 @@
 project('titania', 'c',
 	license : 'MPL-2',
 	meson_version : '>=1.3.0',
-	version : '1.5.2',
+	version : '1.5.3',
 	default_options : [
 		'c_std=c2x',
 		'warning_level=3',

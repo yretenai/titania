@@ -29,7 +29,7 @@
 - [x] report dumping (`titaniactl dump`)
 - [x] speed benchmarking (`titaniactl bench`)
 - [x] update led state (`titania led #rrggbb|off [player-led]`)
-- [ ] dualsense edge merged profile conversion (`titaniactl profile convert`)
+- [x] dualsense edge merged profile conversion (`titaniactl profile convert`)
 - [x] dualsense edge profile importing (`titaniactl profile import [square, cross, circle]`)
 - [x] dualsense edge profile exporting (`titaniactl profile export [triangle, square, cross, circle]`)
 - [ ] playstation access merged profile conversion (`titaniactl profile convert`)
