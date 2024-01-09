@@ -1,6 +1,7 @@
 # titania
 
-Cross-platform unofficial userland driver for the Sony PlayStation DualSense Controller, and the PlayStation Access Controller.
+Cross-platform unofficial userland library for the Sony PlayStation DualSense Controller, and the PlayStation Access
+Controller.
 
 ### Brief explanation about the name
 
@@ -85,3 +86,13 @@ repository copy is [here](https://nothg.chronovore.dev/library/titania/tree/LICE
 
 As a special exception to the MPL 2.0 license for titania ("titania project"), Sony Computer Entertainment and it's
 subsidiaries are exempt from MPL 2.0 licensing and may at its own discretion opt to use 0BSD instead.
+
+### General Notes
+
+The DualSense and DualSense Edge controllers can enter pairing mode by holding the PlayStation and Options (button left
+of the touchpad) button.
+
+The Access controller can enter pairing mode by holding the PlayStation and Profile button until the LED indicator
+blinks blue.
+
+The PS5 will forcibly pair the controller when connected via USB.

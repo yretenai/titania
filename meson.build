@@ -101,7 +101,7 @@ titania_lib = library(meson.project_name(), [
 		'src/unicode.c'
 	],
 	dependencies : [hidapi],
-	gnu_symbol_visibility: 'hidden',
+	gnu_symbol_visibility : 'hidden',
 	c_args : [args, '-DTITANIA_EXPORTING'],
 	install : true,
 	soversion : 1,
@@ -173,6 +173,6 @@ endif
 
 import('pkgconfig').generate(
 	titania_lib,
-	description: 'unofficial dualsense and access driver',
-	url: 'https://nothg.chronovore.dev/library/titania/'
+	description : 'unofficial dualsense and access library',
+	url : 'https://nothg.chronovore.dev/library/titania/'
 )
