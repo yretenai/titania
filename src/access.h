@@ -106,6 +106,7 @@ typedef struct PACKED dualsense_access_profile_blob {
 			uint32_t version;
 			uint8_t _padding[0x34];
 		};
+
 		uint8_t blob[0x38];
 	};
 
@@ -113,6 +114,28 @@ typedef struct PACKED dualsense_access_profile_blob {
 } dualsense_access_profile_blob;
 
 static_assert(sizeof(dualsense_access_profile_blob) == 64, "dualsense_access_profile_blob size is not 64");
+
+typedef struct PACKED dualsense_access_profile_button {
+	uint8_t button;
+	uint8_t secondary_button;
+	uint8_t unknown2; // 0
+	uint8_t unknown3; // 0
+	uint8_t flags; // 1? 4? 3?
+} dualsense_access_profile_button;
+
+static_assert(sizeof(dualsense_access_profile_button) == 5, "dualsense_access_profile_button is not 5");
+
+typedef struct PACKED dualsense_access_profile_msg {
+	uint32_t version;
+	titania_wchar name[40];
+	dualsense_profile_uuid uuid;
+	dualsense_access_profile_button buttons[9];
+	uint8_t reserved[803];
+	uint64_t timestamp;
+	uint32_t checksum;
+} dualsense_access_profile_msg;
+
+static_assert(sizeof(dualsense_access_profile_msg) == TITANIA_MERGED_REPORT_ACCESS_SIZE, "dualsense_access_profile_msg size is not TITANIA_MERGED_REPORT_ACCESS_SIZE");
 
 #ifdef TITANIA_HAS_PACK
 #pragma pack(pop)
