@@ -456,8 +456,8 @@ this *bitset* is *4 bytes*.
  ~ is ps pressed (bypasses mapped buttons)
  ~ **(value >> 29) & 1**
 
-**b7: \[bool\]** share
- ~ is share pressed (bypasses mapped buttons)
+**b7: \[bool\]** create
+ ~ is create pressed (bypasses mapped buttons)
  ~ **(value >> 30) & 1**
 
 **b8: \[bool\]** option
@@ -551,8 +551,8 @@ this *bitset* is *4 bytes*.
  ~ is r2 pressed
  ~ **(value >> 11) & 1**
 
-**j: \[bool\]** share
- ~ is share pressed
+**j: \[bool\]** create
+ ~ is create pressed
  ~ **(value >> 12) & 1**
 
 **k: \[bool\]** option

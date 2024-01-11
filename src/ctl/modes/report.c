@@ -83,7 +83,7 @@ titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const
 			TITANIAPRINT_BUTTON_TEST(r1); TITANIAPRINT_SEP();
 			TITANIAPRINT_BUTTON_TEST(l2); TITANIAPRINT_SEP();
 			TITANIAPRINT_BUTTON_TEST(r2); TITANIAPRINT_SEP();
-			TITANIAPRINT_BUTTON_TEST(share); TITANIAPRINT_SEP();
+			TITANIAPRINT_BUTTON_TEST(create); TITANIAPRINT_SEP();
 			TITANIAPRINT_BUTTON_TEST(option); TITANIAPRINT_SEP();
 			TITANIAPRINT_BUTTON_TEST(l3); TITANIAPRINT_SEP();
 			TITANIAPRINT_BUTTON_TEST(r3); TITANIAPRINT_SEP();
@@ -226,7 +226,7 @@ titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const
 				TITANIAPRINT_EDGE_BUTTON_TEST(cross); TITANIAPRINT_SEP();
 				TITANIAPRINT_EDGE_BUTTON_TEST(circle); TITANIAPRINT_SEP();
 				TITANIAPRINT_EDGE_BUTTON_TEST(triangle); TITANIAPRINT_SEP();
-				TITANIAPRINT_EDGE_BUTTON_TEST(share); TITANIAPRINT_SEP();
+				TITANIAPRINT_EDGE_BUTTON_TEST(create); TITANIAPRINT_SEP();
 				TITANIAPRINT_EDGE_BUTTON_TEST(option); TITANIAPRINT_SEP();
 				TITANIAPRINT_EDGE_BUTTON_TEST(playstation); TITANIAPRINT_SEP();
 				TITANIAPRINT_EDGE_BUTTON_TEST(mute);
@@ -362,7 +362,7 @@ titaniactl_error titaniactl_mode_report_json_inner(titaniactl_context* context, 
 				json_object_add_bool(buttons_obj, "r1", data.buttons.r1);
 				json_object_add_bool(buttons_obj, "l2", data.buttons.l2);
 				json_object_add_bool(buttons_obj, "r2", data.buttons.r2);
-				json_object_add_bool(buttons_obj, "share", data.buttons.share);
+				json_object_add_bool(buttons_obj, "create", data.buttons.create);
 				json_object_add_bool(buttons_obj, "option", data.buttons.option);
 				json_object_add_bool(buttons_obj, "l3", data.buttons.l3);
 				json_object_add_bool(buttons_obj, "r3", data.buttons.r3);
@@ -525,7 +525,7 @@ titaniactl_error titaniactl_mode_report_json_inner(titaniactl_context* context, 
 				json_object_add_bool(edge_buttons_obj, "cross", data.edge_device.raw_buttons.cross);
 				json_object_add_bool(edge_buttons_obj, "circle", data.edge_device.raw_buttons.circle);
 				json_object_add_bool(edge_buttons_obj, "triangle", data.edge_device.raw_buttons.triangle);
-				json_object_add_bool(edge_buttons_obj, "share", data.edge_device.raw_buttons.share);
+				json_object_add_bool(edge_buttons_obj, "create", data.edge_device.raw_buttons.create);
 				json_object_add_bool(edge_buttons_obj, "option", data.edge_device.raw_buttons.option);
 				json_object_add_bool(edge_buttons_obj, "playstation", data.edge_device.raw_buttons.playstation);
 				json_object_add_bool(edge_buttons_obj, "mute", data.edge_device.raw_buttons.mute);

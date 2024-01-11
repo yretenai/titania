@@ -79,7 +79,7 @@ subsidiaries are exempt from MPL 2.0 licensing and may at its own discretion opt
 
 ## Useful Notes
 
-The DualSense and DualSense Edge controllers can enter pairing mode by holding the PlayStation and Share button (button left of the touchpad) until the touchpad LED indicator blinks blue.
+The DualSense and DualSense Edge controllers can enter pairing mode by holding the PlayStation and Create button (button left of the touchpad) until the touchpad LED indicator blinks blue.
 
 The Access controller can enter pairing mode by holding the PlayStation and Profile button until the LED indicator blinks blue.
 

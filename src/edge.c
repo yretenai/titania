@@ -71,7 +71,7 @@ titania_result titania_convert_edge_profile_input(uint8_t profile_data[TITANIA_M
 	output->disabled_buttons.dpad_left = profile.msg.disabled_buttons.dpad_left;
 	output->disabled_buttons.dpad_down = profile.msg.disabled_buttons.dpad_down;
 	output->disabled_buttons.dpad_right = profile.msg.disabled_buttons.dpad_right;
-	output->disabled_buttons.share = profile.msg.disabled_buttons.share;
+	output->disabled_buttons.create = profile.msg.disabled_buttons.create;
 	output->disabled_buttons.option = profile.msg.disabled_buttons.option;
 	output->disabled_buttons.square = profile.msg.disabled_buttons.square;
 	output->disabled_buttons.triangle = profile.msg.disabled_buttons.triangle;
@@ -166,7 +166,7 @@ titania_result titania_convert_edge_profile_output(titania_edge_profile input, d
 	profile.msg.disabled_buttons.dpad_left = input.disabled_buttons.dpad_left;
 	profile.msg.disabled_buttons.dpad_down = input.disabled_buttons.dpad_down;
 	profile.msg.disabled_buttons.dpad_right = input.disabled_buttons.dpad_right;
-	profile.msg.disabled_buttons.share = input.disabled_buttons.share;
+	profile.msg.disabled_buttons.create = input.disabled_buttons.create;
 	profile.msg.disabled_buttons.option = input.disabled_buttons.option;
 	profile.msg.disabled_buttons.square = input.disabled_buttons.square;
 	profile.msg.disabled_buttons.triangle = input.disabled_buttons.triangle;

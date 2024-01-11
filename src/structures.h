@@ -48,7 +48,7 @@ typedef struct PACKED dualsense_button {
 	bool r1 : 1;
 	bool l2 : 1;
 	bool r2 : 1;
-	bool share : 1;
+	bool create : 1;
 	bool option : 1;
 	bool l3 : 1;
 	bool r3 : 1;

@@ -134,7 +134,7 @@ titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, const s
 	profile_data.disabled_buttons.cross = titania_json_object_get_bool(disabled_button_obj, "cross");
 	profile_data.disabled_buttons.circle = titania_json_object_get_bool(disabled_button_obj, "circle");
 	profile_data.disabled_buttons.triangle = titania_json_object_get_bool(disabled_button_obj, "triangle");
-	profile_data.disabled_buttons.share = titania_json_object_get_bool(disabled_button_obj, "share");
+	profile_data.disabled_buttons.create = titania_json_object_get_bool(disabled_button_obj, "create");
 	profile_data.disabled_buttons.option = titania_json_object_get_bool(disabled_button_obj, "option");
 	profile_data.disabled_buttons.playstation = titania_json_object_get_bool(disabled_button_obj, "playstation");
 	profile_data.disabled_buttons.touchpad = titania_json_object_get_bool(disabled_button_obj, "touchpad");
@@ -275,7 +275,7 @@ struct json* titaniactl_mode_edge_convert(const titania_edge_profile profile, co
 	json_object_add_bool(disabled_button_obj, "cross", profile.disabled_buttons.cross);
 	json_object_add_bool(disabled_button_obj, "circle", profile.disabled_buttons.circle);
 	json_object_add_bool(disabled_button_obj, "triangle", profile.disabled_buttons.triangle);
-	json_object_add_bool(disabled_button_obj, "share", profile.disabled_buttons.share);
+	json_object_add_bool(disabled_button_obj, "create", profile.disabled_buttons.create);
 	json_object_add_bool(disabled_button_obj, "option", profile.disabled_buttons.option);
 	json_object_add_bool(disabled_button_obj, "playstation", profile.disabled_buttons.playstation);
 	json_object_add_bool(disabled_button_obj, "touchpad", profile.disabled_buttons.touchpad);

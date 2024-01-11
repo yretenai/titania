@@ -302,7 +302,7 @@ typedef struct titania_buttons {
 	bool r1;
 	bool l2;
 	bool r2;
-	bool share;
+	bool create;
 	bool option;
 	bool l3;
 	bool r3;

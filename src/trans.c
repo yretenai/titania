@@ -104,7 +104,7 @@ void titania_convert_input(const titania_hid hid_info, const dualsense_input_msg
 	data->buttons.r1 = input.buttons.r1;
 	data->buttons.l2 = input.buttons.l2;
 	data->buttons.r2 = input.buttons.r2;
-	data->buttons.share = input.buttons.share;
+	data->buttons.create = input.buttons.create;
 	data->buttons.option = input.buttons.option;
 	data->buttons.l3 = input.buttons.l3;
 	data->buttons.r3 = input.buttons.r3;
@@ -205,7 +205,7 @@ void titania_convert_input(const titania_hid hid_info, const dualsense_input_msg
 		data->edge_device.brightness = input.state.edge.override.brightness_override;
 		data->edge_device.unknown = input.state.edge.override.unknown;
 		data->edge_device.raw_buttons.playstation = input.state.edge.override.playstation;
-		data->edge_device.raw_buttons.share = input.state.edge.override.share;
+		data->edge_device.raw_buttons.create = input.state.edge.override.create;
 		data->edge_device.raw_buttons.option = input.state.edge.override.option;
 
 		data->edge_device.stick.disconnected = input.state.edge.input.stick_disconnected;

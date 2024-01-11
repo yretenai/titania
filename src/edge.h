@@ -56,7 +56,7 @@ typedef struct PACKED dualsense_device_state_edge_override {
 	uint8_t brightness_override : 2; // this is updated* somewhere* -> setting the entire report to 0xFF sets this to 0b11
 	uint8_t unknown : 2;
 	bool playstation : 1;
-	bool share : 1;
+	bool create : 1;
 	bool option : 1;
 } dualsense_device_state_edge_override;
 
@@ -119,7 +119,7 @@ typedef struct PACKED dualsense_edge_profile_disabled_buttons {
 	bool dpad_left : 1;
 	bool dpad_down : 1;
 	bool dpad_right : 1;
-	bool share : 1;
+	bool create : 1;
 	bool option : 1;
 	bool square : 1;
 	bool triangle : 1;
