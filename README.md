@@ -4,7 +4,11 @@ Cross-platform unofficial userland library for the Sony PlayStation DualSense Co
 
 ## Notice
 
-This project is not authorized, affiliated or endorsed by Sony Interactive Entertainment.
+This project is not authorized, affiliated or endorsed by Sony Interactive Entertainment Inc.
+
+"DualSense", "PlayStation", and "PlayStation Access" are registered trademarks or trademarks of Sony Interactive Entertainment Inc.
+
+See [TRADEMARKS](https://raw.githubusercontent.com/yretenai/titania/develop/TRADEMARKS) for more information.
 
 ## Caveats
 
