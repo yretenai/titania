@@ -456,6 +456,9 @@ typedef struct titania_edge_profile {
 
 typedef struct titania_access_profile {
 	bool valid;
+	uint32_t version;
+	char name[0xA1];
+	uint8_t id[0x10];
 } titania_access_profile;
 
 typedef struct titania_query {
@@ -910,8 +913,7 @@ TITANIA_EXPORT titania_result titania_debug_get_edge_profile(const titania_handl
  * @param profile_id: profile to get
  * @param profile_data: profile data buffer
  */
-TITANIA_EXPORT titania_result titania_debug_get_access_profile(const titania_handle handle, const titania_profile_id profile_id,
-	uint8_t profile_data[TITANIA_MERGED_REPORT_ACCESS_SIZE]);
+TITANIA_EXPORT titania_result titania_debug_get_access_profile(const titania_handle handle, const titania_profile_id profile_id, uint8_t profile_data[TITANIA_MERGED_REPORT_ACCESS_SIZE]);
 
 /**
  * @brief convert a dualsense edge profile to titania's representation

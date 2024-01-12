@@ -17,7 +17,8 @@ typedef enum profile_mode {
 	PROFILE_MODE_IMPORT = 'i',
 	PROFILE_MODE_EXPORT = 'e',
 	PROFILE_MODE_DELETE = 'd',
-	PROFILE_MODE_DEBUG_DUMP = '~'
+	PROFILE_MODE_DEBUG_DUMP = '~',
+	PROFILE_MODE_DEBUG_DUMP_SIMPLE = '='
 } profile_mode;
 
 titania_profile_id convert_profile_id(const char* const str) {
@@ -52,26 +53,54 @@ titania_profile_id convert_profile_id(const char* const str) {
 	return TITANIA_PROFILE_NONE;
 }
 
-titaniactl_error titaniactl_mode_profile_dump(titaniactl_context* context) {
-	if (context->argc < 2) {
-		return TITANIACTL_INVALID_ARGUMENTS;
-	}
-
-	const titania_profile_id profile = convert_profile_id(context->argv[1]);
-
+titaniactl_error titaniactl_mode_profile_dump_inner(titaniactl_context* context, const titania_profile_id profile, const bool simple) {
 	for (int i = 0; i < context->connected_controllers; ++i) {
 		titania_result result;
 		uint8_t buffer[TITANIA_MERGED_REPORT_ACCESS_SIZE];
-		const char* name;
+		char strbuffer[512];
 		size_t n;
 		if (context->hids[i].is_edge) {
-			result = titania_debug_get_edge_profile(context->handles[i], profile, buffer);
-			name = titania_profile_id_msg[profile];
 			n = TITANIA_MERGED_REPORT_EDGE_SIZE;
+			result = titania_debug_get_edge_profile(context->handles[i], profile, buffer);
+			titania_edge_profile edge_profile;
+			if (IS_TITANIA_OKAY(titania_convert_edge_profile_input(buffer, &edge_profile))) {
+				if (!simple) {
+					for (int j = 0; j < 0x10; ++j) {
+						sprintf(&strbuffer[j * 2], "%02x", edge_profile.id[j] & 0xFF);
+					}
+
+					strbuffer[0x21] = '_';
+				} else {
+					if (strlen(edge_profile.name) == 0) {
+						continue;
+					}
+				}
+
+				memcpy(&strbuffer[simple ? 0 : 0x22], edge_profile.name, sizeof(edge_profile.name));
+			} else {
+				memcpy(&strbuffer, titania_profile_id_msg[profile], strlen(titania_profile_id_msg[profile]));
+			}
 		} else if (context->hids[i].is_access) {
-			result = titania_debug_get_access_profile(context->handles[i], profile, buffer);
-			name = titania_profile_id_alt_msg[profile];
 			n = TITANIA_MERGED_REPORT_ACCESS_SIZE;
+			result = titania_debug_get_access_profile(context->handles[i], profile, buffer);
+			titania_access_profile access_profile;
+			if (IS_TITANIA_OKAY(titania_convert_access_profile_input(buffer, &access_profile))) {
+				if (!simple) {
+					for (int j = 0; j < 0x10; ++j) {
+						sprintf(&strbuffer[j * 2], "%02x", access_profile.id[j] & 0xFF);
+					}
+
+					strbuffer[0x21] = '_';
+				} else {
+					if (strlen(access_profile.name) == 0) {
+						continue;
+					}
+				}
+
+				memcpy(&strbuffer[simple ? 0 : 0x22], access_profile.name, sizeof(access_profile.name));
+			} else {
+				memcpy(&strbuffer, titania_profile_id_alt_msg[profile], strlen(titania_profile_id_alt_msg[profile]));
+			}
 		} else {
 			continue;
 		}
@@ -84,8 +113,27 @@ titaniactl_error titaniactl_mode_profile_dump(titaniactl_context* context) {
 			return TITANIACTL_HID_ERROR;
 		}
 
-		char report_name[256];
-		sprintf(report_name, "%s_profile_%s.bin", context->hids[i].serial.mac, name);
+		char report_name[1024];
+		if (simple) {
+			sprintf(report_name, "%s.bin", strbuffer);
+		} else {
+			sprintf(report_name, "%s_profile_%s.bin", context->hids[i].serial.mac, strbuffer);
+		}
+
+		printf("%s, %s\n", context->hids[i].serial.mac, strbuffer);
+
+		for (size_t j = 0; j < 1024 && report_name[j] != 0; ++j) {
+#ifdef _WIN32
+			if (report_name[i] == '\\' || report_name[i] == '<' || report_name[i] == '>' || report_name[i] == ':' || report_name[i] == '"' || report_name[i] == '|' || report_name[i] == '?' ||
+				report_name[i] == '*' || report_name[i] < 0x1F) {
+				report_name[i] == '_';
+			}
+#endif
+
+			if (report_name[j] == '/') {
+				report_name[j] = '_';
+			}
+		}
 		FILE* file = fopen(report_name, "w+b");
 		if (file != nullptr) {
 			fwrite(buffer, 1, n, file);
@@ -94,6 +142,27 @@ titaniactl_error titaniactl_mode_profile_dump(titaniactl_context* context) {
 	}
 
 	return TITANIACTL_OK;
+}
+
+titaniactl_error titaniactl_mode_profile_dump(titaniactl_context* context, const bool simple) {
+	titania_profile_id profile = TITANIA_PROFILE_ALL;
+	if (context->argc > 1) {
+		profile = convert_profile_id(context->argv[1]);
+	}
+
+	if (profile == TITANIA_PROFILE_ALL) {
+		const titania_profile_id profiles[3] = { TITANIA_PROFILE_1, TITANIA_PROFILE_2, TITANIA_PROFILE_3 };
+		for (size_t i = 0; i < 3; ++i) {
+			const titaniactl_error error = titaniactl_mode_profile_dump_inner(context, profiles[i], simple);
+			if (IS_TITANIACTL_BAD(error)) {
+				return error;
+			}
+		}
+
+		return TITANIACTL_OK;
+	}
+
+	return titaniactl_mode_profile_dump_inner(context, profile, simple);
 }
 
 titaniactl_error titaniactl_mode_profile_convert_selector(titaniactl_context* context) {
@@ -119,7 +188,7 @@ titaniactl_error titaniactl_mode_profile_convert_selector(titaniactl_context* co
 	fclose(file);
 
 	struct json* profile_json;
-	if (n == TITANIA_MERGED_REPORT_ACCESS_SIZE) {
+	if (n >= TITANIA_MERGED_REPORT_ACCESS_SIZE) {
 		titania_access_profile profile;
 		const titania_result result = titania_convert_access_profile_input(buffer, &profile);
 		if (IS_TITANIA_BAD(result)) {
@@ -236,17 +305,12 @@ titaniactl_error titaniactl_mode_profile_import_selector(titaniactl_context* con
 	return result;
 }
 
-titaniactl_error titaniactl_mode_profile_export_selector(titaniactl_context* context) {
+titaniactl_error titaniactl_mode_profile_export_inner(titaniactl_context* context, const titania_profile_id profile) {
 	if (context->argc < 2) {
 		return TITANIACTL_INVALID_ARGUMENTS;
 	}
 
-	const titania_profile_id profile = convert_profile_id(context->argv[1]);
 	const char* const path = context->argc > 2 ? context->argv[2] : ".";
-
-	if (profile == TITANIA_PROFILE_ALL || profile == TITANIA_PROFILE_NONE) {
-		return TITANIACTL_INVALID_ARGUMENTS;
-	}
 
 	titaniactl_error result = TITANIACTL_OK;
 	for (int i = 0; i < context->connected_controllers; ++i) {
@@ -268,6 +332,27 @@ titaniactl_error titaniactl_mode_profile_export_selector(titaniactl_context* con
 	}
 
 	return result;
+}
+
+titaniactl_error titaniactl_mode_profile_export_selector(titaniactl_context* context) {
+	titania_profile_id profile = TITANIA_PROFILE_ALL;
+	if (context->argc > 1) {
+		profile = convert_profile_id(context->argv[1]);
+	}
+
+	if (profile == TITANIA_PROFILE_ALL) {
+		const titania_profile_id profiles[3] = { TITANIA_PROFILE_1, TITANIA_PROFILE_2, TITANIA_PROFILE_3 };
+		for (size_t i = 0; i < 3; ++i) {
+			const titaniactl_error error = titaniactl_mode_profile_export_inner(context, profiles[i]);
+			if (IS_TITANIACTL_BAD(error)) {
+				return error;
+			}
+		}
+
+		return TITANIACTL_OK;
+	}
+
+	return titaniactl_mode_profile_export_inner(context, profile);
 }
 
 titaniactl_error titaniactl_mode_profile_delete_selector(titaniactl_context* context) {
@@ -304,7 +389,8 @@ titaniactl_error titaniactl_mode_profile_funnel(titaniactl_context* context) {
 	}
 
 	titaniactl_error result = TITANIACTL_OK;
-	switch ((profile_mode) tolower(context->argv[0][0])) {
+	const profile_mode mode = tolower(context->argv[0][0]);
+	switch (mode) {
 		case PROFILE_MODE_INVALID: break; // unreachable but llvm complains.
 		case PROFILE_MODE_CONVERT:
 			result = titaniactl_mode_profile_convert_selector(context);
@@ -331,7 +417,8 @@ titaniactl_error titaniactl_mode_profile_funnel(titaniactl_context* context) {
 			}
 			break;
 		case PROFILE_MODE_DEBUG_DUMP:
-			result = titaniactl_mode_profile_dump(context);
+		case PROFILE_MODE_DEBUG_DUMP_SIMPLE:
+			result = titaniactl_mode_profile_dump(context, mode == PROFILE_MODE_DEBUG_DUMP_SIMPLE);
 			if (IS_TITANIACTL_BAD(result)) {
 				return result;
 			}

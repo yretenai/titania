@@ -5,7 +5,9 @@
 #include <string.h>
 
 #include "titania.h"
+
 #include "structures.h"
+#include "unicode.h"
 
 titania_result titania_update_access_led(const titania_handle handle, const titania_led_update data) {
 	dualsense_output_access_msg* hid_state = &state[handle].output.data.msg.access;
@@ -51,7 +53,27 @@ titania_result titania_update_access_led(const titania_handle handle, const tita
 	return TITANIA_OK;
 }
 
-titania_result titania_convert_access_profile_input(uint8_t profile_data[TITANIA_MERGED_REPORT_ACCESS_SIZE], titania_access_profile* profile) { return TITANIA_NOT_IMPLEMENTED; }
+titania_result titania_convert_access_profile_input(uint8_t profile_data[TITANIA_MERGED_REPORT_ACCESS_SIZE], titania_access_profile* output) {
+	memset(output, 0, sizeof(titania_edge_profile));
+
+	const dualsense_access_profile profile = *(dualsense_access_profile*) profile_data;
+
+	titania_char32 unicode[41];
+	titania_unicode_result unicode_result = titania_utf16_to_utf32((const titania_char16*) &profile.msg.name, sizeof(profile.msg.name), unicode, sizeof(unicode));
+	if (unicode_result.failed) {
+		return TITANIA_UNICODE_ERROR;
+	}
+
+	unicode_result = titania_utf32_to_utf8(unicode, sizeof(unicode), (titania_char8*) &output->name, sizeof(output->name));
+	if (unicode_result.failed) {
+		return TITANIA_UNICODE_ERROR;
+	}
+
+	output->version = profile.msg.version;
+	memcpy(output->id, profile.msg.uuid, sizeof(profile.msg.uuid));
+
+	return TITANIA_OK;
+}
 
 titania_result titania_debug_get_access_profile(const titania_handle handle, const titania_profile_id profile_id, uint8_t profile_data[TITANIA_MERGED_REPORT_ACCESS_SIZE]) {
 	CHECK_INIT();

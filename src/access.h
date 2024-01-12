@@ -137,6 +137,17 @@ typedef struct PACKED dualsense_access_profile_msg {
 
 static_assert(sizeof(dualsense_access_profile_msg) == TITANIA_MERGED_REPORT_ACCESS_SIZE, "dualsense_access_profile_msg size is not TITANIA_MERGED_REPORT_ACCESS_SIZE");
 
+typedef union PACKED dualsense_access_profile {
+	dualsense_access_profile_msg msg;
+
+	struct {
+		uint8_t buffers[17][0x38];
+		uint8_t tail[0x8];
+	};
+} dualsense_access_profile;
+
+static_assert(sizeof(dualsense_access_profile) == TITANIA_MERGED_REPORT_ACCESS_SIZE, "dualsense_access_profile size is not TITANIA_MERGED_REPORT_ACCESS_SIZE");
+
 #ifdef TITANIA_HAS_PACK
 #pragma pack(pop)
 #endif
