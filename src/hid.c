@@ -901,14 +901,21 @@ titania_result titania_delete_access_profile(const titania_handle handle, const 
 	return TITANIA_OK;
 }
 
-titania_result titania_close(const titania_handle handle) {
-	CHECK_INIT();
-	CHECK_HANDLE(handle);
+void titania_close(const titania_handle handle) {
+	if (!is_initialized) {
+		return;
+	}
+
+	if (handle == TITANIA_INVALID_HANDLE || handle < 0 || handle >= TITANIA_MAX_CONTROLLERS) {
+		return;
+	}
+
+	if(state[handle].hid == nullptr) {
+		return;
+	}
 
 	hid_close(state[handle].hid);
 	memset(&state[handle], 0, sizeof(dualsense_state));
-
-	return TITANIA_OK;
 }
 
 void titania_exit(void) {

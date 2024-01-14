@@ -931,7 +931,7 @@ TITANIA_EXPORT titania_result titania_delete_access_profile(const titania_handle
  * @brief close a controller device handle
  * @param handle: the controller to close
  */
-TITANIA_EXPORT titania_result titania_close(const titania_handle handle);
+TITANIA_EXPORT void titania_close(const titania_handle handle);
 
 /**
  * @brief cleans up library internals for exit
