@@ -49,6 +49,16 @@ extern "C" {
 #define TITANIA_FIRMWARE_DATE_LEN (0x20)
 #define TITANIA_MERGED_REPORT_EDGE_SIZE (174)
 #define TITANIA_MERGED_REPORT_ACCESS_SIZE (960)
+#define TITANIA_ACCESS_BUTTON_CENTER (0)
+#define TITANIA_ACCESS_BUTTON_B1 (1)
+#define TITANIA_ACCESS_BUTTON_B2 (2)
+#define TITANIA_ACCESS_BUTTON_B3 (3)
+#define TITANIA_ACCESS_BUTTON_B4 (4)
+#define TITANIA_ACCESS_BUTTON_B5 (5)
+#define TITANIA_ACCESS_BUTTON_B6 (6)
+#define TITANIA_ACCESS_BUTTON_B7 (7)
+#define TITANIA_ACCESS_BUTTON_B8 (8)
+#define TITANIA_ACCESS_BUTTON_STICK (9)
 
 typedef enum titania_result {
 	TITANIA_OK = 0,
@@ -229,6 +239,51 @@ typedef enum titania_mic_led {
 	TITANIA_MIC_LED_FLASH = 2,
 	TITANIA_MIC_LED_FAST_FLASH = 3
 } titania_mic_led;
+
+typedef enum titania_access_orientation {
+	TITANIA_ACCESS_ORIENTATION_DOWN = 0,
+	TITANIA_ACCESS_ORIENTATION_LEFT = 1,
+	TITANIA_ACCESS_ORIENTATION_UP = 2,
+	TITANIA_ACCESS_ORIENTATION_RIGHT = 3
+} titania_access_orientation;
+
+typedef enum titania_access_button_id {
+	TITANIA_ACCESS_BUTTON_ID_NONE = 0,
+	TITANIA_ACCESS_BUTTON_ID_CIRCLE = 1,
+	TITANIA_ACCESS_BUTTON_ID_CROSS = 2,
+	TITANIA_ACCESS_BUTTON_ID_TRIANGLE = 3,
+	TITANIA_ACCESS_BUTTON_ID_SQUARE = 4,
+	TITANIA_ACCESS_BUTTON_ID_UP = 5,
+	TITANIA_ACCESS_BUTTON_ID_DOWN = 6,
+	TITANIA_ACCESS_BUTTON_ID_LEFT = 7,
+	TITANIA_ACCESS_BUTTON_ID_RIGHT = 8,
+	TITANIA_ACCESS_BUTTON_ID_L1 = 9,
+	TITANIA_ACCESS_BUTTON_ID_R1 = 10,
+	TITANIA_ACCESS_BUTTON_ID_L2 = 11,
+	TITANIA_ACCESS_BUTTON_ID_R2 = 12,
+	TITANIA_ACCESS_BUTTON_ID_L3 = 13,
+	TITANIA_ACCESS_BUTTON_ID_R3 = 14,
+	TITANIA_ACCESS_BUTTON_ID_OPTIONS = 15,
+	TITANIA_ACCESS_BUTTON_ID_CREATE = 16,
+	TITANIA_ACCESS_BUTTON_ID_PLAYSTATION = 17,
+	TITANIA_ACCESS_BUTTON_ID_TOUCH = 18,
+	TITANIA_ACCESS_BUTTON_ID_MAX
+} titania_access_button_id;
+
+typedef enum titania_access_stick_id {
+	TITANIA_ACCESS_STICK_ID_NONE = 0,
+	TITANIA_ACCESS_STICK_ID_LEFT = 1,
+	TITANIA_ACCESS_STICK_ID_RIGHT = 2,
+	TITANIA_ACCESS_STICK_ID_MAX
+} titania_access_stick_id;
+
+// why
+typedef enum titania_access_extension_type_id {
+	TITANIA_ACCESS_EXTENSION_TYPE_DISCONNECTED = 0,
+	TITANIA_ACCESS_EXTENSION_TYPE_STICK = 1,
+	TITANIA_ACCESS_EXTENSION_TYPE_BUTTON = 2,
+	TITANIA_ACCESS_EXTENSION_TYPE_MAX
+} titania_access_extension_type_id;
 
 TITANIA_EXPORT extern const char* const titania_error_msg[TITANIA_ERROR_MAX + 1];
 TITANIA_EXPORT extern const char* const titania_battery_state_msg[TITANIA_BATTERY_MAX + 1];
@@ -786,8 +841,7 @@ TITANIA_EXPORT titania_result titania_get_control(const titania_handle handle, t
  * @param right_trigger: effect data for RT
  * @param power_reduction: power reduction amount for trigger motors
  */
-TITANIA_EXPORT titania_result titania_update_effect(const titania_handle handle, const titania_effect_update left_trigger, const titania_effect_update right_trigger,
-	const float power_reduction);
+TITANIA_EXPORT titania_result titania_update_effect(const titania_handle handle, const titania_effect_update left_trigger, const titania_effect_update right_trigger, const float power_reduction);
 
 /**
  * @brief update rumble state of a controller
@@ -797,8 +851,7 @@ TITANIA_EXPORT titania_result titania_update_effect(const titania_handle handle,
  * @param power_reduction: power reduction amount for haptic motors
  * @param emulate_legacy_behavior: instructs the dualsense to emulate how rumble motors used to work
  */
-TITANIA_EXPORT titania_result titania_update_rumble(const titania_handle handle, const float large_motor, const float small_motor, const float power_reduction,
-	const bool emulate_legacy_behavior);
+TITANIA_EXPORT titania_result titania_update_rumble(const titania_handle handle, const float large_motor, const float small_motor, const float power_reduction, const bool emulate_legacy_behavior);
 
 /**
  * @brief pair a controller with a bluetooth adapter

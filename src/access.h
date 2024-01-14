@@ -113,24 +113,69 @@ typedef struct PACKED dualsense_access_profile_blob {
 	uint32_t checksum;
 } dualsense_access_profile_blob;
 
-static_assert(sizeof(dualsense_access_profile_blob) == 64, "dualsense_access_profile_blob size is not 64");
+static_assert(sizeof(dualsense_access_profile_blob) == 64, "dualsense_access_profile_blob size is not 64 bytes");
 
 typedef struct PACKED dualsense_access_profile_button {
 	uint8_t button;
 	uint8_t secondary_button;
-	uint8_t unknown2; // 0
-	uint8_t unknown3; // 0
-	uint8_t flags; // 1? 4? 3?
+	uint8_t unknown;
+	uint16_t unknown2; // always zero, i assume this is used for trigger extensions which show as buttons??
 } dualsense_access_profile_button;
 
-static_assert(sizeof(dualsense_access_profile_button) == 5, "dualsense_access_profile_button is not 5");
+static_assert(sizeof(dualsense_access_profile_button) == 5, "dualsense_access_profile_button is not 5 bytes");
+
+typedef struct PACKED dualsense_access_profile_stick {
+	uint8_t orientation; // changes +/- X/Y, extension[0] controls whole device orientation for the access
+	uint8_t unknown; // Sometimes this is 2?
+	uint16_t unknown2; // Flags, probably?
+	// NOTE: Deadzone seems to readjust the entire curve. Might be 10 UNORM8 bytes? UNORM16.
+	uint16_t deadzone;
+	uint16_t curve[3]; // [3] > [2] > [1] > deadzone
+} dualsense_access_profile_stick;
+
+static_assert(sizeof(dualsense_access_profile_stick) == 12, "dualsense_access_profile_stick is not 12 bytes");
+
+typedef struct PACKED dualsense_access_profile_extension {
+	uint8_t type;
+	uint8_t subtype;
+
+	union {
+		dualsense_access_profile_button button;
+		dualsense_access_profile_stick stick;
+		uint8_t padding[43];
+	};
+} dualsense_access_profile_extension;
+
+static_assert(sizeof(dualsense_access_profile_extension) == 45, "dualsense_access_profile_extension is not 45 bytes");
+
+typedef struct PACKED dualsense_access_profile_hold {
+	bool b1 : 1;
+	bool b2 : 1;
+	bool b3 : 1;
+	bool b4 : 1;
+	bool b5 : 1;
+	bool b6 : 1;
+	bool b7 : 1;
+	bool b8 : 1;
+	bool center : 1;
+	bool right_stick : 1;
+	bool e1 : 1;
+	bool e2 : 1;
+	bool e3 : 1;
+	bool e4 : 1;
+	uint8_t reserved : 2;
+} dualsense_access_profile_hold;
+
+static_assert(sizeof(dualsense_access_profile_hold) == 2, "dualsense_access_profile_hold is not 2 bytes");
 
 typedef struct PACKED dualsense_access_profile_msg {
 	uint32_t version;
 	titania_wchar name[40];
 	dualsense_profile_uuid uuid;
-	dualsense_access_profile_button buttons[9];
-	uint8_t reserved[803];
+	dualsense_access_profile_button buttons[10];
+	dualsense_access_profile_hold hold;
+	dualsense_access_profile_extension extensions[5];
+	uint8_t reserved[571];
 	uint64_t timestamp;
 	uint32_t checksum;
 } dualsense_access_profile_msg;
