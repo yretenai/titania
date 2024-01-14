@@ -909,7 +909,7 @@ void titania_close(const titania_handle handle) {
 		return;
 	}
 
-	if (handle == TITANIA_INVALID_HANDLE || handle < 0 || handle >= TITANIA_MAX_CONTROLLERS) {
+	if (handle == TITANIA_INVALID_HANDLE_ID || handle < 0 || handle >= TITANIA_MAX_CONTROLLERS) {
 		return;
 	}
 

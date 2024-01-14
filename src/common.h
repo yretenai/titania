@@ -98,7 +98,7 @@
 
 // Check if a handle is a valid number.
 #define CHECK_HANDLE(h) \
-	if (h == TITANIA_INVALID_HANDLE || h < 0 || h >= TITANIA_MAX_CONTROLLERS) \
+	if (h == TITANIA_INVALID_HANDLE_ID || h < 0 || h >= TITANIA_MAX_CONTROLLERS) \
 	return TITANIA_INVALID_HANDLE
 
 // Check if a handle is a valid number, and that it has been initialized.
