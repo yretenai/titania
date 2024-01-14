@@ -74,6 +74,7 @@ titania_result titania_init_checked(const size_t size) {
 
 titania_result titania_get_hids(titania_query* hids, const size_t hids_length) {
 	CHECK_INIT();
+
 	if (hids_length == 0) {
 		return TITANIA_OK;
 	}
@@ -291,6 +292,7 @@ titania_result titania_open(const titania_hid_path path, const bool is_bluetooth
 
 titania_result titania_pull(titania_handle* handle, const size_t handle_count, titania_data* data) {
 	CHECK_INIT();
+
 	if (handle == nullptr || data == nullptr) {
 		return TITANIA_INVALID_ARGUMENT;
 	}
@@ -334,6 +336,7 @@ titania_result titania_pull(titania_handle* handle, const size_t handle_count, t
 
 titania_result titania_push(titania_handle* handle, const size_t handle_count) {
 	CHECK_INIT();
+
 	if (handle == nullptr) {
 		return TITANIA_INVALID_HANDLE;
 	}
@@ -910,7 +913,7 @@ void titania_close(const titania_handle handle) {
 		return;
 	}
 
-	if(state[handle].hid == nullptr) {
+	if (state[handle].hid == nullptr) {
 		return;
 	}
 
