@@ -60,22 +60,20 @@ typedef enum dualsense_report_id {
 	DUALSENSE_REPORT_BLUETOOTH_EDGE_SET_DATA = 0xf6,
 	DUALSENSE_REPORT_BLUETOOTH_EDGE_GET_DATA = 0xf7,
 	// access:
-	DUALSENSE_REPORT_ACCESS_SET_PROFILE = 0x60, // [1] = dualsense_access_page_id
-	DUALSENSE_REPORT_ACCESS_GET_PROFILE = 0x61, // each time this report is requested
-												// the page id goes up by 1 (up to page 18)
-												// this means the max size is about 1200~
+	ACCESS_REPORT_SET_PROFILE = 0x60, // [1] = playstation_access_page_id
+	ACCESS_REPORT_GET_PROFILE = 0x61, // each time this report is requested the page id goes up by 1 (up to page 18) this means the max size is about 1200~
 } dualsense_report_id;
 
-typedef enum dualsense_access_page_id {
-	DUALSENSE_ACCESS_DELETE_PROFILE = 0x3,
-	DUALSENSE_ACCESS_UPDATE_PROFILE_1 = 0x9,
-	DUALSENSE_ACCESS_UPDATE_PROFILE_2 = 0xA,
-	DUALSENSE_ACCESS_UPDATE_PROFILE_3 = 0xB,
-	DUALSENSE_ACCESS_QUERY_PROFILE_0 = 0xF,
-	DUALSENSE_ACCESS_QUERY_PROFILE_1 = 0x10,
-	DUALSENSE_ACCESS_QUERY_PROFILE_2 = 0x11,
-	DUALSENSE_ACCESS_QUERY_PROFILE_3 = 0x12
-} dualsense_access_page_id;
+typedef enum playstation_access_page_id {
+	PLAYSTATION_ACCESS_DELETE_PROFILE = 0x3,
+	PLAYSTATION_ACCESS_UPDATE_PROFILE_1 = 0x9,
+	PLAYSTATION_ACCESS_UPDATE_PROFILE_2 = 0xA,
+	PLAYSTATION_ACCESS_UPDATE_PROFILE_3 = 0xB,
+	PLAYSTATION_ACCESS_QUERY_PROFILE_0 = 0xF,
+	PLAYSTATION_ACCESS_QUERY_PROFILE_1 = 0x10,
+	PLAYSTATION_ACCESS_QUERY_PROFILE_2 = 0x11,
+	PLAYSTATION_ACCESS_QUERY_PROFILE_3 = 0x12
+} playstation_access_page_id;
 
 typedef enum dualsense_dpad {
 	DUALSENSE_DPAD_U = 0,

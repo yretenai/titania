@@ -921,7 +921,7 @@ TITANIA_EXPORT titania_result titania_helper_edge_stick_template(titania_edge_st
 TITANIA_EXPORT titania_result titania_delete_edge_profile(const titania_handle handle, const titania_profile_id id);
 
 /**
- * @brief delete a dualsense access profile
+ * @brief delete a playstation access profile
  * @param handle: the controller to update
  * @param id: the profile id to delete
  */

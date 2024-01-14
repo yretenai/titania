@@ -169,8 +169,8 @@ typedef struct PACKED dualsense_input_msg {
 			dualsense_device_state state;
 		};
 
-		struct PACKED dualsense_input_access_msg {
-			dualsense_access_raw_button raw_button;
+		struct PACKED access_input_msg {
+			playstation_access_raw_button raw_button;
 			dualsense_vector2b raw_stick;
 			dualsense_vector2b e[4];
 			uint32_t unknown1; // buttons? 80 00 00 00
@@ -181,13 +181,13 @@ typedef struct PACKED dualsense_input_msg {
 			uint8_t profile_id : 3; // 1..3
 			bool profile_switching_disabled : 1;
 			uint8_t unknown5 : 4;
-			dualsense_access_expansion e3e4;
+			playstation_access_expansion e3e4;
 			uint8_t unknown6; // 1
 			dualsense_vector2b stick1;
 			uint8_t unknown7;
 			dualsense_vector2b stick2;
 			uint8_t unknown8; // 0
-			dualsense_access_expansion e1e2;
+			playstation_access_expansion e1e2;
 			uint32_t unknown9; // 0
 			uint8_t unknown10; // 0
 		} access;
@@ -366,23 +366,23 @@ typedef struct PACKED dualsense_output_msg {
 
 static_assert(sizeof(dualsense_output_msg) == 0x40, "dualsense_output_msg is not 64 bytes");
 
-typedef struct PACKED dualsense_output_access_msg {
+typedef struct PACKED access_output_msg {
 	union PACKED {
 		dualsense_report_output_bt bt;
 		uint8_t report_id;
 	};
 
-	dualsense_access_mutator_flags flags;
+	playstation_access_mutator_flags flags;
 	dualsense_led_output led; // needs mutator led
-	dualsense_access_control control; // needs mutator control
-	dualsense_access_control2 control2; // needs mutator control2
-	dualsense_access_led_flags led_flags;
+	playstation_access_control control; // needs mutator control
+	playstation_access_control2 control2; // needs mutator control2
+	playstation_access_led_flags led_flags;
 	uint8_t unknown2[9]; // always zero?
 	bool show_center_indicator; // ???????
 	uint8_t reserved[8];
-} dualsense_output_access_msg;
+} access_output_msg;
 
-static_assert(sizeof(dualsense_output_access_msg) == 0x20, "dualsense_output_access_msg is not 32 bytes");
+static_assert(sizeof(access_output_msg) == 0x20, "access_output_msg is not 32 bytes");
 
 typedef struct PACKED dualsense_output_msg_ex {
 	uint8_t report_id;
@@ -390,7 +390,7 @@ typedef struct PACKED dualsense_output_msg_ex {
 	union PACKED dualsense_output_msg_ex_selector {
 		dualsense_output_msg data;
 		uint8_t buffer[sizeof(dualsense_output_msg)];
-		dualsense_output_access_msg access;
+		access_output_msg access;
 	} msg;
 
 	uint8_t reserved[9];

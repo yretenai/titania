@@ -102,7 +102,7 @@ typedef struct PACKED dualsense_edge_profile_deadzone {
 	uint8_t max;
 } dualsense_edge_profile_deadzone;
 
-static_assert(sizeof(dualsense_edge_profile_deadzone) == 2, "dualsense_edge_profile_deadzone size is not 2");
+static_assert(sizeof(dualsense_edge_profile_deadzone) == 2, "dualsense_edge_profile_deadzone size is not 2 bytes");
 
 typedef struct PACKED dualsense_edge_profile_stick {
 	uint8_t interpolation_type; // 3 for everything, except precise which is 4. interpolation type?
@@ -111,7 +111,7 @@ typedef struct PACKED dualsense_edge_profile_stick {
 	dualsense_vector2b coordinates[3];
 } dualsense_edge_profile_stick;
 
-static_assert(sizeof(dualsense_edge_profile_stick) == 9, "dualsense_edge_profile_stick size is not 9");
+static_assert(sizeof(dualsense_edge_profile_stick) == 9, "dualsense_edge_profile_stick size is not 9 bytes");
 
 // this bitset has no order whatsoever??
 typedef struct PACKED dualsense_edge_profile_disabled_buttons {
@@ -145,7 +145,7 @@ typedef struct PACKED dualsense_edge_profile_disabled_buttons {
 	bool sticks_swapped : 1;
 } dualsense_edge_profile_disabled_buttons;
 
-static_assert(sizeof(dualsense_edge_profile_disabled_buttons) == 4, "dualsense_edge_profile_disabled_buttons size is not 4");
+static_assert(sizeof(dualsense_edge_profile_disabled_buttons) == 4, "dualsense_edge_profile_disabled_buttons size is not 4 bytes");
 
 typedef struct PACKED dualsense_edge_profile_flags {
 	uint8_t left_stick_profile : 4;
@@ -165,7 +165,7 @@ typedef struct PACKED dualsense_edge_profile_flags {
 #endif
 } dualsense_edge_profile_flags;
 
-static_assert(sizeof(dualsense_edge_profile_flags) == 4, "dualsense_edge_profile_flags size is not 4");
+static_assert(sizeof(dualsense_edge_profile_flags) == 4, "dualsense_edge_profile_flags size is not 4 bytes");
 
 typedef struct PACKED dualsense_edge_profile_msg {
 	uint32_t version;
@@ -183,14 +183,14 @@ typedef struct PACKED dualsense_edge_profile_msg {
 	uint32_t checksum;
 } dualsense_edge_profile_msg;
 
-static_assert(sizeof(dualsense_edge_profile_msg) == TITANIA_MERGED_REPORT_EDGE_SIZE, "dualsense_edge_profile_msg size is not TITANIA_MERGED_REPORT_EDGE_SIZE");
+static_assert(sizeof(dualsense_edge_profile_msg) == TITANIA_MERGED_REPORT_EDGE_SIZE, "dualsense_edge_profile_msg size is not TITANIA_MERGED_REPORT_EDGE_SIZE bytes");
 
 typedef union PACKED dualsense_edge_profile {
 	dualsense_edge_profile_msg msg;
 	uint8_t buffers[3][0x3a];
 } dualsense_edge_profile;
 
-static_assert(sizeof(dualsense_edge_profile) == TITANIA_MERGED_REPORT_EDGE_SIZE, "dualsense_edge_profile size is not TITANIA_MERGED_REPORT_EDGE_SIZE");
+static_assert(sizeof(dualsense_edge_profile) == TITANIA_MERGED_REPORT_EDGE_SIZE, "dualsense_edge_profile size is not TITANIA_MERGED_REPORT_EDGE_SIZE bytes");
 
 typedef struct PACKED dualsense_edge_profile_blob {
 	uint8_t report_id;

@@ -10,7 +10,7 @@
 #include "unicode.h"
 
 titania_result titania_update_access_led(const titania_handle handle, const titania_led_update data) {
-	dualsense_output_access_msg* hid_state = &state[handle].output.data.msg.access;
+	access_output_msg* hid_state = &state[handle].output.data.msg.access;
 
 	if (data.color.x >= 0.0f && data.color.y >= 0.0f && data.color.z >= 0.0f) {
 		hid_state->flags.led = true;
@@ -56,7 +56,7 @@ titania_result titania_update_access_led(const titania_handle handle, const tita
 titania_result titania_convert_access_profile_input(uint8_t profile_data[TITANIA_MERGED_REPORT_ACCESS_SIZE], titania_access_profile* output) {
 	memset(output, 0, sizeof(titania_edge_profile));
 
-	const dualsense_access_profile profile = *(dualsense_access_profile*) profile_data;
+	const playstation_access_profile profile = *(playstation_access_profile*) profile_data;
 
 	titania_char32 unicode[41];
 	titania_unicode_result unicode_result = titania_utf16_to_utf32((const titania_char16*) &profile.msg.name, sizeof(profile.msg.name), unicode, sizeof(unicode));
@@ -80,24 +80,24 @@ titania_result titania_debug_get_access_profile(const titania_handle handle, con
 	CHECK_HANDLE_VALID(handle);
 	CHECK_ACCESS(handle);
 
-	dualsense_access_profile_blob data = { 0 };
+	playstation_access_profile_blob data = { 0 };
 
-	data.report_id = DUALSENSE_REPORT_ACCESS_SET_PROFILE;
+	data.report_id = ACCESS_REPORT_SET_PROFILE;
 	switch (profile_id) {
-		case TITANIA_PROFILE_DEFAULT: data.command_id = DUALSENSE_ACCESS_QUERY_PROFILE_0; break;
-		case TITANIA_PROFILE_1: data.command_id = DUALSENSE_ACCESS_QUERY_PROFILE_1; break;
-		case TITANIA_PROFILE_2: data.command_id = DUALSENSE_ACCESS_QUERY_PROFILE_2; break;
-		case TITANIA_PROFILE_3: data.command_id = DUALSENSE_ACCESS_QUERY_PROFILE_3; break;
+		case TITANIA_PROFILE_DEFAULT: data.command_id = PLAYSTATION_ACCESS_QUERY_PROFILE_0; break;
+		case TITANIA_PROFILE_1: data.command_id = PLAYSTATION_ACCESS_QUERY_PROFILE_1; break;
+		case TITANIA_PROFILE_2: data.command_id = PLAYSTATION_ACCESS_QUERY_PROFILE_2; break;
+		case TITANIA_PROFILE_3: data.command_id = PLAYSTATION_ACCESS_QUERY_PROFILE_3; break;
 		default: return TITANIA_INVALID_PROFILE;
 	}
 
-	if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &data, sizeof(dualsense_access_profile_blob)))) {
+	if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &data, sizeof(playstation_access_profile_blob)))) {
 		return TITANIA_INVALID_PROFILE;
 	}
 
 	for (int i = 0; i < 0x12; ++i) {
-		data.report_id = DUALSENSE_REPORT_ACCESS_GET_PROFILE;
-		if (HID_FAIL(hid_get_feature_report(state[handle].hid, (uint8_t*) &data, sizeof(dualsense_access_profile_blob)))) {
+		data.report_id = ACCESS_REPORT_GET_PROFILE;
+		if (HID_FAIL(hid_get_feature_report(state[handle].hid, (uint8_t*) &data, sizeof(playstation_access_profile_blob)))) {
 			return TITANIA_INVALID_DATA;
 		}
 

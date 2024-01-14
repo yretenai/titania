@@ -57,20 +57,20 @@ void titania_convert_input_access(const titania_hid hid_info, const dualsense_in
 	data->access_device.current_profile_id = input.access.profile_id + 1;
 	data->access_device.profile_switching_disabled = input.access.profile_switching_disabled;
 
-	data->access_device.extensions[TITANIA_EXTENSION1].pos.x = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION1].x);
-	data->access_device.extensions[TITANIA_EXTENSION1].pos.y = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION1].y);
+	data->access_device.extensions[TITANIA_EXTENSION1].pos.x = DENORM_CLAMP_UINT8(input.access.e[PLAYSTATION_ACCESS_EXTENSION1].x);
+	data->access_device.extensions[TITANIA_EXTENSION1].pos.y = DENORM_CLAMP_UINT8(input.access.e[PLAYSTATION_ACCESS_EXTENSION1].y);
 	data->access_device.extensions[TITANIA_EXTENSION1].type = input.access.e1e2.left_port;
 
-	data->access_device.extensions[TITANIA_EXTENSION2].pos.x = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION2].x);
-	data->access_device.extensions[TITANIA_EXTENSION2].pos.y = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION2].y);
+	data->access_device.extensions[TITANIA_EXTENSION2].pos.x = DENORM_CLAMP_UINT8(input.access.e[PLAYSTATION_ACCESS_EXTENSION2].x);
+	data->access_device.extensions[TITANIA_EXTENSION2].pos.y = DENORM_CLAMP_UINT8(input.access.e[PLAYSTATION_ACCESS_EXTENSION2].y);
 	data->access_device.extensions[TITANIA_EXTENSION2].type = input.access.e1e2.right_port;
 
-	data->access_device.extensions[TITANIA_EXTENSION3].pos.x = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION3].x);
-	data->access_device.extensions[TITANIA_EXTENSION3].pos.y = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION3].y);
+	data->access_device.extensions[TITANIA_EXTENSION3].pos.x = DENORM_CLAMP_UINT8(input.access.e[PLAYSTATION_ACCESS_EXTENSION3].x);
+	data->access_device.extensions[TITANIA_EXTENSION3].pos.y = DENORM_CLAMP_UINT8(input.access.e[PLAYSTATION_ACCESS_EXTENSION3].y);
 	data->access_device.extensions[TITANIA_EXTENSION3].type = input.access.e3e4.left_port;
 
-	data->access_device.extensions[TITANIA_EXTENSION4].pos.x = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION4].x);
-	data->access_device.extensions[TITANIA_EXTENSION4].pos.y = DENORM_CLAMP_UINT8(input.access.e[DUALSENSE_ACCESS_EXTENSION4].y);
+	data->access_device.extensions[TITANIA_EXTENSION4].pos.x = DENORM_CLAMP_UINT8(input.access.e[PLAYSTATION_ACCESS_EXTENSION4].x);
+	data->access_device.extensions[TITANIA_EXTENSION4].pos.y = DENORM_CLAMP_UINT8(input.access.e[PLAYSTATION_ACCESS_EXTENSION4].y);
 	data->access_device.extensions[TITANIA_EXTENSION4].type = input.access.e3e4.right_port;
 
 	data->access_device.unknown1 = input.access.unknown1;

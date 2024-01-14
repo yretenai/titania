@@ -173,6 +173,6 @@ endif
 
 import('pkgconfig').generate(
 	titania_lib,
-	description : 'unofficial dualsense and access library',
+	description : 'unofficial dualsense and playstation access library',
 	url : 'https://nothg.chronovore.dev/library/titania/'
 )

@@ -26,7 +26,7 @@
 #define nullptr ((void*) 0)
 #endif
 
-typedef struct PACKED dualsense_access_raw_button {
+typedef struct PACKED playstation_access_raw_button {
 	bool button1 : 1;
 	bool button2 : 1;
 	bool button3 : 1;
@@ -40,18 +40,18 @@ typedef struct PACKED dualsense_access_raw_button {
 	bool playstation : 1;
 	bool profile : 1;
 	uint8_t reserved : 4;
-} dualsense_access_raw_button;
+} playstation_access_raw_button;
 
-static_assert(sizeof(dualsense_access_raw_button) == 2, "dualsense_access_raw_button is not 2 bytes");
+static_assert(sizeof(playstation_access_raw_button) == 2, "playstation_access_raw_button is not 2 bytes");
 
-typedef struct PACKED dualsense_access_expansion {
+typedef struct PACKED playstation_access_expansion {
 	uint8_t left_port : 4;
 	uint8_t right_port : 4;
-} dualsense_access_expansion;
+} playstation_access_expansion;
 
-static_assert(sizeof(dualsense_access_expansion) == 1, "dualsense_access_expansion is not 1 bytes");
+static_assert(sizeof(playstation_access_expansion) == 1, "playstation_access_expansion is not 1 bytes");
 
-typedef struct PACKED dualsense_access_mutator_flags {
+typedef struct PACKED playstation_access_mutator_flags {
 	bool status_led : 1;
 	bool profile_led : 1;
 	bool led : 1;
@@ -61,41 +61,41 @@ typedef struct PACKED dualsense_access_mutator_flags {
 	bool control2 : 1;
 	bool unknown : 1;
 	uint8_t reserved : 8;
-} dualsense_access_mutator_flags;
+} playstation_access_mutator_flags;
 
-static_assert(sizeof(dualsense_access_mutator_flags) == 2, "dualsense_access_mutator_flags is not 2 bytes");
+static_assert(sizeof(playstation_access_mutator_flags) == 2, "playstation_access_mutator_flags is not 2 bytes");
 
-typedef struct PACKED dualsense_access_control {
+typedef struct PACKED playstation_access_control {
 	uint8_t profile_id : 3;
 	bool override_profile : 1; // ??? this bricks profiles
 	bool unknown : 1;
 	bool unknown2 : 1;
 	bool unknown3 : 1;
 	bool unknown4 : 1;
-} dualsense_access_control;
+} playstation_access_control;
 
-static_assert(sizeof(dualsense_access_control) == 1, "dualsense_access_control is not 1 bytes");
+static_assert(sizeof(playstation_access_control) == 1, "playstation_access_control is not 1 bytes");
 
-typedef struct PACKED dualsense_access_control2 {
+typedef struct PACKED playstation_access_control2 {
 	uint8_t unknown : 1;
 	bool show_secondary_indicator : 1;
 	uint8_t unknown2 : 6;
 	uint8_t unknown3 : 8;
-} dualsense_access_control2;
+} playstation_access_control2;
 
-static_assert(sizeof(dualsense_access_control2) == 2, "dualsense_access_control2 is not 2 bytes");
+static_assert(sizeof(playstation_access_control2) == 2, "playstation_access_control2 is not 2 bytes");
 
-typedef struct PACKED dualsense_access_led_flags {
+typedef struct PACKED playstation_access_led_flags {
 	bool profile_led : 1;
 	uint8_t profile_led_brightness : 3;
 	bool center_led : 1;
 	uint8_t center_led_brightness : 3;
 	bool profile_led2 : 1; // ??
-} dualsense_access_led_flags;
+} playstation_access_led_flags;
 
-static_assert(sizeof(dualsense_access_led_flags) == 2, "dualsense_access_led_flags is not 2 bytes");
+static_assert(sizeof(playstation_access_led_flags) == 2, "playstation_access_led_flags is not 2 bytes");
 
-typedef struct PACKED dualsense_access_profile_blob {
+typedef struct PACKED playstation_access_profile_blob {
 	uint8_t report_id;
 	uint8_t command_id;
 	uint8_t profile_id;
@@ -111,44 +111,44 @@ typedef struct PACKED dualsense_access_profile_blob {
 	};
 
 	uint32_t checksum;
-} dualsense_access_profile_blob;
+} playstation_access_profile_blob;
 
-static_assert(sizeof(dualsense_access_profile_blob) == 64, "dualsense_access_profile_blob size is not 64 bytes");
+static_assert(sizeof(playstation_access_profile_blob) == 64, "playstation_access_profile_blob size is not 64 bytes");
 
-typedef struct PACKED dualsense_access_profile_button {
+typedef struct PACKED playstation_access_profile_button {
 	uint8_t button;
 	uint8_t secondary_button;
 	uint8_t unknown;
 	uint16_t unknown2; // always zero, i assume this is used for trigger extensions which show as buttons??
-} dualsense_access_profile_button;
+} playstation_access_profile_button;
 
-static_assert(sizeof(dualsense_access_profile_button) == 5, "dualsense_access_profile_button is not 5 bytes");
+static_assert(sizeof(playstation_access_profile_button) == 5, "playstation_access_profile_button is not 5 bytes");
 
-typedef struct PACKED dualsense_access_profile_stick {
+typedef struct PACKED playstation_access_profile_stick {
 	uint8_t orientation; // changes +/- X/Y, extension[0] controls whole device orientation for the access
 	uint8_t unknown; // Sometimes this is 2?
 	uint16_t unknown2; // Flags, probably?
 	// NOTE: Deadzone seems to readjust the entire curve. Might be 10 UNORM8 bytes? UNORM16.
 	uint16_t deadzone;
 	uint16_t curve[3]; // [3] > [2] > [1] > deadzone
-} dualsense_access_profile_stick;
+} playstation_access_profile_stick;
 
-static_assert(sizeof(dualsense_access_profile_stick) == 12, "dualsense_access_profile_stick is not 12 bytes");
+static_assert(sizeof(playstation_access_profile_stick) == 12, "playstation_access_profile_stick is not 12 bytes");
 
-typedef struct PACKED dualsense_access_profile_extension {
+typedef struct PACKED playstation_access_profile_extension {
 	uint8_t type;
 	uint8_t subtype;
 
 	union {
-		dualsense_access_profile_button button;
-		dualsense_access_profile_stick stick;
+		playstation_access_profile_button button;
+		playstation_access_profile_stick stick;
 		uint8_t padding[43];
 	};
-} dualsense_access_profile_extension;
+} playstation_access_profile_extension;
 
-static_assert(sizeof(dualsense_access_profile_extension) == 45, "dualsense_access_profile_extension is not 45 bytes");
+static_assert(sizeof(playstation_access_profile_extension) == 45, "playstation_access_profile_extension is not 45 bytes");
 
-typedef struct PACKED dualsense_access_profile_hold {
+typedef struct PACKED playstation_access_profile_hold {
 	bool b1 : 1;
 	bool b2 : 1;
 	bool b3 : 1;
@@ -164,34 +164,34 @@ typedef struct PACKED dualsense_access_profile_hold {
 	bool e3 : 1;
 	bool e4 : 1;
 	uint8_t reserved : 2;
-} dualsense_access_profile_hold;
+} playstation_access_profile_hold;
 
-static_assert(sizeof(dualsense_access_profile_hold) == 2, "dualsense_access_profile_hold is not 2 bytes");
+static_assert(sizeof(playstation_access_profile_hold) == 2, "playstation_access_profile_hold is not 2 bytes");
 
-typedef struct PACKED dualsense_access_profile_msg {
+typedef struct PACKED playstation_access_profile_msg {
 	uint32_t version;
 	titania_wchar name[40];
 	dualsense_profile_uuid uuid;
-	dualsense_access_profile_button buttons[10];
-	dualsense_access_profile_hold hold;
-	dualsense_access_profile_extension extensions[5];
+	playstation_access_profile_button buttons[10];
+	playstation_access_profile_hold hold;
+	playstation_access_profile_extension extensions[5];
 	uint8_t reserved[571];
 	uint64_t timestamp;
 	uint32_t checksum;
-} dualsense_access_profile_msg;
+} playstation_access_profile_msg;
 
-static_assert(sizeof(dualsense_access_profile_msg) == TITANIA_MERGED_REPORT_ACCESS_SIZE, "dualsense_access_profile_msg size is not TITANIA_MERGED_REPORT_ACCESS_SIZE");
+static_assert(sizeof(playstation_access_profile_msg) == TITANIA_MERGED_REPORT_ACCESS_SIZE, "playstation_access_profile_msg size is not TITANIA_MERGED_REPORT_ACCESS_SIZE bytes");
 
-typedef union PACKED dualsense_access_profile {
-	dualsense_access_profile_msg msg;
+typedef union PACKED playstation_access_profile {
+	playstation_access_profile_msg msg;
 
 	struct {
 		uint8_t buffers[17][0x38];
 		uint8_t tail[0x8];
 	};
-} dualsense_access_profile;
+} playstation_access_profile;
 
-static_assert(sizeof(dualsense_access_profile) == TITANIA_MERGED_REPORT_ACCESS_SIZE, "dualsense_access_profile size is not TITANIA_MERGED_REPORT_ACCESS_SIZE");
+static_assert(sizeof(playstation_access_profile) == TITANIA_MERGED_REPORT_ACCESS_SIZE, "playstation_access_profile size is not TITANIA_MERGED_REPORT_ACCESS_SIZE bytes");
 
 #ifdef TITANIA_HAS_PACK
 #pragma pack(pop)
