@@ -391,7 +391,7 @@ int main(const int argc, const char** const argv) {
 
 	shutdown();
 
-	if ((error & TITANIACTL_MASK) == TITANIACTL_TITANIA_ERROR) {
+	if (error > 0 && (error & TITANIACTL_MASK) == TITANIACTL_TITANIA_ERROR) {
 		return error;
 	}
 
