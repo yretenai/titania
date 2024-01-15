@@ -825,23 +825,61 @@ titania_result titania_update_edge_profile(const titania_handle handle, const ti
 		return result;
 	}
 
-	output[0].profile_part = 0;
-	output[1].profile_part = 1;
-	output[2].profile_part = 2;
-
+	uint8_t report_id;
 	switch (id) {
-		case TITANIA_PROFILE_CIRCLE: output[0].report_id = output[1].report_id = output[2].report_id = DUALSENSE_REPORT_EDGE_UPDATE_PROFILE_CIRCLE; break;
-		case TITANIA_PROFILE_SQUARE: output[0].report_id = output[1].report_id = output[2].report_id = DUALSENSE_REPORT_EDGE_UPDATE_PROFILE_SQUARE; break;
-		case TITANIA_PROFILE_CROSS: output[0].report_id = output[1].report_id = output[2].report_id = DUALSENSE_REPORT_EDGE_UPDATE_PROFILE_CROSS; break;
+		case TITANIA_PROFILE_CIRCLE: report_id = DUALSENSE_REPORT_EDGE_UPDATE_PROFILE_CIRCLE; break;
+		case TITANIA_PROFILE_SQUARE: report_id = DUALSENSE_REPORT_EDGE_UPDATE_PROFILE_SQUARE; break;
+		case TITANIA_PROFILE_CROSS: report_id = DUALSENSE_REPORT_EDGE_UPDATE_PROFILE_CROSS; break;
 		default: return TITANIA_INVALID_PROFILE;
 	}
 
-	output[0].checksum = titania_calc_checksum(crc_seed_feature_profile, (uint8_t*) &output[0], sizeof(output[0]) - 4);
-	output[1].checksum = titania_calc_checksum(crc_seed_feature_profile, (uint8_t*) &output[1], sizeof(output[1]) - 4);
-	output[2].checksum = titania_calc_checksum(crc_seed_feature_profile, (uint8_t*) &output[2], sizeof(output[2]) - 4);
-
 	for (int i = 0; i < 3; ++i) {
+		output[i].report_id = report_id;
+		output[i].profile_part = i;
+		output[i].checksum = titania_calc_checksum(crc_seed_feature_profile, (uint8_t*) &output[i], sizeof(*output) - 4);
+
 		if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &output[i], sizeof(dualsense_edge_profile_blob)))) {
+			return TITANIA_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
+		}
+	}
+
+	return TITANIA_OK;
+}
+
+titania_result titania_update_access_profile(const titania_handle handle, const titania_profile_id id, const titania_access_profile profile) {
+	CHECK_INIT();
+	CHECK_HANDLE_VALID(handle);
+	CHECK_ACCESS(handle);
+
+	if (id == TITANIA_PROFILE_NONE) {
+		return TITANIA_OK;
+	}
+
+	if (id <= TITANIA_PROFILE_DEFAULT || id > TITANIA_PROFILE_3) {
+		return TITANIA_INVALID_PROFILE;
+	}
+
+	playstation_access_profile_blob output[0x12];
+	const titania_result result = titania_convert_access_profile_output(profile, output);
+	if (IS_TITANIA_BAD(result)) {
+		return result;
+	}
+
+	uint8_t command;
+	switch (id) {
+		case TITANIA_PROFILE_1: command = PLAYSTATION_ACCESS_UPDATE_PROFILE_1; break;
+		case TITANIA_PROFILE_2: command = PLAYSTATION_ACCESS_UPDATE_PROFILE_2; break;
+		case TITANIA_PROFILE_3: command = PLAYSTATION_ACCESS_UPDATE_PROFILE_3; break;
+		default: return TITANIA_INVALID_PROFILE;
+	}
+
+	for (int i = 0; i < 0x12; ++i) {
+		output[i].report_id = ACCESS_REPORT_SET_PROFILE;
+		output[i].command_id = command;
+		output[i].update_op.page_id = i;
+		output[i].checksum = titania_calc_checksum(crc_seed_feature_profile, (uint8_t*) &output[i], sizeof(*output) - 4);
+
+		if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &output[i], sizeof(playstation_access_profile_blob)))) {
 			return TITANIA_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
 		}
 	}
@@ -894,9 +932,9 @@ titania_result titania_delete_access_profile(const titania_handle handle, const 
 	del.report_id = ACCESS_REPORT_SET_PROFILE;
 	del.command_id = PLAYSTATION_ACCESS_DELETE_PROFILE;
 	if (id == TITANIA_PROFILE_ALL) {
-		del.profile_id = 0xFF;
+		del.delete_op.profile_id = 0xFF;
 	} else {
-		del.profile_id = id;
+		del.delete_op.profile_id = id;
 	}
 	del.checksum = titania_calc_checksum(crc_seed_feature_profile, (uint8_t*) &del, sizeof(del) - 4);
 	if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &del, sizeof(del)))) {

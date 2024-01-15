@@ -95,25 +95,47 @@ typedef struct PACKED playstation_access_led_flags {
 
 static_assert(sizeof(playstation_access_led_flags) == 2, "playstation_access_led_flags is not 2 bytes");
 
-typedef struct PACKED playstation_access_profile_blob {
-	uint8_t report_id;
-	uint8_t command_id;
+typedef struct playstation_access_profile_delete_blob PACKED {
+	uint8_t profile_id;
+	uint8_t reserved[0x39];
+} playstation_access_profile_delete_blob;
+
+static_assert(sizeof(playstation_access_profile_delete_blob) == 0x3a, "playstation_access_profile_delete_blob is not 58 bytes");
+
+typedef struct playstation_access_profile_select_blob PACKED {
 	uint8_t profile_id;
 	uint8_t page_id;
 
 	union PACKED {
-		struct {
-			uint32_t version;
-			uint8_t _padding[0x34];
-		};
-
+		uint32_t version;
 		uint8_t blob[0x38];
+	};
+} playstation_access_profile_select_blob;
+
+static_assert(sizeof(playstation_access_profile_select_blob) == 0x3a, "playstation_access_profile_select_blob is not 58 bytes");
+
+typedef struct playstation_access_profile_update_blob PACKED {
+	uint8_t page_id;
+	uint8_t blob[0x39];
+} playstation_access_profile_update_blob;
+
+static_assert(sizeof(playstation_access_profile_update_blob) == 0x3a, "playstation_access_profile_update_blob is not 58 bytes");
+
+typedef struct PACKED playstation_access_profile_blob {
+	uint8_t report_id;
+	uint8_t command_id;
+
+	union PACKED {
+		playstation_access_profile_delete_blob delete_op;
+		playstation_access_profile_select_blob select_op;
+		playstation_access_profile_update_blob update_op;
+		uint8_t blob[0x3a];
 	};
 
 	uint32_t checksum;
 } playstation_access_profile_blob;
 
-static_assert(sizeof(playstation_access_profile_blob) == 64, "playstation_access_profile_blob size is not 64 bytes");
+static_assert(sizeof(playstation_access_profile_blob) == 64, "playstation_access_profile_blob is not 64 bytes");
 
 typedef struct PACKED playstation_access_profile_button {
 	uint8_t button;

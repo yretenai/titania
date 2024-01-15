@@ -95,7 +95,7 @@ titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, const s
 	profile_data.timestamp = timestamp;
 
 	uint64_t incoming_timestamp = titania_json_object_get_uint64(data, "timestamp", timestamp);
-	;
+
 	if (preserve_data && incoming_timestamp > 0) {
 		profile_data.timestamp = incoming_timestamp;
 	}
@@ -191,7 +191,7 @@ struct json* json_object_add_edge_stick(struct json* obj, const char* key, const
 		json_array_add_number(curve, data.curve_points[i].max);
 	}
 
-	json_object_add_number(stick_obj, "unknown", data.unknown);
+	titania_json_object_add_uint64(stick_obj, "unknown", data.unknown);
 
 	return stick_obj;
 }
@@ -213,7 +213,7 @@ struct json* titaniactl_mode_edge_convert(const titania_edge_profile profile, co
 		json_object_add_bool(profile_json, "success", true);
 	}
 	json_object_add_string(profile_json, "type", "edge");
-	json_object_add_number(profile_json, "version", 1);
+	titania_json_object_add_uint64(profile_json, "version", 1);
 	json_object_add_string(profile_json, "name", profile.name);
 	char strbuffer[512];
 	for (int i = 0; i < 0x10; ++i) {
@@ -292,7 +292,7 @@ struct json* titaniactl_mode_edge_convert(const titania_edge_profile profile, co
 	json_object_add_bool(disabled_button_obj, "leftPaddle", profile.disabled_buttons.edge_left_paddle);
 	json_object_add_bool(disabled_button_obj, "rightPaddle", profile.disabled_buttons.edge_right_paddle);
 
-	json_object_add_number(profile_json, "unknown", profile.unknown);
+	titania_json_object_add_uint64(profile_json, "unknown", profile.unknown);
 	return profile_json;
 }
 
@@ -318,7 +318,7 @@ titaniactl_error titaniactl_mode_edge_export(titania_profile_id profile, const c
 	}
 
 	if (strlen(data.name) == 0) {
-		if(profile == TITANIA_PROFILE_TRIANGLE) {
+		if (profile == TITANIA_PROFILE_TRIANGLE) {
 			strcpy(data.name, "Default Profile");
 		} else {
 			return TITANIACTL_EMPTY_PROFILE;

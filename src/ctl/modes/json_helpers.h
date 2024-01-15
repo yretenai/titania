@@ -303,4 +303,14 @@ static inline bool titania_json_object_get_bool(const struct json* obj, const ch
 	return value->type != JSON_FALSE;
 }
 
+static inline struct json* titania_json_object_add_uint64(struct json* obj, const char* key, uint64_t value) {
+	if (obj == nullptr || key == nullptr) {
+		return nullptr;
+	}
+
+	char strbuffer[64] = { 0 };
+	sprintf(strbuffer, "%llx", (unsigned long long) value);
+	return json_object_add_string(obj, key, strbuffer);
+}
+
 #endif

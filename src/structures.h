@@ -542,7 +542,7 @@ titania_result titania_convert_edge_profile_output(titania_edge_profile input, d
  * @param input: the input to convert
  * @param output: the profile to convert into
  */
-titania_result titania_convert_access_profile_output(titania_access_profile input, dualsense_edge_profile_blob output[0x12]);
+titania_result titania_convert_access_profile_output(titania_access_profile input, playstation_access_profile_blob output[0x12]);
 
 /**
  * @brief update LED state of an access controller

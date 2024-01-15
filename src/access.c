@@ -151,16 +151,16 @@ titania_result titania_debug_get_access_profile(const titania_handle handle, con
 			return TITANIA_INVALID_DATA;
 		}
 
-		size_t s = sizeof(data.blob);
-		if (sizeof(data.blob) * (i + 1) > TITANIA_MERGED_REPORT_ACCESS_SIZE) {
+		size_t s = sizeof(data.select_op.blob);
+		if (sizeof(data.select_op.blob) * (i + 1) > TITANIA_MERGED_REPORT_ACCESS_SIZE) {
 			if (i == 0x11) { // last profile, truncated.
-				s = TITANIA_MERGED_REPORT_ACCESS_SIZE - (sizeof(data.blob) * i);
+				s = TITANIA_MERGED_REPORT_ACCESS_SIZE - (sizeof(data.select_op.blob) * i);
 			} else {
 				return TITANIA_INVALID_DATA;
 			}
 		}
 
-		memcpy(&profile_data[sizeof(data.blob) * i], data.blob, s);
+		memcpy(&profile_data[sizeof(data.select_op.blob) * i], data.select_op.blob, s);
 	}
 
 	return TITANIA_OK;
@@ -186,3 +186,5 @@ titania_result titania_query_access_profile(const titania_handle handle, const t
 
 	return result;
 }
+
+titania_result titania_convert_access_profile_output(titania_access_profile input, playstation_access_profile_blob output[0x12]) { return TITANIA_NOT_IMPLEMENTED; }
