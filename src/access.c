@@ -9,7 +9,7 @@
 #include "structures.h"
 #include "unicode.h"
 
-titania_result titania_update_access_led(const titania_handle handle, const titania_led_update data) {
+titania_error titania_update_access_led(const titania_handle handle, const titania_led_update data) {
 	access_output_msg* hid_state = &state[handle].output.data.msg.access;
 
 	if (data.color.x >= 0.0f && data.color.y >= 0.0f && data.color.z >= 0.0f) {
@@ -50,7 +50,7 @@ titania_result titania_update_access_led(const titania_handle handle, const tita
 		hid_state->control.override_profile = data.access.update_profile;
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
 void convert_button(titania_access_profile_button* out, playstation_access_profile_button in, bool toggle) {
@@ -81,7 +81,7 @@ void convert_extension(titania_access_profile_extension* out, playstation_access
 	}
 }
 
-titania_result titania_convert_access_profile_input(uint8_t profile_data[TITANIA_MERGED_REPORT_ACCESS_SIZE], titania_access_profile* output) {
+titania_error titania_convert_access_profile_input(uint8_t profile_data[TITANIA_MERGED_REPORT_ACCESS_SIZE], titania_access_profile* output) {
 	memset(output, 0, sizeof(titania_edge_profile));
 
 	const playstation_access_profile profile = *(playstation_access_profile*) profile_data;
@@ -89,12 +89,12 @@ titania_result titania_convert_access_profile_input(uint8_t profile_data[TITANIA
 	titania_char32 unicode[41];
 	titania_unicode_result unicode_result = titania_utf16_to_utf32((const titania_char16*) &profile.msg.name, sizeof(profile.msg.name), unicode, sizeof(unicode));
 	if (unicode_result.failed) {
-		return TITANIA_UNICODE_ERROR;
+		return TITANIA_ERROR_UNICODE_ERROR;
 	}
 
 	unicode_result = titania_utf32_to_utf8(unicode, sizeof(unicode), (titania_char8*) &output->name, sizeof(output->name));
 	if (unicode_result.failed) {
-		return TITANIA_UNICODE_ERROR;
+		return TITANIA_ERROR_UNICODE_ERROR;
 	}
 
 	output->version = profile.msg.version;
@@ -122,10 +122,10 @@ titania_result titania_convert_access_profile_input(uint8_t profile_data[TITANIA
 
 	output->valid = true;
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_debug_get_access_profile(const titania_handle handle, const titania_profile_id profile_id, uint8_t profile_data[TITANIA_MERGED_REPORT_ACCESS_SIZE]) {
+titania_error titania_debug_get_access_profile(const titania_handle handle, const titania_profile_id profile_id, uint8_t profile_data[TITANIA_MERGED_REPORT_ACCESS_SIZE]) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 	CHECK_ACCESS(handle);
@@ -138,17 +138,17 @@ titania_result titania_debug_get_access_profile(const titania_handle handle, con
 		case TITANIA_PROFILE_1: data.command_id = PLAYSTATION_ACCESS_QUERY_PROFILE_1; break;
 		case TITANIA_PROFILE_2: data.command_id = PLAYSTATION_ACCESS_QUERY_PROFILE_2; break;
 		case TITANIA_PROFILE_3: data.command_id = PLAYSTATION_ACCESS_QUERY_PROFILE_3; break;
-		default: return TITANIA_INVALID_PROFILE;
+		default: return TITANIA_ERROR_INVALID_PROFILE;
 	}
 
 	if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &data, sizeof(playstation_access_profile_blob)))) {
-		return TITANIA_INVALID_PROFILE;
+		return TITANIA_ERROR_INVALID_PROFILE;
 	}
 
 	for (int i = 0; i < 0x12; ++i) {
 		data.report_id = ACCESS_REPORT_GET_PROFILE;
 		if (HID_FAIL(hid_get_feature_report(state[handle].hid, (uint8_t*) &data, sizeof(playstation_access_profile_blob)))) {
-			return TITANIA_INVALID_DATA;
+			return TITANIA_ERROR_INVALID_DATA;
 		}
 
 		size_t s = sizeof(data.select_op.blob);
@@ -156,23 +156,23 @@ titania_result titania_debug_get_access_profile(const titania_handle handle, con
 			if (i == 0x11) { // last profile, truncated.
 				s = TITANIA_MERGED_REPORT_ACCESS_SIZE - (sizeof(data.select_op.blob) * i);
 			} else {
-				return TITANIA_INVALID_DATA;
+				return TITANIA_ERROR_INVALID_DATA;
 			}
 		}
 
 		memcpy(&profile_data[sizeof(data.select_op.blob) * i], data.select_op.blob, s);
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_query_access_profile(const titania_handle handle, const titania_profile_id profile_id, titania_access_profile* profile) {
+titania_error titania_query_access_profile(const titania_handle handle, const titania_profile_id profile_id, titania_access_profile* profile) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 	CHECK_ACCESS(handle);
 
 	uint8_t profile_data[TITANIA_MERGED_REPORT_ACCESS_SIZE];
-	titania_result result = titania_debug_get_access_profile(handle, profile_id, profile_data);
+	titania_error result = titania_debug_get_access_profile(handle, profile_id, profile_data);
 	if (IS_TITANIA_BAD(result)) {
 		profile->valid = false;
 		return result;
@@ -187,4 +187,4 @@ titania_result titania_query_access_profile(const titania_handle handle, const t
 	return result;
 }
 
-titania_result titania_convert_access_profile_output(titania_access_profile input, playstation_access_profile_blob output[0x12]) { return TITANIA_NOT_IMPLEMENTED; }
+titania_error titania_convert_access_profile_output(titania_access_profile input, playstation_access_profile_blob output[0x12]) { return TITANIA_ERROR_NOT_IMPLEMENTED; }

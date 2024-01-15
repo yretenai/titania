@@ -8,7 +8,7 @@
 #include "titania.h"
 #include "unicode.h"
 
-titania_result titania_convert_edge_profile_input(uint8_t profile_data[TITANIA_MERGED_REPORT_EDGE_SIZE], titania_edge_profile* output) {
+titania_error titania_convert_edge_profile_input(uint8_t profile_data[TITANIA_MERGED_REPORT_EDGE_SIZE], titania_edge_profile* output) {
 	memset(output, 0, sizeof(titania_edge_profile));
 
 	const dualsense_edge_profile profile = *(dualsense_edge_profile*) profile_data;
@@ -16,12 +16,12 @@ titania_result titania_convert_edge_profile_input(uint8_t profile_data[TITANIA_M
 	titania_char32 unicode[41];
 	titania_unicode_result unicode_result = titania_utf16_to_utf32((const titania_char16*) &profile.msg.name, sizeof(profile.msg.name), unicode, sizeof(unicode));
 	if (unicode_result.failed) {
-		return TITANIA_UNICODE_ERROR;
+		return TITANIA_ERROR_UNICODE_ERROR;
 	}
 
 	unicode_result = titania_utf32_to_utf8(unicode, sizeof(unicode), (titania_char8*) &output->name, sizeof(output->name));
 	if (unicode_result.failed) {
-		return TITANIA_UNICODE_ERROR;
+		return TITANIA_ERROR_UNICODE_ERROR;
 	}
 
 	output->version = profile.msg.version;
@@ -103,10 +103,10 @@ titania_result titania_convert_edge_profile_input(uint8_t profile_data[TITANIA_M
 #endif
 	output->valid = true;
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_convert_edge_profile_output(titania_edge_profile input, dualsense_edge_profile_blob output[3]) {
+titania_error titania_convert_edge_profile_output(titania_edge_profile input, dualsense_edge_profile_blob output[3]) {
 	dualsense_edge_profile profile = { 0 };
 
 	profile.msg.version = 1;
@@ -114,12 +114,12 @@ titania_result titania_convert_edge_profile_output(titania_edge_profile input, d
 	titania_char32 unicode[41];
 	titania_unicode_result unicode_result = titania_utf8_to_utf32((const titania_char8*) &input.name, sizeof(input.name), unicode, sizeof(unicode));
 	if (unicode_result.failed) {
-		return TITANIA_UNICODE_ERROR;
+		return TITANIA_ERROR_UNICODE_ERROR;
 	}
 
 	unicode_result = titania_utf32_to_utf16(unicode, sizeof(unicode), (titania_char16*) &profile.msg.name, sizeof(profile.msg.name));
 	if (unicode_result.failed) {
-		return TITANIA_UNICODE_ERROR;
+		return TITANIA_ERROR_UNICODE_ERROR;
 	}
 
 	const uint8_t left_right[4] = { TITANIA_LEFT, DUALSENSE_LEFT, TITANIA_RIGHT, TITANIA_RIGHT };
@@ -209,7 +209,7 @@ titania_result titania_convert_edge_profile_output(titania_edge_profile input, d
 	memcpy(output[1].blob, profile.buffers[1], sizeof(profile.buffers[1]));
 	memcpy(output[2].blob, profile.buffers[2], sizeof(profile.buffers[2]));
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
 const titania_edge_template template_vectors[TITANIA_EDGE_STICK_TEMPLATE_MAX] = {
@@ -265,9 +265,9 @@ const titania_edge_template template_vectors[TITANIA_EDGE_STICK_TEMPLATE_MAX] = 
 
 #define LERP(from, to, factor) ((float) from * (1.0f - factor)) + ((float) to * factor)
 
-titania_result titania_helper_edge_stick_template(titania_edge_stick* stick, const titania_edge_stick_template template_id, int32_t offset) {
+titania_error titania_helper_edge_stick_template(titania_edge_stick* stick, const titania_edge_stick_template template_id, int32_t offset) {
 	if (template_id >= TITANIA_EDGE_STICK_TEMPLATE_MAX) {
-		return TITANIA_NOT_IMPLEMENTED;
+		return TITANIA_ERROR_NOT_IMPLEMENTED;
 	}
 
 	const titania_edge_template stick_template = template_vectors[template_id];
@@ -300,10 +300,10 @@ titania_result titania_helper_edge_stick_template(titania_edge_stick* stick, con
 		}
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_debug_get_edge_profile(const titania_handle handle, const titania_profile_id profile_id, uint8_t profile_data[TITANIA_MERGED_REPORT_EDGE_SIZE]) {
+titania_error titania_debug_get_edge_profile(const titania_handle handle, const titania_profile_id profile_id, uint8_t profile_data[TITANIA_MERGED_REPORT_EDGE_SIZE]) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 	CHECK_EDGE(handle);
@@ -316,31 +316,31 @@ titania_result titania_debug_get_edge_profile(const titania_handle handle, const
 		case TITANIA_PROFILE_SQUARE: id = DUALSENSE_REPORT_EDGE_QUERY_PROFILE_SQUARE_P1; break;
 		case TITANIA_PROFILE_CROSS: id = DUALSENSE_REPORT_EDGE_QUERY_PROFILE_CROSS_P1; break;
 		case TITANIA_PROFILE_CIRCLE: id = DUALSENSE_REPORT_EDGE_QUERY_PROFILE_CIRCLE_P1; break;
-		default: return TITANIA_INVALID_PROFILE;
+		default: return TITANIA_ERROR_INVALID_PROFILE;
 	}
 
 	for (int i = 0; i < 3; ++i) {
 		data.report_id = id + i;
 		if (HID_FAIL(hid_get_feature_report(state[handle].hid, (uint8_t*) &data, sizeof(dualsense_edge_profile_blob))) || (i == 0 && data.profile_part == 0x10)) {
-			return TITANIA_INVALID_DATA;
+			return TITANIA_ERROR_INVALID_DATA;
 		}
 
 		memcpy(&profile_data[sizeof(data.blob) * i], data.blob, sizeof(data.blob));
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_query_edge_profile(const titania_handle handle, const titania_profile_id profile_id, titania_edge_profile* profile) {
+titania_error titania_query_edge_profile(const titania_handle handle, const titania_profile_id profile_id, titania_edge_profile* profile) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 	CHECK_EDGE(handle);
 
 	uint8_t profile_data[TITANIA_MERGED_REPORT_EDGE_SIZE];
-	titania_result result = titania_debug_get_edge_profile(handle, profile_id, profile_data);
+	titania_error result = titania_debug_get_edge_profile(handle, profile_id, profile_data);
 	if (IS_TITANIA_BAD(result)) {
 		profile->valid = false;
-		return TITANIA_INVALID_DATA;
+		return TITANIA_ERROR_INVALID_DATA;
 	}
 
 	result = titania_convert_edge_profile_input(profile_data, profile);

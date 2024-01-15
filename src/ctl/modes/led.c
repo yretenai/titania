@@ -70,7 +70,7 @@ titaniactl_error titaniactl_mode_led(titaniactl_context* context) {
 
 	for (int i = 0; i < context->connected_controllers; ++i) {
 		if (should_stop) {
-			return TITANIACTL_INTERRUPTED;
+			return TITANIACTL_ERROR_INTERRUPTED;
 		}
 
 		titania_update_led(context->handles[i], update);
@@ -78,5 +78,5 @@ titaniactl_error titaniactl_mode_led(titaniactl_context* context) {
 
 	titania_push(context->handles, context->connected_controllers);
 
-	return TITANIACTL_OK;
+	return TITANIACTL_ERROR_OK;
 }

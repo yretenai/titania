@@ -19,7 +19,7 @@
 #define nullptr ((void*) 0)
 #endif
 
-#define MAKE_TITANIA_ERROR(result) (TITANIACTL_TITANIA_ERROR | ((titaniactl_error) result << 16))
+#define MAKE_TITANIA_ERROR(result) (TITANIACTL_ERROR_TITANIA_ERROR | ((titaniactl_error) result << 16))
 
 typedef struct titaniactl_context {
 	int connected_controllers;
@@ -30,27 +30,27 @@ typedef struct titaniactl_context {
 } titaniactl_context;
 
 typedef enum titaniactl_error {
-	TITANIACTL_OK_NO_JSON_INTERRUPTED = -2,
-	TITANIACTL_OK_NO_JSON = -1,
-	TITANIACTL_OK = TITANIA_OK,
-	TITANIACTL_HID_ERROR,
-	TITANIACTL_INTERRUPTED,
-	TITANIACTL_NOT_IMPLEMENTED,
-	TITANIACTL_INVALID_ARGUMENTS,
-	TITANIACTL_INVALID_PAIR_ARGUMENTS,
-	TITANIACTL_INVALID_MAC_ADDRESS,
-	TITANIACTL_INVALID_LINK_KEY,
-	TITANIACTL_INVALID_PROFILE,
-	TITANIACTL_EMPTY_PROFILE,
-	TITANIACTL_FILE_WRITE_ERROR,
-	TITANIACTL_FILE_READ_ERROR,
-	TITANIACTL_TITANIA_ERROR = 0xFFFF,
-	TITANIACTL_MASK = 0xFFFF,
+	TITANIACTL_ERROR_OK_NO_JSON_INTERRUPTED = -2,
+	TITANIACTL_ERROR_OK_NO_JSON = -1,
+	TITANIACTL_ERROR_OK = TITANIA_ERROR_OK,
+	TITANIACTL_ERROR_HID_FAILURE,
+	TITANIACTL_ERROR_INTERRUPTED,
+	TITANIACTL_ERROR_NOT_IMPLEMENTED,
+	TITANIACTL_ERROR_INVALID_ARGUMENTS,
+	TITANIACTL_ERROR_INVALID_PAIR_ARGUMENTS,
+	TITANIACTL_ERROR_INVALID_MAC_ADDRESS,
+	TITANIACTL_ERROR_INVALID_LINK_KEY,
+	TITANIACTL_ERROR_INVALID_PROFILE,
+	TITANIACTL_ERROR_EMPTY_PROFILE,
+	TITANIACTL_ERROR_FILE_WRITE_ERROR,
+	TITANIACTL_ERROR_FILE_READ_ERROR,
+	TITANIACTL_ERROR_TITANIA_ERROR = 0xFFFF,
+	TITANIACTL_ERROR_MASK = 0xFFFF,
 	TITANIACTL_ERROR_MAX
 } titaniactl_error;
 
-#define IS_TITANIACTL_OKAY(result) (result == TITANIACTL_OK)
-#define IS_TITANIACTL_BAD(result) (result > TITANIACTL_OK)
+#define IS_TITANIACTL_ERROR_OKAY(result) (result == TITANIACTL_ERROR_OK)
+#define IS_TITANIACTL_BAD(result) (result > TITANIACTL_ERROR_OK)
 
 typedef titaniactl_error (*titaniactl_callback_t)(titaniactl_context* context);
 
@@ -62,7 +62,7 @@ typedef struct titaniactl_mode {
 	const char* const args;
 } titaniactl_mode;
 
-void titania_errorf(const titania_result result, const char* message);
+void titania_errorf(const titania_error result, const char* message);
 void titaniactl_errorf(const char* error, const char* message);
 
 titaniactl_error titaniactl_mode_list(titaniactl_context* context);

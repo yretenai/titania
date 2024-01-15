@@ -12,18 +12,18 @@ const char* const REPORT_TYPES[3] = { "INPUT", "OUTPUT", "FEATURE" };
 titaniactl_error titaniactl_mode_dump(titaniactl_context* context) {
 	for (int i = 0; i < context->connected_controllers; ++i) {
 		if (should_stop) {
-			return TITANIACTL_INTERRUPTED;
+			return TITANIACTL_ERROR_INTERRUPTED;
 		}
 
 		char name[0x30] = { 0 };
 		sprintf(name, "report_%s_%%d.bin", context->hids[i].serial.mac);
 		titania_report_id report_ids[0xFF];
 		hid_device* device;
-		if (IS_TITANIA_OKAY(titania_debug_get_hid(context->hids[i].handle, (intptr_t*) &device)) &&
-			IS_TITANIA_OKAY(titania_debug_get_hid_report_ids(context->hids[i].handle, report_ids))) {
+		if (IS_TITANIA_ERROR_OKAY(titania_debug_get_hid(context->hids[i].handle, (intptr_t*) &device)) &&
+			IS_TITANIA_ERROR_OKAY(titania_debug_get_hid_report_ids(context->hids[i].handle, report_ids))) {
 			for (int j = 0; j < 0xFF; j++) {
 				if (should_stop) {
-					return TITANIACTL_INTERRUPTED;
+					return TITANIACTL_ERROR_INTERRUPTED;
 				}
 
 				uint8_t buffer[0x4096];
@@ -58,5 +58,5 @@ titaniactl_error titaniactl_mode_dump(titaniactl_context* context) {
 		}
 	}
 
-	return TITANIACTL_OK;
+	return TITANIACTL_ERROR_OK;
 }

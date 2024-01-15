@@ -38,7 +38,7 @@ titaniactl_error titaniactl_mode_bench(titaniactl_context* context) {
 	const struct timespec sleep_time = { 0, 1e+6 };
 	while (true) {
 		if (should_stop) {
-			return TITANIACTL_INTERRUPTED;
+			return TITANIACTL_ERROR_INTERRUPTED;
 		}
 
 		timespec_get(&ts1, TIME_UTC);

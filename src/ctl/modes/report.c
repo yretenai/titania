@@ -11,10 +11,10 @@
 titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const bool loop) {
 	do {
 		titania_data datum[TITANIACTL_CONTROLLER_COUNT];
-		const titania_result result = titania_pull(context->handles, context->connected_controllers, datum);
+		const titania_error result = titania_pull(context->handles, context->connected_controllers, datum);
 		if (IS_TITANIA_BAD(result)) {
 			titania_errorf(result, "error getting report");
-			return TITANIACTL_HID_ERROR;
+			return TITANIACTL_ERROR_HID_FAILURE;
 		}
 
 		for (int i = 0; i < context->connected_controllers; ++i) {
@@ -263,7 +263,7 @@ titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const
 		}
 	} while (loop && !should_stop);
 
-	return TITANIACTL_OK;
+	return TITANIACTL_ERROR_OK;
 }
 
 titaniactl_error titaniactl_mode_report(titaniactl_context* context) { return titaniactl_mode_report_inner(context, false); }
@@ -273,9 +273,9 @@ titaniactl_error titaniactl_mode_report_loop(titaniactl_context* context) { retu
 titaniactl_error titaniactl_mode_report_json_inner(titaniactl_context* context, const bool loop) {
 	do {
 		titania_data datum[TITANIACTL_CONTROLLER_COUNT];
-		const titania_result result = titania_pull(context->handles, context->connected_controllers, datum);
+		const titania_error result = titania_pull(context->handles, context->connected_controllers, datum);
 		if (IS_TITANIA_BAD(result)) {
-			return TITANIACTL_HID_ERROR;
+			return TITANIACTL_ERROR_HID_FAILURE;
 		}
 
 		struct json* root_obj = json_new_object();
@@ -585,7 +585,7 @@ titaniactl_error titaniactl_mode_report_json_inner(titaniactl_context* context, 
 		free(json_text);
 	} while (loop && !should_stop);
 
-	return TITANIACTL_OK_NO_JSON;
+	return TITANIACTL_ERROR_OK_NO_JSON;
 }
 
 titaniactl_error titaniactl_mode_report_json(titaniactl_context* context) { return titaniactl_mode_report_json_inner(context, false); }
@@ -620,7 +620,7 @@ titaniactl_error titaniactl_mode_list(titaniactl_context* context) {
 		printf("Version %04x (VID 0x%04x, PID 0x%04x, %s)\n", hid.firmware.update.major, hid.vendor_id, hid.product_id, hid.serial.mac);
 	}
 
-	return TITANIACTL_OK;
+	return TITANIACTL_ERROR_OK;
 }
 
 titaniactl_error titaniactl_mode_list_json(titaniactl_context* context) {
@@ -646,11 +646,11 @@ titaniactl_error titaniactl_mode_list_json(titaniactl_context* context) {
 	char* json_text = json_print(arr);
 	json_delete(arr);
 	if (json_text == nullptr) {
-		return TITANIACTL_OK_NO_JSON;
+		return TITANIACTL_ERROR_OK_NO_JSON;
 	}
 
 	printf("%s\n", json_text);
 	free(json_text);
 
-	return TITANIACTL_OK_NO_JSON;
+	return TITANIACTL_ERROR_OK_NO_JSON;
 }

@@ -64,11 +64,11 @@ void json_object_get_access_extension(const struct json* obj, titania_access_pro
 
 titaniactl_error titaniactl_mode_access_import(titania_profile_id profile, const struct json* data, titania_hid handle) {
 	if (strcmp(titania_json_object_get_string(data, "type", "(null)"), "access") != 0) {
-		return TITANIACTL_INVALID_PROFILE;
+		return TITANIACTL_ERROR_INVALID_PROFILE;
 	}
 
 	if (titania_json_object_get_uint32(data, "version", 0) != 2) {
-		return TITANIACTL_INVALID_PROFILE;
+		return TITANIACTL_ERROR_INVALID_PROFILE;
 	}
 
 	titania_access_profile profile_data = { 0 };
@@ -76,7 +76,7 @@ titaniactl_error titaniactl_mode_access_import(titania_profile_id profile, const
 	const char* name = titania_json_object_get_string(data, "name", "Unnamed Profile");
 	const size_t name_len = strlen(name);
 	if (name_len >= sizeof(profile_data.name)) {
-		return TITANIACTL_INVALID_PROFILE;
+		return TITANIACTL_ERROR_INVALID_PROFILE;
 	}
 	memset(profile_data.name, 0, sizeof(profile_data.name));
 	memcpy(profile_data.name, name, name_len);
@@ -138,7 +138,7 @@ titaniactl_error titaniactl_mode_access_import(titania_profile_id profile, const
 		json_object_get_access_extension(extension_entry, &profile_data.extensions[i]);
 	}
 
-	titania_result result = titania_update_access_profile(handle.handle, profile, profile_data);
+	titania_error result = titania_update_access_profile(handle.handle, profile, profile_data);
 	if (IS_TITANIA_BAD(result)) {
 		titania_errorf(result, "failed to update access profile");
 		return MAKE_TITANIA_ERROR(result);
@@ -148,7 +148,7 @@ titaniactl_error titaniactl_mode_access_import(titania_profile_id profile, const
 		printf("successfully uploaded profile");
 	}
 
-	return TITANIACTL_OK;
+	return TITANIACTL_ERROR_OK;
 }
 
 struct json* json_object_add_access_button(struct json* obj, const titania_access_profile_button data) {
@@ -278,30 +278,30 @@ struct json* titaniactl_mode_access_convert(const titania_access_profile profile
 
 titaniactl_error titaniactl_mode_access_export(titania_profile_id profile, const char* path, titania_hid handle) {
 	if (path == nullptr) {
-		return TITANIACTL_INVALID_ARGUMENTS;
+		return TITANIACTL_ERROR_INVALID_ARGUMENTS;
 	}
 
 	bool is_stdout = strcmp(path, "--") == 0;
 	if (is_stdout && !is_json) {
-		return TITANIACTL_INVALID_ARGUMENTS;
+		return TITANIACTL_ERROR_INVALID_ARGUMENTS;
 	}
 
 	titania_access_profile data;
-	titania_result result = titania_query_access_profile(handle.handle, profile, &data);
+	titania_error result = titania_query_access_profile(handle.handle, profile, &data);
 	if (IS_TITANIA_BAD(result)) {
 		titania_errorf(result, "failed to query access profile");
 		return MAKE_TITANIA_ERROR(result);
 	}
 
 	if (!data.valid) {
-		return TITANIACTL_EMPTY_PROFILE;
+		return TITANIACTL_ERROR_EMPTY_PROFILE;
 	}
 
 	if (strlen(data.name) == 0) {
 		if (profile == TITANIA_PROFILE_DEFAULT) {
 			strcpy(data.name, "Default Profile");
 		} else {
-			return TITANIACTL_EMPTY_PROFILE;
+			return TITANIACTL_ERROR_EMPTY_PROFILE;
 		}
 	}
 
@@ -310,13 +310,13 @@ titaniactl_error titaniactl_mode_access_export(titania_profile_id profile, const
 	char* profile_str = json_print(profile_json);
 	json_delete(profile_json);
 	if (profile_str == nullptr) {
-		return TITANIACTL_FILE_WRITE_ERROR;
+		return TITANIACTL_ERROR_FILE_WRITE_ERROR;
 	}
 
 	if (is_stdout) {
 		printf("%s\n", profile_str);
 		free(profile_str);
-		return TITANIACTL_OK_NO_JSON;
+		return TITANIACTL_ERROR_OK_NO_JSON;
 	}
 
 	const char* const suffix = ".json";
@@ -326,7 +326,7 @@ titaniactl_error titaniactl_mode_access_export(titania_profile_id profile, const
 	char* output_path = calloc(full_len, sizeof(char));
 	if (output_path == nullptr) {
 		free(profile_str);
-		return TITANIACTL_FILE_WRITE_ERROR;
+		return TITANIACTL_ERROR_FILE_WRITE_ERROR;
 	}
 
 	sprintf(output_path, "%s/%s%s", path, data.name, suffix);
@@ -349,7 +349,7 @@ titaniactl_error titaniactl_mode_access_export(titania_profile_id profile, const
 	if (file == nullptr) {
 		free(profile_str);
 		free(output_path);
-		return TITANIACTL_FILE_WRITE_ERROR;
+		return TITANIACTL_ERROR_FILE_WRITE_ERROR;
 	}
 	fwrite(profile_str, 1, strlen(profile_str), file);
 	fwrite("\n", 1, 1, file);
@@ -362,15 +362,15 @@ titaniactl_error titaniactl_mode_access_export(titania_profile_id profile, const
 	free(profile_str);
 	free(output_path);
 
-	return TITANIACTL_OK;
+	return TITANIACTL_ERROR_OK;
 }
 
 titaniactl_error titaniactl_mode_access_delete(titania_profile_id profile, titania_hid handle) {
 	if (IS_TITANIA_BAD(titania_delete_access_profile(handle.handle, profile))) {
-		return TITANIACTL_HID_ERROR;
+		return TITANIACTL_ERROR_HID_FAILURE;
 	}
 
 	printf("deleted %s profile%s from %s\n", titania_profile_id_msg[profile], profile == TITANIA_PROFILE_ALL ? "s" : "", handle.serial.mac);
 
-	return TITANIACTL_OK;
+	return TITANIACTL_ERROR_OK;
 }

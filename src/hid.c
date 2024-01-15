@@ -49,17 +49,17 @@ static titania_device_info device_infos[] = {
 
 #define ARR_LEN(arr) sizeof(arr) / sizeof(*arr)
 
-titania_result titania_init_checked(const size_t size) {
+titania_error titania_init_checked(const size_t size) {
 	if (size != sizeof(titania_hid)) {
-		return TITANIA_INVALID_LIBRARY;
+		return TITANIA_ERROR_INVALID_LIBRARY;
 	}
 
 	if (is_initialized) {
-		return TITANIA_OK;
+		return TITANIA_ERROR_OK;
 	}
 
 	if (hid_init() != 0) {
-		return TITANIA_HIDAPI_FAIL;
+		return TITANIA_ERROR_HIDAPI_FAIL;
 	}
 
 #ifdef __APPLE__
@@ -71,14 +71,14 @@ titania_result titania_init_checked(const size_t size) {
 	titania_init_checksum();
 
 	is_initialized = true;
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_get_hids(titania_query* hids, const size_t hids_length) {
+titania_error titania_get_hids(titania_query* hids, const size_t hids_length) {
 	CHECK_INIT();
 
 	if (hids_length == 0) {
-		return TITANIA_OK;
+		return TITANIA_ERROR_OK;
 	}
 
 	for (size_t i = 0; i < hids_length; i++) {
@@ -100,12 +100,12 @@ titania_result titania_get_hids(titania_query* hids, const size_t hids_length) {
 		while (dev) {
 			if (wcslen(dev->serial_number) >= 0x100) {
 				hid_free_enumeration(root);
-				return TITANIA_INVALID_DATA;
+				return TITANIA_ERROR_INVALID_DATA;
 			}
 
 			if (strlen(dev->path) >= 0x200) {
 				hid_free_enumeration(root);
-				return TITANIA_INVALID_DATA;
+				return TITANIA_ERROR_INVALID_DATA;
 			}
 
 			if (dev->bus_type == HID_API_BUS_USB || dev->bus_type == HID_API_BUS_BLUETOOTH) {
@@ -129,10 +129,10 @@ titania_result titania_get_hids(titania_query* hids, const size_t hids_length) {
 		hid_free_enumeration(root);
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_open(const titania_hid_path path, const bool is_bluetooth, titania_hid* handle, const bool use_calibration, const bool blocking) {
+titania_error titania_open(const titania_hid_path path, const bool is_bluetooth, titania_hid* handle, const bool use_calibration, const bool blocking) {
 	CHECK_INIT();
 
 	for (int i = 0; i < TITANIA_MAX_CONTROLLERS; i++) {
@@ -141,7 +141,7 @@ titania_result titania_open(const titania_hid_path path, const bool is_bluetooth
 			handle->handle = i;
 			state[i].hid = hid_open_path(path);
 			if (state[i].hid == nullptr) {
-				return TITANIA_HIDAPI_FAIL;
+				return TITANIA_ERROR_HIDAPI_FAIL;
 			}
 
 			hid_set_nonblocking(state[i].hid, !blocking);
@@ -285,30 +285,30 @@ titania_result titania_open(const titania_hid_path path, const bool is_bluetooth
 				titania_push(&handle->handle, 1);
 			}
 
-			return TITANIA_OK;
+			return TITANIA_ERROR_OK;
 		}
 	}
 
-	return TITANIA_NO_SLOTS;
+	return TITANIA_ERROR_NO_SLOTS;
 }
 
-titania_result titania_pull(titania_handle* handle, const size_t handle_count, titania_data* data) {
+titania_error titania_pull(titania_handle* handle, const size_t handle_count, titania_data* data) {
 	CHECK_INIT();
 
 	if (handle == nullptr || data == nullptr) {
-		return TITANIA_INVALID_ARGUMENT;
+		return TITANIA_ERROR_INVALID_ARGUMENT;
 	}
 
 	if (handle_count <= 0) {
-		return TITANIA_OK;
+		return TITANIA_ERROR_OK;
 	}
 
 	if (handle_count > TITANIA_MAX_CONTROLLERS) {
-		return TITANIA_NO_SLOTS;
+		return TITANIA_ERROR_NO_SLOTS;
 	}
 
 	titania_data invalid = { 0 };
-	invalid.hid.handle = TITANIA_INVALID_HANDLE_ID;
+	invalid.hid.handle = TITANIA_INVALID_ID;
 
 	for (size_t i = 0; i < handle_count; i++) {
 		CHECK_HANDLE_VALID(handle[i]);
@@ -328,27 +328,27 @@ titania_result titania_pull(titania_handle* handle, const size_t handle_count, t
 			titania_convert_input(hid_state->hid_info, hid_state->input.data.msg.data, &data[i], hid_state->calibration);
 		} else if (HID_FAIL(report_size)) {
 			titania_close(handle[i]);
-			handle[i] = TITANIA_INVALID_HANDLE_ID;
+			handle[i] = TITANIA_INVALID_ID;
 			data[i] = invalid;
 		}
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_push(titania_handle* handle, const size_t handle_count) {
+titania_error titania_push(titania_handle* handle, const size_t handle_count) {
 	CHECK_INIT();
 
 	if (handle == nullptr) {
-		return TITANIA_INVALID_HANDLE;
+		return TITANIA_ERROR_INVALID_HANDLE;
 	}
 
 	if (handle_count <= 0) {
-		return TITANIA_OK;
+		return TITANIA_ERROR_OK;
 	}
 
 	if (handle_count > TITANIA_MAX_CONTROLLERS) {
-		return TITANIA_NO_SLOTS;
+		return TITANIA_ERROR_NO_SLOTS;
 	}
 
 	for (size_t i = 0; i < handle_count; i++) {
@@ -379,7 +379,7 @@ titania_result titania_push(titania_handle* handle, const size_t handle_count) {
 
 		if (HID_FAIL(hid_write(hid_state->hid, buffer, size))) {
 			titania_close(handle[i]);
-			handle[i] = TITANIA_INVALID_HANDLE_ID;
+			handle[i] = TITANIA_INVALID_ID;
 			continue; // invalid!
 		}
 
@@ -392,10 +392,10 @@ titania_result titania_push(titania_handle* handle, const size_t handle_count) {
 		hid_state->output.data.bt_checksum = 0;
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_update_led(const titania_handle handle, const titania_led_update data) {
+titania_error titania_update_led(const titania_handle handle, const titania_led_update data) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
@@ -417,15 +417,15 @@ titania_result titania_update_led(const titania_handle handle, const titania_led
 		hid_state->led.led_id = data.led;
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_update_audio(const titania_handle handle, const titania_audio_update data) {
+titania_error titania_update_audio(const titania_handle handle, const titania_audio_update data) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
 	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_NOT_SUPPORTED;
+		return TITANIA_ERROR_NOT_SUPPORTED;
 	}
 
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
@@ -446,15 +446,15 @@ titania_result titania_update_audio(const titania_handle handle, const titania_a
 	hid_state->audio.speaker = NORM_CLAMP_UINT8(data.speaker_volume);
 	hid_state->audio.mic = NORM_CLAMP_UINT8(data.microphone_volume);
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_update_control(const titania_handle handle, const titania_control_update data) {
+titania_error titania_update_control(const titania_handle handle, const titania_control_update data) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
 	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_NOT_SUPPORTED;
+		return TITANIA_ERROR_NOT_SUPPORTED;
 	}
 
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
@@ -499,15 +499,15 @@ titania_result titania_update_control(const titania_handle handle, const titania
 		hid_state->edge.indicator.enable_vibration = !data.edge_disable_vibration_indicators;
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_get_control(const titania_handle handle, titania_control_update* control) {
+titania_error titania_get_control(const titania_handle handle, titania_control_update* control) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
 	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_NOT_SUPPORTED;
+		return TITANIA_ERROR_NOT_SUPPORTED;
 	}
 
 	const dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
@@ -544,10 +544,10 @@ titania_result titania_get_control(const titania_handle handle, titania_control_
 		control->edge_disable_vibration_indicators = !hid_state->edge.indicator.enable_vibration;
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result compute_effect(dualsense_effect_output* effect, dualsense_output_msg* msg, const titania_effect_update trigger, const float power_reduction) {
+titania_error compute_effect(dualsense_effect_output* effect, dualsense_output_msg* msg, const titania_effect_update trigger, const float power_reduction) {
 	// clear
 	effect->mode = 0;
 	effect->params.multiple.id = 0;
@@ -659,39 +659,39 @@ titania_result compute_effect(dualsense_effect_output* effect, dualsense_output_
 				break;
 			}
 		// ReSharper restore CppRedundantParentheses
-		default: return TITANIA_NOT_IMPLEMENTED;
+		default: return TITANIA_ERROR_NOT_IMPLEMENTED;
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
 // sanity check to make sure we don't (temporarily) brick the controller
-titania_result check_if_trigger_state_bad(const titania_handle handle, const uint8_t id) {
+titania_error check_if_trigger_state_bad(const titania_handle handle, const uint8_t id) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
 	const dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 	if (hid_state->effects[id].mode >= 0xF0) { // these are calibration modes, will temporarily brick the controller!!
-		return TITANIA_INVALID_DATA;
+		return TITANIA_ERROR_INVALID_DATA;
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_update_effect(const titania_handle handle, const titania_effect_update left_trigger, const titania_effect_update right_trigger, const float power_reduction) {
+titania_error titania_update_effect(const titania_handle handle, const titania_effect_update left_trigger, const titania_effect_update right_trigger, const float power_reduction) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
 	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_NOT_SUPPORTED;
+		return TITANIA_ERROR_NOT_SUPPORTED;
 	}
 
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 	hid_state->flags.left_trigger_motor = left_trigger.mode != TITANIA_EFFECT_NONE;
 	hid_state->flags.right_trigger_motor = right_trigger.mode != TITANIA_EFFECT_NONE;
 
-	titania_result result = compute_effect(&hid_state->effects[ADAPTIVE_TRIGGER_LEFT], hid_state, left_trigger, power_reduction);
-	if (IS_TITANIA_OKAY(result)) {
+	titania_error result = compute_effect(&hid_state->effects[ADAPTIVE_TRIGGER_LEFT], hid_state, left_trigger, power_reduction);
+	if (IS_TITANIA_ERROR_OKAY(result)) {
 		result = check_if_trigger_state_bad(handle, ADAPTIVE_TRIGGER_LEFT);
 	}
 
@@ -702,7 +702,7 @@ titania_result titania_update_effect(const titania_handle handle, const titania_
 	}
 
 	result = compute_effect(&hid_state->effects[ADAPTIVE_TRIGGER_RIGHT], hid_state, right_trigger, power_reduction);
-	if (IS_TITANIA_OKAY(result)) {
+	if (IS_TITANIA_ERROR_OKAY(result)) {
 		result = check_if_trigger_state_bad(handle, ADAPTIVE_TRIGGER_RIGHT);
 	}
 
@@ -715,12 +715,12 @@ titania_result titania_update_effect(const titania_handle handle, const titania_
 	return result;
 }
 
-titania_result titania_update_rumble(const titania_handle handle, const float large_motor, const float small_motor, const float power_reduction, const bool emulate_legacy_behavior) {
+titania_error titania_update_rumble(const titania_handle handle, const float large_motor, const float small_motor, const float power_reduction, const bool emulate_legacy_behavior) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
 	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_NOT_SUPPORTED;
+		return TITANIA_ERROR_NOT_SUPPORTED;
 	}
 
 	const titania_hid hid = state[handle].hid_info;
@@ -743,10 +743,10 @@ titania_result titania_update_rumble(const titania_handle handle, const float la
 		hid_state->motor_flags.rumble_power_reduction = NORM_CLAMP(power_reduction - 1, 0x7);
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_bt_pair(const titania_handle handle, const titania_mac mac, const titania_link_key link_key) {
+titania_error titania_bt_pair(const titania_handle handle, const titania_mac mac, const titania_link_key link_key) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
@@ -755,7 +755,7 @@ titania_result titania_bt_pair(const titania_handle handle, const titania_mac ma
 	uint32_t pair_mac[6];
 	const int test = sscanf(mac, "%02x:%02x:%02x:%02x:%02x:%02x", &pair_mac[0], &pair_mac[1], &pair_mac[2], &pair_mac[3], &pair_mac[4], &pair_mac[5]);
 	if (test != 6) {
-		return TITANIA_INVALID_ARGUMENT;
+		return TITANIA_ERROR_INVALID_ARGUMENT;
 	}
 
 	msg.pair_mac[0] = pair_mac[0] & 0xFF;
@@ -768,13 +768,13 @@ titania_result titania_bt_pair(const titania_handle handle, const titania_mac ma
 	msg.checksum = titania_calc_checksum(crc_seed_feature, (uint8_t*) &msg, sizeof(dualsense_bt_pair_msg) - 4);
 
 	if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &msg, sizeof(dualsense_bt_pair_msg)))) {
-		return TITANIA_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
+		return TITANIA_ERROR_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_bt_connect(const titania_handle handle) {
+titania_error titania_bt_connect(const titania_handle handle) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
@@ -784,13 +784,13 @@ titania_result titania_bt_connect(const titania_handle handle) {
 	msg.checksum = titania_calc_checksum(crc_seed_feature, (uint8_t*) &msg, sizeof(dualsense_bt_command_msg) - 4);
 
 	if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &msg, sizeof(dualsense_bt_command_msg)))) {
-		return TITANIA_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
+		return TITANIA_ERROR_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_bt_disconnect(const titania_handle handle) {
+titania_error titania_bt_disconnect(const titania_handle handle) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
@@ -800,27 +800,27 @@ titania_result titania_bt_disconnect(const titania_handle handle) {
 	msg.checksum = titania_calc_checksum(crc_seed_feature, (uint8_t*) &msg, sizeof(dualsense_bt_command_msg) - 4);
 
 	if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &msg, sizeof(dualsense_bt_command_msg)))) {
-		return TITANIA_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
+		return TITANIA_ERROR_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_update_edge_profile(const titania_handle handle, const titania_profile_id id, const titania_edge_profile profile) {
+titania_error titania_update_edge_profile(const titania_handle handle, const titania_profile_id id, const titania_edge_profile profile) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 	CHECK_EDGE(handle);
 
 	if (id == TITANIA_PROFILE_NONE) {
-		return TITANIA_OK;
+		return TITANIA_ERROR_OK;
 	}
 
 	if (id <= TITANIA_PROFILE_TRIANGLE || id > TITANIA_PROFILE_CIRCLE) {
-		return TITANIA_INVALID_PROFILE;
+		return TITANIA_ERROR_INVALID_PROFILE;
 	}
 
 	dualsense_edge_profile_blob output[3];
-	const titania_result result = titania_convert_edge_profile_output(profile, output);
+	const titania_error result = titania_convert_edge_profile_output(profile, output);
 	if (IS_TITANIA_BAD(result)) {
 		return result;
 	}
@@ -830,7 +830,7 @@ titania_result titania_update_edge_profile(const titania_handle handle, const ti
 		case TITANIA_PROFILE_CIRCLE: report_id = DUALSENSE_REPORT_EDGE_UPDATE_PROFILE_CIRCLE; break;
 		case TITANIA_PROFILE_SQUARE: report_id = DUALSENSE_REPORT_EDGE_UPDATE_PROFILE_SQUARE; break;
 		case TITANIA_PROFILE_CROSS: report_id = DUALSENSE_REPORT_EDGE_UPDATE_PROFILE_CROSS; break;
-		default: return TITANIA_INVALID_PROFILE;
+		default: return TITANIA_ERROR_INVALID_PROFILE;
 	}
 
 	for (int i = 0; i < 3; ++i) {
@@ -839,28 +839,28 @@ titania_result titania_update_edge_profile(const titania_handle handle, const ti
 		output[i].checksum = titania_calc_checksum(crc_seed_feature_profile, (uint8_t*) &output[i], sizeof(*output) - 4);
 
 		if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &output[i], sizeof(dualsense_edge_profile_blob)))) {
-			return TITANIA_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
+			return TITANIA_ERROR_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
 		}
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_update_access_profile(const titania_handle handle, const titania_profile_id id, const titania_access_profile profile) {
+titania_error titania_update_access_profile(const titania_handle handle, const titania_profile_id id, const titania_access_profile profile) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 	CHECK_ACCESS(handle);
 
 	if (id == TITANIA_PROFILE_NONE) {
-		return TITANIA_OK;
+		return TITANIA_ERROR_OK;
 	}
 
 	if (id <= TITANIA_PROFILE_DEFAULT || id > TITANIA_PROFILE_3) {
-		return TITANIA_INVALID_PROFILE;
+		return TITANIA_ERROR_INVALID_PROFILE;
 	}
 
 	playstation_access_profile_blob output[0x12];
-	const titania_result result = titania_convert_access_profile_output(profile, output);
+	const titania_error result = titania_convert_access_profile_output(profile, output);
 	if (IS_TITANIA_BAD(result)) {
 		return result;
 	}
@@ -870,7 +870,7 @@ titania_result titania_update_access_profile(const titania_handle handle, const 
 		case TITANIA_PROFILE_1: command = PLAYSTATION_ACCESS_UPDATE_PROFILE_1; break;
 		case TITANIA_PROFILE_2: command = PLAYSTATION_ACCESS_UPDATE_PROFILE_2; break;
 		case TITANIA_PROFILE_3: command = PLAYSTATION_ACCESS_UPDATE_PROFILE_3; break;
-		default: return TITANIA_INVALID_PROFILE;
+		default: return TITANIA_ERROR_INVALID_PROFILE;
 	}
 
 	for (int i = 0; i < 0x12; ++i) {
@@ -880,24 +880,24 @@ titania_result titania_update_access_profile(const titania_handle handle, const 
 		output[i].checksum = titania_calc_checksum(crc_seed_feature_profile, (uint8_t*) &output[i], sizeof(*output) - 4);
 
 		if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &output[i], sizeof(playstation_access_profile_blob)))) {
-			return TITANIA_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
+			return TITANIA_ERROR_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
 		}
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_delete_edge_profile(const titania_handle handle, const titania_profile_id id) {
+titania_error titania_delete_edge_profile(const titania_handle handle, const titania_profile_id id) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 	CHECK_EDGE(handle);
 
 	if (id == TITANIA_PROFILE_NONE) {
-		return TITANIA_OK;
+		return TITANIA_ERROR_OK;
 	}
 
 	if ((id <= TITANIA_PROFILE_TRIANGLE || id > TITANIA_PROFILE_CIRCLE) && id != TITANIA_PROFILE_ALL) {
-		return TITANIA_INVALID_PROFILE;
+		return TITANIA_ERROR_INVALID_PROFILE;
 	}
 
 	dualsense_edge_profile_delete del = { 0 };
@@ -909,23 +909,23 @@ titania_result titania_delete_edge_profile(const titania_handle handle, const ti
 	}
 	del.checksum = titania_calc_checksum(crc_seed_feature_profile, (uint8_t*) &del, sizeof(del) - 4);
 	if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &del, sizeof(del)))) {
-		return TITANIA_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
+		return TITANIA_ERROR_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_delete_access_profile(const titania_handle handle, const titania_profile_id id) {
+titania_error titania_delete_access_profile(const titania_handle handle, const titania_profile_id id) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 	CHECK_ACCESS(handle);
 
 	if (id == TITANIA_PROFILE_NONE) {
-		return TITANIA_OK;
+		return TITANIA_ERROR_OK;
 	}
 
 	if ((id <= TITANIA_PROFILE_DEFAULT || id > TITANIA_PROFILE_3) && id != TITANIA_PROFILE_ALL) {
-		return TITANIA_INVALID_PROFILE;
+		return TITANIA_ERROR_INVALID_PROFILE;
 	}
 
 	playstation_access_profile_blob del = { 0 };
@@ -938,10 +938,10 @@ titania_result titania_delete_access_profile(const titania_handle handle, const 
 	}
 	del.checksum = titania_calc_checksum(crc_seed_feature_profile, (uint8_t*) &del, sizeof(del) - 4);
 	if (HID_FAIL(hid_send_feature_report(state[handle].hid, (uint8_t*) &del, sizeof(del)))) {
-		return TITANIA_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
+		return TITANIA_ERROR_HIDAPI_FAIL; // really only happens with bluetooth due to failed checksum
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
 void titania_close(const titania_handle handle) {
@@ -949,7 +949,7 @@ void titania_close(const titania_handle handle) {
 		return;
 	}
 
-	if (handle == TITANIA_INVALID_HANDLE_ID || handle < 0 || handle >= TITANIA_MAX_CONTROLLERS) {
+	if (handle == TITANIA_INVALID_ID || handle < 0 || handle >= TITANIA_MAX_CONTROLLERS) {
 		return;
 	}
 
@@ -975,16 +975,16 @@ void titania_exit(void) {
 	is_initialized = false;
 }
 
-titania_result titania_debug_get_hid(const titania_handle handle, intptr_t* hid) {
+titania_error titania_debug_get_hid(const titania_handle handle, intptr_t* hid) {
 	CHECK_INIT();
 	CHECK_HANDLE(handle);
 
 	*hid = (intptr_t) state[handle].hid;
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }
 
-titania_result titania_debug_get_hid_report_ids(const titania_handle handle, titania_report_id report_ids[0xFF]) {
+titania_error titania_debug_get_hid_report_ids(const titania_handle handle, titania_report_id report_ids[0xFF]) {
 	CHECK_INIT();
 	CHECK_HANDLE(handle);
 
@@ -1059,5 +1059,5 @@ titania_result titania_debug_get_hid_report_ids(const titania_handle handle, tit
 		}
 	}
 
-	return TITANIA_OK;
+	return TITANIA_ERROR_OK;
 }

@@ -94,18 +94,18 @@
 // Check if the library is initialized
 #define CHECK_INIT() \
 	if (!is_initialized) \
-	return TITANIA_NOT_INITIALIZED
+	return TITANIA_ERROR_NOT_INITIALIZED
 
 // Check if a handle is a valid number.
 #define CHECK_HANDLE(h) \
-	if (h == TITANIA_INVALID_HANDLE_ID || h < 0 || h >= TITANIA_MAX_CONTROLLERS) \
-	return TITANIA_INVALID_HANDLE
+	if (h == TITANIA_INVALID_ID || h < 0 || h >= TITANIA_MAX_CONTROLLERS) \
+	return TITANIA_ERROR_INVALID_HANDLE
 
 // Check if a handle is a valid number, and that it has been initialized.
 #define CHECK_HANDLE_VALID(h) \
 	CHECK_HANDLE(h); \
 	if (state[h].hid == nullptr) \
-	return TITANIA_INVALID_HANDLE
+	return TITANIA_ERROR_INVALID_HANDLE
 
 #define HID_FAIL(s) (s == -1)
 #define HID_PASS(s) (s != -1)
@@ -115,11 +115,11 @@
 
 #define CHECK_EDGE(h) \
 	if (!IS_EDGE(state[h].hid_info)) \
-	return TITANIA_NOT_EDGE
+	return TITANIA_ERROR_NOT_EDGE
 
 #define CHECK_ACCESS(h) \
 	if (!IS_ACCESS(state[h].hid_info)) \
-	return TITANIA_NOT_ACCESS
+	return TITANIA_ERROR_NOT_ACCESS
 
 typedef struct PACKED dualsense_vector3 {
 	int16_t x;

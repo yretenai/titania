@@ -55,7 +55,7 @@ titania_profile_id convert_profile_id(const char* const str) {
 
 titaniactl_error titaniactl_mode_profile_dump_inner(titaniactl_context* context, const titania_profile_id profile, const bool simple) {
 	for (int i = 0; i < context->connected_controllers; ++i) {
-		titania_result result;
+		titania_error result;
 		uint8_t buffer[TITANIA_MERGED_REPORT_ACCESS_SIZE];
 		char strbuffer[512];
 		size_t n;
@@ -63,7 +63,7 @@ titaniactl_error titaniactl_mode_profile_dump_inner(titaniactl_context* context,
 			n = TITANIA_MERGED_REPORT_EDGE_SIZE;
 			result = titania_debug_get_edge_profile(context->handles[i], profile, buffer);
 			titania_edge_profile edge_profile;
-			if (IS_TITANIA_OKAY(titania_convert_edge_profile_input(buffer, &edge_profile))) {
+			if (IS_TITANIA_ERROR_OKAY(titania_convert_edge_profile_input(buffer, &edge_profile))) {
 				if (!simple) {
 					for (int j = 0; j < 0x10; ++j) {
 						sprintf(&strbuffer[j * 2], "%02x", edge_profile.id[j] & 0xFF);
@@ -84,7 +84,7 @@ titaniactl_error titaniactl_mode_profile_dump_inner(titaniactl_context* context,
 			n = TITANIA_MERGED_REPORT_ACCESS_SIZE;
 			result = titania_debug_get_access_profile(context->handles[i], profile, buffer);
 			titania_access_profile access_profile;
-			if (IS_TITANIA_OKAY(titania_convert_access_profile_input(buffer, &access_profile))) {
+			if (IS_TITANIA_ERROR_OKAY(titania_convert_access_profile_input(buffer, &access_profile))) {
 				if (!simple) {
 					for (int j = 0; j < 0x10; ++j) {
 						sprintf(&strbuffer[j * 2], "%02x", access_profile.id[j] & 0xFF);
@@ -105,12 +105,12 @@ titaniactl_error titaniactl_mode_profile_dump_inner(titaniactl_context* context,
 			continue;
 		}
 
-		if (result == TITANIA_NOT_IMPLEMENTED) {
+		if (result == TITANIA_ERROR_NOT_IMPLEMENTED) {
 			continue;
 		}
 
 		if (IS_TITANIA_BAD(result)) {
-			return TITANIACTL_HID_ERROR;
+			return TITANIACTL_ERROR_HID_FAILURE;
 		}
 
 		char report_name[1024];
@@ -141,7 +141,7 @@ titaniactl_error titaniactl_mode_profile_dump_inner(titaniactl_context* context,
 		}
 	}
 
-	return TITANIACTL_OK;
+	return TITANIACTL_ERROR_OK;
 }
 
 titaniactl_error titaniactl_mode_profile_dump(titaniactl_context* context, const bool simple) {
@@ -159,7 +159,7 @@ titaniactl_error titaniactl_mode_profile_dump(titaniactl_context* context, const
 			}
 		}
 
-		return TITANIACTL_OK;
+		return TITANIACTL_ERROR_OK;
 	}
 
 	return titaniactl_mode_profile_dump_inner(context, profile, simple);
@@ -167,7 +167,7 @@ titaniactl_error titaniactl_mode_profile_dump(titaniactl_context* context, const
 
 titaniactl_error titaniactl_mode_profile_convert_selector(titaniactl_context* context) {
 	if (context->argc < 2) {
-		return TITANIACTL_INVALID_ARGUMENTS;
+		return TITANIACTL_ERROR_INVALID_ARGUMENTS;
 	}
 
 	const char* const report_name = context->argv[1];
@@ -175,13 +175,13 @@ titaniactl_error titaniactl_mode_profile_convert_selector(titaniactl_context* co
 
 	const bool is_stdout = strcmp(output_path, "--") == 0;
 	if (is_stdout && !is_json) {
-		return TITANIACTL_INVALID_ARGUMENTS;
+		return TITANIACTL_ERROR_INVALID_ARGUMENTS;
 	}
 
 	uint8_t buffer[TITANIA_MERGED_REPORT_ACCESS_SIZE];
 	FILE* file = fopen(report_name, "r+b");
 	if (file == nullptr) {
-		return TITANIACTL_FILE_READ_ERROR;
+		return TITANIACTL_ERROR_FILE_READ_ERROR;
 	}
 
 	const size_t n = fread(buffer, 1, TITANIA_MERGED_REPORT_ACCESS_SIZE, file);
@@ -190,7 +190,7 @@ titaniactl_error titaniactl_mode_profile_convert_selector(titaniactl_context* co
 	struct json* profile_json;
 	if (n >= TITANIA_MERGED_REPORT_ACCESS_SIZE) {
 		titania_access_profile profile;
-		const titania_result result = titania_convert_access_profile_input(buffer, &profile);
+		const titania_error result = titania_convert_access_profile_input(buffer, &profile);
 		if (IS_TITANIA_BAD(result)) {
 			titania_errorf(result, "failed to convert access profile");
 			return MAKE_TITANIA_ERROR(result);
@@ -198,36 +198,36 @@ titaniactl_error titaniactl_mode_profile_convert_selector(titaniactl_context* co
 		profile_json = titaniactl_mode_access_convert(profile, is_stdout);
 	} else if (n == TITANIA_MERGED_REPORT_EDGE_SIZE) {
 		titania_edge_profile profile;
-		const titania_result result = titania_convert_edge_profile_input(buffer, &profile);
+		const titania_error result = titania_convert_edge_profile_input(buffer, &profile);
 		if (IS_TITANIA_BAD(result)) {
 			titania_errorf(result, "failed to convert edge profile");
 			return MAKE_TITANIA_ERROR(result);
 		}
 		profile_json = titaniactl_mode_edge_convert(profile, is_stdout);
 	} else {
-		return TITANIACTL_INVALID_PROFILE;
+		return TITANIACTL_ERROR_INVALID_PROFILE;
 	}
 
 	if (profile_json == nullptr) {
-		return TITANIACTL_INVALID_PROFILE;
+		return TITANIACTL_ERROR_INVALID_PROFILE;
 	}
 
 	char* profile_str = json_print(profile_json);
 	json_delete(profile_json);
 	if (profile_str == nullptr) {
-		return TITANIACTL_FILE_WRITE_ERROR;
+		return TITANIACTL_ERROR_FILE_WRITE_ERROR;
 	}
 
 	if (is_stdout) {
 		printf("%s\n", profile_str);
 		free(profile_str);
-		return TITANIACTL_OK_NO_JSON;
+		return TITANIACTL_ERROR_OK_NO_JSON;
 	}
 
 	file = fopen(output_path, "w");
 	if (file == nullptr) {
 		free(profile_str);
-		return TITANIACTL_FILE_WRITE_ERROR;
+		return TITANIACTL_ERROR_FILE_WRITE_ERROR;
 	}
 	fwrite(profile_str, 1, strlen(profile_str), file);
 	fwrite("\n", 1, 1, file);
@@ -239,25 +239,25 @@ titaniactl_error titaniactl_mode_profile_convert_selector(titaniactl_context* co
 
 	free(profile_str);
 
-	return TITANIACTL_OK;
+	return TITANIACTL_ERROR_OK;
 }
 
 titaniactl_error titaniactl_mode_profile_import_selector(titaniactl_context* context) {
 	if (context->argc < 3) {
-		return TITANIACTL_INVALID_ARGUMENTS;
+		return TITANIACTL_ERROR_INVALID_ARGUMENTS;
 	}
 
 	const titania_profile_id profile = convert_profile_id(context->argv[1]);
 
 	if (profile == TITANIA_PROFILE_ALL || profile == TITANIA_PROFILE_NONE || profile == TITANIA_PROFILE_DEFAULT) {
-		return TITANIACTL_INVALID_ARGUMENTS;
+		return TITANIACTL_ERROR_INVALID_ARGUMENTS;
 	}
 
 	const char* const path = context->argv[2];
 
 	FILE* file = fopen(path, "r");
 	if (file == nullptr) {
-		return TITANIACTL_INVALID_PROFILE;
+		return TITANIACTL_ERROR_INVALID_PROFILE;
 	}
 
 	fseek(file, 0, SEEK_END);
@@ -267,23 +267,23 @@ titaniactl_error titaniactl_mode_profile_import_selector(titaniactl_context* con
 	char* json_data = calloc(1, size + 1);
 	if (json_data == nullptr) {
 		fclose(file);
-		return TITANIACTL_INVALID_PROFILE;
+		return TITANIACTL_ERROR_INVALID_PROFILE;
 	}
 
 	const size_t n = fread(json_data, 1, size, file);
 	fclose(file);
 	if(n < size) {
 		free(json_data);
-		return TITANIACTL_INVALID_PROFILE;
+		return TITANIACTL_ERROR_INVALID_PROFILE;
 	}
 
 	struct json* json = json_parse_len(json_data, size);
 	if (json == nullptr) {
 		free(json_data);
-		return TITANIACTL_INVALID_PROFILE;
+		return TITANIACTL_ERROR_INVALID_PROFILE;
 	}
 
-	titaniactl_error result = TITANIACTL_OK;
+	titaniactl_error result = TITANIACTL_ERROR_OK;
 	for (int i = 0; i < context->connected_controllers; ++i) {
 		if (context->hids[i].is_edge) {
 			result = titaniactl_mode_edge_import(profile, json, context->hids[i]);
@@ -293,7 +293,7 @@ titaniactl_error titaniactl_mode_profile_import_selector(titaniactl_context* con
 			continue;
 		}
 
-		if (result == TITANIACTL_NOT_IMPLEMENTED) {
+		if (result == TITANIACTL_ERROR_NOT_IMPLEMENTED) {
 			continue;
 		}
 
@@ -311,12 +311,12 @@ titaniactl_error titaniactl_mode_profile_import_selector(titaniactl_context* con
 
 titaniactl_error titaniactl_mode_profile_export_inner(titaniactl_context* context, const titania_profile_id profile) {
 	if (context->argc < 2) {
-		return TITANIACTL_INVALID_ARGUMENTS;
+		return TITANIACTL_ERROR_INVALID_ARGUMENTS;
 	}
 
 	const char* const path = context->argc > 2 ? context->argv[2] : ".";
 
-	titaniactl_error result = TITANIACTL_OK;
+	titaniactl_error result = TITANIACTL_ERROR_OK;
 	for (int i = 0; i < context->connected_controllers; ++i) {
 		if (context->hids[i].is_edge) {
 			result = titaniactl_mode_edge_export(profile, path, context->hids[i]);
@@ -326,12 +326,12 @@ titaniactl_error titaniactl_mode_profile_export_inner(titaniactl_context* contex
 			continue;
 		}
 
-		if (result == TITANIACTL_NOT_IMPLEMENTED) {
+		if (result == TITANIACTL_ERROR_NOT_IMPLEMENTED) {
 			continue;
 		}
 
-		if (result == TITANIACTL_EMPTY_PROFILE) {
-			result = TITANIACTL_OK;
+		if (result == TITANIACTL_ERROR_EMPTY_PROFILE) {
+			result = TITANIACTL_ERROR_OK;
 			continue;
 		}
 
@@ -358,7 +358,7 @@ titaniactl_error titaniactl_mode_profile_export_selector(titaniactl_context* con
 			}
 		}
 
-		return TITANIACTL_OK;
+		return TITANIACTL_ERROR_OK;
 	}
 
 	return titaniactl_mode_profile_export_inner(context, profile);
@@ -370,7 +370,7 @@ titaniactl_error titaniactl_mode_profile_delete_selector(titaniactl_context* con
 		profile = convert_profile_id(context->argv[1]);
 	}
 
-	titaniactl_error result = TITANIACTL_OK;
+	titaniactl_error result = TITANIACTL_ERROR_OK;
 	for (int i = 0; i < context->connected_controllers; ++i) {
 		if (context->hids[i].is_edge) {
 			result = titaniactl_mode_edge_delete(profile, context->hids[i]);
@@ -380,7 +380,7 @@ titaniactl_error titaniactl_mode_profile_delete_selector(titaniactl_context* con
 			continue;
 		}
 
-		if (result == TITANIACTL_NOT_IMPLEMENTED) {
+		if (result == TITANIACTL_ERROR_NOT_IMPLEMENTED) {
 			continue;
 		}
 
@@ -394,10 +394,10 @@ titaniactl_error titaniactl_mode_profile_delete_selector(titaniactl_context* con
 
 titaniactl_error titaniactl_mode_profile_funnel(titaniactl_context* context) {
 	if (context->argc < 1) {
-		return TITANIACTL_INVALID_ARGUMENTS;
+		return TITANIACTL_ERROR_INVALID_ARGUMENTS;
 	}
 
-	titaniactl_error result = TITANIACTL_OK;
+	titaniactl_error result = TITANIACTL_ERROR_OK;
 	const profile_mode mode = tolower(context->argv[0][0]);
 	switch (mode) {
 		case PROFILE_MODE_INVALID: break; // unreachable but llvm complains.
@@ -432,7 +432,7 @@ titaniactl_error titaniactl_mode_profile_funnel(titaniactl_context* context) {
 				return result;
 			}
 			break;
-		default: return TITANIACTL_INVALID_ARGUMENTS;
+		default: return TITANIACTL_ERROR_INVALID_ARGUMENTS;
 	}
 
 	return result;

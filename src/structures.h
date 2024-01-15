@@ -535,21 +535,21 @@ void titania_convert_input(const titania_hid hid_info, const dualsense_input_msg
  * @param input: the input to convert
  * @param output: the profile to convert into
  */
-titania_result titania_convert_edge_profile_output(titania_edge_profile input, dualsense_edge_profile_blob output[3]);
+titania_error titania_convert_edge_profile_output(titania_edge_profile input, dualsense_edge_profile_blob output[3]);
 
 /**
  * @brief convert a titania profile to access's representation
  * @param input: the input to convert
  * @param output: the profile to convert into
  */
-titania_result titania_convert_access_profile_output(titania_access_profile input, playstation_access_profile_blob output[0x12]);
+titania_error titania_convert_access_profile_output(titania_access_profile input, playstation_access_profile_blob output[0x12]);
 
 /**
  * @brief update LED state of an access controller
  * @param handle: the controller to update
  * @param data: led update data
  */
-titania_result titania_update_access_led(const titania_handle handle, const titania_led_update data);
+titania_error titania_update_access_led(const titania_handle handle, const titania_led_update data);
 
 /**
  * @brief initializes checksum tables

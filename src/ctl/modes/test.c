@@ -22,7 +22,7 @@ bool report_hid_trigger(titania_handle* handles, const size_t handle_count, usec
 		}
 
 		titania_data data[TITANIACTL_CONTROLLER_COUNT];
-		const titania_result result = titania_pull(handles, handle_count, data);
+		const titania_error result = titania_pull(handles, handle_count, data);
 		if (IS_TITANIA_BAD(result)) {
 			printf("invalid pull response");
 			return true;
@@ -69,7 +69,7 @@ bool report_hid_close(titania_handle* handles, const size_t handle_count, usecon
 		}
 
 		titania_data data[TITANIACTL_CONTROLLER_COUNT];
-		const titania_result result = titania_pull(handles, handle_count, data);
+		const titania_error result = titania_pull(handles, handle_count, data);
 		if (IS_TITANIA_BAD(result)) {
 			printf("invalid pull response");
 			return true;
@@ -104,7 +104,7 @@ void wait_until_options_clear(titania_handle* handles, const size_t handle_count
 		}
 
 		titania_data data[TITANIACTL_CONTROLLER_COUNT];
-		const titania_result result = titania_pull(handles, handle_count, data);
+		const titania_error result = titania_pull(handles, handle_count, data);
 		if (IS_TITANIA_BAD(result)) {
 			return;
 		}
@@ -130,16 +130,16 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 	printf("press OPTIONS to skip test\n");
 
 	titania_data datum[TITANIACTL_CONTROLLER_COUNT];
-	const titania_result result = titania_pull(context->handles, context->connected_controllers, datum);
+	const titania_error result = titania_pull(context->handles, context->connected_controllers, datum);
 	if (IS_TITANIA_BAD(result)) {
 		titania_errorf(result, "error getting report");
-		return TITANIACTL_HID_ERROR;
+		return TITANIACTL_ERROR_HID_FAILURE;
 	}
 
 	bool is_only_access = true;
 	bool has_access = false;
 	if (context->connected_controllers == 0) {
-		return TITANIACTL_OK;
+		return TITANIACTL_ERROR_OK;
 	}
 
 	for (int i = 0; i < context->connected_controllers; ++i) {
@@ -340,7 +340,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 
 	reset_trigger:
 		if (should_stop) {
-			return TITANIACTL_INTERRUPTED;
+			return TITANIACTL_ERROR_INTERRUPTED;
 		}
 
 		update.mode = TITANIA_EFFECT_OFF;
@@ -477,7 +477,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 
 	reset_motor:
 		if (should_stop) {
-			return TITANIACTL_INTERRUPTED;
+			return TITANIACTL_ERROR_INTERRUPTED;
 		}
 
 		for (int i = 0; i < context->connected_controllers; ++i) {
@@ -555,7 +555,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 
 	reset_mic:
 		if (should_stop) {
-			return TITANIACTL_INTERRUPTED;
+			return TITANIACTL_ERROR_INTERRUPTED;
 		}
 
 		printf("restoring mic based on state...\n");
@@ -696,7 +696,7 @@ skip_led:
 reset_led:
 	{
 		if (should_stop) {
-			return TITANIACTL_INTERRUPTED;
+			return TITANIACTL_ERROR_INTERRUPTED;
 		}
 
 		titania_led_update update;
@@ -733,5 +733,5 @@ reset_led:
 		titania_push(context->handles, context->connected_controllers);
 	}
 
-	return TITANIACTL_OK;
+	return TITANIACTL_ERROR_OK;
 }

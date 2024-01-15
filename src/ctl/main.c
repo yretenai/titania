@@ -18,7 +18,7 @@
 
 #include <json.h>
 
-titaniactl_error titaniactl_mode_stub(titaniactl_context* _unused) { return TITANIACTL_NOT_IMPLEMENTED; }
+titaniactl_error titaniactl_mode_stub(titaniactl_context* _unused) { return TITANIACTL_ERROR_NOT_IMPLEMENTED; }
 
 const titaniactl_mode modes[] = { { "report", titaniactl_mode_report, titaniactl_mode_report_json, "print the input report of connected controllers", nullptr },
 	{ "watch", titaniactl_mode_report_loop, titaniactl_mode_report_loop_json, "repeatedly print the input report of connected controllers", nullptr },
@@ -57,7 +57,7 @@ void shutdown(void) {
 
 	for (int i = 0; i < context.connected_controllers; ++i) {
 		titania_close(context.hids[i].handle);
-		context.hids[i].handle = TITANIA_INVALID_HANDLE_ID;
+		context.hids[i].handle = TITANIA_INVALID_ID;
 	}
 
 	memset(&context, 0, sizeof(context));
@@ -98,7 +98,7 @@ void titaniactl_errorf(const char* error, const char* message) {
 	fprintf(stderr, "%s: %s\n", message, error);
 }
 
-void titania_errorf(const titania_result result, const char* message) {
+void titania_errorf(const titania_error result, const char* message) {
 	if (CHECK_ENUM_SAFE(result, titania_error_msg)) {
 		titaniactl_errorf(titania_error_msg[result], message);
 	} else {
@@ -289,10 +289,10 @@ int main(const int argc, const char** const argv) {
 
 	if (cb == nullptr) {
 		titaniactl_errorf("invalid mode", "mode not recognized");
-		return TITANIA_INVALID_ARGUMENT;
+		return TITANIA_ERROR_INVALID_ARGUMENT;
 	}
 
-	titania_result result = titania_init();
+	titania_error result = titania_init();
 	if (IS_TITANIA_BAD(result)) {
 		titania_errorf(result, "error initializing " TITANIA_PROJECT_NAME);
 		return result;
@@ -366,36 +366,36 @@ int main(const int argc, const char** const argv) {
 
 	titaniactl_error error = cb(&context);
 	if (IS_TITANIACTL_BAD(error)) {
-		switch (error & TITANIACTL_MASK) {
-			case TITANIACTL_TITANIA_ERROR: break;
-			case TITANIACTL_HID_ERROR: titaniactl_errorf("hid error", "errored while processing command"); break;
-			case TITANIACTL_INTERRUPTED:
+		switch (error & TITANIACTL_ERROR_MASK) {
+			case TITANIACTL_ERROR_TITANIA_ERROR: break;
+			case TITANIACTL_ERROR_HID_FAILURE: titaniactl_errorf("hid error", "errored while processing command"); break;
+			case TITANIACTL_ERROR_INTERRUPTED:
 				if (is_json) {
-					error = TITANIACTL_OK_NO_JSON_INTERRUPTED;
+					error = TITANIACTL_ERROR_OK_NO_JSON_INTERRUPTED;
 				} else {
 					titaniactl_errorf("caught ctrl+c", "exiting");
 				}
 				break;
-			case TITANIACTL_NOT_IMPLEMENTED: titaniactl_errorf("not implemented", "sorry"); break;
-			case TITANIACTL_INVALID_ARGUMENTS: titaniactl_errorf("invalid arguments", "one of the arguments was invalid"); break;
-			case TITANIACTL_INVALID_PAIR_ARGUMENTS: titaniactl_errorf("invalid arguments", "you need to provide a mac address and a bluetooth link key"); break;
-			case TITANIACTL_INVALID_MAC_ADDRESS: titaniactl_errorf("invalid arguments", "mac address is not valid"); break;
-			case TITANIACTL_INVALID_LINK_KEY: titaniactl_errorf("invalid arguments", "bluetooth link key is not 16 characters"); break;
-			case TITANIACTL_INVALID_PROFILE: titaniactl_errorf("invalid profile", "profile data is not valid"); break;
-			case TITANIACTL_EMPTY_PROFILE: titaniactl_errorf("empty profile", "profile is empty"); break;
-			case TITANIACTL_FILE_READ_ERROR: titaniactl_errorf("file read error", "could not open or read file"); break;
-			case TITANIACTL_FILE_WRITE_ERROR: titaniactl_errorf("file write error", "could not open or write file"); break;
+			case TITANIACTL_ERROR_NOT_IMPLEMENTED: titaniactl_errorf("not implemented", "sorry"); break;
+			case TITANIACTL_ERROR_INVALID_ARGUMENTS: titaniactl_errorf("invalid arguments", "one of the arguments was invalid"); break;
+			case TITANIACTL_ERROR_INVALID_PAIR_ARGUMENTS: titaniactl_errorf("invalid arguments", "you need to provide a mac address and a bluetooth link key"); break;
+			case TITANIACTL_ERROR_INVALID_MAC_ADDRESS: titaniactl_errorf("invalid arguments", "mac address is not valid"); break;
+			case TITANIACTL_ERROR_INVALID_LINK_KEY: titaniactl_errorf("invalid arguments", "bluetooth link key is not 16 characters"); break;
+			case TITANIACTL_ERROR_INVALID_PROFILE: titaniactl_errorf("invalid profile", "profile data is not valid"); break;
+			case TITANIACTL_ERROR_EMPTY_PROFILE: titaniactl_errorf("empty profile", "profile is empty"); break;
+			case TITANIACTL_ERROR_FILE_READ_ERROR: titaniactl_errorf("file read error", "could not open or read file"); break;
+			case TITANIACTL_ERROR_FILE_WRITE_ERROR: titaniactl_errorf("file write error", "could not open or write file"); break;
 			default: titaniactl_errorf("unexpected error", "goodbye"); break;
 		}
 	}
 
 	shutdown();
 
-	if (error > 0 && (error & TITANIACTL_MASK) == TITANIACTL_TITANIA_ERROR) {
+	if (error > 0 && (error & TITANIACTL_ERROR_MASK) == TITANIACTL_ERROR_TITANIA_ERROR) {
 		return error;
 	}
 
-	if (is_json && error > TITANIACTL_OK_NO_JSON) {
+	if (is_json && error > TITANIACTL_ERROR_OK_NO_JSON) {
 		struct json* obj = json_new_object();
 		json_object_add_bool(obj, "success", true);
 		char* json_text = json_print(obj);
@@ -404,12 +404,12 @@ int main(const int argc, const char** const argv) {
 		free(json_text);
 	}
 
-	if (error == TITANIACTL_OK_NO_JSON_INTERRUPTED) {
-		return TITANIACTL_INTERRUPTED;
+	if (error == TITANIACTL_ERROR_OK_NO_JSON_INTERRUPTED) {
+		return TITANIACTL_ERROR_INTERRUPTED;
 	}
 
-	if (error == TITANIACTL_OK_NO_JSON) {
-		return TITANIACTL_OK;
+	if (error == TITANIACTL_ERROR_OK_NO_JSON) {
+		return TITANIACTL_ERROR_OK;
 	}
 
 	return error;
