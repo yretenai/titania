@@ -142,4 +142,50 @@ const char* const titania_edge_stick_template_msg[TITANIA_EDGE_STICK_TEMPLATE_MA
 	"dynamic",
 	nullptr
 };
+
+const char* const titania_access_orientation_msg[TITANIA_ACCESS_ORIENTATION_MAX + 1] = {
+	"down",
+	"left",
+	"up",
+	"right",
+	nullptr
+};
+
+const char* const titania_access_button_id_msg[TITANIA_ACCESS_BUTTON_ID_MAX + 1] = {
+	"none",
+	"circle",
+	"cross",
+	"triangle",
+	"square",
+	"up",
+	"down",
+	"left",
+	"right",
+	"l1",
+	"r1",
+	"l2",
+	"r2",
+	"l3",
+	"r3",
+	"options",
+	"create",
+	"playstation",
+	"touch",
+	nullptr
+};
+
+const char* const titania_access_stick_id_msg[TITANIA_ACCESS_STICK_ID_MAX + 1] = {
+	"none",
+	"left",
+	"right",
+	nullptr
+};
+
+const char* const titania_access_extension_type_id_msg[TITANIA_ACCESS_EXTENSION_TYPE_MAX + 1] = {
+	"disconnected",
+	"stick",
+	"button",
+	nullptr
+};
+
 // clang-format on

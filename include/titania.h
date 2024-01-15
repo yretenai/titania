@@ -244,7 +244,8 @@ typedef enum titania_access_orientation {
 	TITANIA_ACCESS_ORIENTATION_DOWN = 0,
 	TITANIA_ACCESS_ORIENTATION_LEFT = 1,
 	TITANIA_ACCESS_ORIENTATION_UP = 2,
-	TITANIA_ACCESS_ORIENTATION_RIGHT = 3
+	TITANIA_ACCESS_ORIENTATION_RIGHT = 3,
+	TITANIA_ACCESS_ORIENTATION_MAX
 } titania_access_orientation;
 
 typedef enum titania_access_button_id {
@@ -293,8 +294,13 @@ TITANIA_EXPORT extern const char* const titania_level_msg[TITANIA_LEVEL_LOW + 2]
 TITANIA_EXPORT extern const char* const titania_trigger_effect_msg[TITANIA_TRIGGER_EFFECT_MAX + 1];
 TITANIA_EXPORT extern const char* const titania_edge_button_id_msg[TITANIA_BUTTON_ID_MAX + 1];
 TITANIA_EXPORT extern const char* const titania_edge_button_id_alt_msg[TITANIA_BUTTON_ID_MAX + 1];
-TITANIA_EXPORT extern const char* const titania_access_extension_id_msg[TITANIA_ACCESS_EXTENSION_MAX + 1];
 TITANIA_EXPORT extern const char* const titania_edge_stick_template_msg[TITANIA_EDGE_STICK_TEMPLATE_MAX + 1];
+TITANIA_EXPORT extern const char* const titania_access_extension_id_msg[TITANIA_ACCESS_EXTENSION_MAX + 1];
+TITANIA_EXPORT extern const char* const titania_access_orientation_msg[TITANIA_ACCESS_ORIENTATION_MAX + 1];
+TITANIA_EXPORT extern const char* const titania_access_button_id_msg[TITANIA_ACCESS_BUTTON_ID_MAX + 1];
+TITANIA_EXPORT extern const char* const titania_access_stick_id_msg[TITANIA_ACCESS_STICK_ID_MAX + 1];
+TITANIA_EXPORT extern const char* const titania_access_extension_type_id_msg[TITANIA_ACCESS_EXTENSION_TYPE_MAX + 1];
+
 TITANIA_EXPORT extern const int titania_max_controllers;
 
 #define IS_TITANIA_OKAY(result) (result == TITANIA_OK)
@@ -509,11 +515,55 @@ typedef struct titania_edge_profile {
 	uint64_t timestamp;
 } titania_edge_profile;
 
+typedef struct titania_access_profile_button {
+	titania_access_button_id primary;
+	titania_access_button_id secondary;
+	bool toggle;
+	uint32_t unknown;
+} titania_access_profile_button;
+
+typedef union titania_access_profile_buttons {
+	struct {
+		titania_access_profile_button center;
+		titania_access_profile_button b1;
+		titania_access_profile_button b2;
+		titania_access_profile_button b3;
+		titania_access_profile_button b4;
+		titania_access_profile_button b5;
+		titania_access_profile_button b6;
+		titania_access_profile_button b7;
+		titania_access_profile_button b8;
+		titania_access_profile_button stick;
+	};
+
+	titania_access_profile_button values[10];
+} titania_access_profile_buttons;
+
+typedef struct titania_access_profile_stick {
+	titania_access_orientation orientation;
+	titania_access_stick_id id;
+	float deadzone;
+	float curve[3];
+	uint32_t unknown;
+} titania_access_profile_stick;
+
+typedef struct titania_access_profile_extension {
+	titania_access_extension_type_id type;
+	titania_access_profile_stick stick;
+	titania_access_profile_button button;
+	uint8_t raw_data[45];
+} titania_access_profile_extension;
+
 typedef struct titania_access_profile {
 	bool valid;
 	uint32_t version;
 	char name[0xA1];
 	uint8_t id[0x10];
+	titania_access_profile_buttons buttons;
+	titania_access_orientation orientation;
+	titania_access_profile_stick stick;
+	titania_access_profile_extension extensions[4];
+	uint64_t timestamp;
 } titania_access_profile;
 
 typedef struct titania_query {

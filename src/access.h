@@ -158,7 +158,7 @@ typedef struct PACKED playstation_access_profile_hold {
 	bool b7 : 1;
 	bool b8 : 1;
 	bool center : 1;
-	bool right_stick : 1;
+	bool stick : 1;
 	bool e1 : 1;
 	bool e2 : 1;
 	bool e3 : 1;

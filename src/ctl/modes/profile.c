@@ -270,8 +270,12 @@ titaniactl_error titaniactl_mode_profile_import_selector(titaniactl_context* con
 		return TITANIACTL_INVALID_PROFILE;
 	}
 
-	fread(json_data, 1, size, file);
+	const size_t n = fread(json_data, 1, size, file);
 	fclose(file);
+	if(n < size) {
+		free(json_data);
+		return TITANIACTL_INVALID_PROFILE;
+	}
 
 	struct json* json = json_parse_len(json_data, size);
 	if (json == nullptr) {
@@ -323,6 +327,11 @@ titaniactl_error titaniactl_mode_profile_export_inner(titaniactl_context* contex
 		}
 
 		if (result == TITANIACTL_NOT_IMPLEMENTED) {
+			continue;
+		}
+
+		if (result == TITANIACTL_EMPTY_PROFILE) {
+			result = TITANIACTL_OK;
 			continue;
 		}
 

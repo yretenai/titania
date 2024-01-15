@@ -53,6 +53,34 @@ titania_result titania_update_access_led(const titania_handle handle, const tita
 	return TITANIA_OK;
 }
 
+void convert_button(titania_access_profile_button* out, playstation_access_profile_button in, bool toggle) {
+	out->primary = in.button;
+	out->secondary = in.secondary_button;
+	out->toggle = toggle;
+	out->unknown = (uint32_t) in.unknown | (uint32_t) in.unknown2 << 8;
+}
+
+void convert_stick(titania_access_profile_stick* out, playstation_access_profile_extension in) {
+	out->orientation = in.stick.orientation;
+	out->id = in.subtype;
+	out->deadzone = DENORM_CLAMP(in.stick.deadzone, UINT16_MAX);
+	out->curve[0] = DENORM_CLAMP(in.stick.curve[0], UINT16_MAX);
+	out->curve[1] = DENORM_CLAMP(in.stick.curve[1], UINT16_MAX);
+	out->curve[2] = DENORM_CLAMP(in.stick.curve[2], UINT16_MAX);
+	out->unknown = (uint32_t) in.stick.unknown | (uint32_t) in.stick.unknown2 << 8;
+}
+
+void convert_extension(titania_access_profile_extension* out, playstation_access_profile_extension in, bool toggle) {
+	out->type = in.type;
+	memcpy(&out->raw_data, &in, sizeof(playstation_access_profile_extension));
+
+	switch (out->type) {
+		case TITANIA_ACCESS_EXTENSION_TYPE_STICK: convert_stick(&out->stick, in); return;
+		case TITANIA_ACCESS_EXTENSION_TYPE_BUTTON: convert_button(&out->button, in.button, toggle); return;
+		default: return;
+	}
+}
+
 titania_result titania_convert_access_profile_input(uint8_t profile_data[TITANIA_MERGED_REPORT_ACCESS_SIZE], titania_access_profile* output) {
 	memset(output, 0, sizeof(titania_edge_profile));
 
@@ -70,7 +98,29 @@ titania_result titania_convert_access_profile_input(uint8_t profile_data[TITANIA
 	}
 
 	output->version = profile.msg.version;
+	output->timestamp = profile.msg.timestamp;
 	memcpy(output->id, profile.msg.uuid, sizeof(profile.msg.uuid));
+
+	convert_button(&output->buttons.values[TITANIA_ACCESS_BUTTON_CENTER], profile.msg.buttons[PLAYSTATION_ACCESS_PROFILE_CENTER_BUTTON], profile.msg.hold.center);
+	convert_button(&output->buttons.values[TITANIA_ACCESS_BUTTON_B1], profile.msg.buttons[PLAYSTATION_ACCESS_PROFILE_B1], profile.msg.hold.b1);
+	convert_button(&output->buttons.values[TITANIA_ACCESS_BUTTON_B2], profile.msg.buttons[PLAYSTATION_ACCESS_PROFILE_B2], profile.msg.hold.b2);
+	convert_button(&output->buttons.values[TITANIA_ACCESS_BUTTON_B3], profile.msg.buttons[PLAYSTATION_ACCESS_PROFILE_B3], profile.msg.hold.b3);
+	convert_button(&output->buttons.values[TITANIA_ACCESS_BUTTON_B4], profile.msg.buttons[PLAYSTATION_ACCESS_PROFILE_B4], profile.msg.hold.b4);
+	convert_button(&output->buttons.values[TITANIA_ACCESS_BUTTON_B5], profile.msg.buttons[PLAYSTATION_ACCESS_PROFILE_B5], profile.msg.hold.b5);
+	convert_button(&output->buttons.values[TITANIA_ACCESS_BUTTON_B6], profile.msg.buttons[PLAYSTATION_ACCESS_PROFILE_B6], profile.msg.hold.b6);
+	convert_button(&output->buttons.values[TITANIA_ACCESS_BUTTON_B7], profile.msg.buttons[PLAYSTATION_ACCESS_PROFILE_B7], profile.msg.hold.b7);
+	convert_button(&output->buttons.values[TITANIA_ACCESS_BUTTON_B8], profile.msg.buttons[PLAYSTATION_ACCESS_PROFILE_B8], profile.msg.hold.b8);
+	convert_button(&output->buttons.values[TITANIA_ACCESS_BUTTON_STICK], profile.msg.buttons[PLAYSTATION_ACCESS_PROFILE_STICK_BUTTON], profile.msg.hold.stick);
+
+	output->orientation = profile.msg.extensions[PLAYSTATION_ACCESS_PROFILE_STICK].stick.orientation;
+	convert_stick(&output->stick, profile.msg.extensions[PLAYSTATION_ACCESS_PROFILE_STICK]);
+
+	convert_extension(&output->extensions[TITANIA_EXTENSION1], profile.msg.extensions[PLAYSTATION_ACCESS_PROFILE_EXTENSION1], profile.msg.hold.e1);
+	convert_extension(&output->extensions[TITANIA_EXTENSION2], profile.msg.extensions[PLAYSTATION_ACCESS_PROFILE_EXTENSION2], profile.msg.hold.e2);
+	convert_extension(&output->extensions[TITANIA_EXTENSION3], profile.msg.extensions[PLAYSTATION_ACCESS_PROFILE_EXTENSION3], profile.msg.hold.e3);
+	convert_extension(&output->extensions[TITANIA_EXTENSION4], profile.msg.extensions[PLAYSTATION_ACCESS_PROFILE_EXTENSION4], profile.msg.hold.e4);
+
+	output->valid = true;
 
 	return TITANIA_OK;
 }
@@ -103,7 +153,7 @@ titania_result titania_debug_get_access_profile(const titania_handle handle, con
 
 		size_t s = sizeof(data.blob);
 		if (sizeof(data.blob) * (i + 1) > TITANIA_MERGED_REPORT_ACCESS_SIZE) {
-			if(i == 0x11) { // last profile, truncated.
+			if (i == 0x11) { // last profile, truncated.
 				s = TITANIA_MERGED_REPORT_ACCESS_SIZE - (sizeof(data.blob) * i);
 			} else {
 				return TITANIA_INVALID_DATA;

@@ -381,7 +381,7 @@ int main(const int argc, const char** const argv) {
 			case TITANIACTL_INVALID_PAIR_ARGUMENTS: titaniactl_errorf("invalid arguments", "you need to provide a mac address and a bluetooth link key"); break;
 			case TITANIACTL_INVALID_MAC_ADDRESS: titaniactl_errorf("invalid arguments", "mac address is not valid"); break;
 			case TITANIACTL_INVALID_LINK_KEY: titaniactl_errorf("invalid arguments", "bluetooth link key is not 16 characters"); break;
-			case TITANIACTL_INVALID_PROFILE: titaniactl_errorf("invalid profile", "profile data is not valid to import"); break;
+			case TITANIACTL_INVALID_PROFILE: titaniactl_errorf("invalid profile", "profile data is not valid"); break;
 			case TITANIACTL_EMPTY_PROFILE: titaniactl_errorf("empty profile", "profile is empty"); break;
 			case TITANIACTL_FILE_READ_ERROR: titaniactl_errorf("file read error", "could not open or read file"); break;
 			case TITANIACTL_FILE_WRITE_ERROR: titaniactl_errorf("file write error", "could not open or write file"); break;

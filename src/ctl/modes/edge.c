@@ -12,7 +12,7 @@
 #include "../titaniactl.h"
 #include "json_helpers.h"
 
-void json_object_get_stick(const struct json* obj, const char* key, titania_edge_stick* data) {
+void json_object_get_edge_stick(const struct json* obj, const char* key, titania_edge_stick* data) {
 	const struct json* stick_obj = json_object_get(obj, key);
 
 	data->template_id = titania_json_object_get_enum(stick_obj, "template", titania_edge_stick_template_msg, TITANIA_EDGE_STICK_TEMPLATE_DEFAULT);
@@ -35,7 +35,7 @@ void json_object_get_stick(const struct json* obj, const char* key, titania_edge
 	data->unknown = titania_json_object_get_uint32(stick_obj, "unknown", 0);
 }
 
-void json_object_get_trigger(const struct json* obj, const char* key, titania_edge_trigger* data) {
+void json_object_get_edge_trigger(const struct json* obj, const char* key, titania_edge_trigger* data) {
 	const struct json* trigger_obj = json_object_get(obj, key);
 
 	const struct json* deadzone_arr = json_object_get(trigger_obj, "deadzone");
@@ -106,12 +106,12 @@ titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, const s
 	profile_data.trigger_deadzone_mirrored = titania_json_object_get_bool(data, "triggerDeadzoneMirrored");
 
 	const struct json* stick_obj = json_object_get(data, "sticks");
-	json_object_get_stick(stick_obj, "left", &profile_data.sticks[TITANIA_LEFT]);
-	json_object_get_stick(stick_obj, "right", &profile_data.sticks[TITANIA_RIGHT]);
+	json_object_get_edge_stick(stick_obj, "left", &profile_data.sticks[TITANIA_LEFT]);
+	json_object_get_edge_stick(stick_obj, "right", &profile_data.sticks[TITANIA_RIGHT]);
 
 	const struct json* trigger_obj = json_object_get(data, "triggers");
-	json_object_get_trigger(trigger_obj, "left", &profile_data.triggers[TITANIA_LEFT]);
-	json_object_get_trigger(trigger_obj, "right", &profile_data.triggers[TITANIA_RIGHT]);
+	json_object_get_edge_trigger(trigger_obj, "left", &profile_data.triggers[TITANIA_LEFT]);
+	json_object_get_edge_trigger(trigger_obj, "right", &profile_data.triggers[TITANIA_RIGHT]);
 
 	struct json* button_obj = json_object_get(data, "buttonMap");
 	for (size_t i = 0; i < 0x10; ++i) {
@@ -166,7 +166,7 @@ titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, const s
 	return TITANIACTL_OK;
 }
 
-struct json* json_object_add_stick(struct json* obj, const char* key, const titania_edge_stick data) {
+struct json* json_object_add_edge_stick(struct json* obj, const char* key, const titania_edge_stick data) {
 	char strbuffer[128];
 	struct json* stick_obj = json_object_add_object(obj, key);
 	if (CHECK_ENUM_SAFE(data.template_id, titania_edge_stick_template_msg)) {
@@ -196,7 +196,7 @@ struct json* json_object_add_stick(struct json* obj, const char* key, const tita
 	return stick_obj;
 }
 
-struct json* json_object_add_trigger(struct json* obj, const char* key, const titania_edge_trigger data) {
+struct json* json_object_add_edge_trigger(struct json* obj, const char* key, const titania_edge_trigger data) {
 	struct json* trigger_obj = json_object_add_object(obj, key);
 
 	struct json* deadzone_arr = json_object_add_array(trigger_obj, "deadzone");
@@ -242,12 +242,12 @@ struct json* titaniactl_mode_edge_convert(const titania_edge_profile profile, co
 	json_object_add_bool(profile_json, "triggerDeadzoneMirrored", profile.trigger_deadzone_mirrored);
 
 	struct json* stick_obj = json_object_add_object(profile_json, "sticks");
-	json_object_add_stick(stick_obj, "left", profile.sticks[TITANIA_LEFT]);
-	json_object_add_stick(stick_obj, "right", profile.sticks[TITANIA_RIGHT]);
+	json_object_add_edge_stick(stick_obj, "left", profile.sticks[TITANIA_LEFT]);
+	json_object_add_edge_stick(stick_obj, "right", profile.sticks[TITANIA_RIGHT]);
 
 	struct json* trigger_obj = json_object_add_object(profile_json, "triggers");
-	json_object_add_trigger(trigger_obj, "left", profile.triggers[TITANIA_LEFT]);
-	json_object_add_trigger(trigger_obj, "right", profile.triggers[TITANIA_RIGHT]);
+	json_object_add_edge_trigger(trigger_obj, "left", profile.triggers[TITANIA_LEFT]);
+	json_object_add_edge_trigger(trigger_obj, "right", profile.triggers[TITANIA_RIGHT]);
 
 	struct json* button_obj = json_object_add_object(profile_json, "buttonMap");
 	for (size_t i = 0; i < 0x10; ++i) {
@@ -317,9 +317,12 @@ titaniactl_error titaniactl_mode_edge_export(titania_profile_id profile, const c
 		return TITANIACTL_INVALID_PROFILE;
 	}
 
-	size_t name_len = strlen(data.name);
-	if (name_len == 0) {
-		return TITANIACTL_EMPTY_PROFILE;
+	if (strlen(data.name) == 0) {
+		if(profile == TITANIA_PROFILE_TRIANGLE) {
+			strcpy(data.name, "Default Profile");
+		} else {
+			return TITANIACTL_EMPTY_PROFILE;
+		}
 	}
 
 	struct json* profile_json = titaniactl_mode_edge_convert(data, is_stdout);
