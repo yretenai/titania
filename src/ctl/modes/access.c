@@ -122,14 +122,7 @@ struct json* titaniactl_mode_access_convert(const titania_access_profile profile
 	const char* const name_list[10] = { "center", "b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8", "stick" };
 
 	for (size_t i = 0; i < 10; ++i) {
-		char button_id[64];
-		if (CHECK_ENUM_SAFE(i, name_list)) {
-			sprintf(button_id, "%s", name_list[i]);
-		} else {
-			sprintf(button_id, "%d", (int) i);
-		}
-
-		struct json* button_entry = json_object_add_object(button_obj, button_id);
+		struct json* button_entry = json_object_add_object(button_obj, name_list[i]);
 		json_object_add_access_button(button_entry, profile.buttons.values[i]);
 	}
 
@@ -165,11 +158,9 @@ titaniactl_error titaniactl_mode_access_export(titania_profile_id profile, const
 		return TITANIACTL_EMPTY_PROFILE;
 	}
 
-	size_t name_len = strlen(data.name);
-	if (name_len == 0) {
+	if (strlen(data.name) == 0) {
 		if (profile == TITANIA_PROFILE_DEFAULT) {
 			strcpy(data.name, "Default Profile");
-			name_len = strlen(data.name);
 		} else {
 			return TITANIACTL_EMPTY_PROFILE;
 		}
