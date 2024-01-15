@@ -884,6 +884,13 @@ titania_error titania_update_access_profile(const titania_handle handle, const t
 		}
 	}
 
+	// this might not be necessary.
+	playstation_access_profile_blob data = { 0 };
+	data.report_id = ACCESS_REPORT_GET_PROFILE;
+	if (HID_FAIL(hid_get_feature_report(state[handle].hid, (uint8_t*) &data, sizeof(playstation_access_profile_blob)))) {
+		return TITANIA_ERROR_INVALID_DATA;
+	}
+
 	return TITANIA_ERROR_OK;
 }
 

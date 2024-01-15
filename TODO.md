@@ -18,8 +18,8 @@
 - [x] dualsense edge profile report writing
 - [x] playstation access input reading
 - [x] playstation access output reading
-- [ ] playstation access profile report reading
-- [ ] playstation access profile report writing
+- [x] playstation access profile report reading
+- [x] playstation access profile report writing
 - [ ] documentation
 
 ### titaniactl
@@ -32,9 +32,9 @@
 - [x] dualsense edge merged profile conversion (`titaniactl profile convert`)
 - [x] dualsense edge profile importing (`titaniactl profile import [square, cross, circle]`)
 - [x] dualsense edge profile exporting (`titaniactl profile export [triangle, square, cross, circle]`)
-- [ ] playstation access merged profile conversion (`titaniactl profile convert`)
-- [ ] playstation access profile importing (`titaniactl profile import [1, 2, 3]`)
-- [ ] playstation access profile exporting (`titaniactl profile export [0, 1, 2, 3]`)
+- [x] playstation access merged profile conversion (`titaniactl profile convert`)
+- [x] playstation access profile importing (`titaniactl profile import [1, 2, 3]`)
+- [x] playstation access profile exporting (`titaniactl profile export [0, 1, 2, 3]`)
 - [x] pair bluetooth (`titaniactl pair`)
 - [ ] shell autocomplete profiles
 
