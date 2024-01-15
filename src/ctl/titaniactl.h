@@ -49,7 +49,7 @@ typedef enum titaniactl_error {
 	TITANIACTL_ERROR_MAX
 } titaniactl_error;
 
-#define IS_TITANIACTL_ERROR_OKAY(result) (result == TITANIACTL_ERROR_OK)
+#define IS_TITANIACTL_OKAY(result) (result == TITANIACTL_ERROR_OK)
 #define IS_TITANIACTL_BAD(result) (result > TITANIACTL_ERROR_OK)
 
 typedef titaniactl_error (*titaniactl_callback_t)(titaniactl_context* context);

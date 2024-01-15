@@ -63,7 +63,7 @@ titaniactl_error titaniactl_mode_profile_dump_inner(titaniactl_context* context,
 			n = TITANIA_MERGED_REPORT_EDGE_SIZE;
 			result = titania_debug_get_edge_profile(context->handles[i], profile, buffer);
 			titania_edge_profile edge_profile;
-			if (IS_TITANIA_ERROR_OKAY(titania_convert_edge_profile_input(buffer, &edge_profile))) {
+			if (IS_TITANIA_OKAY(titania_convert_edge_profile_input(buffer, &edge_profile))) {
 				if (!simple) {
 					for (int j = 0; j < 0x10; ++j) {
 						sprintf(&strbuffer[j * 2], "%02x", edge_profile.id[j] & 0xFF);
@@ -84,7 +84,7 @@ titaniactl_error titaniactl_mode_profile_dump_inner(titaniactl_context* context,
 			n = TITANIA_MERGED_REPORT_ACCESS_SIZE;
 			result = titania_debug_get_access_profile(context->handles[i], profile, buffer);
 			titania_access_profile access_profile;
-			if (IS_TITANIA_ERROR_OKAY(titania_convert_access_profile_input(buffer, &access_profile))) {
+			if (IS_TITANIA_OKAY(titania_convert_access_profile_input(buffer, &access_profile))) {
 				if (!simple) {
 					for (int j = 0; j < 0x10; ++j) {
 						sprintf(&strbuffer[j * 2], "%02x", access_profile.id[j] & 0xFF);

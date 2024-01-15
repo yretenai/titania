@@ -303,7 +303,7 @@ TITANIA_EXPORT extern const char* const titania_access_extension_type_id_msg[TIT
 
 TITANIA_EXPORT extern const int titania_max_controllers;
 
-#define IS_TITANIA_ERROR_OKAY(result) (result <= TITANIA_ERROR_OK)
+#define IS_TITANIA_OKAY(result) (result <= TITANIA_ERROR_OK)
 #define IS_TITANIA_BAD(result) (result > TITANIA_ERROR_OK)
 typedef uint16_t titania_wchar;
 

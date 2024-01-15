@@ -691,7 +691,7 @@ titania_error titania_update_effect(const titania_handle handle, const titania_e
 	hid_state->flags.right_trigger_motor = right_trigger.mode != TITANIA_EFFECT_NONE;
 
 	titania_error result = compute_effect(&hid_state->effects[ADAPTIVE_TRIGGER_LEFT], hid_state, left_trigger, power_reduction);
-	if (IS_TITANIA_ERROR_OKAY(result)) {
+	if (IS_TITANIA_OKAY(result)) {
 		result = check_if_trigger_state_bad(handle, ADAPTIVE_TRIGGER_LEFT);
 	}
 
@@ -702,7 +702,7 @@ titania_error titania_update_effect(const titania_handle handle, const titania_e
 	}
 
 	result = compute_effect(&hid_state->effects[ADAPTIVE_TRIGGER_RIGHT], hid_state, right_trigger, power_reduction);
-	if (IS_TITANIA_ERROR_OKAY(result)) {
+	if (IS_TITANIA_OKAY(result)) {
 		result = check_if_trigger_state_bad(handle, ADAPTIVE_TRIGGER_RIGHT);
 	}
 
