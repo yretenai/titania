@@ -7,7 +7,8 @@
 #ifndef TITANIAPRINT_H
 #define TITANIAPRINT_H
 
-#define CHECK_ENUM_SAFE(val, arr) val < sizeof(arr) / sizeof(const char* const) && arr[val] != nullptr
+#define ARR_LEN(arr) sizeof(arr) / sizeof(*arr)
+#define CHECK_ENUM_SAFE(val, arr) val < ARR_LEN(arr) && arr[val] != nullptr
 
 #define TITANIAPRINT_SEP() printf(",")
 #define TITANIAPRINT_STR(struc, field) printf(" " #field " = %s", struc.field)

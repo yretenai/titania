@@ -157,7 +157,7 @@ int main(const int argc, const char** const argv) {
 				printf("\t-p, --preserve: preserve ids and timestamps when importing\n");
 				printf("\n");
 				printf("available modes:\n");
-				for (size_t j = 0; j < sizeof(modes) / sizeof(titaniactl_mode); ++j) {
+				for (size_t j = 0; j < ARR_LEN(modes); ++j) {
 					if (modes[j].help == nullptr) {
 						continue;
 					}
@@ -171,7 +171,7 @@ int main(const int argc, const char** const argv) {
 				}
 
 				bool has_json_lead = false;
-				for (size_t j = 0; j < sizeof(modes) / sizeof(titaniactl_mode); ++j) {
+				for (size_t j = 0; j < ARR_LEN(modes); ++j) {
 					if (modes[j].json_callback == nullptr || modes[j].name == nullptr) {
 						continue;
 					}

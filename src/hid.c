@@ -47,6 +47,8 @@ static titania_device_info device_infos[] = {
 	handle->firmware.name.minor = firmware.name.firmware.minor; \
 	handle->firmware.name.revision = firmware.name.firmware.revision
 
+#define ARR_LEN(arr) sizeof(arr) / sizeof(*arr)
+
 titania_result titania_init_checked(const size_t size) {
 	if (size != sizeof(titania_hid)) {
 		return TITANIA_INVALID_LIBRARY;
@@ -86,7 +88,7 @@ titania_result titania_get_hids(titania_query* hids, const size_t hids_length) {
 
 	size_t index = 0;
 
-	for (size_t i = 0; i < sizeof(device_infos) / sizeof(titania_device_info); i++) {
+	for (size_t i = 0; i < ARR_LEN(device_infos); i++) {
 		if (index >= hids_length) {
 			break;
 		}
