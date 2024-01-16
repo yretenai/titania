@@ -157,181 +157,168 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing adaptive triggers\n");
 		titania_effect_update update = { 0 };
+		goto test;
 
-		update.mode = TITANIA_EFFECT_UNIFORM;
-		update.effect.uniform.position = 0.5;
-		update.effect.uniform.resistance = 1.0;
-		printf("uniform\n");
+		update.mode = TITANIA_EFFECT_SIMPLE_UNIFORM;
+		update.effect.simple_uniform.position = 0.5;
+		update.effect.simple_uniform.resistance = 1.0;
+		printf("simple uniform\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			titania_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, TITANIA_NO_POWER_REDUCTION);
 		}
 		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		update.mode = TITANIA_EFFECT_SECTION;
-		update.effect.section.position.x = 0.25;
-		update.effect.section.position.y = 0.75;
-		update.effect.section.resistance = 1.0;
-		printf("section\n");
+		update.mode = TITANIA_EFFECT_SIMPLE_SECTION;
+		update.effect.simple_section.position.x = 0.25;
+		update.effect.simple_section.position.y = 0.75;
+		update.effect.simple_section.resistance = 1.0;
+		printf("simple section\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			titania_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, TITANIA_NO_POWER_REDUCTION);
 		}
 		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		update.mode = TITANIA_EFFECT_MUTIPLE_SECTIONS;
-		update.effect.multiple_sections.resistance[0] = 0;
-		update.effect.multiple_sections.resistance[1] = 0;
-		update.effect.multiple_sections.resistance[2] = 0.3f;
-		update.effect.multiple_sections.resistance[3] = 0.3f;
-		update.effect.multiple_sections.resistance[4] = 0.6f;
-		update.effect.multiple_sections.resistance[5] = 0.6f;
-		update.effect.multiple_sections.resistance[6] = 0.3f;
-		update.effect.multiple_sections.resistance[7] = 0.3f;
-		update.effect.multiple_sections.resistance[8] = 1.0f;
-		update.effect.multiple_sections.resistance[9] = 1.0f;
-		printf("multiple section\n");
+		update.mode = TITANIA_EFFECT_ADVANCED_SECTIONS;
+		update.effect.advanced_sections.resistance[0] = 0;
+		update.effect.advanced_sections.resistance[1] = 0;
+		update.effect.advanced_sections.resistance[2] = 0.3f;
+		update.effect.advanced_sections.resistance[3] = 0.3f;
+		update.effect.advanced_sections.resistance[4] = 0.6f;
+		update.effect.advanced_sections.resistance[5] = 0.6f;
+		update.effect.advanced_sections.resistance[6] = 0.3f;
+		update.effect.advanced_sections.resistance[7] = 0.3f;
+		update.effect.advanced_sections.resistance[8] = 1.0f;
+		update.effect.advanced_sections.resistance[9] = 1.0f;
+		printf("advanced section\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			titania_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, TITANIA_NO_POWER_REDUCTION);
 		}
 		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		update.mode = TITANIA_EFFECT_TRIGGER;
-		update.effect.trigger.position.x = 0.50f;
-		update.effect.trigger.position.y = 1.00f;
-		update.effect.trigger.resistance = 0.5f;
-		printf("trigger\n");
+		test:
+		update.mode = TITANIA_EFFECT_ADVANCED_TRIGGER;
+		update.effect.advanced_trigger.position.x = 0.50f;
+		update.effect.advanced_trigger.position.y = 1.00f;
+		update.effect.advanced_trigger.resistance = 0.5f;
+		printf("advanced trigger\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			titania_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, TITANIA_NO_POWER_REDUCTION);
 		}
 		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		update.mode = TITANIA_EFFECT_SLOPE;
-		update.effect.slope.position.x = 0.20;
-		update.effect.slope.position.y = 1.00;
-		update.effect.slope.resistance.x = 0.25f;
-		update.effect.slope.resistance.y = 1.0f;
-		printf("slope\n");
+		update.mode = TITANIA_EFFECT_ADVANCED_SLOPE;
+		update.effect.advanced_slope.position.x = 0.20;
+		update.effect.advanced_slope.position.y = 1.00;
+		update.effect.advanced_slope.resistance.x = 0.25f;
+		update.effect.advanced_slope.resistance.y = 1.0f;
+		printf("advanced slope\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			titania_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, TITANIA_NO_POWER_REDUCTION);
 		}
 		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		update.mode = TITANIA_EFFECT_VIBRATE;
-		update.effect.vibrate.position = 0.33;
-		update.effect.vibrate.amplitude = 0.75;
-		update.effect.vibrate.frequency = 201;
-		printf("vibrate\n");
+		update.mode = TITANIA_EFFECT_SIMPLE_VIBRATE;
+		update.effect.simple_vibrate.position = 0.33;
+		update.effect.simple_vibrate.amplitude = 0.75;
+		update.effect.simple_vibrate.frequency = 201;
+		printf("simple vibrate\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			titania_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, TITANIA_NO_POWER_REDUCTION);
 		}
 		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		update.mode = TITANIA_EFFECT_VIBRATE_SLOPE;
-		update.effect.vibrate_slope.position.x = 0.20;
-		update.effect.vibrate_slope.position.y = 1.00;
-		update.effect.vibrate_slope.amplitude.x = 0.25f;
-		update.effect.vibrate_slope.amplitude.y = 1.0f;
-		update.effect.vibrate_slope.frequency = 201;
-		update.effect.vibrate_slope.period = 4;
-		printf("vibrate slope\n");
+		update.mode = TITANIA_EFFECT_ADVANCED_VIBRATE_SLOPE;
+		update.effect.advanced_vibrate_slope.position.x = 0.20;
+		update.effect.advanced_vibrate_slope.position.y = 1.00;
+		update.effect.advanced_vibrate_slope.delay.x = 0.25f;
+		update.effect.advanced_vibrate_slope.delay.y = 1.0f;
+		update.effect.advanced_vibrate_slope.frequency = 201;
+		printf("advanced vibrate slope\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			titania_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, TITANIA_NO_POWER_REDUCTION);
 		}
 		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		update.mode = TITANIA_EFFECT_MUTIPLE_VIBRATE;
-		update.effect.multiple_vibrate.amplitude[0] = 0;
-		update.effect.multiple_vibrate.amplitude[1] = 0;
-		update.effect.multiple_vibrate.amplitude[2] = 0.3f;
-		update.effect.multiple_vibrate.amplitude[3] = 0.3f;
-		update.effect.multiple_vibrate.amplitude[4] = 0.6f;
-		update.effect.multiple_vibrate.amplitude[5] = 0.6f;
-		update.effect.multiple_vibrate.amplitude[6] = 0.3f;
-		update.effect.multiple_vibrate.amplitude[7] = 0.3f;
-		update.effect.multiple_vibrate.amplitude[8] = 1.0f;
-		update.effect.multiple_vibrate.amplitude[9] = 1.0f;
-		update.effect.multiple_vibrate.frequency = 201;
-		update.effect.multiple_vibrate.period = 4;
-		printf("multiple vibrate\n");
+		update.mode = TITANIA_EFFECT_ADVANCED_VIBRATE;
+		update.effect.advanced_vibrate.amplitude[0] = 0;
+		update.effect.advanced_vibrate.amplitude[1] = 0;
+		update.effect.advanced_vibrate.amplitude[2] = 0.3f;
+		update.effect.advanced_vibrate.amplitude[3] = 0.3f;
+		update.effect.advanced_vibrate.amplitude[4] = 0.6f;
+		update.effect.advanced_vibrate.amplitude[5] = 0.6f;
+		update.effect.advanced_vibrate.amplitude[6] = 0.3f;
+		update.effect.advanced_vibrate.amplitude[7] = 0.3f;
+		update.effect.advanced_vibrate.amplitude[8] = 1.0f;
+		update.effect.advanced_vibrate.amplitude[9] = 1.0f;
+		update.effect.advanced_vibrate.frequency = 201;
+		update.effect.advanced_vibrate.period = 4;
+		printf("advanced vibrate\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			titania_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, TITANIA_NO_POWER_REDUCTION);
 		}
 		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
 			goto reset_trigger;
 		}
 
-		update.mode = TITANIA_EFFECT_MUTIPLE_VIBRATE_SECTIONS;
-		update.effect.multiple_vibrate_sections.amplitude[0] = 0;
-		update.effect.multiple_vibrate_sections.amplitude[1] = 0;
-		update.effect.multiple_vibrate_sections.amplitude[2] = 0.3f;
-		update.effect.multiple_vibrate_sections.amplitude[3] = 0.3f;
-		update.effect.multiple_vibrate_sections.amplitude[4] = 0.6f;
-		update.effect.multiple_vibrate_sections.amplitude[5] = 0.6f;
-		update.effect.multiple_vibrate_sections.amplitude[6] = 0.3f;
-		update.effect.multiple_vibrate_sections.amplitude[7] = 0.3f;
-		update.effect.multiple_vibrate_sections.amplitude[8] = 1.0f;
-		update.effect.multiple_vibrate_sections.amplitude[9] = 1.0f;
-		update.effect.multiple_vibrate_sections.resistance[0] = 0;
-		update.effect.multiple_vibrate_sections.resistance[1] = 0;
-		update.effect.multiple_vibrate_sections.resistance[2] = 0.3f;
-		update.effect.multiple_vibrate_sections.resistance[3] = 0.3f;
-		update.effect.multiple_vibrate_sections.resistance[4] = 0.6f;
-		update.effect.multiple_vibrate_sections.resistance[5] = 0.6f;
-		update.effect.multiple_vibrate_sections.resistance[6] = 0.3f;
-		update.effect.multiple_vibrate_sections.resistance[7] = 0.3f;
-		update.effect.multiple_vibrate_sections.resistance[8] = 1.0f;
-		update.effect.multiple_vibrate_sections.resistance[9] = 1.0f;
-		printf("multiple vibrate sections\n");
+		update.mode = TITANIA_EFFECT_ADVANCED_VIBRATE_FEEDBACK;
+		update.effect.advanced_vibrate_feedback.position.x = 0.20;
+		update.effect.advanced_vibrate_feedback.position.y = 1.00;
+		update.effect.advanced_vibrate_feedback.amplitude.x = 0.25f;
+		update.effect.advanced_vibrate_feedback.amplitude.y = 0.75f;
+		update.effect.advanced_vibrate_feedback.frequency = 201;
+		update.effect.advanced_vibrate_feedback.period = 4;
+		printf("advanced vibrate feedback\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			titania_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, TITANIA_NO_POWER_REDUCTION);
 		}
 		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
@@ -348,7 +335,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			titania_update_effect(context->handles[i], update, update, 0.0f);
+			titania_update_effect(context->handles[i], update, update, TITANIA_NO_POWER_REDUCTION);
 		}
 		titania_push(context->handles, context->connected_controllers);
 		struct timespec delayspec = { 0, 1e+8 };
@@ -367,7 +354,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 				if (context->hids[i].is_access) {
 					continue;
 				}
-				titania_update_rumble(context->handles[i], rumble, 0.0f, 0.0f, false);
+				titania_update_rumble(context->handles[i], rumble, 0.0f, TITANIA_NO_POWER_REDUCTION, false);
 			}
 			titania_push(context->handles, context->connected_controllers);
 			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
@@ -381,7 +368,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 				if (context->hids[i].is_access) {
 					continue;
 				}
-				titania_update_rumble(context->handles[i], 0, rumble, 0.0f, false);
+				titania_update_rumble(context->handles[i], 0, rumble, TITANIA_NO_POWER_REDUCTION, false);
 			}
 			titania_push(context->handles, context->connected_controllers);
 			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
@@ -395,7 +382,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 				if (context->hids[i].is_access) {
 					continue;
 				}
-				titania_update_rumble(context->handles[i], rumble, rumble, 0.0f, false);
+				titania_update_rumble(context->handles[i], rumble, rumble, TITANIA_NO_POWER_REDUCTION, false);
 			}
 			titania_push(context->handles, context->connected_controllers);
 			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
@@ -410,7 +397,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 				if (context->hids[i].is_access) {
 					continue;
 				}
-				titania_update_rumble(context->handles[i], level, level, 0.0f, false);
+				titania_update_rumble(context->handles[i], level, level, TITANIA_NO_POWER_REDUCTION, false);
 			}
 			titania_push(context->handles, context->connected_controllers);
 			if (report_hid_close(context->handles, context->connected_controllers, 250000, 10000)) {
@@ -424,7 +411,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 				if (context->hids[i].is_access) {
 					continue;
 				}
-				titania_update_rumble(context->handles[i], rumble, 0.0f, 0.0f, true);
+				titania_update_rumble(context->handles[i], rumble, 0.0f, TITANIA_NO_POWER_REDUCTION, true);
 			}
 			titania_push(context->handles, context->connected_controllers);
 			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
@@ -438,7 +425,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 				if (context->hids[i].is_access) {
 					continue;
 				}
-				titania_update_rumble(context->handles[i], 0, rumble, 0.0f, true);
+				titania_update_rumble(context->handles[i], 0, rumble, TITANIA_NO_POWER_REDUCTION, true);
 			}
 			titania_push(context->handles, context->connected_controllers);
 			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
@@ -452,7 +439,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 				if (context->hids[i].is_access) {
 					continue;
 				}
-				titania_update_rumble(context->handles[i], rumble, rumble, 0.0f, true);
+				titania_update_rumble(context->handles[i], rumble, rumble, TITANIA_NO_POWER_REDUCTION, true);
 			}
 			titania_push(context->handles, context->connected_controllers);
 			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
@@ -467,7 +454,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 				if (context->hids[i].is_access) {
 					continue;
 				}
-				titania_update_rumble(context->handles[i], level, level, 0.0f, true);
+				titania_update_rumble(context->handles[i], level, level, TITANIA_NO_POWER_REDUCTION, true);
 			}
 			titania_push(context->handles, context->connected_controllers);
 			if (report_hid_close(context->handles, context->connected_controllers, 250000, 10000)) {
@@ -484,7 +471,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 			if (context->hids[i].is_access) {
 				continue;
 			}
-			titania_update_rumble(context->handles[i], 0, 0, 0.0f, false);
+			titania_update_rumble(context->handles[i], 0, 0, TITANIA_NO_POWER_REDUCTION, false);
 		}
 		titania_push(context->handles, context->connected_controllers);
 		struct timespec delayspec = { 0, 1e+8 };

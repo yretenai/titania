@@ -61,16 +61,13 @@ TODO, see src/ctl/ for the source of `titaniactl`
 
 ## Acknowledgements
 
-- [this archived](https://gist.github.com/stealth-alex/10a8e7cc6027b78fa18a7f48a0d3d1e4) [reddit post](https://www.reddit.com/r/gamedev/comments/jumvi5/dualsense_haptics_leds_and_more_hid_output_report/)
-  for the initial research on the output report
+- [this archived](https://gist.github.com/stealth-alex/10a8e7cc6027b78fa18a7f48a0d3d1e4) [reddit post](https://www.reddit.com/r/gamedev/comments/jumvi5/dualsense_haptics_leds_and_more_hid_output_report/) for the initial research on the output report
+- [this gist](https://gist.github.com/Nielk1/6d54cc2c00d2201ccb8c2720ad7538db/) for info on trigger mode 0x27
 - [pydualsense](https://github.com/flok/pydualsense) for guidance on bluetooth
-- [controllers wiki](https://controllers.fandom.com/wiki/Sony_DualSense) for report ids and some of the missing report
-  values
+- [controllers wiki](https://controllers.fandom.com/wiki/Sony_DualSense) for report ids and some of the missing report values
 - [eleccelerator wiki](https://eleccelerator.com/wiki/index.php?title=DualShock_4) for guidance on crc32
-- [dsremap's research](https://dsremap.readthedocs.io/en/latest/reverse.html) for some of the DualShock 4 reports that were
-  reused for the DualSense
-- [linux kernel playstation driver](https://github.com/torvalds/linux/blob/master/drivers/hid/hid-playstation.c) for
-  guidance on how to read calibration data
+- [dsremap's research](https://dsremap.readthedocs.io/en/latest/reverse.html) for some of the DualShock 4 reports that were reused for the DualSense
+- [linux kernel playstation driver](https://github.com/torvalds/linux/blob/master/drivers/hid/hid-playstation.c) for guidance on how to read calibration data
 
 ## License
 

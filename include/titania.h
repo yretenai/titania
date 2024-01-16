@@ -33,6 +33,7 @@ extern "C" {
 #endif
 
 #define TITANIA_INVALID_ID (-1)
+#define TITANIA_NO_POWER_REDUCTION (-1.0f)
 
 #define TITANIA_LEFT (0)
 #define TITANIA_RIGHT (1)
@@ -46,6 +47,7 @@ extern "C" {
 #define TITANIA_POLLING_RATE_BT (1)
 #define TITANIA_POLLING_RATE_USB (4)
 #define TITANIA_TRIGGER_GRANULARITY (10)
+#define TITANIA_TRIGGER_MIN_GRANUALITY (0.100001f)
 #define TITANIA_FIRMWARE_DATE_LEN (0x20)
 #define TITANIA_MERGED_REPORT_EDGE_SIZE (174)
 #define TITANIA_MERGED_REPORT_ACCESS_SIZE (960)
@@ -189,15 +191,15 @@ typedef enum titania_effect_mode {
 	TITANIA_EFFECT_NONE = -1,
 	TITANIA_EFFECT_OFF = 0,
 	TITANIA_EFFECT_STOP_VIBRATING,
-	TITANIA_EFFECT_UNIFORM,
-	TITANIA_EFFECT_SLOPE,
-	TITANIA_EFFECT_TRIGGER,
-	TITANIA_EFFECT_SECTION,
-	TITANIA_EFFECT_VIBRATE,
-	TITANIA_EFFECT_VIBRATE_SLOPE,
-	TITANIA_EFFECT_MUTIPLE_SECTIONS,
-	TITANIA_EFFECT_MUTIPLE_VIBRATE,
-	TITANIA_EFFECT_MUTIPLE_VIBRATE_SECTIONS
+	TITANIA_EFFECT_SIMPLE_UNIFORM,
+	TITANIA_EFFECT_SIMPLE_SECTION,
+	TITANIA_EFFECT_SIMPLE_VIBRATE,
+	TITANIA_EFFECT_ADVANCED_SLOPE,
+	TITANIA_EFFECT_ADVANCED_TRIGGER,
+	TITANIA_EFFECT_ADVANCED_VIBRATE_SLOPE,
+	TITANIA_EFFECT_ADVANCED_SECTIONS,
+	TITANIA_EFFECT_ADVANCED_VIBRATE,
+	TITANIA_EFFECT_ADVANCED_VIBRATE_FEEDBACK
 } titania_effect_mode;
 
 typedef enum titania_led_effect {
@@ -707,57 +709,58 @@ typedef struct titania_effect_update_off {
 typedef titania_effect_update_off titania_effect_update_stop;
 typedef titania_effect_update_off titania_effect_update_none;
 
-typedef struct titania_effect_update_uniform {
+typedef struct titania_effect_update_simple_uniform {
 	float position;
 	float resistance;
-} titania_effect_update_uniform;
+} titania_effect_update_simple_uniform;
 
-typedef struct titania_effect_update_slope {
+typedef struct titania_effect_update_advanced_slope {
 	titania_vector2 position;
 	titania_vector2 resistance;
-} titania_effect_update_slope;
+} titania_effect_update_advanced_slope;
 
-typedef struct titania_effect_update_trigger {
+typedef struct titania_effect_update_advanced_trigger {
 	titania_vector2 position;
 	float resistance;
-} titania_effect_update_trigger;
+} titania_effect_update_advanced_trigger;
 
-typedef struct titania_effect_update_section {
+typedef struct titania_effect_update_simple_section {
 	titania_vector2 position;
 	float resistance;
-} titania_effect_update_section;
+} titania_effect_update_simple_section;
 
 // todo: document frequency and period.
 // frequency is the raw Hz frequency of the vibration, 201 is a good value.
 // period is the period in 0.1s steps, 1 is 100ms
 // "stable" frequency table = 1..38, 39, 41, 42, 44, 46, 48, 51, 53, 56, 59, 63, 67, 72, 77, 84, 91, 101, 112, 126, 143, 167, 201, 251, 255
-typedef struct titania_effect_update_vibrate {
+typedef struct titania_effect_update_simple_vibrate {
 	float position;
 	float amplitude;
 	int32_t frequency;
-} titania_effect_update_vibrate;
+} titania_effect_update_simple_vibrate;
 
-typedef struct titania_effect_update_vibrate_slope {
+typedef struct titania_effect_update_advanced_vibrate_feedback {
 	titania_vector2 position;
 	titania_vector2 amplitude;
 	int32_t frequency;
 	int32_t period;
-} titania_effect_update_vibrate_slope;
+} titania_effect_update_advanced_vibrate_feedback;
 
-typedef struct titania_effect_update_multiple_sections {
+typedef struct titania_effect_update_advanced_sections {
 	float resistance[TITANIA_TRIGGER_GRANULARITY];
-} titania_effect_update_multiple_sections;
+} titania_effect_update_advanced_sections;
 
-typedef struct titania_effect_update_multiple_vibrate {
+typedef struct titania_effect_update_advanced_vibrate {
 	float amplitude[TITANIA_TRIGGER_GRANULARITY];
 	int32_t frequency;
 	int32_t period;
-} titania_effect_update_multiple_vibrate;
+} titania_effect_update_advanced_vibrate;
 
-typedef struct titania_effect_update_multiple_vibrate_sections {
-	float resistance[TITANIA_TRIGGER_GRANULARITY];
-	float amplitude[TITANIA_TRIGGER_GRANULARITY];
-} titania_effect_update_multiple_vibrate_sections;
+typedef struct titania_effect_update_advanced_vibrate_slope {
+	titania_vector2 position;
+	titania_vector2 delay;
+	int32_t frequency;
+} titania_effect_update_advanced_vibrate_slope;
 
 typedef struct titania_effect_update {
 	titania_effect_mode mode;
@@ -766,15 +769,15 @@ typedef struct titania_effect_update {
 		titania_effect_update_none none;
 		titania_effect_update_off off;
 		titania_effect_update_stop stop;
-		titania_effect_update_uniform uniform;
-		titania_effect_update_slope slope;
-		titania_effect_update_trigger trigger;
-		titania_effect_update_section section;
-		titania_effect_update_vibrate vibrate;
-		titania_effect_update_vibrate_slope vibrate_slope;
-		titania_effect_update_multiple_sections multiple_sections;
-		titania_effect_update_multiple_vibrate multiple_vibrate;
-		titania_effect_update_multiple_vibrate_sections multiple_vibrate_sections;
+		titania_effect_update_simple_uniform simple_uniform;
+		titania_effect_update_simple_section simple_section;
+		titania_effect_update_simple_vibrate simple_vibrate;
+		titania_effect_update_advanced_slope advanced_slope;
+		titania_effect_update_advanced_trigger advanced_trigger;
+		titania_effect_update_advanced_vibrate_slope advanced_vibrate_slope;
+		titania_effect_update_advanced_sections advanced_sections;
+		titania_effect_update_advanced_vibrate advanced_vibrate;
+		titania_effect_update_advanced_vibrate_feedback advanced_vibrate_feedback;
 	} effect;
 } titania_effect_update;
 

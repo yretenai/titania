@@ -557,105 +557,107 @@ titania_error compute_effect(dualsense_effect_output* effect, dualsense_output_m
 		case TITANIA_EFFECT_NONE: break;
 		case TITANIA_EFFECT_OFF: effect->mode = DUALSENSE_EFFECT_MODE_OFF; break;
 		case TITANIA_EFFECT_STOP_VIBRATING: effect->mode = DUALSENSE_EFFECT_MODE_STOP; break;
-		case TITANIA_EFFECT_UNIFORM:
-			effect->mode = DUALSENSE_EFFECT_MODE_UNIFORM;
-			effect->params.value[0] = NORM_CLAMP(trigger.effect.uniform.position, DUALSENSE_TRIGGER_MAX);
-			effect->params.value[1] = NORM_CLAMP_UINT8(trigger.effect.uniform.resistance);
+		case TITANIA_EFFECT_SIMPLE_UNIFORM:
+			effect->mode = DUALSENSE_EFFECT_MODE_SIMPLE_UNIFORM;
+			effect->params.value[0] = NORM_CLAMP(trigger.effect.simple_uniform.position, DUALSENSE_TRIGGER_MAX);
+			effect->params.value[1] = NORM_CLAMP_UINT8(trigger.effect.simple_uniform.resistance);
 			break;
-		case TITANIA_EFFECT_SECTION:
-			effect->mode = DUALSENSE_EFFECT_MODE_SECTION;
-			effect->params.value[0] = NORM_CLAMP(trigger.effect.section.position.x, DUALSENSE_TRIGGER_MAX);
-			effect->params.value[1] = NORM_CLAMP(trigger.effect.section.position.y, DUALSENSE_TRIGGER_MAX);
-			effect->params.value[2] = NORM_CLAMP_UINT8(trigger.effect.section.resistance);
+		case TITANIA_EFFECT_SIMPLE_SECTION:
+			effect->mode = DUALSENSE_EFFECT_MODE_SIMPLE_SECTION;
+			effect->params.value[0] = NORM_CLAMP(trigger.effect.simple_section.position.x, DUALSENSE_TRIGGER_MAX);
+			effect->params.value[1] = NORM_CLAMP(trigger.effect.simple_section.position.y, DUALSENSE_TRIGGER_MAX);
+			effect->params.value[2] = NORM_CLAMP_UINT8(trigger.effect.simple_section.resistance);
 			break;
-		case TITANIA_EFFECT_VIBRATE:
-			effect->mode = DUALSENSE_EFFECT_MODE_VIBRATE;
-			effect->params.value[0] = trigger.effect.vibrate.frequency & UINT8_MAX;
-			effect->params.value[1] = NORM_CLAMP(trigger.effect.vibrate.amplitude, DUALSENSE_TRIGGER_AMPLITUDE_MAX);
-			effect->params.value[2] = NORM_CLAMP(trigger.effect.vibrate.position, DUALSENSE_TRIGGER_VIBRATION_MAX);
-			msg->flags.motor_power = true;
-			msg->motor_flags.trigger_power_reduction = NORM_CLAMP(power_reduction, 7);
+		case TITANIA_EFFECT_SIMPLE_VIBRATE:
+			effect->mode = DUALSENSE_EFFECT_MODE_SIMPLE_VIBRATE;
+			effect->params.value[0] = trigger.effect.simple_vibrate.frequency & UINT8_MAX;
+			effect->params.value[1] = NORM_CLAMP(trigger.effect.simple_vibrate.amplitude, DUALSENSE_TRIGGER_AMPLITUDE_MAX);
+			effect->params.value[2] = NORM_CLAMP(trigger.effect.simple_vibrate.position, DUALSENSE_TRIGGER_VIBRATION_MAX);
+			if (power_reduction >= -0) {
+				msg->flags.motor_power = true;
+				msg->motor_flags.trigger_power_reduction = NORM_CLAMP(power_reduction, 7);
+			}
 			break;
 		// ReSharper disable CppRedundantParentheses
-		case TITANIA_EFFECT_SLOPE:
+		case TITANIA_EFFECT_ADVANCED_SLOPE:
 			{
-				effect->mode = DUALSENSE_EFFECT_MODE_SLOPE;
-				const uint8_t slope_start = NORM_CLAMP(trigger.effect.slope.position.x, TITANIA_TRIGGER_GRANULARITY);
-				const uint8_t slope_end = NORM_CLAMP(trigger.effect.slope.position.y, TITANIA_TRIGGER_GRANULARITY);
-				const uint8_t res_start = NORM_CLAMP(trigger.effect.slope.resistance.x, DUALSENSE_TRIGGER_STEP);
-				const uint8_t res_end = NORM_CLAMP(trigger.effect.slope.resistance.y, DUALSENSE_TRIGGER_STEP);
+				effect->mode = DUALSENSE_EFFECT_MODE_ADVANCED_SLOPE;
+				const uint8_t slope_start = NORM_CLAMP(trigger.effect.advanced_slope.position.x, TITANIA_TRIGGER_GRANULARITY);
+				const uint8_t slope_end = NORM_CLAMP(trigger.effect.advanced_slope.position.y, TITANIA_TRIGGER_GRANULARITY);
+				const uint8_t res_start = NORM_CLAMP(trigger.effect.advanced_slope.resistance.x, DUALSENSE_TRIGGER_STEP);
+				const uint8_t res_end = NORM_CLAMP(trigger.effect.advanced_slope.resistance.y, DUALSENSE_TRIGGER_STEP);
 				effect->params.multiple.id = (1 << (slope_start - 1)) | (1 << (slope_end - 1));
 				effect->params.value[2] = res_start | res_end << DUALSENSE_TRIGGER_SHIFT;
 				break;
 			}
-		case TITANIA_EFFECT_TRIGGER:
+		case TITANIA_EFFECT_ADVANCED_TRIGGER:
 			{
-				effect->mode = DUALSENSE_EFFECT_MODE_TRIGGER;
-				const uint8_t slope_start = NORM_CLAMP(trigger.effect.trigger.position.x, TITANIA_TRIGGER_GRANULARITY);
-				const uint8_t slope_end = NORM_CLAMP(trigger.effect.trigger.position.y, TITANIA_TRIGGER_GRANULARITY);
+				effect->mode = DUALSENSE_EFFECT_MODE_ADVANCED_TRIGGER;
+				const uint8_t slope_start = NORM_CLAMP(trigger.effect.advanced_trigger.position.x, TITANIA_TRIGGER_GRANULARITY);
+				const uint8_t slope_end = NORM_CLAMP(trigger.effect.advanced_trigger.position.y, TITANIA_TRIGGER_GRANULARITY);
 				effect->params.multiple.id = (1 << (slope_start - 1)) | (1 << (slope_end - 1));
-				effect->params.value[2] = NORM_CLAMP(trigger.effect.trigger.resistance, DUALSENSE_TRIGGER_STEP);
+				effect->params.value[2] = NORM_CLAMP(trigger.effect.advanced_trigger.resistance, DUALSENSE_TRIGGER_STEP);
 				break;
 			}
-		case TITANIA_EFFECT_VIBRATE_SLOPE:
+		case TITANIA_EFFECT_ADVANCED_VIBRATE_SLOPE:
 			{
-				effect->mode = DUALSENSE_EFFECT_MODE_VIBRATE_SLOPE;
-				const uint8_t slope_start = NORM_CLAMP(trigger.effect.vibrate_slope.position.x, TITANIA_TRIGGER_GRANULARITY);
-				const uint8_t slope_end = NORM_CLAMP(trigger.effect.vibrate_slope.position.y, TITANIA_TRIGGER_GRANULARITY);
-				const uint8_t res_start = NORM_CLAMP(trigger.effect.vibrate_slope.amplitude.x, DUALSENSE_TRIGGER_STEP);
-				const uint8_t res_end = NORM_CLAMP(trigger.effect.vibrate_slope.amplitude.y, DUALSENSE_TRIGGER_STEP);
+				effect->mode = DUALSENSE_EFFECT_MODE_ADVANCED_VIBRATE_SLOPE;
+				const uint8_t slope_start = NORM_CLAMP(trigger.effect.advanced_vibrate_slope.position.x, TITANIA_TRIGGER_GRANULARITY);
+				const uint8_t slope_end = NORM_CLAMP(trigger.effect.advanced_vibrate_slope.position.y, TITANIA_TRIGGER_GRANULARITY);
+				const uint8_t res_start = NORM_CLAMP(trigger.effect.advanced_vibrate_slope.delay.x, DUALSENSE_TRIGGER_STEP);
+				const uint8_t res_end = NORM_CLAMP(trigger.effect.advanced_vibrate_slope.delay.y, DUALSENSE_TRIGGER_STEP);
 				effect->params.multiple.id = (1 << (slope_start - 1)) | (1 << (slope_end - 1));
 				effect->params.value[2] = res_start | res_end << DUALSENSE_TRIGGER_SHIFT;
-				effect->params.value[3] = trigger.effect.vibrate_slope.frequency & UINT8_MAX;
-				effect->params.value[4] = trigger.effect.vibrate_slope.period & UINT8_MAX;
-				msg->flags.motor_power = true;
-				msg->motor_flags.trigger_power_reduction = NORM_CLAMP(power_reduction, 7);
+				effect->params.value[3] = trigger.effect.advanced_vibrate_slope.frequency & UINT8_MAX;
+				if (power_reduction >= -0) {
+					msg->flags.motor_power = true;
+					msg->motor_flags.trigger_power_reduction = NORM_CLAMP(power_reduction, 7);
+				}
 				break;
 			}
-		case TITANIA_EFFECT_MUTIPLE_SECTIONS:
+		case TITANIA_EFFECT_ADVANCED_SECTIONS:
 			{
-				effect->mode = DUALSENSE_EFFECT_MODE_MUTIPLE_SECTIONS;
+				effect->mode = DUALSENSE_EFFECT_MODE_ADVANCED_SECTIONS;
 				for (int i = 0; i < TITANIA_TRIGGER_GRANULARITY; ++i) {
-					if (trigger.effect.multiple_sections.resistance[i] >= 0.01f) {
+					if (trigger.effect.advanced_sections.resistance[i] >= 0.01f) {
 						effect->params.multiple.id |= 1 << i;
-						effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_sections.resistance[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * i);
+						effect->params.multiple.value |= NORM_CLAMP(trigger.effect.advanced_sections.resistance[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * i);
 					}
 				}
 				break;
 			}
-		case TITANIA_EFFECT_MUTIPLE_VIBRATE:
+		case TITANIA_EFFECT_ADVANCED_VIBRATE:
 			{
-				effect->mode = DUALSENSE_EFFECT_MODE_MUTIPLE_VIBRATE;
+				effect->mode = DUALSENSE_EFFECT_MODE_ADVANCED_VIBRATE;
 				for (int i = 0; i < TITANIA_TRIGGER_GRANULARITY; ++i) {
-					if (trigger.effect.multiple_vibrate.amplitude[i] >= 0.01f) {
+					if (trigger.effect.advanced_vibrate.amplitude[i] >= 0.01f) {
 						effect->params.multiple.id |= 1 << i;
-						effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_vibrate.amplitude[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * i);
+						effect->params.multiple.value |= NORM_CLAMP(trigger.effect.advanced_vibrate.amplitude[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * i);
 					}
 				}
-				effect->params.multiple.value |= ((uint64_t) (trigger.effect.multiple_vibrate.frequency & UINT8_MAX)) << DUALSENSE_TRIGGER_FREQ_BITS;
-				effect->params.multiple.value |= ((uint64_t) (trigger.effect.multiple_vibrate.period & UINT8_MAX)) << DUALSENSE_TRIGGER_PERD_BITS;
-				msg->flags.motor_power = true;
-				msg->motor_flags.trigger_power_reduction = NORM_CLAMP(power_reduction, 7);
+				effect->params.multiple.value |= ((uint64_t) (trigger.effect.advanced_vibrate.frequency & UINT8_MAX)) << DUALSENSE_TRIGGER_FREQ_BITS;
+				effect->params.multiple.value |= ((uint64_t) (trigger.effect.advanced_vibrate.period & UINT8_MAX)) << DUALSENSE_TRIGGER_PERD_BITS;
+				if (power_reduction >= -0) {
+					msg->flags.motor_power = true;
+					msg->motor_flags.trigger_power_reduction = NORM_CLAMP(power_reduction, 7);
+				}
 				break;
 			}
-		case TITANIA_EFFECT_MUTIPLE_VIBRATE_SECTIONS:
+		case TITANIA_EFFECT_ADVANCED_VIBRATE_FEEDBACK:
 			{
-				effect->mode = DUALSENSE_EFFECT_MODE_MUTIPLE_VIBRATE_SECTIONS;
-				// 9 and 10 run into the 7 and 8th bytes, which are used for freq and period which are... not used? setup from previous frames?
-				// freq seems to be based off the speed the trigger is going.
-				for (int i = 0; i < TITANIA_TRIGGER_GRANULARITY; ++i) {
-					// this is likely incorrect, have yet to find a real user of this
-					if (trigger.effect.multiple_vibrate_sections.resistance[i] >= 0.01f) {
-						effect->params.multiple.id |= 1 << i;
-						effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_vibrate_sections.resistance[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * (i * 2));
-					}
-					if (trigger.effect.multiple_vibrate_sections.amplitude[i] >= 0.01f) {
-						effect->params.multiple.id |= 1 << i;
-						effect->params.multiple.value |= NORM_CLAMP(trigger.effect.multiple_vibrate_sections.amplitude[i], DUALSENSE_TRIGGER_STEP) << (DUALSENSE_TRIGGER_SHIFT * (i * 2 + 1));
-					}
+				effect->mode = DUALSENSE_EFFECT_MODE_ADVANCED_VIBRATE_FEEDBACK;
+				const uint8_t slope_start = NORM_CLAMP(trigger.effect.advanced_vibrate_feedback.position.x, TITANIA_TRIGGER_GRANULARITY);
+				const uint8_t slope_end = NORM_CLAMP(trigger.effect.advanced_vibrate_feedback.position.y, TITANIA_TRIGGER_GRANULARITY);
+				const uint8_t res_start = NORM_CLAMP(trigger.effect.advanced_vibrate_feedback.amplitude.x, DUALSENSE_TRIGGER_STEP);
+				const uint8_t res_end = NORM_CLAMP(trigger.effect.advanced_vibrate_feedback.amplitude.y, DUALSENSE_TRIGGER_STEP);
+				effect->params.multiple.id = (1 << (slope_start - 1)) | (1 << (slope_end - 1));
+				effect->params.value[2] = res_start | res_end << DUALSENSE_TRIGGER_SHIFT;
+				effect->params.value[3] = trigger.effect.advanced_vibrate_feedback.frequency & UINT8_MAX;
+				effect->params.value[4] = trigger.effect.advanced_vibrate_feedback.period & UINT8_MAX;
+				if (power_reduction >= -0) {
+					msg->flags.motor_power = true;
+					msg->motor_flags.trigger_power_reduction = NORM_CLAMP(power_reduction, 7);
 				}
-				msg->flags.motor_power = true;
-				msg->motor_flags.trigger_power_reduction = NORM_CLAMP(power_reduction, 7);
 				break;
 			}
 		// ReSharper restore CppRedundantParentheses
@@ -738,9 +740,9 @@ titania_error titania_update_rumble(const titania_handle handle, const float lar
 	hid_state->rumble[DUALSENSE_LARGE_MOTOR] = NORM_CLAMP_UINT8(large_motor);
 	hid_state->rumble[DUALSENSE_SMALL_MOTOR] = NORM_CLAMP_UINT8(small_motor);
 
-	if (power_reduction > 0) {
+	if (power_reduction >= -0) {
 		hid_state->flags.motor_power = true;
-		hid_state->motor_flags.rumble_power_reduction = NORM_CLAMP(power_reduction - 1, 0x7);
+		hid_state->motor_flags.rumble_power_reduction = NORM_CLAMP(power_reduction, 0x7);
 	}
 
 	return TITANIA_ERROR_OK;
