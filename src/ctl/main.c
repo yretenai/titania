@@ -114,7 +114,7 @@ int main(const int argc, const char** const argv) {
 #endif
 
 	const char* mode = nullptr;
-	bool calibrate = false;
+	bool calibrate = true;
 	bool disable_regular = false;
 	bool disable_edge = false;
 	bool disable_access = false;

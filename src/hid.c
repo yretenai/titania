@@ -25,12 +25,6 @@ static titania_device_info device_infos[] = {
 	{ 0x054C, 0x0E5F }, // Access
 };
 
-#define CALIBRATION_GYRO(slot, type) (calibration.gyro[slot].type * calibration.gyro_speed.type / (float) DUALSENSE_GYRO_RESOLUTION / (float) INT16_MAX)
-
-#define CALIBRATION_ACCELEROMETER(slot, type) (calibration.accelerometer[slot].type / 8192.0f * (float) DUALSENSE_ACCELEROMETER_RESOLUTION / (float) INT16_MAX)
-
-#define CALIBRATION_ACCELEROMETER_BIAS(slot) calibration.accelerometer[slot].max - (calibration.accelerometer[slot].max - calibration.accelerometer[slot].min) / 2
-
 #define COPY_VERSION_HARDWARE(name) \
 	handle->firmware.name.reserved = firmware.name.hardware.reserved; \
 	handle->firmware.name.variation = firmware.name.hardware.variation; \
@@ -132,6 +126,10 @@ titania_error titania_get_hids(titania_query* hids, const size_t hids_length) {
 	return TITANIA_ERROR_OK;
 }
 
+#define CALIBRATE_ACCEL(slot) DUALSENSE_ACCELEROMETER_RESOLUTION / (DUALSENSE_ACCELEROMETER_RESOLUTION * DUALSENSE_ACCELEROMETER_SENSITIVITY) * (9.80665f)
+
+#define CALIBRATE_GYRO(slot) DUALSENSE_GYRO_RESOLUTION / (DUALSENSE_GYRO_RESOLUTION * DUALSENSE_GYRO_SENSITIVITY) * (360.0f / state[i].calibration[slot].speed)
+
 titania_error titania_open(const titania_hid_path path, const bool is_bluetooth, titania_hid* handle, const bool use_calibration, const bool blocking) {
 	CHECK_INIT();
 
@@ -225,13 +223,13 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 				dualsense_calibration_info calibration;
 				calibration.report_id = DUALSENSE_REPORT_CALIBRATION;
 				if (use_calibration && HID_PASS(hid_get_feature_report(state[i].hid, (uint8_t*) &calibration, sizeof(dualsense_calibration_info)))) {
-					state[i].calibration[CALIBRATION_GYRO_X].max = CALIBRATION_GYRO(CALIBRATION_RAW_X, max);
-					state[i].calibration[CALIBRATION_GYRO_Y].max = CALIBRATION_GYRO(CALIBRATION_RAW_Y, max);
-					state[i].calibration[CALIBRATION_GYRO_Z].max = CALIBRATION_GYRO(CALIBRATION_RAW_Z, max);
+					state[i].calibration[CALIBRATION_GYRO_X].max = calibration.gyro[CALIBRATION_RAW_X].max / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_GYRO_Y].max = calibration.gyro[CALIBRATION_RAW_Y].max / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_GYRO_Z].max = calibration.gyro[CALIBRATION_RAW_Z].max / (float) INT16_MAX;
 
-					state[i].calibration[CALIBRATION_GYRO_X].min = CALIBRATION_GYRO(CALIBRATION_RAW_X, min);
-					state[i].calibration[CALIBRATION_GYRO_Y].min = CALIBRATION_GYRO(CALIBRATION_RAW_Y, min);
-					state[i].calibration[CALIBRATION_GYRO_Z].min = CALIBRATION_GYRO(CALIBRATION_RAW_Z, min);
+					state[i].calibration[CALIBRATION_GYRO_X].min = calibration.gyro[CALIBRATION_RAW_X].min / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_GYRO_Y].min = calibration.gyro[CALIBRATION_RAW_Y].min / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_GYRO_Z].min = calibration.gyro[CALIBRATION_RAW_Z].min / (float) INT16_MAX;
 
 					state[i].calibration[CALIBRATION_GYRO_X].bias = calibration.gyro_bias.x;
 					state[i].calibration[CALIBRATION_GYRO_Y].bias = calibration.gyro_bias.y;
@@ -241,31 +239,36 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 					state[i].calibration[CALIBRATION_GYRO_Y].speed = calibration.gyro_speed.min;
 					state[i].calibration[CALIBRATION_GYRO_Z].speed = calibration.gyro_speed.min;
 
-					state[i].calibration[CALIBRATION_ACCELEROMETER_X].max = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_X, max);
-					state[i].calibration[CALIBRATION_ACCELEROMETER_Y].max = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Y, max);
-					state[i].calibration[CALIBRATION_ACCELEROMETER_Z].max = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Z, max);
+					state[i].calibration[CALIBRATION_ACCELEROMETER_X].max = calibration.accelerometer[CALIBRATION_RAW_X].max / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Y].max = calibration.accelerometer[CALIBRATION_RAW_Y].max / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Z].max = calibration.accelerometer[CALIBRATION_RAW_Z].max / (float) INT16_MAX;
 
-					state[i].calibration[CALIBRATION_ACCELEROMETER_X].min = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_X, min);
-					state[i].calibration[CALIBRATION_ACCELEROMETER_Y].min = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Y, min);
-					state[i].calibration[CALIBRATION_ACCELEROMETER_Z].min = CALIBRATION_ACCELEROMETER(CALIBRATION_RAW_Z, min);
+					state[i].calibration[CALIBRATION_ACCELEROMETER_X].min = calibration.accelerometer[CALIBRATION_RAW_X].min / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Y].min = calibration.accelerometer[CALIBRATION_RAW_Y].min / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Z].min = calibration.accelerometer[CALIBRATION_RAW_Z].min / (float) INT16_MAX;
 
-					state[i].calibration[CALIBRATION_ACCELEROMETER_X].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_X);
-					state[i].calibration[CALIBRATION_ACCELEROMETER_Y].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_Y);
-					state[i].calibration[CALIBRATION_ACCELEROMETER_Z].bias = CALIBRATION_ACCELEROMETER_BIAS(CALIBRATION_RAW_Z);
+					state[i].calibration[CALIBRATION_ACCELEROMETER_X].bias = 0;
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Y].bias = 0;
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Z].bias = 0;
+
+					state[i].calibration[CALIBRATION_ACCELEROMETER_X].speed = 4;
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Y].speed = 4;
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Z].speed = 4;
 				} else {
-					state[i].calibration[CALIBRATION_GYRO_X] =
-						(titania_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
-					state[i].calibration[CALIBRATION_GYRO_Y] =
-						(titania_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
-					state[i].calibration[CALIBRATION_GYRO_Z] =
-						(titania_calibration_bit) { DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_GYRO_RESOLUTION, INT16_MAX), 0, 540 };
-					state[i].calibration[CALIBRATION_ACCELEROMETER_X] =
-						(titania_calibration_bit) { DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), 0, 1 };
-					state[i].calibration[CALIBRATION_ACCELEROMETER_Y] =
-						(titania_calibration_bit) { DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), 0, 1 };
-					state[i].calibration[CALIBRATION_ACCELEROMETER_Z] =
-						(titania_calibration_bit) { DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), DENORM_CLAMP(DUALSENSE_ACCELEROMETER_RESOLUTION, INT16_MAX), 0, 1 };
+					state[i].calibration[CALIBRATION_GYRO_X] = (titania_calibration_bit) { DUALSENSE_GYRO_BASE, -DUALSENSE_GYRO_BASE, 0, 540, 0 };
+					state[i].calibration[CALIBRATION_GYRO_Y] = (titania_calibration_bit) { DUALSENSE_GYRO_BASE, -DUALSENSE_GYRO_BASE, 0, 540, 0 };
+					state[i].calibration[CALIBRATION_GYRO_Z] = (titania_calibration_bit) { DUALSENSE_GYRO_BASE, -DUALSENSE_GYRO_BASE, 0, 540, 0 };
+					state[i].calibration[CALIBRATION_ACCELEROMETER_X] = (titania_calibration_bit) { DUALSENSE_ACCELEROMETER_BASE, -DUALSENSE_ACCELEROMETER_BASE, 0, 4, 0 };
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Y] = (titania_calibration_bit) { DUALSENSE_ACCELEROMETER_BASE, -DUALSENSE_ACCELEROMETER_BASE, 0, 4, 0 };
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Z] = (titania_calibration_bit) { DUALSENSE_ACCELEROMETER_BASE, -DUALSENSE_ACCELEROMETER_BASE, 0, 4, 0 };
 				}
+
+				state[i].calibration[CALIBRATION_GYRO_X].cache = CALIBRATE_GYRO(CALIBRATION_GYRO_X);
+				state[i].calibration[CALIBRATION_GYRO_Y].cache = CALIBRATE_GYRO(CALIBRATION_GYRO_Y);
+				state[i].calibration[CALIBRATION_GYRO_Z].cache = CALIBRATE_GYRO(CALIBRATION_GYRO_Z);
+				state[i].calibration[CALIBRATION_ACCELEROMETER_X].cache = CALIBRATE_ACCEL(CALIBRATION_ACCELEROMETER_X);
+				state[i].calibration[CALIBRATION_ACCELEROMETER_Y].cache = CALIBRATE_ACCEL(CALIBRATION_ACCELEROMETER_Y);
+				state[i].calibration[CALIBRATION_ACCELEROMETER_Z].cache = CALIBRATE_ACCEL(CALIBRATION_ACCELEROMETER_Z);
 			}
 
 			state[i].hid_info = *handle;

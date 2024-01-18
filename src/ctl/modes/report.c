@@ -136,7 +136,7 @@ titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const
 
 
 				printf("sensors {");
-				TITANIAPRINT_U32(data.sensors, temperature); TITANIAPRINT_SEP();
+				TITANIAPRINT_U8(data.sensors, temperature); TITANIAPRINT_SEP();
 				printf(" accelerometer = {");
 				TITANIAPRINT_FLOAT(data.sensors.accelerometer, x); TITANIAPRINT_SEP();
 				TITANIAPRINT_FLOAT(data.sensors.accelerometer, y); TITANIAPRINT_SEP();

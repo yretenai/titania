@@ -16,6 +16,7 @@
 	printf(" " #field " { generation = %d, variation = %d, revision = %d, reserved = %d }", struc.field.generation, struc.field.variation, struc.field.revision, struc.field.reserved)
 #define TITANIAPRINT_UPDATE(struc, field) printf(" " #field " = %04x (%d.%d.%d)", struc.field.major, struc.field.major, struc.field.minor, struc.field.revision)
 #define TITANIAPRINT_FIRMWARE(struc, field) printf(" " #field " = %d.%d.%d", struc.field.major, struc.field.minor, struc.field.revision)
+#define TITANIAPRINT_U8(struc, field) printf(" " #field " = %02u", struc.field)
 #define TITANIAPRINT_U32(struc, field) printf(" " #field " = %u", struc.field)
 #define TITANIAPRINT_U64(struc, field) printf(" " #field " = %lu", (unsigned long) struc.field)
 #define TITANIAPRINT_X16(struc, field) printf(" " #field " = 0x%04x", struc.field)

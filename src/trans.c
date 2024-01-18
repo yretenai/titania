@@ -11,16 +11,13 @@
 #pragma STDC CX_LIMITED_RANGE ON
 #endif
 
-#define PI_CONST 3.14159265358979323846f
-#define G_CONST 9.80665f
-
 #define CHECK_DPAD(V, A, B, C) V.dpad == DUALSENSE_DPAD_##A || V.dpad == DUALSENSE_DPAD_##B || V.dpad == DUALSENSE_DPAD_##C
 
-#define CALIBRATE(value, slot) (value < 0 ? value / calibration[slot].min : value / calibration[slot].max)
+#define CALIBRATE(value, slot) (value < 0 ? value * calibration[slot].min : value * calibration[slot].max) * calibration[slot].cache
 
 #define CALIBRATE_BIAS(value, slot) CALIBRATE(value - calibration[slot].bias, slot)
 
-void titania_convert_input_access(const titania_hid hid_info, const dualsense_input_msg input, titania_data* data) {
+void titania_convert_input_access(const dualsense_input_msg input, titania_data* data) {
 	data->battery.state = input.access.battery.state + 1;
 	if (data->battery.state == TITANIA_BATTERY_FULL) {
 		data->battery.level = 1.0f;
@@ -124,7 +121,7 @@ void titania_convert_input(const titania_hid hid_info, const dualsense_input_msg
 	data->sticks[TITANIA_RIGHT].y = DENORM_CLAMP_INT8(input.sticks[DUALSENSE_RIGHT].y);
 
 	if (IS_ACCESS(hid_info)) {
-		titania_convert_input_access(hid_info, input, data);
+		titania_convert_input_access(input, data);
 		return;
 	}
 
@@ -161,12 +158,12 @@ void titania_convert_input(const titania_hid hid_info, const dualsense_input_msg
 #endif
 	data->buttons.touchpad = data->touch[TITANIA_PRIMARY].active || data->touch[TITANIA_SECONDARY].active;
 
-	data->sensors.accelerometer.x = CALIBRATE(input.sensors.accelerometer.x, CALIBRATION_ACCELEROMETER_X) / DUALSENSE_ACCELEROMETER_RESOLUTION / G_CONST;
-	data->sensors.accelerometer.y = CALIBRATE(input.sensors.accelerometer.y, CALIBRATION_ACCELEROMETER_Y) / DUALSENSE_ACCELEROMETER_RESOLUTION / G_CONST;
-	data->sensors.accelerometer.z = CALIBRATE(input.sensors.accelerometer.z, CALIBRATION_ACCELEROMETER_Z) / DUALSENSE_ACCELEROMETER_RESOLUTION / G_CONST;
-	data->sensors.gyro.x = CALIBRATE_BIAS(input.sensors.gyro.x, CALIBRATION_GYRO_X) / DUALSENSE_GYRO_RESOLUTION * PI_CONST;
-	data->sensors.gyro.y = CALIBRATE_BIAS(input.sensors.gyro.y, CALIBRATION_GYRO_Y) / DUALSENSE_GYRO_RESOLUTION * PI_CONST;
-	data->sensors.gyro.z = CALIBRATE_BIAS(input.sensors.gyro.z, CALIBRATION_GYRO_Z) / DUALSENSE_GYRO_RESOLUTION * PI_CONST;
+	data->sensors.accelerometer.x = CALIBRATE(input.sensors.accelerometer.x, CALIBRATION_ACCELEROMETER_X);
+	data->sensors.accelerometer.y = CALIBRATE(input.sensors.accelerometer.y, CALIBRATION_ACCELEROMETER_Y);
+	data->sensors.accelerometer.z = CALIBRATE(input.sensors.accelerometer.z, CALIBRATION_ACCELEROMETER_Z);
+	data->sensors.gyro.x = CALIBRATE_BIAS(input.sensors.gyro.x, CALIBRATION_GYRO_X);
+	data->sensors.gyro.y = CALIBRATE_BIAS(input.sensors.gyro.y, CALIBRATION_GYRO_Y);
+	data->sensors.gyro.z = CALIBRATE_BIAS(input.sensors.gyro.z, CALIBRATION_GYRO_Z);
 	data->sensors.temperature = input.sensors.temperature;
 
 	data->device.headphones = input.state.device.headphones;

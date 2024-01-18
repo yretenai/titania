@@ -465,9 +465,10 @@ typedef struct PACKED dualsense_serial_info {
 
 static_assert(sizeof(dualsense_serial_info) == 20, "dualsense_serial_info is not 20 bytes");
 
-typedef struct PACKED titania_calibration_bit {
+typedef struct titania_calibration_bit {
 	float max;
 	float min;
+	float cache;
 	int bias;
 	int speed;
 } titania_calibration_bit;
