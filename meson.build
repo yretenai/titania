@@ -17,7 +17,6 @@ args = compiler.get_supported_arguments(
 	'-Wall',
 	'-Wextra',
 	'-pedantic',
-	'-Werror',
 	'-Wno-unused-variable',
 	'-Wno-unused-parameter',
 	'-fcx-limited-range',
@@ -30,6 +29,10 @@ if get_option('buildtype') == 'custom'
 		'-march=native',
 		'-mtune=native'
 	)
+endif
+
+if get_option('buildtype') == 'debug'
+	args += compiler.get_supported_arguments('-Werror')
 endif
 
 has_nullptr = false
