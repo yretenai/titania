@@ -1,5 +1,5 @@
 //  titania project
-//  https://nothg.chronovore.dev/library/titania/
+//  https://git.sr.ht/~chronovore/titania
 //  SPDX-License-Identifier: MPL-2.0
 
 #include <stdio.h>
