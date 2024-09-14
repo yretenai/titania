@@ -167,14 +167,14 @@ struct json* json_object_add_edge_stick(struct json* obj, const char* key, const
 	char strbuffer[128];
 	struct json* stick_obj = json_object_add_object(obj, key);
 	if (CHECK_ENUM_SAFE(data.template_id, titania_edge_stick_template_msg)) {
-		json_set_string(stick_obj, "template", titania_edge_stick_template_msg[data.template_id]);
+		json_object_add_string(stick_obj, "template", titania_edge_stick_template_msg[data.template_id]);
 	} else {
 		sprintf(strbuffer, "%d", data.template_id);
-		json_set_string(stick_obj, "template", strbuffer);
+		json_object_add_string(stick_obj, "template", strbuffer);
 	}
 
 	sprintf(strbuffer, "%d", data.interpolation_type);
-	json_set_string(stick_obj, "interpolationType", strbuffer);
+	json_object_add_string(stick_obj, "interpolationType", strbuffer);
 	json_object_add_bool(stick_obj, "disabled", data.disabled);
 
 	struct json* deadzone_arr = json_object_add_array(stick_obj, "deadzone");
@@ -209,30 +209,30 @@ struct json* titaniactl_mode_edge_convert(const titania_edge_profile profile, co
 	if (include_success) {
 		json_object_add_bool(profile_json, "success", true);
 	}
-	json_set_string(profile_json, "type", "edge");
+	json_object_add_string(profile_json, "type", "edge");
 	titania_json_object_add_uint64(profile_json, "version", 1);
-	json_set_string(profile_json, "name", profile.name);
+	json_object_add_string(profile_json, "name", profile.name);
 	char strbuffer[512];
 	for (int i = 0; i < 0x10; ++i) {
 		sprintf(&strbuffer[i * 2], "%02x", profile.id[i] & 0xFF);
 	}
 	strbuffer[0x21] = 0;
-	json_set_string(profile_json, "id", strbuffer);
+	json_object_add_string(profile_json, "id", strbuffer);
 	sprintf(strbuffer, "%llu", (unsigned long long) profile.timestamp);
-	json_set_string(profile_json, "timestamp", strbuffer);
+	json_object_add_string(profile_json, "timestamp", strbuffer);
 
 	if (CHECK_ENUM_SAFE(profile.vibration, titania_level_msg)) {
-		json_set_string(profile_json, "vibrationLevel", titania_level_msg[profile.vibration]);
+		json_object_add_string(profile_json, "vibrationLevel", titania_level_msg[profile.vibration]);
 	} else {
 		sprintf(strbuffer, "%d", profile.vibration);
-		json_set_string(profile_json, "vibrationLevel", strbuffer);
+		json_object_add_string(profile_json, "vibrationLevel", strbuffer);
 	}
 
 	if (CHECK_ENUM_SAFE(profile.trigger_effect, titania_level_msg)) {
-		json_set_string(profile_json, "triggerStrength", titania_level_msg[profile.trigger_effect]);
+		json_object_add_string(profile_json, "triggerStrength", titania_level_msg[profile.trigger_effect]);
 	} else {
 		sprintf(strbuffer, "%d", profile.trigger_effect);
-		json_set_string(profile_json, "triggerStrength", strbuffer);
+		json_object_add_string(profile_json, "triggerStrength", strbuffer);
 	}
 
 	json_object_add_bool(profile_json, "sticksSwapped", profile.sticks_swapped);
@@ -256,10 +256,10 @@ struct json* titaniactl_mode_edge_convert(const titania_edge_profile profile, co
 		}
 
 		if (CHECK_ENUM_SAFE(profile.buttons.values[i], titania_edge_button_id_alt_msg)) {
-			json_set_string(button_obj, button_id, titania_edge_button_id_alt_msg[profile.buttons.values[i]]);
+			json_object_add_string(button_obj, button_id, titania_edge_button_id_alt_msg[profile.buttons.values[i]]);
 		} else {
 			sprintf(strbuffer, "%d", profile.buttons.values[i]);
-			json_set_string(button_obj, button_id, strbuffer);
+			json_object_add_string(button_obj, button_id, strbuffer);
 		}
 	}
 

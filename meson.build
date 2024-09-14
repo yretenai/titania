@@ -1,7 +1,7 @@
 project('titania', 'c',
 	license : 'MPL-2',
 	meson_version : '>=1.3.0',
-	version : '2.2.0',
+	version : '2.2.1',
 	default_options : [
 		'c_std=c2x',
 		'warning_level=3',
@@ -114,7 +114,7 @@ titania_lib = library(meson.project_name(), [
 titania_dep = declare_dependency(link_with : titania_lib, include_directories : titania_inc)
 
 if get_option('titania_ctl')
-	json = dependency('libjson', version : '>=1.0')
+	json = dependency('json', version : '>=1.0')
 	executable('titaniactl', [
 			'src/ctl/main.c',
 			'src/ctl/modes/access.c',
