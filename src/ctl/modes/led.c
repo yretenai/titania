@@ -65,7 +65,7 @@ titaniactl_error titaniactl_mode_led(titaniactl_context* context) {
 	update.led = led;
 
 	if (!is_json) {
-		printf("setting color to rgb(%f, %f, %f) with led value %d", update.color.r, update.color.g, update.color.b, update.led);
+		printf("setting color to rgb(%f, %f, %f) with led value %d\n", update.color.r, update.color.g, update.color.b, update.led);
 	}
 
 	for (int i = 0; i < context->connected_controllers; ++i) {

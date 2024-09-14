@@ -142,7 +142,7 @@ titaniactl_error titaniactl_mode_access_import(titania_profile_id profile, struc
 	}
 
 	if (!is_json) {
-		printf("successfully uploaded profile");
+		printf("successfully uploaded profile\n");
 	}
 
 	return TITANIACTL_ERROR_OK;

@@ -37,7 +37,7 @@ const titaniactl_mode modes[] = { { "report", titaniactl_mode_report, titaniactl
 	{ "profile", titaniactl_mode_profile_funnel, titaniactl_mode_profile_funnel, nullptr, nullptr },
 	{ "profile convert", nullptr, nullptr, "convert merged dualsense edge profile from or to json", "path/to/report.{bin, json}" },
 	{ "profile import", nullptr, nullptr, "import a controller profile to the specified slot", "{square, cross, circle, 1, 2, 3} path/to/profile.json" },
-	{ "profile export", nullptr, nullptr, "export a controller profile to json", "{triangle, square, cross, circle, 0, 1, 2, 3} path/to/profile.json" },
+	{ "profile export", nullptr, nullptr, "export a controller profile to json", "{all, triangle, square, cross, circle, 0, 1, 2, 3} path/to/directory" },
 	{ "profile delete", nullptr, nullptr, "delete a given profile", nullptr },
 	//
 	{ nullptr, nullptr, nullptr, nullptr, nullptr } };

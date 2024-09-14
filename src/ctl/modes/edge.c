@@ -157,7 +157,7 @@ titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, struct 
 	}
 
 	if (!is_json) {
-		printf("successfully uploaded profile");
+		printf("successfully uploaded profile\n");
 	}
 
 	return TITANIACTL_ERROR_OK;
@@ -305,13 +305,13 @@ titaniactl_error titaniactl_mode_edge_export(titania_profile_id profile, const c
 
 	titania_edge_profile data;
 	titania_error result = titania_query_edge_profile(handle.handle, profile, &data);
-	if (IS_TITANIA_BAD(result)) {
+	if (IS_TITANIA_BAD(result) && result != TITANIA_ERROR_INVALID_DATA) {
 		titania_errorf(result, "failed to query edge profile");
 		return MAKE_TITANIA_ERROR(result);
 	}
 
 	if (!data.valid) {
-		return TITANIACTL_ERROR_INVALID_PROFILE;
+		return TITANIACTL_ERROR_EMPTY_PROFILE;
 	}
 
 	if (strlen(data.name) == 0) {
