@@ -107,7 +107,7 @@ titania_lib = library(meson.project_name(), [
 	gnu_symbol_visibility : 'hidden',
 	c_args : [args, '-DTITANIA_EXPORTING'],
 	install : true,
-	soversion : 1,
+	soversion : meson.project_version(),
 	include_directories : titania_inc
 )
 
@@ -127,6 +127,7 @@ if get_option('titania_ctl')
 			'src/ctl/modes/report.c',
 			'src/ctl/modes/test.c'
 		],
+		gui_app : false,
 		c_args : [args],
 		dependencies : [titania_dep, hidapi, json],
 	install : true)
@@ -177,5 +178,6 @@ endif
 import('pkgconfig').generate(
 	titania_lib,
 	description : 'unofficial dualsense and playstation access library',
-	url : 'https://nothg.chronovore.dev/library/titania/'
+	url : 'https://nothg.chronovore.dev/library/titania/',
+	version : meson.project_version()
 )
