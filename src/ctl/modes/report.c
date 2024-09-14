@@ -6,8 +6,6 @@
 
 #include "../titaniactl.h"
 
-#include <json.h>
-
 titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const bool loop) {
 	do {
 		titania_data datum[TITANIACTL_CONTROLLER_COUNT];
@@ -278,7 +276,7 @@ titaniactl_error titaniactl_mode_report_json_inner(titaniactl_context* context, 
 			return TITANIACTL_ERROR_HID_FAILURE;
 		}
 
-		struct json* root_obj = json_new_object();
+		struct json* root_obj = json_object();
 		json_object_add_bool(root_obj, "success", true);
 		struct json* arr = json_object_add_array(root_obj, "devices");
 		for (int i = 0; i < context->connected_controllers; ++i) {
@@ -624,7 +622,7 @@ titaniactl_error titaniactl_mode_list(titaniactl_context* context) {
 }
 
 titaniactl_error titaniactl_mode_list_json(titaniactl_context* context) {
-	struct json* root_obj = json_new_object();
+	struct json* root_obj = json_object();
 	json_object_add_bool(root_obj, "success", true);
 	struct json* arr = json_object_add_array(root_obj, "devices");
 	for (int i = 0; i < context->connected_controllers; ++i) {

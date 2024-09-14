@@ -9,14 +9,56 @@
 
 #include <json.h>
 
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+// retroported functions
+
+static inline void json_object_add_string(struct json* obj, const char* key, const char* value) {
+	json_set(obj, key, json_string(value));
+}
+
+static inline void json_object_add_bool(struct json* obj, const char* key, bool value) {
+	json_set(obj, key, json_bool(value));
+}
+
+static inline void json_object_add_number(struct json* obj, const char* key, double num) {
+	json_set(obj, key, json_number(num));
+}
+
+static inline struct json* json_object_add_object(struct json* obj, const char* key) {
+	return json_set(obj, key, json_object());
+}
+
+static inline struct json* json_object_add_array(struct json* obj, const char* key) {
+	return json_set(obj, key, json_array());
+}
+
+static inline void json_array_add_number(struct json* obj, double num) {
+	json_append(obj, json_number(num));
+}
+
+static inline struct json* json_array_add_object(struct json* obj) {
+	struct json* arr = json_object();
+	json_append(obj, arr);
+	return arr;
+}
+
+static inline struct json* json_array_add_array(struct json* obj) {
+	struct json* arr = json_array();
+	json_append(obj, arr);
+	return arr;
+}
+
 // safe wrappers and conversions
 
-static inline const char* titania_json_object_get_string(const struct json* obj, const char* key, const char* default_value) {
+static inline const char* titania_json_object_get_string(struct json* obj, const char* key, const char* default_value) {
 	if (obj == nullptr) {
 		return default_value;
 	}
 
-	const struct json* value = json_object_get(obj, key);
+	struct json* value = json_get(obj, key);
 	if (value == nullptr) {
 		return default_value;
 	}
@@ -28,12 +70,12 @@ static inline const char* titania_json_object_get_string(const struct json* obj,
 	return str;
 }
 
-static inline uint32_t titania_json_object_get_enum(const struct json* obj, const char* key, const char* const* const values, const uint32_t default_value) {
+static inline uint32_t titania_json_object_get_enum(struct json* obj, const char* key, const char* const* const values, const uint32_t default_value) {
 	if (obj == nullptr) {
 		return default_value;
 	}
 
-	const struct json* value = json_object_get(obj, key);
+	struct json* value = json_get(obj, key);
 	if (value == nullptr) {
 		return default_value;
 	}
@@ -56,12 +98,12 @@ static inline uint32_t titania_json_object_get_enum(const struct json* obj, cons
 	return temp;
 }
 
-static inline double titania_json_object_get_float(const struct json* obj, const char* key, const double default_value) {
+static inline double titania_json_object_get_float(struct json* obj, const char* key, const double default_value) {
 	if (obj == nullptr) {
 		return default_value;
 	}
 
-	const struct json* value = json_object_get(obj, key);
+	struct json* value = json_get(obj, key);
 	if (value == nullptr) {
 		return default_value;
 	}
@@ -73,12 +115,12 @@ static inline double titania_json_object_get_float(const struct json* obj, const
 	return value->num;
 }
 
-static inline int32_t titania_json_object_get_int32(const struct json* obj, const char* key, const int32_t default_value) {
+static inline int32_t titania_json_object_get_int32(struct json* obj, const char* key, const int32_t default_value) {
 	if (obj == nullptr) {
 		return default_value;
 	}
 
-	const struct json* value = json_object_get(obj, key);
+	struct json* value = json_get(obj, key);
 	if (value == nullptr) {
 		return default_value;
 	}
@@ -98,12 +140,12 @@ static inline int32_t titania_json_object_get_int32(const struct json* obj, cons
 	return value->num;
 }
 
-static inline int64_t titania_json_object_get_int64(const struct json* obj, const char* key, const int64_t default_value) {
+static inline int64_t titania_json_object_get_int64(struct json* obj, const char* key, const int64_t default_value) {
 	if (obj == nullptr) {
 		return default_value;
 	}
 
-	const struct json* value = json_object_get(obj, key);
+	struct json* value = json_get(obj, key);
 	if (value == nullptr) {
 		return default_value;
 	}
@@ -123,12 +165,12 @@ static inline int64_t titania_json_object_get_int64(const struct json* obj, cons
 	return value->num;
 }
 
-static inline uint32_t titania_json_object_get_uint32(const struct json* obj, const char* key, const uint32_t default_value) {
+static inline uint32_t titania_json_object_get_uint32(struct json* obj, const char* key, const uint32_t default_value) {
 	if (obj == nullptr) {
 		return default_value;
 	}
 
-	const struct json* value = json_object_get(obj, key);
+	struct json* value = json_get(obj, key);
 	if (value == nullptr) {
 		return default_value;
 	}
@@ -148,12 +190,12 @@ static inline uint32_t titania_json_object_get_uint32(const struct json* obj, co
 	return value->num;
 }
 
-static inline uint64_t titania_json_object_get_uint64(const struct json* obj, const char* key, const uint64_t default_value) {
+static inline uint64_t titania_json_object_get_uint64(struct json* obj, const char* key, const uint64_t default_value) {
 	if (obj == nullptr) {
 		return default_value;
 	}
 
-	const struct json* value = json_object_get(obj, key);
+	struct json* value = json_get(obj, key);
 	if (value == nullptr) {
 		return default_value;
 	}
@@ -173,12 +215,12 @@ static inline uint64_t titania_json_object_get_uint64(const struct json* obj, co
 	return value->num;
 }
 
-static inline double titania_json_array_get_float(const struct json* obj, const int index, const double default_value) {
+static inline double titania_json_array_get_float(struct json* obj, const int index, const double default_value) {
 	if (obj == nullptr) {
 		return default_value;
 	}
 
-	const struct json* value = json_array_get(obj, index);
+	struct json* value = json_at(obj, index);
 	if (value == nullptr) {
 		return default_value;
 	}
@@ -190,12 +232,12 @@ static inline double titania_json_array_get_float(const struct json* obj, const 
 	return value->num;
 }
 
-static inline int32_t titania_json_array_get_int32(const struct json* obj, const int index, const int32_t default_value) {
+static inline int32_t titania_json_array_get_int32(struct json* obj, const int index, const int32_t default_value) {
 	if (obj == nullptr) {
 		return default_value;
 	}
 
-	const struct json* value = json_array_get(obj, index);
+	struct json* value = json_at(obj, index);
 	if (value == nullptr) {
 		return default_value;
 	}
@@ -215,12 +257,12 @@ static inline int32_t titania_json_array_get_int32(const struct json* obj, const
 	return value->num;
 }
 
-static inline int64_t titania_json_array_get_int64(const struct json* obj, const int index, const int64_t default_value) {
+static inline int64_t titania_json_array_get_int64(struct json* obj, const int index, const int64_t default_value) {
 	if (obj == nullptr) {
 		return default_value;
 	}
 
-	const struct json* value = json_array_get(obj, index);
+	struct json* value = json_at(obj, index);
 	if (value == nullptr) {
 		return default_value;
 	}
@@ -240,12 +282,12 @@ static inline int64_t titania_json_array_get_int64(const struct json* obj, const
 	return value->num;
 }
 
-static inline uint32_t titania_json_array_get_uint32(const struct json* obj, const int index, const uint32_t default_value) {
+static inline uint32_t titania_json_array_get_uint32(struct json* obj, const int index, const uint32_t default_value) {
 	if (obj == nullptr) {
 		return default_value;
 	}
 
-	const struct json* value = json_array_get(obj, index);
+	struct json* value = json_at(obj, index);
 	if (value == nullptr) {
 		return default_value;
 	}
@@ -265,12 +307,12 @@ static inline uint32_t titania_json_array_get_uint32(const struct json* obj, con
 	return value->num;
 }
 
-static inline uint64_t titania_json_array_get_uint64(const struct json* obj, const int index, const uint64_t default_value) {
+static inline uint64_t titania_json_array_get_uint64(struct json* obj, const int index, const uint64_t default_value) {
 	if (obj == nullptr) {
 		return default_value;
 	}
 
-	const struct json* value = json_array_get(obj, index);
+	struct json* value = json_at(obj, index);
 	if (value == nullptr) {
 		return default_value;
 	}
@@ -290,27 +332,27 @@ static inline uint64_t titania_json_array_get_uint64(const struct json* obj, con
 	return value->num;
 }
 
-static inline bool titania_json_object_get_bool(const struct json* obj, const char* key) {
+static inline bool titania_json_object_get_bool(struct json* obj, const char* key) {
 	if (obj == nullptr) {
 		return false;
 	}
 
-	const struct json* value = json_object_get(obj, key);
-	if (value == nullptr) {
+	struct json* value = json_get(obj, key);
+	if (value == nullptr || value->type != JSON_BOOL) {
 		return false;
 	}
 
-	return value->type != JSON_FALSE;
+	return value->boolean;
 }
 
-static inline struct json* titania_json_object_add_uint64(struct json* obj, const char* key, uint64_t value) {
+static inline void titania_json_object_add_uint64(struct json* obj, const char* key, uint64_t value) {
 	if (obj == nullptr || key == nullptr) {
-		return nullptr;
+		return;
 	}
 
 	char strbuffer[64] = { 0 };
 	sprintf(strbuffer, "%llx", (unsigned long long) value);
-	return json_object_add_string(obj, key, strbuffer);
+	json_object_add_string(obj, key, strbuffer);
 }
 
 #endif

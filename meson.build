@@ -127,7 +127,6 @@ if get_option('titania_ctl')
 			'src/ctl/modes/report.c',
 			'src/ctl/modes/test.c'
 		],
-		gui_app : false,
 		c_args : [args],
 		dependencies : [titania_dep, hidapi, json],
 	install : true)

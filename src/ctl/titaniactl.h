@@ -7,7 +7,7 @@
 #ifndef TITANIACTL_H
 #define TITANIACTL_H
 
-#include <json.h>
+#include "modes/json_helpers.h"
 
 #include <titania.h>
 
@@ -82,12 +82,12 @@ titaniactl_error titaniactl_mode_report_json(titaniactl_context* context);
 titaniactl_error titaniactl_mode_report_loop_json(titaniactl_context* context);
 
 struct json* titaniactl_mode_edge_convert(const titania_edge_profile profile, const bool include_success);
-titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, const struct json* data, titania_hid handle);
+titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, struct json* data, titania_hid handle);
 titaniactl_error titaniactl_mode_edge_export(titania_profile_id profile, const char* path, titania_hid handle);
 titaniactl_error titaniactl_mode_edge_delete(titania_profile_id profile, titania_hid handle);
 
 struct json* titaniactl_mode_access_convert(const titania_access_profile profile, const bool include_success);
-titaniactl_error titaniactl_mode_access_import(titania_profile_id profile, const struct json* data, titania_hid handle);
+titaniactl_error titaniactl_mode_access_import(titania_profile_id profile, struct json* data, titania_hid handle);
 titaniactl_error titaniactl_mode_access_export(titania_profile_id profile, const char* path, titania_hid handle);
 titaniactl_error titaniactl_mode_access_delete(titania_profile_id profile, titania_hid handle);
 

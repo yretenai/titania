@@ -7,32 +7,29 @@
 #include <string.h>
 #include <time.h>
 
-#include <json.h>
-
 #include "../titaniactl.h"
-#include "json_helpers.h"
 
 const char* const BUTTON_NAME_LIST[10] = { "center", "b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8", "stick" };
 
-void json_object_get_access_button(const struct json* obj, titania_access_profile_button* data) {
+void json_object_get_access_button(struct json* obj, titania_access_profile_button* data) {
 	data->primary = titania_json_object_get_enum(obj, "primary", titania_access_button_id_msg, TITANIA_ACCESS_BUTTON_ID_NONE);
 	data->secondary = titania_json_object_get_enum(obj, "secondary", titania_access_button_id_msg, TITANIA_ACCESS_BUTTON_ID_NONE);
 	data->toggle = titania_json_object_get_bool(obj, "toggle");
 	data->unknown = titania_json_object_get_uint32(obj, "unknown", 0);
 }
 
-void json_object_get_access_stick(const struct json* obj, titania_access_profile_stick* data) {
+void json_object_get_access_stick(struct json* obj, titania_access_profile_stick* data) {
 	data->orientation = titania_json_object_get_enum(obj, "orientation", titania_access_orientation_msg, TITANIA_ACCESS_ORIENTATION_RIGHT);
 	data->id = titania_json_object_get_enum(obj, "stick", titania_access_stick_id_msg, TITANIA_ACCESS_STICK_ID_NONE);
 	data->deadzone = titania_json_object_get_float(obj, "deadzone", 0.0);
-	const struct json* arr = json_object_get(obj, "curve");
+	struct json* arr = json_get(obj, "curve");
 	data->curve[0] = titania_json_array_get_float(arr, 0, 0.0);
 	data->curve[1] = titania_json_array_get_float(arr, 0, 0.0);
 	data->curve[2] = titania_json_array_get_float(arr, 0, 0.0);
 	data->unknown = titania_json_object_get_uint32(obj, "unknown", 0);
 }
 
-void json_object_get_access_extension(const struct json* obj, titania_access_profile_extension* data) {
+void json_object_get_access_extension(struct json* obj, titania_access_profile_extension* data) {
 	data->type = titania_json_object_get_enum(obj, "type", titania_access_extension_type_id_msg, TITANIA_ACCESS_EXTENSION_TYPE_DISCONNECTED);
 
 	// clang-format off
@@ -62,7 +59,7 @@ void json_object_get_access_extension(const struct json* obj, titania_access_pro
 	// clang-format on
 }
 
-titaniactl_error titaniactl_mode_access_import(titania_profile_id profile, const struct json* data, titania_hid handle) {
+titaniactl_error titaniactl_mode_access_import(titania_profile_id profile, struct json* data, titania_hid handle) {
 	if (strcmp(titania_json_object_get_string(data, "type", "(null)"), "access") != 0) {
 		return TITANIACTL_ERROR_INVALID_PROFILE;
 	}
@@ -121,20 +118,20 @@ titaniactl_error titaniactl_mode_access_import(titania_profile_id profile, const
 
 	profile_data.orientation = titania_json_object_get_enum(data, "orientation", titania_access_orientation_msg, TITANIA_ACCESS_ORIENTATION_RIGHT);
 
-	const struct json* button_obj = json_object_get(data, "buttonMap");
+	struct json* button_obj = json_get(data, "buttonMap");
 	for (size_t i = 0; i < 10; ++i) {
-		const struct json* button_entry = json_object_get(button_obj, BUTTON_NAME_LIST[i]);
+		struct json* button_entry = json_get(button_obj, BUTTON_NAME_LIST[i]);
 		json_object_get_access_button(button_entry, &profile_data.buttons.values[i]);
 	}
 
-	const struct json* stick_obj = json_object_get(data, "stick");
+	struct json* stick_obj = json_get(data, "stick");
 	json_object_get_access_stick(stick_obj, &profile_data.stick);
 
-	const struct json* extension_obj = json_object_get(data, "extensions");
+	struct json* extension_obj = json_get(data, "extensions");
 	for (int i = 0; i < 4; ++i) {
 		char strbuffer[100];
 		sprintf(strbuffer, "e%d", i + 1);
-		const struct json* extension_entry = json_object_get(extension_obj, strbuffer);
+		struct json* extension_entry = json_get(extension_obj, strbuffer);
 		json_object_get_access_extension(extension_entry, &profile_data.extensions[i]);
 	}
 
@@ -233,7 +230,7 @@ struct json* json_object_add_access_extension(struct json* obj, const titania_ac
 }
 
 struct json* titaniactl_mode_access_convert(const titania_access_profile profile, const bool include_success) {
-	struct json* profile_json = json_new_object();
+	struct json* profile_json = json_object();
 
 	if (include_success) {
 		json_object_add_bool(profile_json, "success", true);

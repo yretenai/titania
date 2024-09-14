@@ -7,8 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <json.h>
-
 #include "../titaniactl.h"
 
 typedef enum profile_mode {
@@ -277,7 +275,7 @@ titaniactl_error titaniactl_mode_profile_import_selector(titaniactl_context* con
 		return TITANIACTL_ERROR_INVALID_PROFILE;
 	}
 
-	struct json* json = json_parse_len(json_data, size);
+	struct json* json = json_parse_sized(size, json_data);
 	if (json == nullptr) {
 		free(json_data);
 		return TITANIACTL_ERROR_INVALID_PROFILE;

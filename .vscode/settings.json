@@ -1,0 +1,11 @@
+{
+	"mesonbuild.configureOnOpen": false,
+	"files.associations": {
+		"titaniactl.h": "c",
+		"json_helpers.h": "c",
+		"json.h": "c",
+		"string.h": "c",
+		"stdint.h": "c",
+		"time.h": "c"
+	}
+}

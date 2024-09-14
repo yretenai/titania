@@ -16,8 +16,6 @@
 
 #include "titaniactl.h"
 
-#include <json.h>
-
 titaniactl_error titaniactl_mode_stub(titaniactl_context* _unused) { return TITANIACTL_ERROR_NOT_IMPLEMENTED; }
 
 const titaniactl_mode modes[] = { { "report", titaniactl_mode_report, titaniactl_mode_report_json, "print the input report of connected controllers", nullptr },
@@ -84,7 +82,7 @@ bool preserve_data = false;
 
 void titaniactl_errorf(const char* error, const char* message) {
 	if (is_json) {
-		struct json* obj = json_new_object();
+		struct json* obj = json_object();
 		json_object_add_bool(obj, "success", false);
 		json_object_add_string(obj, "error", error);
 		json_object_add_string(obj, "message", message);
@@ -194,7 +192,7 @@ int main(const int argc, const char** const argv) {
 
 			if (strcmp(text, "-v") == 0 || strcmp(text, "--version") == 0 || strcmp(text, "version") == 0) {
 				if (is_json) {
-					struct json* obj = json_new_object();
+					struct json* obj = json_object();
 					json_object_add_string(obj, "version", TITANIA_PROJECT_VERSION);
 					json_object_add_string(obj, "name", TITANIA_PROJECT_NAME);
 					json_object_add_number(obj, "max_controllers", titania_max_controllers);
@@ -396,7 +394,7 @@ int main(const int argc, const char** const argv) {
 	}
 
 	if (is_json && error > TITANIACTL_ERROR_OK_NO_JSON) {
-		struct json* obj = json_new_object();
+		struct json* obj = json_object();
 		json_object_add_bool(obj, "success", true);
 		char* json_text = json_print(obj);
 		printf("%s\n", json_text);
