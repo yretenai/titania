@@ -62,6 +62,7 @@ titania_error titania_init_checked(const size_t size) {
 
 	memset(&state, 0, sizeof(state));
 
+	titania_init_floats();
 	titania_init_checksum();
 
 	is_initialized = true;

@@ -558,6 +558,11 @@ titania_error titania_update_access_led(const titania_handle handle, const titan
 void titania_init_checksum(void);
 
 /**
+ * @brief initializes float tables
+ */
+void titania_init_floats(void);
+
+/**
  * @brief calculates a bluetooth checksum
  * @param state: existing state.
  * @param buffer: data to hash

@@ -11,6 +11,34 @@
 #pragma STDC CX_LIMITED_RANGE ON
 #endif
 
+float DENORM_CLAMP_UINT8_TAB[UINT8_MAX + 1];
+float DENORM_CLAMP_INT8_TAB[UINT8_MAX + 1];
+float DENORM_CLAMP_UINT16_TAB[UINT16_MAX + 1];
+
+void titania_init_floats(void) {
+	float maxu8 = (float) (UINT8_MAX);
+	float maxu16 = (float) UINT16_MAX;
+	for(int32_t i = 0; i <= UINT8_MAX; ++i) {
+		DENORM_CLAMP_UINT8_TAB[i] = i / maxu8;
+		DENORM_CLAMP_INT8_TAB[i] = i / maxu8 * 2.0f - 1.0f;
+	}
+
+	for(int32_t i = 0; i <= UINT16_MAX; ++i) {
+		DENORM_CLAMP_UINT16_TAB[i] = i / maxu16;
+	}
+
+	DENORM_CLAMP_UINT8_TAB[0] = 0.0f;
+	DENORM_CLAMP_INT8_TAB[0] = -1.0f;
+	DENORM_CLAMP_UINT16_TAB[0] = 0.0f;
+
+	DENORM_CLAMP_UINT8_TAB[UINT8_MAX] = 1.0f;
+	DENORM_CLAMP_INT8_TAB[UINT8_MAX] = 1.0f;
+	DENORM_CLAMP_UINT16_TAB[UINT16_MAX] = 1.0f;
+
+	DENORM_CLAMP_INT8_TAB[127] = 0.0f;
+	DENORM_CLAMP_INT8_TAB[128] = 0.0f;
+}
+
 #define CHECK_DPAD(V, A, B, C) V.dpad == DUALSENSE_DPAD_##A || V.dpad == DUALSENSE_DPAD_##B || V.dpad == DUALSENSE_DPAD_##C
 
 #define CALIBRATE(value, slot) (value < 0 ? value * calibration[slot].min : value * calibration[slot].max) * calibration[slot].cache

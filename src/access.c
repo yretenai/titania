@@ -63,10 +63,10 @@ void convert_button_in(titania_access_profile_button* out, playstation_access_pr
 void convert_stick_in(titania_access_profile_stick* out, playstation_access_profile_extension in) {
 	out->orientation = in.stick.orientation;
 	out->id = in.subtype;
-	out->deadzone = DENORM_CLAMP(in.stick.deadzone, UINT16_MAX);
-	out->curve[0] = DENORM_CLAMP(in.stick.curve[0], UINT16_MAX);
-	out->curve[1] = DENORM_CLAMP(in.stick.curve[1], UINT16_MAX);
-	out->curve[2] = DENORM_CLAMP(in.stick.curve[2], UINT16_MAX);
+	out->deadzone = DENORM_CLAMP_UINT16(in.stick.deadzone);
+	out->curve[0] = DENORM_CLAMP_UINT16(in.stick.curve[0]);
+	out->curve[1] = DENORM_CLAMP_UINT16(in.stick.curve[1]);
+	out->curve[2] = DENORM_CLAMP_UINT16(in.stick.curve[2]);
 	out->unknown = (uint32_t) in.stick.unknown | (uint32_t) in.stick.unknown2 << 8;
 }
 

@@ -93,9 +93,13 @@
 #define NORM_CLAMP_UINT8(value) NORM_CLAMP(value, UINT8_MAX)
 #define NORM_CLAMP_INT8(value) NORM_CLAMP_UINT8(((uint8_t) value))
 
-#define DENORM_CLAMP(value, max) ((value) / ((float) max))
-#define DENORM_CLAMP_UINT8(value) DENORM_CLAMP(value, UINT8_MAX)
-#define DENORM_CLAMP_INT8(value) (DENORM_CLAMP(value, INT8_MAX + 1) / 2.0f)
+extern float DENORM_CLAMP_UINT8_TAB[UINT8_MAX + 1];
+extern float DENORM_CLAMP_INT8_TAB[UINT8_MAX + 1];
+extern float DENORM_CLAMP_UINT16_TAB[UINT16_MAX + 1];
+
+#define DENORM_CLAMP_UINT8(value) DENORM_CLAMP_UINT8_TAB[value]
+#define DENORM_CLAMP_INT8(value) DENORM_CLAMP_INT8_TAB[value]
+#define DENORM_CLAMP_UINT16(value) DENORM_CLAMP_UINT16_TAB[value]
 
 // Check if the library is initialized
 #define CHECK_INIT() \
