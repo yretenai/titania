@@ -10,6 +10,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
+#include <io.h>
 #endif
 
 #include <titania_config.h>
@@ -71,10 +72,19 @@ BOOL WINAPI handle_sigint(DWORD signal) {
 
 	return TRUE;
 }
+
+bool should_output_json() {
+	return _isatty(_fileno(stdout)) == 0;
+}
 #else
 #include <signal.h>
+#include <unistd.h>
 
 void handle_sigint(int signal) { shutdown(); }
+
+bool should_output_json() {
+	return isatty(1) == 0;
+}
 #endif
 
 bool is_json = false;
@@ -111,6 +121,8 @@ int main(const int argc, const char** const argv) {
 	signal(SIGINT, handle_sigint);
 #endif
 
+	is_json = should_output_json();
+
 	const char* mode = nullptr;
 	bool calibrate = true;
 	bool disable_regular = false;
@@ -143,7 +155,8 @@ int main(const int argc, const char** const argv) {
 				printf("available options:\n");
 				printf("\t-h, --help: print this help text\n");
 				printf("\t-v, --version: print version and exit\n");
-				printf("\t-j, --json: output json to stdout\n");
+				printf("\t-j, --json: output json\n");
+				printf("\t-t, --text: output text\n");
 				printf("\t-d, --device: filter specific device id (up to 32)\n");
 				printf("\t-c, --no-calibration: do not use calibration\n");
 				printf("\t-r, --no-regular: disable regular controllers from being considered\n");
@@ -208,6 +221,10 @@ int main(const int argc, const char** const argv) {
 
 			if (strcmp(text, "-j") == 0 || strcmp(text, "--json") == 0) {
 				is_json = true;
+			}
+
+			if (strcmp(text, "-t") == 0 || strcmp(text, "--text") == 0) {
+				is_json = false;
 			}
 
 			if (strcmp(text, "-p") == 0 || strcmp(text, "--preserve") == 0) {
