@@ -44,12 +44,25 @@ struct nya {
 	char a;
 	int b;
 };
-static_assert(sizeof(struct nya) == 5, "");
+static_assert(sizeof(struct nya) == 5, "fail");
 
 #pragma pack(pop)
 '''
 
 has_pack = compiler.compiles(pack_test, name : 'has pack', args : args, werror : true)
+
+if not has_pack
+	fallback_pack_test = '''
+	struct __attribute__((__packed__)) nya {
+		char a;
+		int b;
+	};
+	static_assert(sizeof(struct nya) == 5, "fail");
+	'''
+	if not compiler.compiles(fallback_pack_test, name : 'has packed attribute', args : args, werror : true)
+		error('compiler cannot create densely packed structs?')
+	endif
+endif
 
 stdc_test = '''
 #pragma STDC FP_CONTRACT ON
@@ -61,13 +74,23 @@ has_stdc_flags = compiler.compiles(stdc_test, name : 'has stdc flags', args : ar
 bitpacking_test = '''
 #include <stdint.h>
 
+#ifdef HAS_PACK
+#define PACKED
 #pragma pack(push, 1)
-typedef struct bitpacked {
+#else
+#define PACKED __attribute__((__packed__))
+#endif
+
+typedef struct PACKED bitpacked {
 	uint8_t a : 7;
 	uint16_t x : 12;
 	uint16_t y : 12;
 } bitpacked;
+
+#ifdef HAS_PACK
 #pragma pack(pop)
+#undef PACKED
+#endif
 
 uint16_t test(uint32_t value) {
 	bitpacked vec = *(bitpacked*) &value;
@@ -81,7 +104,7 @@ int main(void) {
 '''
 
 has_normal_bitpacking = false
-bitpacking_test_run = compiler.run(bitpacking_test, name : 'has variable type bitpacking', args : args)
+bitpacking_test_run = compiler.run(bitpacking_test, name : 'has variable type bitpacking', args : args + [has_pack ? '-DHAS_PACK' : ''])
 has_normal_bitpacking = bitpacking_test_run.compiled() and bitpacking_test_run.returncode() == 0
 
 config_file = configure_file(
