@@ -63,20 +63,20 @@ bitpacking_test = '''
 
 #pragma pack(push, 1)
 typedef struct bitpacked {
-    uint8_t a : 7;
+	uint8_t a : 7;
 	uint16_t x : 12;
 	uint16_t y : 12;
 } bitpacked;
 #pragma pack(pop)
 
 uint16_t test(uint32_t value) {
-    bitpacked vec = *(bitpacked*) &value;
-    return vec.y;
+	bitpacked vec = *(bitpacked*) &value;
+	return vec.y;
 }
 
 int main(void) {
-    int n = test(0xf | (0x123 << 7) | (0x7ff << 19)); // 0x3ff8918f
-    return !(n == 0x7ff);
+	int n = test(0xf | (0x123 << 7) | (0x7ff << 19)); // 0x3ff8918f
+	return !(n == 0x7ff);
 }
 '''
 
