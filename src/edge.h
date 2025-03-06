@@ -149,7 +149,7 @@ static_assert(sizeof(dualsense_edge_profile_disabled_buttons) == 4, "dualsense_e
 
 typedef struct PACKED dualsense_edge_profile_flags {
 	uint8_t left_stick_profile : 4;
-#ifdef _WIN32
+#ifndef TITANIA_HAS_VARIABLE_BITPACKING
 	uint8_t unknown1a : 4;
 	uint8_t unknown1b : 7;
 #else
@@ -157,7 +157,7 @@ typedef struct PACKED dualsense_edge_profile_flags {
 #endif
 	bool triggers_mirrored : 1;
 	uint8_t right_stick_profile : 4;
-#ifdef _WIN32
+#ifndef TITANIA_HAS_VARIABLE_BITPACKING
 	uint8_t unknown2a : 4;
 	uint8_t unknown2b : 8;
 #else

@@ -307,7 +307,7 @@ typedef struct PACKED dualsense_control2 {
 
 	// misc flags
 	bool enable_lowpass_filter : 1;
-#ifdef _WIN32
+#ifndef TITANIA_HAS_VARIABLE_BITPACKING
 	uint8_t reserved3a : 7;
 	uint8_t reserved3b : 7;
 #else

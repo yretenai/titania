@@ -148,7 +148,7 @@ typedef struct PACKED dualsense_vector3b {
 static_assert(sizeof(dualsense_vector3b) == 3, "dualsense_vector3b is not 3 bytes");
 
 typedef struct PACKED dualsense_vector2 {
-#ifdef _WIN32
+#ifndef TITANIA_HAS_VARIABLE_BITPACKING
 	uint8_t x1 : 8;
 	uint8_t x2 : 4;
 	uint8_t y1 : 4;

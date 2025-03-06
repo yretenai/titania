@@ -35,10 +35,7 @@ if get_option('buildtype') == 'debug'
 	args += compiler.get_supported_arguments('-Werror')
 endif
 
-has_nullptr = false
-if compiler.compiles('int main(void) { return nullptr == 0; }\n', name : 'has nullptr', args : args, werror : true)
-	has_nullptr = true
-endif
+has_nullptr = compiler.compiles('int main(void) { return nullptr == 0; }\n', name : 'has nullptr', args : args, werror : true)
 
 pack_test = '''
 #pragma pack(push, 1)
@@ -52,20 +49,40 @@ static_assert(sizeof(struct nya) == 5, "");
 #pragma pack(pop)
 '''
 
-has_pack = false
-if compiler.compiles(pack_test, name : 'has pack', args : args, werror : true)
-	has_pack = true
-endif
+has_pack = compiler.compiles(pack_test, name : 'has pack', args : args, werror : true)
 
 stdc_test = '''
 #pragma STDC FP_CONTRACT ON
 #pragma STDC CX_LIMITED_RANGE ON
 '''
 
-has_stdc_flags = false
-if compiler.compiles(stdc_test, name : 'has stdc flags', args : args, werror : true)
-	has_stdc_flags = true
-endif
+has_stdc_flags = compiler.compiles(stdc_test, name : 'has stdc flags', args : args, werror : true)
+
+bitpacking_test = '''
+#include <stdint.h>
+
+#pragma pack(push, 1)
+typedef struct bitpacked {
+    uint8_t a : 7;
+	uint16_t x : 12;
+	uint16_t y : 12;
+} bitpacked;
+#pragma pack(pop)
+
+uint16_t test(uint32_t value) {
+    bitpacked vec = *(bitpacked*) &value;
+    return vec.y;
+}
+
+int main(void) {
+    int n = test(0xf | (0x123 << 7) | (0x7ff << 19)); // 0x3ff8918f
+    return !(n == 0x7ff);
+}
+'''
+
+has_normal_bitpacking = false
+bitpacking_test_run = compiler.run(bitpacking_test, name : 'has variable type bitpacking', args : args)
+has_normal_bitpacking = bitpacking_test_run.compiled() and bitpacking_test_run.returncode() == 0
 
 config_file = configure_file(
 	output : 'titania_config.h',
@@ -83,7 +100,8 @@ configure_file(
 	configuration : configuration_data({
 		'TITANIA_HAS_NULLPTR' : has_nullptr,
 		'TITANIA_HAS_PACK' : has_pack,
-		'TITANIA_HAS_STDC_FLAGS': has_stdc_flags
+		'TITANIA_HAS_STDC_FLAGS': has_stdc_flags,
+		'TITANIA_HAS_VARIABLE_BITPACKING' : has_normal_bitpacking,
    })
 )
 

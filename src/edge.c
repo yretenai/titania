@@ -94,7 +94,7 @@ titania_error titania_convert_edge_profile_input(uint8_t profile_data[TITANIA_ME
 	output->disabled_buttons.edge_reserved = profile.msg.disabled_buttons.reserved;
 	output->sticks_swapped = profile.msg.disabled_buttons.sticks_swapped;
 	output->timestamp = profile.msg.timestamp;
-#ifdef _WIN32
+#ifndef TITANIA_HAS_VARIABLE_BITPACKING
 	uint16_t unknown = (uint16_t) profile.msg.flags.unknown1a | ((uint16_t) profile.msg.flags.unknown1b << 4);
 	uint16_t unknown2 = (uint16_t) profile.msg.flags.unknown2a | ((uint16_t) profile.msg.flags.unknown2b << 4);
 	output->unknown = unknown | unknown2;
@@ -189,7 +189,7 @@ titania_error titania_convert_edge_profile_output(titania_edge_profile input, du
 	profile.msg.disabled_buttons.reserved = input.disabled_buttons.edge_reserved;
 	profile.msg.disabled_buttons.sticks_swapped = input.sticks_swapped;
 
-#ifdef _WIN32
+#ifndef TITANIA_HAS_VARIABLE_BITPACKING
 	uint16_t unknown = input.unknown & 0x7ff;
 	uint16_t unknown2 = input.unknown >> 7 & 0xfff;
 	profile.msg.flags.unknown1a = unknown & 0xf;

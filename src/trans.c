@@ -173,7 +173,7 @@ void titania_convert_input(const titania_hid hid_info, const dualsense_input_msg
 	data->touch[TITANIA_PRIMARY].active = !input.touch[DUALSENSE_LEFT].id.idle;
 	data->touch[TITANIA_SECONDARY].id = input.touch[DUALSENSE_RIGHT].id.value;
 	data->touch[TITANIA_SECONDARY].active = !input.touch[DUALSENSE_RIGHT].id.idle;
-#ifdef _WIN32
+#ifndef TITANIA_HAS_VARIABLE_BITPACKING
 	data->touch[TITANIA_PRIMARY].pos.x = ((uint16_t) input.touch[DUALSENSE_LEFT].pos.x1) | ((uint16_t) input.touch[DUALSENSE_LEFT].pos.x2 << 8);
 	data->touch[TITANIA_PRIMARY].pos.x = ((uint16_t) input.touch[DUALSENSE_LEFT].pos.y1) | ((uint16_t) input.touch[DUALSENSE_LEFT].pos.y2 << 4);
 	data->touch[TITANIA_SECONDARY].pos.x = ((uint16_t) input.touch[DUALSENSE_RIGHT].pos.x1) | ((uint16_t) input.touch[DUALSENSE_RIGHT].pos.x2 << 8);

@@ -485,7 +485,7 @@ titania_error titania_update_control(const titania_handle handle, const titania_
 	hid_state->led.effect = data.led_effect;
 
 	hid_state->control2.reserved1 = data.reserved1;
-#ifdef _WIN32
+#ifndef TITANIA_HAS_VARIABLE_BITPACKING
 	hid_state->control2.reserved3a = data.reserved3 & 0x7F;
 	hid_state->control2.reserved3b = data.reserved3 >> 7;
 #else
@@ -536,7 +536,7 @@ titania_error titania_get_control(const titania_handle handle, titania_control_u
 	control->led_effect = hid_state->led.effect;
 
 	control->reserved1 = hid_state->control2.reserved1;
-#ifdef _WIN32
+#ifndef TITANIA_HAS_VARIABLE_BITPACKING
 	control->reserved3 = hid_state->control2.reserved3a | (hid_state->control2.reserved3b << 7);
 #else
 	control->reserved3 = hid_state->control2.reserved3;
