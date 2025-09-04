@@ -1,6 +1,6 @@
 [wrap-git]
 url=https://github.com/libusb/hidapi.git
-revision=hidapi-0.14.0
+revision=hidapi-0.15.0
 depth=1
 
 [provide]

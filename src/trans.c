@@ -210,10 +210,7 @@ void titania_convert_input(const titania_hid hid_info, const dualsense_input_msg
 		data->battery.level = input.state.battery.level * 0.1 + 0.10;
 	}
 
-	data->bt.has_hid = input.bt.has_hid;
-	data->bt.unknown = input.bt.unknown;
-	data->bt.unknown2 = input.bt.unknown2;
-	data->bt.unknown3 = input.bt.unknown3;
+	data->bt.tag = input.bt.tag;
 	data->bt.seq = input.bt.seq;
 
 	if (IS_EDGE(hid_info)) {

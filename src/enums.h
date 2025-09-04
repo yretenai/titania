@@ -13,7 +13,7 @@
 #define MAKE_EDGE_PROFILE_REPORT(id, name) \
 	DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P1 = id, DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P2 = id + 1, DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P3 = id + 2
 
-typedef enum dualsense_report_id {
+typedef enum dualsense_report_id : uint8_t {
 	// usb:
 	DUALSENSE_REPORT_INPUT = 0x1,
 	DUALSENSE_REPORT_OUTPUT = 0x2,
@@ -52,15 +52,15 @@ typedef enum dualsense_report_id {
 	MAKE_EDGE_PROFILE_REPORT(0x76, CROSS),
 	MAKE_EDGE_PROFILE_REPORT(0x79, CIRCLE),
 	// bluetooth:
-	DUALSENSE_REPORT_BLUETOOTH = 0x31,
-	DUALSENSE_REPORT_BLUETOOTH_HAPTICS = 0x32,
-	DUALSENSE_REPORT_BLUETOOTH_OUTPUT2 = 0x33,
-	DUALSENSE_REPORT_BLUETOOTH_OUTPUT3 = 0x34,
-	DUALSENSE_REPORT_BLUETOOTH_OUTPUT4 = 0x35,
-	DUALSENSE_REPORT_BLUETOOTH_OUTPUT5 = 0x36,
-	DUALSENSE_REPORT_BLUETOOTH_OUTPUT6 = 0x37,
-	DUALSENSE_REPORT_BLUETOOTH_OUTPUT7 = 0x38,
-	DUALSENSE_REPORT_BLUETOOTH_OUTPUT8 = 0x39,
+	DUALSENSE_REPORT_BLUETOOTH_04C = 0x31, // 4C
+	DUALSENSE_REPORT_BLUETOOTH_08C = 0x32, // payload sizes. default is 4C.
+	DUALSENSE_REPORT_BLUETOOTH_0CC = 0x33,
+	DUALSENSE_REPORT_BLUETOOTH_10C = 0x34,
+	DUALSENSE_REPORT_BLUETOOTH_14C = 0x35,
+	DUALSENSE_REPORT_BLUETOOTH_18C = 0x36,
+	DUALSENSE_REPORT_BLUETOOTH_1CC = 0x37,
+	DUALSENSE_REPORT_BLUETOOTH_20C = 0x38,
+	DUALSENSE_REPORT_BLUETOOTH_24C = 0x39,
 	// bluetooth + edge:
 	DUALSENSE_REPORT_BLUETOOTH_EDGE_SET_DATA = 0xf6,
 	DUALSENSE_REPORT_BLUETOOTH_EDGE_GET_DATA = 0xf7,
@@ -69,7 +69,13 @@ typedef enum dualsense_report_id {
 	ACCESS_REPORT_GET_PROFILE = 0x61, // each time this report is requested the page id goes up by 1 (up to page 18) this means the max size is about 1200~
 } dualsense_report_id;
 
-typedef enum playstation_access_page_id {
+typedef enum dualsense_bt_report_id : uint8_t {
+	DUALSENSE_BT_REPORT_OUTPUT = 0x10,
+	DUALSENSE_BT_REPORT_HAPTICS_SETUP = 0x11,
+	DUALSENSE_BT_REPORT_HAPTICS_GRANULE = 0x12,
+} dualsense_bt_report_id;
+
+typedef enum playstation_access_page_id : uint8_t {
 	PLAYSTATION_ACCESS_DELETE_PROFILE = 0x3,
 	PLAYSTATION_ACCESS_UPDATE_PROFILE_1 = 0x9,
 	PLAYSTATION_ACCESS_UPDATE_PROFILE_2 = 0xA,
@@ -80,7 +86,7 @@ typedef enum playstation_access_page_id {
 	PLAYSTATION_ACCESS_QUERY_PROFILE_3 = 0x12
 } playstation_access_page_id;
 
-typedef enum dualsense_dpad {
+typedef enum dualsense_dpad : uint8_t {
 	DUALSENSE_DPAD_U = 0,
 	DUALSENSE_DPAD_UR = 1,
 	DUALSENSE_DPAD_R = 2,
@@ -92,7 +98,7 @@ typedef enum dualsense_dpad {
 	DUALSENSE_DPAD_RESET = 8
 } dualsense_dpad;
 
-typedef enum dualsense_effect_mode {
+typedef enum dualsense_effect_mode : uint8_t {
 	DUALSENSE_EFFECT_MODE_OFF = 0x5,
 	DUALSENSE_EFFECT_MODE_STOP = 0x0,
 	DUALSENSE_EFFECT_MODE_SIMPLE_UNIFORM = 0x1,
@@ -106,21 +112,21 @@ typedef enum dualsense_effect_mode {
 	DUALSENSE_EFFECT_MODE_ADVANCED_VIBRATE_FEEDBACK = 0x27
 } dualsense_effect_mode;
 
-typedef enum dualsense_bt_command {
+typedef enum dualsense_bt_command : uint8_t {
 	DUALSENSE_BT_COMMAND_NONE = 0,
 	DUALSENSE_BT_COMMAND_CONNECT = 0,
 	DUALSENSE_BT_COMMAND_DISCONNECT = 0
 } dualsense_bt_command;
 
-typedef enum dualsense_profile_version {
+typedef enum dualsense_profile_version : uint8_t {
 	DUALSENSE_PROFILE_VERSION_INVALID = 0,
 	DUALSENSE_PROFILE_VERSION_EDGE_V1 = 1,
 	DUALSENSE_PROFILE_VERSION_ACCESS_V1 = 2
 } dualsense_profile_version;
 
-typedef enum dualsense_audio_endpoint {
+typedef enum dualsense_audio_endpoint : uint8_t {
 	DUALSENSE_AUDIO_DEV_SPEAKER = 1,
-	DUALSENSE_AUDIO_DEV_HAPTICS = 2, // assumption
+	DUALSENSE_AUDIO_DEV_HEADSET = 2, // assumption
 	DUALSENSE_AUDIO_DEV_MICROPHONE = 3
 } dualsense_audio_endpoint;
 

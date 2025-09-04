@@ -4,4 +4,4 @@ revision = c0bcb33d99ff939eb75758f80c948a10ea6733d2
 depth = 1
 
 [provide]
-libjson = json
+json = json

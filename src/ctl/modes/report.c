@@ -31,10 +31,7 @@ titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const
 
 			if(data.hid.is_bluetooth && !data.hid.is_access) {
 				printf("bt {");
-				TITANIAPRINT_TEST(data.bt, has_hid); TITANIAPRINT_SEP();
-				TITANIAPRINT_TEST(data.bt, unknown); TITANIAPRINT_SEP();
-				TITANIAPRINT_TEST(data.bt, unknown2); TITANIAPRINT_SEP();
-				TITANIAPRINT_TEST(data.bt, unknown3); TITANIAPRINT_SEP();
+				TITANIAPRINT_U32(data.bt, tag); TITANIAPRINT_SEP();
 				TITANIAPRINT_U32(data.bt, seq);
 				printf(" }\n");
 			}
@@ -299,10 +296,7 @@ titaniactl_error titaniactl_mode_report_json_inner(titaniactl_context* context, 
 
 				if (data.hid.is_bluetooth && !data.hid.is_access) {
 					struct json* bt_obj = json_object_add_object(obj, "bt");
-					json_object_add_bool(bt_obj, "hasHID", data.bt.has_hid);
-					json_object_add_bool(bt_obj, "unknown", data.bt.unknown);
-					json_object_add_bool(bt_obj, "unknown2", data.bt.unknown2);
-					json_object_add_bool(bt_obj, "unknown3", data.bt.unknown3);
+					json_object_add_number(bt_obj, "tag", data.bt.tag);
 					json_object_add_number(bt_obj, "sequence", data.bt.seq);
 				}
 

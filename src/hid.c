@@ -156,7 +156,7 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 			state[i].hid_info = *handle;
 			handle->is_edge = IS_EDGE(state[i].hid_info);
 			handle->is_access = IS_ACCESS(state[i].hid_info);
-			state[i].output.data.report_id = DUALSENSE_REPORT_BLUETOOTH;
+			state[i].output.data.report_id = DUALSENSE_REPORT_BLUETOOTH_04C;
 			state[i].output.data.msg.data.report_id = DUALSENSE_REPORT_OUTPUT;
 
 			if (state[i].hid_info.is_bluetooth) { // this is needed to reset LEDs from controller firmware
@@ -324,7 +324,7 @@ titania_error titania_pull(titania_handle* handle, const size_t handle_count, ti
 			size = sizeof(dualsense_input_msg);
 		}
 
-		hid_state->input.data.report_id = DUALSENSE_REPORT_BLUETOOTH;
+		hid_state->input.data.report_id = DUALSENSE_REPORT_BLUETOOTH_04C;
 		hid_state->input.data.msg.data.report_id = DUALSENSE_REPORT_INPUT;
 		const int report_size = hid_read(hid_state->hid, buffer, size);
 
@@ -374,10 +374,12 @@ titania_error titania_push(titania_handle* handle, const size_t handle_count) {
 			} else if (!hid_state->hid_info.is_edge) {
 				size -= 0x10;
 			}
+			hid_state->output.data.msg.data.report_id = DUALSENSE_REPORT_OUTPUT;
 		} else {
-			hid_state->output.data.msg.data.report_id = 0;
-			hid_state->output.data.msg.data.bt.enable_hid = true;
-			hid_state->output.data.msg.data.bt.seq = hid_state->seq & 0xF;
+			hid_state->output.data.report_id = DUALSENSE_REPORT_BLUETOOTH_04C;
+			hid_state->output.data.bt.tag = 0;
+			hid_state->output.data.bt.seq = hid_state->seq;
+			hid_state->output.data.msg.data.bt.report_id = DUALSENSE_BT_REPORT_OUTPUT;
 			hid_state->output.data.bt_checksum = titania_calc_checksum(crc_seed_output, buffer, size - 4);
 		}
 
@@ -387,8 +389,6 @@ titania_error titania_push(titania_handle* handle, const size_t handle_count) {
 			continue; // invalid!
 		}
 
-		hid_state->output.data.report_id = DUALSENSE_REPORT_BLUETOOTH;
-		hid_state->output.data.msg.data.report_id = DUALSENSE_REPORT_OUTPUT;
 		hid_state->output.data.msg.data.flags.value = 0;
 		const bool edge_enable = hid_state->output.data.msg.data.edge.flags.enable_switching;
 		hid_state->output.data.msg.data.edge.flags.value = 0;

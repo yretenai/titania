@@ -596,10 +596,7 @@ typedef struct titania_report_id {
 } titania_report_id;
 
 typedef struct titania_bt {
-	bool has_hid;
-	bool unknown;
-	bool unknown2;
-	bool unknown3;
+	uint8_t tag;
 	uint8_t seq;
 } titania_bt;
 

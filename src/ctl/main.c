@@ -30,8 +30,8 @@ const titaniactl_mode modes[] = { { "report", titaniactl_mode_report, titaniactl
 	{ "led", titaniactl_mode_led, titaniactl_mode_led, "update LED color", "#rrggbb|off player-led" },
 	{ "light", titaniactl_mode_led, titaniactl_mode_led, nullptr, nullptr },
 	{ "pair", titaniactl_mode_bt_pair, titaniactl_mode_bt_pair, "pair with a bluetooth adapter", "address link-key" },
-	{ "usb", titaniactl_mode_bt_disconnect, titaniactl_mode_bt_disconnect, "instruct controller to connect via bluetooth", nullptr },
-	{ "bt", titaniactl_mode_bt_connect, titaniactl_mode_bt_connect, "instruct controller to connect via usb", nullptr },
+	{ "usb", titaniactl_mode_bt_disconnect, titaniactl_mode_bt_disconnect, "instruct controller to connect via usb", nullptr },
+	{ "bt", titaniactl_mode_bt_connect, titaniactl_mode_bt_connect, "instruct controller to connect via bt", nullptr },
 	{ "disconnect", titaniactl_mode_bt_disconnect, titaniactl_mode_bt_disconnect, nullptr, nullptr },
 	{ "connect", titaniactl_mode_bt_connect, titaniactl_mode_bt_connect, nullptr, nullptr },
 	// Edge, Access

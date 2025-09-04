@@ -123,7 +123,7 @@ static_assert(sizeof(playstation_access_profile_update_blob) == 0x3a, "playstati
 
 typedef struct PACKED playstation_access_profile_blob {
 	uint8_t report_id;
-	uint8_t command_id;
+	playstation_access_page_id command_id;
 
 	union PACKED {
 		playstation_access_profile_delete_blob delete_op;

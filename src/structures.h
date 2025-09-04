@@ -137,22 +137,18 @@ typedef struct PACKED dualsense_adaptive_trigger {
 
 static_assert(sizeof(dualsense_adaptive_trigger) == 1, "dualsense_adaptive_trigger is not 1 byte");
 
-typedef struct PACKED dualsense_input_msg_bt {
-	bool has_hid : 1;
-	bool unknown : 1;
-	bool unknown2 : 1;
-	bool unknown3 : 1;
+typedef struct PACKED dualsense_bt_packet_tag {
+	uint8_t tag : 4;
 	uint8_t seq : 4;
-} dualsense_input_msg_bt;
+} dualsense_bt_packet_tag;
 
-static_assert(sizeof(dualsense_input_msg_bt) == 1, "dualsense_input_msg_bt is not 1 byte");
+static_assert(sizeof(dualsense_bt_packet_tag) == 1, "dualsense_bt_packet_tag is not 1 byte");
 
 typedef struct PACKED dualsense_input_msg {
 	union PACKED {
-		dualsense_input_msg_bt bt;
-		uint8_t report_id;
+		dualsense_bt_packet_tag bt;
+		dualsense_report_id report_id;
 	};
-
 	dualsense_vector2b sticks[2];
 	uint8_t triggers[2];
 	uint8_t sequence;
@@ -199,7 +195,7 @@ typedef struct PACKED dualsense_input_msg {
 static_assert(sizeof(dualsense_input_msg) == 0x40, "dualsense_input_msg is not 64 bytes");
 
 typedef struct PACKED dualsense_input_msg_ex {
-	uint8_t report_id;
+	dualsense_report_id report_id;
 
 	union PACKED dualsense_input_msg_ex_selector {
 		dualsense_input_msg data;
@@ -251,7 +247,7 @@ typedef struct PACKED dualsense_led_output {
 static_assert(sizeof(dualsense_led_output) == 6, "dualsense_led_output is not 6 bytes");
 
 typedef struct PACKED dualsense_effect_output {
-	uint8_t mode;
+	dualsense_effect_mode mode;
 
 	union PACKED dualsense_effect_output_params {
 		uint8_t value[TITANIA_TRIGGER_GRANULARITY];
@@ -336,22 +332,16 @@ typedef struct PACKED dualsense_motor_flags {
 
 static_assert(sizeof(dualsense_motor_flags) == 1, "dualsense_motor_flags is not 1 byte");
 
-typedef struct PACKED dualsense_report_output_bt {
-	bool unknown : 1;
-	bool enable_hid : 1;
-	bool unknown2 : 1;
-	bool unknown3 : 1;
-	uint8_t seq : 4;
-} dualsense_report_output_bt;
-
-static_assert(sizeof(dualsense_report_output_bt) == 1, "dualsense_report_output_bt is not 1 byte");
+typedef union PACKED dualsense_bt_packet {
+	dualsense_bt_report_id report_id : 6;
+	uint8_t flags : 2;
+} dualsense_bt_packet;
 
 typedef struct PACKED dualsense_output_msg {
 	union PACKED {
-		dualsense_report_output_bt bt;
-		uint8_t report_id;
+		dualsense_bt_packet bt;
+		dualsense_report_id report_id;
 	};
-
 	dualsense_mutator_flags flags;
 	uint8_t rumble[2];
 	dualsense_audio_output audio;
@@ -367,11 +357,7 @@ typedef struct PACKED dualsense_output_msg {
 static_assert(sizeof(dualsense_output_msg) == 0x40, "dualsense_output_msg is not 64 bytes");
 
 typedef struct PACKED access_output_msg {
-	union PACKED {
-		dualsense_report_output_bt bt;
-		uint8_t report_id;
-	};
-
+	dualsense_report_id report_id;
 	playstation_access_mutator_flags flags;
 	dualsense_led_output led; // needs mutator led
 	playstation_access_control control; // needs mutator control
@@ -385,7 +371,8 @@ typedef struct PACKED access_output_msg {
 static_assert(sizeof(access_output_msg) == 0x20, "access_output_msg is not 32 bytes");
 
 typedef struct PACKED dualsense_output_msg_ex {
-	uint8_t report_id;
+	dualsense_report_id report_id;
+	dualsense_bt_packet_tag bt;
 
 	union PACKED dualsense_output_msg_ex_selector {
 		dualsense_output_msg data;
@@ -393,14 +380,14 @@ typedef struct PACKED dualsense_output_msg_ex {
 		access_output_msg access;
 	} msg;
 
-	uint8_t reserved[9];
+	uint8_t reserved[8];
 	uint32_t bt_checksum;
 } dualsense_output_msg_ex;
 
 static_assert(sizeof(dualsense_output_msg_ex) == 0x4e, "dualsense_output_msg_ex is not 78 bytes");
 
 typedef struct PACKED dualsense_calibration_info {
-	uint8_t report_id;
+	dualsense_report_id report_id;
 	dualsense_vector3s gyro_bias;
 	dualsense_minmax gyro[3];
 	dualsense_minmax gyro_speed;
@@ -435,7 +422,7 @@ typedef union PACKED dualsense_firmware_version {
 static_assert(sizeof(dualsense_firmware_version) == 4, "dualsense_firmware_version is 4 bytes");
 
 typedef struct PACKED dualsense_firmware_info {
-	uint8_t report_id;
+	dualsense_report_id report_id;
 	char date[DUALSENSE_FIRMWARE_VERSION_DATE_LEN];
 	char time[DUALSENSE_FIRMWARE_VERSION_TIME_LEN];
 	uint16_t type;
@@ -456,7 +443,7 @@ static_assert(DUALSENSE_FIRMWARE_VERSION_DATE_LEN + 1 + DUALSENSE_FIRMWARE_VERSI
 static_assert(sizeof(dualsense_firmware_info) == 64, "dualsense_firmware_info is not 64 bytes");
 
 typedef struct PACKED dualsense_audio_control {
-	uint8_t report_id;
+	dualsense_report_id report_id;
 	uint8_t endpoint;
 	uint8_t volume;
 	uint8_t padding[2];
@@ -465,7 +452,7 @@ typedef struct PACKED dualsense_audio_control {
 static_assert(sizeof(dualsense_audio_control) == 5, "dualsense_firmware_info is not 5 bytes");
 
 typedef struct PACKED dualsense_serial_info {
-	uint8_t report_id;
+	dualsense_report_id report_id;
 	uint8_t device_mac[6];
 	uint8_t unknown[3];
 	uint8_t pair_mac[6];
@@ -500,7 +487,7 @@ typedef struct PACKED dualsense_state {
 } dualsense_state;
 
 typedef struct PACKED dualsense_bt_pair_msg {
-	uint8_t report_id;
+	dualsense_report_id report_id;
 	uint8_t pair_mac[6];
 	uint8_t link_key[0x10];
 	uint32_t checksum;
@@ -509,8 +496,8 @@ typedef struct PACKED dualsense_bt_pair_msg {
 static_assert(sizeof(dualsense_bt_pair_msg) == 0x1b, "dualsense_bt_pair_msg is not 27 bytes");
 
 typedef struct PACKED dualsense_bt_command_msg {
-	uint8_t report_id;
-	uint8_t command;
+	dualsense_report_id report_id;
+	dualsense_bt_command command;
 	uint8_t reserved[0x2a];
 	uint32_t checksum;
 } dualsense_bt_command_msg;
