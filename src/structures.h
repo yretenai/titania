@@ -455,6 +455,15 @@ typedef struct PACKED dualsense_firmware_info {
 static_assert(DUALSENSE_FIRMWARE_VERSION_DATE_LEN + 1 + DUALSENSE_FIRMWARE_VERSION_TIME_LEN + 1 < TITANIA_FIRMWARE_DATE_LEN, "date + space + time + null is >= titania_firmware_info.version");
 static_assert(sizeof(dualsense_firmware_info) == 64, "dualsense_firmware_info is not 64 bytes");
 
+typedef struct PACKED dualsense_audio_control {
+	uint8_t report_id;
+	uint8_t endpoint;
+	uint8_t volume;
+	uint8_t padding[2];
+} dualsense_audio_control;
+
+static_assert(sizeof(dualsense_audio_control) == 5, "dualsense_firmware_info is not 5 bytes");
+
 typedef struct PACKED dualsense_serial_info {
 	uint8_t report_id;
 	uint8_t device_mac[6];

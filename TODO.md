@@ -20,6 +20,11 @@
 - [x] playstation access output reading
 - [x] playstation access profile report reading
 - [x] playstation access profile report writing
+- [ ] rumble (usb)
+- [ ] rumble (bt)
+- [ ] audio output (usb)
+- [ ] audio output (bt)
+- [ ] audio control
 - [ ] documentation
 
 ### titaniactl

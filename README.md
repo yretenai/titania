@@ -68,6 +68,7 @@ TODO, see src/ctl/ for the source of `titaniactl`
 - [eleccelerator wiki](https://eleccelerator.com/wiki/index.php?title=DualShock_4) for guidance on crc32
 - [dsremap's research](https://dsremap.readthedocs.io/en/latest/reverse.html) for some of the DualShock 4 reports that were reused for the DualSense
 - [linux kernel playstation driver](https://github.com/torvalds/linux/blob/master/drivers/hid/hid-playstation.c) for guidance on how to read calibration data
+- todo: [SAxense](https://apps.sdore.me/SAxense)([git](https://github.com/egormanga/SAxense/)) for BT haptics
 
 ## License
 
