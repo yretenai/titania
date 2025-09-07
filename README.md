@@ -2,6 +2,9 @@
 
 Cross-platform unofficial userland library for the Sony PlayStation DualSense Controller, and the PlayStation Access Controller.
 
+Currently tested to work on Linux 6.15, macOS 26, and Windows 11. Android and BSD support is theoretical, but should work as long as hidapi works.
+More platforms could be supported in the future if hidapi adds support for it.
+
 Note: this is not a driver, it directly interacts with the raw HID endpoints via an API.
 Library consumers will need to poll the API and do input logic on their own.
 While a joystick API is in my future plans, developing drivers is a huge pain.
