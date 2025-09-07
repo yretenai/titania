@@ -366,13 +366,12 @@ titania_error titania_push(titania_handle* handle, const size_t handle_count) {
 		size_t size = sizeof(dualsense_output_msg_ex);
 		if (!hid_state->hid_info.is_bluetooth) {
 			buffer = hid_state->output.data.msg.buffer;
-			size = sizeof(dualsense_output_msg);
-			// Regular: 48 bytes, Edge: 64 bytes, Access: 32 bytes.
-			// why.
 			if (hid_state->hid_info.is_access) {
-				size -= 0x20;
-			} else if (!hid_state->hid_info.is_edge) {
-				size -= 0x10;
+				size = ACCESS_USB_REPORT_SIZE;
+			} else if (hid_state->hid_info.is_edge) {
+				size = DUALSENSE_EDGE_USB_REPORT_SIZE;
+			} else {
+				size = DUALSENSE_USB_REPORT_SIZE;
 			}
 			hid_state->output.data.msg.data.report_id = DUALSENSE_REPORT_OUTPUT;
 		} else {

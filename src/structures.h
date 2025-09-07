@@ -504,6 +504,12 @@ typedef struct PACKED dualsense_bt_command_msg {
 
 static_assert(sizeof(dualsense_bt_command_msg) == 0x30, "dualsense_bt_command_msg is not 48 bytes");
 
+// Regular: 48 bytes, Edge: 64 bytes, Access: 32 bytes.
+// Edge has more bytes because there's an entire extra block of data, Access lacks a lot of misc reporting.
+#define DUALSENSE_USB_REPORT_SIZE (sizeof(dualsense_output_msg) - 0x10)
+#define DUALSENSE_EDGE_USB_REPORT_SIZE (sizeof(dualsense_output_msg))
+#define ACCESS_USB_REPORT_SIZE (sizeof(dualsense_output_msg) - 0x20)
+
 #ifdef TITANIA_HAS_PACK
 #pragma pack(pop)
 #endif
