@@ -2,6 +2,10 @@
 
 Cross-platform unofficial userland library for the Sony PlayStation DualSense Controller, and the PlayStation Access Controller.
 
+Note: this is not a driver, it directly interacts with the raw HID endpoints via an API.
+Library consumers will need to poll the API and do input logic on their own.
+While a joystick API is in my future plans, developing drivers is a huge pain.
+
 ## Notice
 
 This project is not authorized, affiliated or endorsed by Sony Interactive Entertainment Inc.
