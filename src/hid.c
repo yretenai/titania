@@ -434,12 +434,8 @@ titania_error titania_update_audio(const titania_handle handle, const titania_au
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 
 	hid_state->flags.audio_output = true;
-	hid_state->audio.flags.force_external_mic = (data.mic_selection & TITANIA_MIC_EXTERNAL) == TITANIA_MIC_EXTERNAL;
-	hid_state->audio.flags.force_internal_mic = (data.mic_selection & TITANIA_MIC_INTERNAL) == TITANIA_MIC_INTERNAL;
-	hid_state->audio.flags.balance_external_mic = (data.mic_balance & TITANIA_MIC_EXTERNAL) == TITANIA_MIC_EXTERNAL;
-	hid_state->audio.flags.balance_internal_mic = (data.mic_balance & TITANIA_MIC_INTERNAL) == TITANIA_MIC_INTERNAL;
-	hid_state->audio.flags.disable_jack = data.disable_audio_jack;
-	hid_state->audio.flags.enable_speaker = data.force_enable_speaker;
+	hid_state->audio.flags.output_path = data.output_path & 0b11;
+	hid_state->audio.flags.input_path = data.input_path & 0b11;
 
 	hid_state->flags.mic_led = true;
 	hid_state->audio.mic_led_flags = data.mic_led;
@@ -466,12 +462,12 @@ titania_error titania_update_control(const titania_handle handle, const titania_
 
 	hid_state->control1.touch_powersave = data.touch_powersave;
 	hid_state->control1.sensor_powersave = data.sensor_powersave;
-	hid_state->control1.rumble_powersave = data.rumble_powersave;
+	hid_state->control1.haptics_powersave = data.haptics_powersave;
 	hid_state->control1.speaker_powersave = data.speaker_powersave;
 	hid_state->control1.mute_jack = data.mute_jack;
 	hid_state->control1.mute_speaker = data.mute_speaker;
 	hid_state->control1.mute_mic = data.mute_mic;
-	hid_state->control1.disable_rumble = data.disable_rumble;
+	hid_state->control1.mute_haptics = data.mute_haptics;
 
 	hid_state->control2.enable_beamforming = !data.disable_beamforming;
 	hid_state->control2.enable_lowpass_filter = data.enable_lowpass_filter;
@@ -517,12 +513,12 @@ titania_error titania_get_control(const titania_handle handle, titania_control_u
 
 	control->touch_powersave = hid_state->control1.touch_powersave;
 	control->sensor_powersave = hid_state->control1.sensor_powersave;
-	control->rumble_powersave = hid_state->control1.rumble_powersave;
+	control->haptics_powersave = hid_state->control1.haptics_powersave;
 	control->speaker_powersave = hid_state->control1.speaker_powersave;
 	control->mute_jack = hid_state->control1.mute_jack;
 	control->mute_speaker = hid_state->control1.mute_speaker;
 	control->mute_mic = hid_state->control1.mute_mic;
-	control->disable_rumble = hid_state->control1.disable_rumble;
+	control->mute_haptics = hid_state->control1.mute_haptics;
 
 	control->disable_beamforming = !hid_state->control2.enable_beamforming;
 	control->enable_lowpass_filter = hid_state->control2.enable_lowpass_filter;
@@ -720,6 +716,29 @@ titania_error titania_update_effect(const titania_handle handle, const titania_e
 	return result;
 }
 
+titania_error titania_set_vibration_mode(const titania_handle handle, const bool haptics) {
+	CHECK_INIT();
+	CHECK_HANDLE_VALID(handle);
+
+	if (IS_ACCESS(state[handle].hid_info)) {
+		return TITANIA_ERROR_NOT_SUPPORTED;
+	}
+
+	const titania_hid hid = state[handle].hid_info;
+	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
+
+	hid_state->flags.control2 = true;
+	hid_state->flags.disable_haptics = !haptics;
+	if (haptics) {
+		hid_state->control2.advanced_rumble_control = false;
+		hid_state->flags.rumble_emulation = false;
+	} else {	
+		hid_state->control2.advanced_rumble_control = hid.firmware.update.major >= 0x224;
+		hid_state->flags.rumble_emulation = !hid_state->control2.advanced_rumble_control;
+	}
+	return TITANIA_ERROR_OK;
+}
+
 titania_error titania_update_rumble(const titania_handle handle, const float large_motor, const float small_motor, const float power_reduction, const bool emulate_legacy_behavior) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
@@ -730,14 +749,9 @@ titania_error titania_update_rumble(const titania_handle handle, const float lar
 
 	const titania_hid hid = state[handle].hid_info;
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
-	hid_state->flags.rumble = true;
-
-	if (hid.is_edge || hid.firmware.update.major >= 0x224) {
-		hid_state->flags.control2 = true;
-		hid_state->control2.advanced_rumble_control = emulate_legacy_behavior;
-		hid_state->flags.haptics = !emulate_legacy_behavior;
-	} else {
-		hid_state->flags.haptics = true;
+	const titania_error result = titania_set_vibration_mode(handle, false);
+	if (IS_TITANIA_BAD(result)) {
+		return result;
 	}
 
 	hid_state->rumble[DUALSENSE_LARGE_MOTOR] = NORM_CLAMP_UINT8(large_motor);
@@ -749,6 +763,24 @@ titania_error titania_update_rumble(const titania_handle handle, const float lar
 	}
 
 	return TITANIA_ERROR_OK;
+}
+
+titania_error titania_update_haptics(const titania_handle handle, const titania_haptics_frame samples) {
+	CHECK_INIT();
+	CHECK_HANDLE_VALID(handle);
+
+	if (IS_ACCESS(state[handle].hid_info)) {
+		return TITANIA_ERROR_NOT_SUPPORTED;
+	}
+
+	const titania_hid hid = state[handle].hid_info;
+	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
+	const titania_error result = titania_set_vibration_mode(handle, true);
+	if (IS_TITANIA_BAD(result)) {
+		return result;
+	}
+
+	return TITANIA_ERROR_NOT_IMPLEMENTED;
 }
 
 titania_error titania_bt_pair(const titania_handle handle, const titania_mac mac, const titania_link_key link_key) {

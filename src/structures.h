@@ -213,8 +213,8 @@ static_assert(sizeof(dualsense_input_msg_ex) == 0x4e, "dualsense_input_msg_ex is
 typedef union PACKED dualsense_mutator_flags {
 	struct PACKED {
 		// byte 0
-		bool haptics : 1;
-		bool rumble : 1;
+		bool rumble_emulation : 1;
+		bool disable_haptics : 1;
 		bool right_trigger_motor : 1;
 		bool left_trigger_motor : 1;
 		bool jack : 1;
@@ -266,10 +266,8 @@ typedef struct PACKED dualsense_audio_flags {
 	bool force_external_mic : 1;
 	bool echo_cancellation : 1;
 	bool noise_cancellation : 1;
-	bool balance_external_mic : 1;
-	bool balance_internal_mic : 1;
-	bool disable_jack : 1;
-	bool enable_speaker : 1;
+	uint8_t output_path : 2;
+	uint8_t input_path : 2;
 } dualsense_audio_flags;
 
 static_assert(sizeof(dualsense_audio_flags) == 1, "dualsense_audio_flags is not 1 byte");
@@ -277,12 +275,12 @@ static_assert(sizeof(dualsense_audio_flags) == 1, "dualsense_audio_flags is not 
 typedef struct PACKED dualsense_control1 {
 	bool touch_powersave : 1;
 	bool sensor_powersave : 1;
-	bool rumble_powersave : 1;
+	bool haptics_powersave : 1;
 	bool speaker_powersave : 1;
 	bool mute_mic : 1;
 	bool mute_speaker : 1;
 	bool mute_jack : 1;
-	bool disable_rumble : 1;
+	bool mute_haptics : 1;
 } dualsense_control1;
 
 static_assert(sizeof(dualsense_control1) == 1, "dualsense_control1 is not 1 byte");

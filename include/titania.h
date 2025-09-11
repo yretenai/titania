@@ -62,6 +62,9 @@ extern "C" {
 #define TITANIA_ACCESS_BUTTON_B8 (8)
 #define TITANIA_ACCESS_BUTTON_STICK (9)
 
+#define TITANIA_HAPTICS_SAMPLE_SIZE 64
+#define TITANIA_HAPTICS_SAMPLE_RATE 3000
+
 typedef enum titania_error {
 	TITANIA_ERROR_OK = 0,
 	TITANIA_ERROR_NOT_INITIALIZED,
@@ -228,12 +231,19 @@ typedef enum titania_led_index {
 	TITANIA_LED_NO_UPDATE = 128
 } titania_led_index;
 
-typedef enum titania_audio_mic {
-	TITANIA_MIC_AUTO = 0,
-	TITANIA_MIC_INTERNAL = 1,
-	TITANIA_MIC_EXTERNAL = 2,
-	TITANIA_MIC_BOTH = 3
-} titania_audio_mic;
+typedef enum titania_audio_output {
+	TITANIA_AUDIO_OUTPUT_STEREO_JACK = 0,
+	TITANIA_AUDIO_OUTPUT_MONO_JACK = 1,
+	TITANIA_AUDIO_OUTPUT_MONO_JACK_SPEAKER = 2,
+	TITANIA_AUDIO_OUTPUT_STEREO_SPEAKER = 3,
+} titania_audio_output;
+
+typedef enum titania_audio_input : uint8_t {
+	TITANIA_AUDIO_INPUT_CHAT_ASR = 0,
+	TITANIA_AUDIO_INPUT_CHAT_CHAT = 1,
+	TITANIA_AUDIO_INPUT_ASR_ASR = 2,
+	TITANIA_AUDIO_INPUT_DISABLE = 3,
+} titania_audio_input;
 
 typedef enum titania_mic_led {
 	TITANIA_MIC_LED_OFF = 0,
@@ -782,22 +792,20 @@ typedef struct titania_audio_update {
 	float jack_volume;
 	float speaker_volume;
 	float microphone_volume;
-	titania_audio_mic mic_selection;
-	titania_audio_mic mic_balance;
+	titania_audio_output output_path;
+	titania_audio_input input_path;
 	titania_mic_led mic_led;
-	bool disable_audio_jack;
-	bool force_enable_speaker;
 } titania_audio_update;
 
 typedef struct titania_control_update {
 	bool touch_powersave;
 	bool sensor_powersave;
-	bool rumble_powersave;
+	bool haptics_powersave;
 	bool speaker_powersave;
 	bool mute_mic;
 	bool mute_speaker;
 	bool mute_jack;
-	bool disable_rumble;
+	bool mute_haptics;
 	bool disable_beamforming;
 	bool enable_lowpass_filter;
 	bool disable_led_brightness_control;
@@ -814,6 +822,8 @@ typedef struct titania_control_update {
 	bool edge_disable_led_indicators;
 	bool edge_disable_vibration_indicators;
 } titania_control_update;
+
+typedef uint8_t titania_haptics_frame[TITANIA_HAPTICS_SAMPLE_SIZE];
 
 #define titania_init() titania_init_checked(sizeof(titania_hid))
 
@@ -894,7 +904,16 @@ TITANIA_EXPORT titania_error titania_get_control(const titania_handle handle, ti
 TITANIA_EXPORT titania_error titania_update_effect(const titania_handle handle, const titania_effect_update left_trigger, const titania_effect_update right_trigger, const float power_reduction);
 
 /**
+ * @brief update vibration state of a controller
+ * @note this will be called by both titania_update_rumble and titania_update_haptics
+ * @param handle: the controller to update
+ * @param haptics: whether or not to set mode to haptics or not
+ */
+TITANIA_EXPORT titania_error titania_set_vibration_mode(const titania_handle handle, const bool haptics);
+
+/**
  * @brief update rumble state of a controller
+ * @note this will disable haptics
  * @param handle: the controller to update
  * @param large_motor: amplitude for the large motor
  * @param small_motor: amplitude for the small motor
@@ -902,6 +921,15 @@ TITANIA_EXPORT titania_error titania_update_effect(const titania_handle handle, 
  * @param emulate_legacy_behavior: instructs the dualsense to emulate how rumble motors used to work
  */
 TITANIA_EXPORT titania_error titania_update_rumble(const titania_handle handle, const float large_motor, const float small_motor, const float power_reduction, const bool emulate_legacy_behavior);
+
+/**
+ * @brief update haptics state of a controller
+ * @note this will disable rumble emulation
+ * @note new data must be fed every 10.667 miliseconds (10666666 ns)
+ * @param handle: the controller to update
+ * @param sample: the 8-bit signed PCM 3Khz haptics data 
+ */
+TITANIA_EXPORT titania_error titania_update_haptics(const titania_handle handle, const titania_haptics_frame sample);
 
 /**
  * @brief pair a controller with a bluetooth adapter

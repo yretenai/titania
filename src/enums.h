@@ -130,4 +130,18 @@ typedef enum dualsense_audio_endpoint : uint8_t {
 	DUALSENSE_AUDIO_DEV_MICROPHONE = 3
 } dualsense_audio_endpoint;
 
+typedef enum dualsense_audio_output_path : uint8_t {
+	DUALSENSE_AUDIO_OUTPUT_STEREO_JACK = 0,
+	DUALSENSE_AUDIO_OUTPUT_MONO_JACK = 1,
+	DUALSENSE_AUDIO_OUTPUT_MONO_JACK_SPEAKER = 2,
+	DUALSENSE_AUDIO_OUTPUT_STEREO_SPEAKER = 3,
+} dualsense_audio_output_path;
+
+typedef enum dualsense_audio_input_path : uint8_t {
+	DUALSENSE_AUDIO_INPUT_CHAT_ASR = 0,
+	DUALSENSE_AUDIO_INPUT_CHAT_CHAT = 1,
+	DUALSENSE_AUDIO_INPUT_ASR_ASR = 2,
+	DUALSENSE_AUDIO_INPUT_DISABLE = 3,
+} dualsense_audio_input_path;
+
 #endif // TITANIA_ENUMS_H

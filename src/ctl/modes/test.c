@@ -485,10 +485,8 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 		update.jack_volume = 1.0;
 		update.speaker_volume = 1.0;
 		update.microphone_volume = 1.0;
-		update.mic_selection = TITANIA_MIC_AUTO;
-		update.mic_balance = TITANIA_MIC_AUTO;
-		update.disable_audio_jack = false;
-		update.force_enable_speaker = false;
+		update.output_path = TITANIA_AUDIO_OUTPUT_STEREO_JACK;
+		update.input_path = TITANIA_AUDIO_INPUT_CHAT_ASR;
 		update.mic_led = TITANIA_MIC_LED_ON;
 
 		printf("mic led should be on...\n");

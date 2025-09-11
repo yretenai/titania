@@ -78,7 +78,7 @@ TODO, see src/ctl/ for the source of `titaniactl`
 
 ## License
 
-This project is licensed under MPL-2.0 (Mozilla Public License Version 2.0), a copy of this license should have been provided. 
+This project is licensed under MPL-2.0 (Mozilla Public License Version 2.0), a copy of this license should have been provided.
 If not, an up-to-date copy is always available [here](https://www.mozilla.org/en-US/MPL/2.0/) and the
 repository copy is [here](https://raw.githubusercontent.com/yretenai/titania/develop/LICENSE).
 
