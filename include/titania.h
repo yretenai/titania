@@ -927,13 +927,25 @@ TITANIA_EXPORT titania_error titania_update_rumble(titania_handle handle, float 
 
 /**
  * @brief update haptics state of a controller
- * @note needs at least 3000 samples to fill a single buffer at 48KHz
  * @note this will disable rumble emulation
  * @param handle: the controller to update
- * @param samples: the 8-bit signed 2-channel interleaved PCM 48Khz haptics data
+ * @param samples: the 8-bit signed 2-channel interleaved PCM 3kHz haptics data
  * @param num_samples: number of buffers
  */
 TITANIA_EXPORT titania_error titania_update_haptics(titania_handle handle, const uint8_t* samples, size_t num_samples);
+
+/**
+ * @brief reset haptics audio state of a controller
+ * @param handle: the controller to reset
+ */
+TITANIA_EXPORT titania_error titania_haptics_reset(titania_handle handle);
+
+/**
+ * @brief get haptics state of a controller
+ * @param handle: the controller to query
+ * @param size: number of bytes currently in the haptics audio buffer
+ */
+TITANIA_EXPORT titania_error titania_haptics_state(titania_handle handle, size_t* size);
 
 /**
  * @brief pair a controller with a bluetooth adapter

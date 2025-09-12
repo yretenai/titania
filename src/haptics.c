@@ -5,6 +5,14 @@
 #include "structures.h"
 #include "titania.h"
 
-void titania_haptics_init(const titania_handle handle) { }
+titania_error titania_haptics_init(const titania_handle handle) {
+	return TITANIA_ERROR_OK;
+}
 
-void titania_haptics_close(const titania_handle handle) { }
+titania_error titania_haptics_close(const titania_handle handle) {
+	return TITANIA_ERROR_OK;
+}
+
+titania_error titania_haptics_flush(const titania_handle handle) {
+	return TITANIA_ERROR_OK;
+}

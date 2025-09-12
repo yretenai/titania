@@ -290,7 +290,10 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 			}
 
 #ifdef TITANIA_HAS_HAPTICS
-			titania_haptics_init(handle->handle);
+			titania_error result = titania_haptics_init(handle->handle);
+			if (!IS_TITANIA_OKAY(result)) {
+				return result;
+			}
 #endif
 
 			return TITANIA_ERROR_OK;
@@ -805,16 +808,16 @@ TITANIA_EXPORT titania_error titania_update_haptics(const titania_handle handle,
 
 	const size_t write = state[handle].haptics.write_offset;
 	const size_t read = state[handle].haptics.read_offset;
-	const size_t write_rel = write % TITANIA_HAPTICS_BUFFER_SIZE;
+	const size_t write_rel = write % TITANIA_MAXIMUM_HAPTICS_SIZE;
 
-	const size_t used = (write - read) % TITANIA_HAPTICS_BUFFER_SIZE;
-	const size_t remaining_size = TITANIA_HAPTICS_BUFFER_SIZE - used;
+	const size_t used = (write - read) % TITANIA_MAXIMUM_HAPTICS_SIZE;
+	const size_t remaining_size = TITANIA_MAXIMUM_HAPTICS_SIZE - used;
 
 	if (num_samples > remaining_size) {
 		return TITANIA_ERROR_OUT_OF_SPACE;
 	}
 
-	size_t first_byte = TITANIA_HAPTICS_BUFFER_SIZE - write_rel;
+	size_t first_byte = TITANIA_MAXIMUM_HAPTICS_SIZE - write_rel;
 	if (first_byte > num_samples) {
 		first_byte = num_samples;
 	}
@@ -825,6 +828,42 @@ TITANIA_EXPORT titania_error titania_update_haptics(const titania_handle handle,
 	}
 
 	state[handle].haptics.write_offset = (write + num_samples) & SIZE_MAX;
+
+	return TITANIA_ERROR_OK;
+#endif
+}
+
+TITANIA_EXPORT titania_error titania_haptics_reset(const titania_handle handle) {
+#ifndef TITANIA_HAS_HAPTICS
+	return TITANIA_ERROR_NOT_IMPLEMENTED;
+#else
+	CHECK_INIT();
+	CHECK_HANDLE_VALID(handle);
+
+	if (IS_ACCESS(state[handle].hid_info)) {
+		return TITANIA_ERROR_NOT_SUPPORTED;
+	}
+
+	state[handle].haptics.write_offset = 0;
+	return titania_haptics_flush(handle);
+#endif
+}
+
+TITANIA_EXPORT titania_error titania_haptics_state(const titania_handle handle, size_t* size) {
+#ifndef TITANIA_HAS_HAPTICS
+	return TITANIA_ERROR_NOT_IMPLEMENTED;
+#else
+	CHECK_INIT();
+	CHECK_HANDLE_VALID(handle);
+
+	if (IS_ACCESS(state[handle].hid_info)) {
+		return TITANIA_ERROR_NOT_SUPPORTED;
+	}
+
+	const size_t write = state[handle].haptics.write_offset;
+	const size_t read = state[handle].haptics.read_offset;
+
+	*size = (write - read) % TITANIA_MAXIMUM_HAPTICS_SIZE;
 
 	return TITANIA_ERROR_OK;
 #endif
