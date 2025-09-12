@@ -107,7 +107,11 @@ has_normal_bitpacking = false
 bitpacking_test_run = compiler.run(bitpacking_test, name : 'has variable type bitpacking', args : args + [has_pack ? '-DHAS_PACK' : ''])
 has_normal_bitpacking = bitpacking_test_run.compiled() and bitpacking_test_run.returncode() == 0
 
-config_file = configure_file(
+has_haptics = get_option('titania_haptics').allowed()
+need_haptics = get_option('titania_haptics').enabled()
+# todo: if auto -> look for pipewire (linux), winmm (win32), or coreaudio (apple) and enable if found
+
+configure_file(
 	output : 'titania_config.h',
 	configuration : configuration_data({
 		'TITANIA_MAX_CONTROLLERS' : get_option('titania_max_controllers'),
@@ -125,6 +129,7 @@ configure_file(
 		'TITANIA_HAS_PACK' : has_pack,
 		'TITANIA_HAS_STDC_FLAGS': has_stdc_flags,
 		'TITANIA_HAS_VARIABLE_BITPACKING' : has_normal_bitpacking,
+		'TITANIA_HAS_HAPTICS' : has_haptics
    })
 )
 
@@ -133,17 +138,24 @@ if not hidapi.found()
 	hidapi = dependency('hidapi')
 endif
 
+titania_source = [
+	'src/access.c',
+	'src/crc.c',
+	'src/enums.c',
+	'src/edge.c',
+	'src/hid.c',
+	'src/trans.c',
+	'src/unicode.c'
+]
+
+if has_haptics
+	titania_source += ['src/haptics.c']
+endif
+
 titania_inc = include_directories('include/')
 
-titania_lib = library(meson.project_name(), [
-		'src/access.c',
-		'src/crc.c',
-		'src/enums.c',
-		'src/edge.c',
-		'src/hid.c',
-		'src/trans.c',
-		'src/unicode.c'
-	],
+titania_lib = library(meson.project_name(),
+	titania_source,
 	dependencies : [hidapi],
 	gnu_symbol_visibility : 'hidden',
 	c_args : [args, '-DTITANIA_EXPORTING'],

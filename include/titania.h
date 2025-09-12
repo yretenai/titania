@@ -62,9 +62,6 @@ extern "C" {
 #define TITANIA_ACCESS_BUTTON_B8 (8)
 #define TITANIA_ACCESS_BUTTON_STICK (9)
 
-#define TITANIA_HAPTICS_SAMPLE_SIZE 64
-#define TITANIA_HAPTICS_SAMPLE_RATE 3000
-
 typedef enum titania_error {
 	TITANIA_ERROR_OK = 0,
 	TITANIA_ERROR_NOT_INITIALIZED,
@@ -82,6 +79,8 @@ typedef enum titania_error {
 	TITANIA_ERROR_NOT_EDGE,
 	TITANIA_ERROR_NOT_ACCESS,
 	TITANIA_ERROR_NOT_SUPPORTED,
+	TITANIA_ERROR_OUT_OF_SPACE,
+	TITANIA_ERROR_NOT_ENOUGH_DATA,
 	TITANIA_ERROR_MAX
 } titania_error;
 
@@ -823,8 +822,6 @@ typedef struct titania_control_update {
 	bool edge_disable_vibration_indicators;
 } titania_control_update;
 
-typedef uint8_t titania_haptics_frame[TITANIA_HAPTICS_SAMPLE_SIZE];
-
 #define titania_init() titania_init_checked(sizeof(titania_hid))
 
 /**
@@ -924,12 +921,13 @@ TITANIA_EXPORT titania_error titania_update_rumble(const titania_handle handle, 
 
 /**
  * @brief update haptics state of a controller
+ * @note needs at least 3000 samples to fill a single buffer at 48KHz
  * @note this will disable rumble emulation
- * @note new data must be fed every 10.667 miliseconds (10666666 ns)
  * @param handle: the controller to update
- * @param sample: the 8-bit signed PCM 3Khz haptics data 
+ * @param samples: the 8-bit signed 2-channel interleaved PCM 48Khz haptics data
+ * @param num_samples: number of buffers
  */
-TITANIA_EXPORT titania_error titania_update_haptics(const titania_handle handle, const titania_haptics_frame sample);
+TITANIA_EXPORT titania_error titania_update_haptics(const titania_handle handle, const uint8_t* samples, const size_t num_samples);
 
 /**
  * @brief pair a controller with a bluetooth adapter

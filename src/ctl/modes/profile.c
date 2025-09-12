@@ -270,7 +270,7 @@ titaniactl_error titaniactl_mode_profile_import_selector(titaniactl_context* con
 
 	const size_t n = fread(json_data, 1, size, file);
 	fclose(file);
-	if(n < size) {
+	if (n < size) {
 		free(json_data);
 		return TITANIACTL_ERROR_INVALID_PROFILE;
 	}

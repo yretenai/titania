@@ -18,12 +18,12 @@ float DENORM_CLAMP_UINT16_TAB[UINT16_MAX + 1];
 void titania_init_floats(void) {
 	float maxu8 = (float) (UINT8_MAX);
 	float maxu16 = (float) UINT16_MAX;
-	for(int32_t i = 0; i <= UINT8_MAX; ++i) {
+	for (int32_t i = 0; i <= UINT8_MAX; ++i) {
 		DENORM_CLAMP_UINT8_TAB[i] = i / maxu8;
 		DENORM_CLAMP_INT8_TAB[i] = i / maxu8 * 2.0f - 1.0f;
 	}
 
-	for(int32_t i = 0; i <= UINT16_MAX; ++i) {
+	for (int32_t i = 0; i <= UINT16_MAX; ++i) {
 		DENORM_CLAMP_UINT16_TAB[i] = i / maxu16;
 	}
 

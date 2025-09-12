@@ -29,7 +29,7 @@ titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const
 			TITANIAPRINT_TEST(data.hid, is_access);
 			printf(" }\n");
 
-			if(data.hid.is_bluetooth && !data.hid.is_access) {
+			if (data.hid.is_bluetooth && !data.hid.is_access) {
 				printf("bt {");
 				TITANIAPRINT_U32(data.bt, tag); TITANIAPRINT_SEP();
 				TITANIAPRINT_U32(data.bt, seq);
@@ -102,7 +102,7 @@ titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const
 			TITANIAPRINT_FLOAT(data.sticks[TITANIA_RIGHT], y);
 			printf(" } }\n");
 
-			if(!data.hid.is_access) {
+			if (!data.hid.is_access) {
 				printf("triggers { left = {");
 				TITANIAPRINT_PERCENT(data.triggers[TITANIA_LEFT], level); TITANIAPRINT_SEP();
 				TITANIAPRINT_U32(data.triggers[TITANIA_LEFT], id); TITANIAPRINT_SEP();
@@ -153,7 +153,7 @@ titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const
 				TITANIAPRINT_U32(data.device, reserved);
 				printf(" }\n");
 			} else {
-				for(int j = 0; j < 4; ++j) {
+				for (int j = 0; j < 4; ++j) {
 					printf("access extension e%d {", j + 1);
 					TITANIAPRINT_FLOAT(data.access_device.extensions[j].pos, x); TITANIAPRINT_SEP();
 					TITANIAPRINT_FLOAT(data.access_device.extensions[j].pos, y); TITANIAPRINT_SEP();

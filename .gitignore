@@ -1,6 +1,11 @@
 build
+builddir
+buildDir
 .cache
 .clangd
 .idea
+.vscode
+.DS_Store
+Thumbs.db
 subprojects/*
 !subprojects/*.wrap

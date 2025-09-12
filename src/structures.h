@@ -27,6 +27,10 @@ static_assert(__STDC_VERSION__ >= 202000L, "a c2x compiler is required");
 #include "enums.h"
 #include <titania_config.h>
 
+#ifdef TITANIA_HAS_HAPTICS
+#include "haptics.h"
+#endif
+
 #ifdef TITANIA_HAS_PACK
 #define PACKED
 #pragma pack(push, 1)
@@ -467,7 +471,7 @@ typedef struct titania_calibration_bit {
 	int speed;
 } titania_calibration_bit;
 
-typedef struct PACKED dualsense_state {
+typedef struct dualsense_state {
 	hid_device* hid;
 	titania_hid hid_info;
 	titania_calibration_bit calibration[6];
@@ -482,6 +486,10 @@ typedef struct PACKED dualsense_state {
 		dualsense_output_msg_ex data;
 		uint8_t buffer[sizeof(dualsense_output_msg_ex)];
 	} output;
+
+#ifdef TITANIA_HAS_HAPTICS
+	dualsense_haptics_state haptics;
+#endif
 } dualsense_state;
 
 typedef struct PACKED dualsense_bt_pair_msg {

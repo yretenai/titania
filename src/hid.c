@@ -289,6 +289,10 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 				titania_push(&handle->handle, 1);
 			}
 
+		#ifdef TITANIA_HAS_HAPTICS
+			titania_haptics_init(handle->handle);
+		#endif
+
 			return TITANIA_ERROR_OK;
 		}
 	}
@@ -729,10 +733,11 @@ titania_error titania_set_vibration_mode(const titania_handle handle, const bool
 
 	hid_state->flags.control2 = true;
 	hid_state->flags.disable_haptics = !haptics;
+	state[handle].haptics.enabled = haptics;
 	if (haptics) {
 		hid_state->control2.advanced_rumble_control = false;
 		hid_state->flags.rumble_emulation = false;
-	} else {	
+	} else {
 		hid_state->control2.advanced_rumble_control = hid.firmware.update.major >= 0x224;
 		hid_state->flags.rumble_emulation = !hid_state->control2.advanced_rumble_control;
 	}
@@ -749,9 +754,11 @@ titania_error titania_update_rumble(const titania_handle handle, const float lar
 
 	const titania_hid hid = state[handle].hid_info;
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
-	const titania_error result = titania_set_vibration_mode(handle, false);
-	if (IS_TITANIA_BAD(result)) {
-		return result;
+	if (state[handle].haptics.enabled) {
+		const titania_error result = titania_set_vibration_mode(handle, false);
+		if (IS_TITANIA_BAD(result)) {
+			return result;
+		}
 	}
 
 	hid_state->rumble[DUALSENSE_LARGE_MOTOR] = NORM_CLAMP_UINT8(large_motor);
@@ -765,7 +772,10 @@ titania_error titania_update_rumble(const titania_handle handle, const float lar
 	return TITANIA_ERROR_OK;
 }
 
-titania_error titania_update_haptics(const titania_handle handle, const titania_haptics_frame samples) {
+TITANIA_EXPORT titania_error titania_update_haptics(const titania_handle handle, const uint8_t* samples, const size_t num_samples) {
+#ifndef TITANIA_HAS_HAPTICS
+	return TITANIA_ERROR_NOT_IMPLEMENTED;
+#else
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
@@ -775,12 +785,42 @@ titania_error titania_update_haptics(const titania_handle handle, const titania_
 
 	const titania_hid hid = state[handle].hid_info;
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
-	const titania_error result = titania_set_vibration_mode(handle, true);
-	if (IS_TITANIA_BAD(result)) {
-		return result;
+	if (state[handle].haptics.enabled) {
+		const titania_error result = titania_set_vibration_mode(handle, true);
+		if (IS_TITANIA_BAD(result)) {
+			return result;
+		}
 	}
 
-	return TITANIA_ERROR_NOT_IMPLEMENTED;
+	if (num_samples < TITANIA_MINIMUM_HAPTICS_SIZE) {
+		return TITANIA_ERROR_NOT_ENOUGH_DATA;
+	}
+
+	const size_t write = state[handle].haptics.write_offset;
+	const size_t read = state[handle].haptics.read_offset;
+	const size_t write_rel = write % TITANIA_HAPTICS_BUFFER_SIZE;
+
+	const size_t used = (write - read) % TITANIA_HAPTICS_BUFFER_SIZE;
+	const size_t remaining_size = TITANIA_HAPTICS_BUFFER_SIZE - used;
+
+	if (num_samples > remaining_size) {
+		return TITANIA_ERROR_OUT_OF_SPACE;
+	}
+
+    size_t first_byte = TITANIA_HAPTICS_BUFFER_SIZE - write_rel;
+    if (first_byte > num_samples) {
+        first_byte = num_samples;
+    }
+
+	memcpy(&state[handle].haptics.buffer[write_rel], samples, first_byte);
+	if (num_samples - first_byte > 0) {
+	    memcpy(&state[handle].haptics.buffer[0], samples + first_byte, num_samples - first_byte);
+	}
+
+	state[handle].haptics.write_offset = (write + num_samples) & SIZE_MAX;
+
+	return TITANIA_ERROR_OK;
+#endif
 }
 
 titania_error titania_bt_pair(const titania_handle handle, const titania_mac mac, const titania_link_key link_key) {
@@ -1002,6 +1042,9 @@ void titania_close(const titania_handle handle) {
 	}
 
 	hid_close(state[handle].hid);
+#ifdef TITANIA_HAS_HAPTICS
+	titania_haptics_close(handle);
+#endif
 	memset(&state[handle], 0, sizeof(dualsense_state));
 }
 

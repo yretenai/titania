@@ -33,7 +33,7 @@ While the library is built on c2x, the `titania.h` header is c17 (maybe c11) com
 
 - hidapi 0.14 or newer (meson wrap subproject, will compile if system is missing)
 - pandoc 3.0.0 or newer (optional, only used for man page generation)
-- a C23/C2x capable compiler (GCC 13 or newer, Clang 16 or newer, MSVC 19.30 or newer)
+- a C23 capable compiler (GCC 13 or newer, Clang 16 or newer, MSVC 19.30 or newer)
 - meson 1.3.0 or newer
 - ninja 1.10.0 or newer
 

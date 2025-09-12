@@ -39,7 +39,7 @@ void json_object_get_access_extension(struct json* obj, titania_access_profile_e
 		case TITANIA_ACCESS_EXTENSION_TYPE_BUTTON: json_object_get_access_button(obj, &data->button); break;
 		default: {
 			const char* raw = titania_json_object_get_string(obj, "raw", nullptr);
-			if(raw != nullptr && strlen(raw) >= 90) {
+			if (raw != nullptr && strlen(raw) >= 90) {
 				for (int i = 0; i < 45; ++i) {
 					const uint16_t a = titania_parse_octet_safe(raw[i * 2]);
 					const uint16_t b = titania_parse_octet_safe(raw[i * 2 + 1]);
