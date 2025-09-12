@@ -54,8 +54,8 @@ titaniactl_error titaniactl_mode_bench(titaniactl_context* context) {
 			max = delta;
 		}
 
-		if (++i % 1000 == 0) {
-			printf("min: %lu ns, max: %lu ns, avg: %lu ns\n", (unsigned long) min, (unsigned long) max, (unsigned long) avg / 1000);
+		if (++i % 64 == 0) {
+			printf("min: %f ms, max: %f ms, avg: %f ms\n", (float) min / 1000000.0f,(float) max / 1000000.0f, (float) avg / 64.0f / 1000000.0f);
 			max = 0;
 			min = UINT64_MAX;
 			avg = 0;
