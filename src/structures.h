@@ -25,7 +25,6 @@ static_assert(__STDC_VERSION__ >= 202000L, "a c2x compiler is required");
 #include "common.h"
 #include "edge.h"
 #include "enums.h"
-#include <titania_config.h>
 
 #ifdef TITANIA_HAS_HAPTICS
 #include "haptics.h"
@@ -153,6 +152,7 @@ typedef struct PACKED dualsense_input_msg {
 		dualsense_bt_packet_tag bt;
 		dualsense_report_id report_id;
 	};
+
 	dualsense_vector2b sticks[2];
 	uint8_t triggers[2];
 	uint8_t sequence;
@@ -344,6 +344,7 @@ typedef struct PACKED dualsense_output_msg {
 		dualsense_bt_packet bt;
 		dualsense_report_id report_id;
 	};
+
 	dualsense_mutator_flags flags;
 	uint8_t rumble[2];
 	dualsense_audio_output audio;
@@ -537,7 +538,7 @@ extern bool is_initialized;
  * @param data: the data to convert into
  * @param calibration: calibration data
  */
-void titania_convert_input(const titania_hid hid_info, const dualsense_input_msg input, titania_data* data, titania_calibration_bit calibration[6]);
+void titania_convert_input(titania_hid hid_info, dualsense_input_msg input, titania_data* data, titania_calibration_bit calibration[6]);
 
 /**
  * @brief convert a titania profile to dualsense edge's representation
@@ -558,7 +559,7 @@ titania_error titania_convert_access_profile_output(titania_access_profile input
  * @param handle: the controller to update
  * @param data: led update data
  */
-titania_error titania_update_access_led(const titania_handle handle, const titania_led_update data);
+titania_error titania_update_access_led(titania_handle handle, titania_led_update data);
 
 /**
  * @brief initializes checksum tables
@@ -572,10 +573,10 @@ void titania_init_floats(void);
 
 /**
  * @brief calculates a bluetooth checksum
- * @param state: existing state.
+ * @param crc_state: existing state.
  * @param buffer: data to hash
  * @param size: sizeof(buffer)
  */
-uint32_t titania_calc_checksum(const uint32_t state, const uint8_t* buffer, const size_t size);
+uint32_t titania_calc_checksum(uint32_t crc_state, const uint8_t* buffer, size_t size);
 
 #endif

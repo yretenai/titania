@@ -35,7 +35,7 @@ titaniactl_error titaniactl_mode_bench(titaniactl_context* context) {
 	titania_data data;
 	titania_handle handle = context->handles[0];
 	int32_t i = 0;
-	const struct timespec sleep_time = { 0, 1e+6 };
+	const struct timespec sleep_time = { 0, 1000000 };
 	while (true) {
 		if (should_stop) {
 			return TITANIACTL_ERROR_INTERRUPTED;
@@ -45,7 +45,7 @@ titaniactl_error titaniactl_mode_bench(titaniactl_context* context) {
 		titania_pull(&handle, 1, &data);
 		timespec_get(&ts2, TIME_UTC);
 		const struct timespec delta_ts = { ts2.tv_sec - ts1.tv_sec, ts2.tv_nsec - ts1.tv_nsec };
-		const uint32_t delta = delta_ts.tv_sec * 1e+9 + delta_ts.tv_nsec;
+		const uint64_t delta = delta_ts.tv_sec * 1000000000 + delta_ts.tv_nsec;
 		avg += delta;
 		if (delta < min) {
 			min = delta;

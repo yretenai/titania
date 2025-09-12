@@ -16,15 +16,15 @@ float DENORM_CLAMP_INT8_TAB[UINT8_MAX + 1];
 float DENORM_CLAMP_UINT16_TAB[UINT16_MAX + 1];
 
 void titania_init_floats(void) {
-	float maxu8 = (float) (UINT8_MAX);
-	float maxu16 = (float) UINT16_MAX;
+	constexpr float maxu8 = (float) (UINT8_MAX);
+	constexpr float maxu16 = (float) UINT16_MAX;
 	for (int32_t i = 0; i <= UINT8_MAX; ++i) {
-		DENORM_CLAMP_UINT8_TAB[i] = i / maxu8;
-		DENORM_CLAMP_INT8_TAB[i] = i / maxu8 * 2.0f - 1.0f;
+		DENORM_CLAMP_UINT8_TAB[i] = (float) i / maxu8;
+		DENORM_CLAMP_INT8_TAB[i] = (float) i / maxu8 * 2.0f - 1.0f;
 	}
 
 	for (int32_t i = 0; i <= UINT16_MAX; ++i) {
-		DENORM_CLAMP_UINT16_TAB[i] = i / maxu16;
+		DENORM_CLAMP_UINT16_TAB[i] = (float) i / maxu16;
 	}
 
 	DENORM_CLAMP_UINT8_TAB[0] = 0.0f;
@@ -39,18 +39,18 @@ void titania_init_floats(void) {
 	DENORM_CLAMP_INT8_TAB[128] = 0.0f;
 }
 
-#define CHECK_DPAD(V, A, B, C) V.dpad == DUALSENSE_DPAD_##A || V.dpad == DUALSENSE_DPAD_##B || V.dpad == DUALSENSE_DPAD_##C
+#define CHECK_DPAD(V, A, B, C) (V).dpad == DUALSENSE_DPAD_##A || (V).dpad == DUALSENSE_DPAD_##B || (V).dpad == DUALSENSE_DPAD_##C
 
-#define CALIBRATE(value, slot) (value < 0 ? value * calibration[slot].min : value * calibration[slot].max) * calibration[slot].cache
+#define CALIBRATE(value, slot) (((value) < 0 ? (value) * calibration[(slot)].min : (value) * calibration[(slot)].max) * calibration[(slot)].cache)
 
-#define CALIBRATE_BIAS(value, slot) CALIBRATE(value - calibration[slot].bias, slot)
+#define CALIBRATE_BIAS(value, slot) CALIBRATE((value) - calibration[(slot)].bias, (slot))
 
 void titania_convert_input_access(const dualsense_input_msg input, titania_data* data) {
 	data->battery.state = input.access.battery.state + 1;
 	if (data->battery.state == TITANIA_BATTERY_FULL) {
 		data->battery.level = 1.0f;
 	} else {
-		data->battery.level = input.access.battery.level * 0.1 + 0.10;
+		data->battery.level = (float) input.access.battery.level * 0.1f + 0.10f;
 	}
 
 	data->access_device.buttons.button1 = input.access.raw_button.button1;
@@ -207,7 +207,7 @@ void titania_convert_input(const titania_hid hid_info, const dualsense_input_msg
 	if (data->battery.state == TITANIA_BATTERY_FULL) {
 		data->battery.level = 1.0f;
 	} else {
-		data->battery.level = input.state.battery.level * 0.1 + 0.10;
+		data->battery.level = (float) input.state.battery.level * 0.1f + 0.10f;
 	}
 
 	data->bt.tag = input.bt.tag;

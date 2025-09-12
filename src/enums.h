@@ -7,11 +7,10 @@
 #ifndef TITANIA_ENUMS_H
 #define TITANIA_ENUMS_H
 
-#include <assert.h>
 #include <stdint.h>
 
 #define MAKE_EDGE_PROFILE_REPORT(id, name) \
-	DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P1 = id, DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P2 = id + 1, DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P3 = id + 2
+	DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P1 = (id), DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P2 = (id) + 1, DUALSENSE_REPORT_EDGE_QUERY_PROFILE_##name##_P3 = (id) + 2
 
 typedef enum dualsense_report_id : uint8_t {
 	// usb:

@@ -33,12 +33,12 @@ typedef union titania_unicode_result {
 	size_t size;
 } titania_unicode_result;
 
-titania_unicode_result titania_utf8_to_utf32(const titania_char8* utf8, const size_t utf8_size, titania_char32* utf32, const size_t utf32_size);
+titania_unicode_result titania_utf8_to_utf32(const titania_char8* utf8, size_t utf8_size, titania_char32* utf32, size_t utf32_size);
 
-titania_unicode_result titania_utf16_to_utf32(const titania_char16* utf16, const size_t utf16_size, titania_char32* utf32, const size_t utf32_size);
+titania_unicode_result titania_utf16_to_utf32(const titania_char16* utf16, size_t utf16_size, titania_char32* utf32, size_t utf32_size);
 
-titania_unicode_result titania_utf32_to_utf8(const titania_char32* utf32, const size_t utf32_size, titania_char8* utf8, const size_t utf8_size);
+titania_unicode_result titania_utf32_to_utf8(const titania_char32* utf32, size_t utf32_size, titania_char8* utf8, size_t utf8_size);
 
-titania_unicode_result titania_utf32_to_utf16(const titania_char32* utf32, const size_t utf32_size, titania_char16* utf16, const size_t utf16_size);
+titania_unicode_result titania_utf32_to_utf16(const titania_char32* utf32, size_t utf32_size, titania_char16* utf16, size_t utf16_size);
 
 #endif

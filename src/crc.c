@@ -40,4 +40,4 @@ void titania_init_checksum(void) {
 	crc_seed_titania = checksum(UINT32_MAX, (uint8_t*) &crc_seed_titania, 4);
 }
 
-uint32_t titania_calc_checksum(const uint32_t state, const uint8_t* buffer, const size_t size) { return ~checksum(state, buffer, size); }
+uint32_t titania_calc_checksum(const uint32_t crc_state, const uint8_t* buffer, const size_t size) { return ~checksum(crc_state, buffer, size); }

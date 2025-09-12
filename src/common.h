@@ -81,17 +81,17 @@
 #define DUALSENSE_ACCELEROMETER_RESOLUTION (4.0f)
 
 #define DUALSENSE_GYRO_SENSITIVITY (16.4f)
-#define DUALSENSE_ACCELEROMETER_SENSITIVITY (8192.0)
+#define DUALSENSE_ACCELEROMETER_SENSITIVITY (8192.0f)
 
-#define DUALSENSE_GYRO_BASE (0.270)
-#define DUALSENSE_ACCELEROMETER_BASE (0.250)
+#define DUALSENSE_GYRO_BASE (0.270f)
+#define DUALSENSE_ACCELEROMETER_BASE (0.250f)
 
 #define DUALSENSE_FIRMWARE_VERSION_DATE_LEN 0xB
 #define DUALSENSE_FIRMWARE_VERSION_TIME_LEN 0x8
 
 #define NORM_CLAMP(value, max) ((value) >= 1.0f ? (max) : (value) <= 0.0f ? 0 : (uint8_t) ((value) * (max)))
 #define NORM_CLAMP_UINT8(value) NORM_CLAMP(value, UINT8_MAX)
-#define NORM_CLAMP_INT8(value) NORM_CLAMP_UINT8(((uint8_t) value))
+#define NORM_CLAMP_INT8(value) NORM_CLAMP_UINT8(((uint8_t) (value)))
 
 extern float DENORM_CLAMP_UINT8_TAB[UINT8_MAX + 1];
 extern float DENORM_CLAMP_INT8_TAB[UINT8_MAX + 1];
@@ -108,7 +108,7 @@ extern float DENORM_CLAMP_UINT16_TAB[UINT16_MAX + 1];
 
 // Check if a handle is a valid number.
 #define CHECK_HANDLE(h) \
-	if (h == TITANIA_INVALID_ID || h < 0 || h >= TITANIA_MAX_CONTROLLERS) \
+	if ((h) == TITANIA_INVALID_ID || (h) < 0 || (h) >= TITANIA_MAX_CONTROLLERS) \
 	return TITANIA_ERROR_INVALID_HANDLE
 
 // Check if a handle is a valid number, and that it has been initialized.
@@ -117,11 +117,11 @@ extern float DENORM_CLAMP_UINT16_TAB[UINT16_MAX + 1];
 	if (state[h].hid == nullptr) \
 	return TITANIA_ERROR_INVALID_HANDLE
 
-#define HID_FAIL(s) (s == -1)
-#define HID_PASS(s) (s != -1)
+#define HID_FAIL(s) ((s) == -1)
+#define HID_PASS(s) ((s) != -1)
 
-#define IS_EDGE(h) (h.vendor_id == 0x054C && h.product_id == 0x0DF2)
-#define IS_ACCESS(h) (h.vendor_id == 0x054C && h.product_id == 0x0E5F)
+#define IS_EDGE(h) ((h).vendor_id == 0x054C && (h).product_id == 0x0DF2)
+#define IS_ACCESS(h) ((h).vendor_id == 0x054C && (h).product_id == 0x0E5F)
 
 #define CHECK_EDGE(h) \
 	if (!IS_EDGE(state[h].hid_info)) \

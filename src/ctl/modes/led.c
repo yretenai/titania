@@ -23,15 +23,14 @@ titaniactl_error titaniactl_mode_led(titaniactl_context* context) {
 		} else if (strcmp(context->argv[1], "player4") == 0) {
 			led = TITANIA_LED_PLAYER_4;
 		} else {
-			int n;
-			sscanf(context->argv[1], "%d", &n);
+			const int32_t n = (int32_t) strtol(context->argv[1], nullptr, 10);
 			led = (titania_led_index) (n & 0x7F);
 		}
 	}
 
 	if (context->argc > 0) {
 		const char* color = context->argv[0];
-		int len = strlen(color);
+		uint32_t len = strlen(color);
 		if (color[0] == '#') {
 			color += 1;
 			len -= 1;
@@ -53,9 +52,9 @@ titaniactl_error titaniactl_mode_led(titaniactl_context* context) {
 			}
 		}
 
-		r = r8 / 255.0f;
-		g = g8 / 255.0f;
-		b = b8 / 255.0f;
+		r = (float) r8 / 255.0f;
+		g = (float) g8 / 255.0f;
+		b = (float) b8 / 255.0f;
 	}
 
 	titania_led_update update = { 0 };

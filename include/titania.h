@@ -189,6 +189,12 @@ typedef enum titania_edge_interpolation_type {
 	TITANIA_EDGE_INTERPOLATION_TYPE_SMOOTH = 4
 } titania_edge_interpolation_type;
 
+typedef enum titania_vibration_mode {
+	TITANIA_VIBRATION_MODE_HAPTICS = 0,
+	TITANIA_VIBRATION_MODE_RUMBLE = 1,
+	TITANIA_VIBRATION_MODE_LEGACY_RUMBLE = 2
+} titania_vibration_mode;
+
 typedef enum titania_effect_mode {
 	TITANIA_EFFECT_NONE = -1,
 	TITANIA_EFFECT_OFF = 0,
@@ -828,14 +834,14 @@ typedef struct titania_control_update {
  * @brief initialize the library, this is mandatory.
  * @param size: sizeof(titania_hid)
  */
-TITANIA_EXPORT titania_error titania_init_checked(const size_t size);
+TITANIA_EXPORT titania_error titania_init_checked(size_t size);
 
 /**
  * @brief scan and return all HIDs that this library supports.
  * @param hids: pointer to where HID data should be stored
  * @param hids_length: array size of hids
  */
-TITANIA_EXPORT titania_error titania_get_hids(titania_query* hids, const size_t hids_length);
+TITANIA_EXPORT titania_error titania_get_hids(titania_query* hids, size_t hids_length);
 
 /**
  * @brief open a HID handle for processing
@@ -845,7 +851,7 @@ TITANIA_EXPORT titania_error titania_get_hids(titania_query* hids, const size_t 
  * @param use_calibration: whether or not to use calibration data for the gyroscope and accelerometer
  * @param blocking: whether or not to wait for data before reading, this is sometimes slower or faster.
  */
-TITANIA_EXPORT titania_error titania_open(const titania_hid_path path, const bool is_bluetooth, titania_hid* handle, const bool use_calibration, const bool blocking);
+TITANIA_EXPORT titania_error titania_open(const titania_hid_path path, bool is_bluetooth, titania_hid* handle, bool use_calibration, bool blocking);
 
 /**
  * @brief poll controllers for input data
@@ -853,28 +859,28 @@ TITANIA_EXPORT titania_error titania_open(const titania_hid_path path, const boo
  * @param handle_count: number of handles to process
  * @param data: pointer to an array of data storage
  */
-TITANIA_EXPORT titania_error titania_pull(titania_handle* handle, const size_t handle_count, titania_data* data);
+TITANIA_EXPORT titania_error titania_pull(titania_handle* handle, size_t handle_count, titania_data* data);
 
 /**
  * @brief push output data to controllers
  * @param handle: pointer to an array of handles, values will be set to TITANIA_ERROR_INVALID_HANDLE if they are invalid.
  * @param handle_count: number of handles to process
  */
-TITANIA_EXPORT titania_error titania_push(titania_handle* handle, const size_t handle_count);
+TITANIA_EXPORT titania_error titania_push(titania_handle* handle, size_t handle_count);
 
 /**
  * @brief update LED state of a controller
  * @param handle: the controller to update
  * @param data: led update data
  */
-TITANIA_EXPORT titania_error titania_update_led(const titania_handle handle, const titania_led_update data);
+TITANIA_EXPORT titania_error titania_update_led(titania_handle handle, titania_led_update data);
 
 /**
  * @brief update audio state of a controller
  * @param handle: the controller to update
  * @param data: audio update data
  */
-TITANIA_EXPORT titania_error titania_update_audio(const titania_handle handle, const titania_audio_update data);
+TITANIA_EXPORT titania_error titania_update_audio(titania_handle handle, titania_audio_update data);
 
 /**
  * @brief update control state flags of a controller
@@ -882,14 +888,14 @@ TITANIA_EXPORT titania_error titania_update_audio(const titania_handle handle, c
  * @param handle: the controller to update
  * @param data: control update data
  */
-TITANIA_EXPORT titania_error titania_update_control(const titania_handle handle, const titania_control_update data);
+TITANIA_EXPORT titania_error titania_update_control(titania_handle handle, titania_control_update data);
 
 /**
  * @brief get control state flags of a controller (if we've sent them this session.)
  * @param handle: the controller to update
  * @param control: control update data
  */
-TITANIA_EXPORT titania_error titania_get_control(const titania_handle handle, titania_control_update* control);
+TITANIA_EXPORT titania_error titania_get_control(titania_handle handle, titania_control_update* control);
 
 /**
  * @brief update effect state of a controller
@@ -898,15 +904,15 @@ TITANIA_EXPORT titania_error titania_get_control(const titania_handle handle, ti
  * @param right_trigger: effect data for RT
  * @param power_reduction: power reduction amount for trigger motors
  */
-TITANIA_EXPORT titania_error titania_update_effect(const titania_handle handle, const titania_effect_update left_trigger, const titania_effect_update right_trigger, const float power_reduction);
+TITANIA_EXPORT titania_error titania_update_effect(titania_handle handle, titania_effect_update left_trigger, titania_effect_update right_trigger, float power_reduction);
 
 /**
  * @brief update vibration state of a controller
  * @note this will be called by both titania_update_rumble and titania_update_haptics
  * @param handle: the controller to update
- * @param haptics: whether or not to set mode to haptics or not
+ * @param mode: the vibration mode to set to
  */
-TITANIA_EXPORT titania_error titania_set_vibration_mode(const titania_handle handle, const bool haptics);
+TITANIA_EXPORT titania_error titania_set_vibration_mode(titania_handle handle, titania_vibration_mode mode);
 
 /**
  * @brief update rumble state of a controller
@@ -917,7 +923,7 @@ TITANIA_EXPORT titania_error titania_set_vibration_mode(const titania_handle han
  * @param power_reduction: power reduction amount for haptic motors
  * @param emulate_legacy_behavior: instructs the dualsense to emulate how rumble motors used to work
  */
-TITANIA_EXPORT titania_error titania_update_rumble(const titania_handle handle, const float large_motor, const float small_motor, const float power_reduction, const bool emulate_legacy_behavior);
+TITANIA_EXPORT titania_error titania_update_rumble(titania_handle handle, float large_motor, float small_motor, float power_reduction, bool emulate_legacy_behavior);
 
 /**
  * @brief update haptics state of a controller
@@ -927,7 +933,7 @@ TITANIA_EXPORT titania_error titania_update_rumble(const titania_handle handle, 
  * @param samples: the 8-bit signed 2-channel interleaved PCM 48Khz haptics data
  * @param num_samples: number of buffers
  */
-TITANIA_EXPORT titania_error titania_update_haptics(const titania_handle handle, const uint8_t* samples, const size_t num_samples);
+TITANIA_EXPORT titania_error titania_update_haptics(titania_handle handle, const uint8_t* samples, size_t num_samples);
 
 /**
  * @brief pair a controller with a bluetooth adapter
@@ -935,19 +941,19 @@ TITANIA_EXPORT titania_error titania_update_haptics(const titania_handle handle,
  * @param mac: mac address of the host bluetooth adapter
  * @param link_key: bluetooth link key
  */
-TITANIA_EXPORT titania_error titania_bt_pair(const titania_handle handle, const titania_mac mac, const titania_link_key link_key);
+TITANIA_EXPORT titania_error titania_bt_pair(titania_handle handle, const titania_mac mac, const titania_link_key link_key);
 
 /**
  * @brief tell a controller to connect with bluetooth
  * @param handle: the controller to update
  */
-TITANIA_EXPORT titania_error titania_bt_connect(const titania_handle handle);
+TITANIA_EXPORT titania_error titania_bt_connect(titania_handle handle);
 
 /**
  * @brief tell a controller to connect with usb
  * @param handle: the controller to update
  */
-TITANIA_EXPORT titania_error titania_bt_disconnect(const titania_handle handle);
+TITANIA_EXPORT titania_error titania_bt_disconnect(titania_handle handle);
 
 /**
  * @brief update a dualsense edge profile
@@ -955,7 +961,7 @@ TITANIA_EXPORT titania_error titania_bt_disconnect(const titania_handle handle);
  * @param id: the profile id to store the profile into
  * @param profile: the profile data to store
  */
-TITANIA_EXPORT titania_error titania_update_edge_profile(const titania_handle handle, const titania_profile_id id, const titania_edge_profile profile);
+TITANIA_EXPORT titania_error titania_update_edge_profile(titania_handle handle, titania_profile_id id, titania_edge_profile profile);
 
 /**
  * @brief update a dualsense edge profile
@@ -963,7 +969,7 @@ TITANIA_EXPORT titania_error titania_update_edge_profile(const titania_handle ha
  * @param id: the profile id to store the profile into
  * @param profile: the profile data to store
  */
-TITANIA_EXPORT titania_error titania_update_access_profile(const titania_handle handle, const titania_profile_id id, const titania_access_profile profile);
+TITANIA_EXPORT titania_error titania_update_access_profile(titania_handle handle, titania_profile_id id, titania_access_profile profile);
 
 /**
  * @brief fetches all dualsense edge profiles
@@ -971,7 +977,7 @@ TITANIA_EXPORT titania_error titania_update_access_profile(const titania_handle 
  * @param profile_id: profile id to query
  * @param profile: the profile data
  */
-TITANIA_EXPORT titania_error titania_query_edge_profile(const titania_handle handle, const titania_profile_id profile_id, titania_edge_profile* profile);
+TITANIA_EXPORT titania_error titania_query_edge_profile(titania_handle handle, titania_profile_id profile_id, titania_edge_profile* profile);
 
 /**
  * @brief fetches all access profiles
@@ -979,7 +985,7 @@ TITANIA_EXPORT titania_error titania_query_edge_profile(const titania_handle han
  * @param profile_id: profile id to query
  * @param profile: the profile data
  */
-TITANIA_EXPORT titania_error titania_query_access_profile(const titania_handle handle, const titania_profile_id profile_id, titania_access_profile* profile);
+TITANIA_EXPORT titania_error titania_query_access_profile(titania_handle handle, titania_profile_id profile_id, titania_access_profile* profile);
 
 /**
  * @brief reset a stick template to a specific template
@@ -987,27 +993,27 @@ TITANIA_EXPORT titania_error titania_query_access_profile(const titania_handle h
  * @param template_id: the stick template to apply
  * @param offset: range between -5 and 5 to offset the sticks
  */
-TITANIA_EXPORT titania_error titania_helper_edge_stick_template(titania_edge_stick* stick, const titania_edge_stick_template template_id, int32_t offset);
+TITANIA_EXPORT titania_error titania_helper_edge_stick_template(titania_edge_stick* stick, titania_edge_stick_template template_id, int32_t offset);
 
 /**
  * @brief delete a dualsense edge profile
  * @param handle: the controller to update
  * @param id: the profile id to delete
  */
-TITANIA_EXPORT titania_error titania_delete_edge_profile(const titania_handle handle, const titania_profile_id id);
+TITANIA_EXPORT titania_error titania_delete_edge_profile(titania_handle handle, titania_profile_id id);
 
 /**
  * @brief delete a playstation access profile
  * @param handle: the controller to update
  * @param id: the profile id to delete
  */
-TITANIA_EXPORT titania_error titania_delete_access_profile(const titania_handle handle, const titania_profile_id id);
+TITANIA_EXPORT titania_error titania_delete_access_profile(titania_handle handle, titania_profile_id id);
 
 /**
  * @brief close a controller device handle
  * @param handle: the controller to close
  */
-TITANIA_EXPORT void titania_close(const titania_handle handle);
+TITANIA_EXPORT void titania_close(titania_handle handle);
 
 /**
  * @brief cleans up library internals for exit
@@ -1019,14 +1025,14 @@ TITANIA_EXPORT void titania_exit(void);
  * @param handle: the device to query
  * @param hid: where to store the hid device pointer
  */
-TITANIA_EXPORT titania_error titania_debug_get_hid(const titania_handle handle, intptr_t* hid);
+TITANIA_EXPORT titania_error titania_debug_get_hid(titania_handle handle, intptr_t* hid);
 
 /**
  * @brief (debug) get hid report ids
  * @param handle: the device to query
  * @param report_ids: where to store the hid report info
  */
-TITANIA_EXPORT titania_error titania_debug_get_hid_report_ids(const titania_handle handle, titania_report_id report_ids[0xFF]);
+TITANIA_EXPORT titania_error titania_debug_get_hid_report_ids(titania_handle handle, titania_report_id report_ids[0xFF]);
 
 /**
  * @brief (debug) get a merged edge profile
@@ -1034,7 +1040,7 @@ TITANIA_EXPORT titania_error titania_debug_get_hid_report_ids(const titania_hand
  * @param profile_id: profile to get
  * @param profile_data: profile data buffer
  */
-TITANIA_EXPORT titania_error titania_debug_get_edge_profile(const titania_handle handle, const titania_profile_id profile_id, uint8_t profile_data[TITANIA_MERGED_REPORT_EDGE_SIZE]);
+TITANIA_EXPORT titania_error titania_debug_get_edge_profile(titania_handle handle, titania_profile_id profile_id, uint8_t profile_data[TITANIA_MERGED_REPORT_EDGE_SIZE]);
 
 /**
  * @brief (debug) get a merged access profile
@@ -1042,21 +1048,21 @@ TITANIA_EXPORT titania_error titania_debug_get_edge_profile(const titania_handle
  * @param profile_id: profile to get
  * @param profile_data: profile data buffer
  */
-TITANIA_EXPORT titania_error titania_debug_get_access_profile(const titania_handle handle, const titania_profile_id profile_id, uint8_t profile_data[TITANIA_MERGED_REPORT_ACCESS_SIZE]);
+TITANIA_EXPORT titania_error titania_debug_get_access_profile(titania_handle handle, titania_profile_id profile_id, uint8_t profile_data[TITANIA_MERGED_REPORT_ACCESS_SIZE]);
 
 /**
  * @brief convert a dualsense edge profile to titania's representation
  * @param input: the input to convert
  * @param output: the profile to convert into
  */
-TITANIA_EXPORT titania_error titania_convert_edge_profile_input(uint8_t input[TITANIA_MERGED_REPORT_EDGE_SIZE], titania_edge_profile* output);
+TITANIA_EXPORT titania_error titania_convert_edge_profile_input(const uint8_t input[TITANIA_MERGED_REPORT_EDGE_SIZE], titania_edge_profile* output);
 
 /**
  * @brief convert an access profile to titania's representation
  * @param input: the input to convert
  * @param output: the profile to convert into
  */
-TITANIA_EXPORT titania_error titania_convert_access_profile_input(uint8_t input[TITANIA_MERGED_REPORT_ACCESS_SIZE], titania_access_profile* output);
+TITANIA_EXPORT titania_error titania_convert_access_profile_input(const uint8_t input[TITANIA_MERGED_REPORT_ACCESS_SIZE], titania_access_profile* output);
 
 #ifdef __cplusplus
 }

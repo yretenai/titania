@@ -28,7 +28,6 @@ titania_error titania_update_access_led(const titania_handle handle, const titan
 			case TITANIA_LED_PLAYER_2: hid_state->led.led_id = TITANIA_LED_ACCESS_2; break;
 			case TITANIA_LED_PLAYER_3: hid_state->led.led_id = TITANIA_LED_ACCESS_3; break;
 			case TITANIA_LED_PLAYER_4: hid_state->led.led_id = TITANIA_LED_ACCESS_4; break;
-			case TITANIA_LED_ALL: hid_state->led.led_id = TITANIA_LED_ACCESS_4; break;
 			default: hid_state->led.led_id = data.led % 5; break;
 		}
 
@@ -53,14 +52,14 @@ titania_error titania_update_access_led(const titania_handle handle, const titan
 	return TITANIA_ERROR_OK;
 }
 
-void convert_button_in(titania_access_profile_button* out, playstation_access_profile_button in, bool toggle) {
+void convert_button_in(titania_access_profile_button* out, const playstation_access_profile_button in, const bool toggle) {
 	out->primary = in.button;
 	out->secondary = in.secondary_button;
 	out->toggle = toggle;
 	out->unknown = (uint32_t) in.unknown | (uint32_t) in.unknown2 << 8;
 }
 
-void convert_stick_in(titania_access_profile_stick* out, playstation_access_profile_extension in) {
+void convert_stick_in(titania_access_profile_stick* out, const playstation_access_profile_extension in) {
 	out->orientation = in.stick.orientation;
 	out->id = in.subtype;
 	out->deadzone = DENORM_CLAMP_UINT16(in.stick.deadzone);
@@ -70,21 +69,21 @@ void convert_stick_in(titania_access_profile_stick* out, playstation_access_prof
 	out->unknown = (uint32_t) in.stick.unknown | (uint32_t) in.stick.unknown2 << 8;
 }
 
-void convert_extension_in(titania_access_profile_extension* out, playstation_access_profile_extension in, bool toggle) {
+void convert_extension_in(titania_access_profile_extension* out, const playstation_access_profile_extension in, const bool toggle) {
 	out->type = in.type;
 	memcpy(&out->raw_data, &in, sizeof(playstation_access_profile_extension));
 
 	switch (out->type) {
-		case TITANIA_ACCESS_EXTENSION_TYPE_STICK: convert_stick_in(&out->stick, in); return;
-		case TITANIA_ACCESS_EXTENSION_TYPE_BUTTON: convert_button_in(&out->button, in.button, toggle); return;
-		default: return;
+		case TITANIA_ACCESS_EXTENSION_TYPE_STICK: convert_stick_in(&out->stick, in); break;
+		case TITANIA_ACCESS_EXTENSION_TYPE_BUTTON: convert_button_in(&out->button, in.button, toggle); break;
+		default: break;
 	}
 }
 
-titania_error titania_convert_access_profile_input(uint8_t profile_data[TITANIA_MERGED_REPORT_ACCESS_SIZE], titania_access_profile* output) {
+titania_error titania_convert_access_profile_input(const uint8_t input[TITANIA_MERGED_REPORT_ACCESS_SIZE], titania_access_profile* output) {
 	memset(output, 0, sizeof(titania_edge_profile));
 
-	const playstation_access_profile profile = *(playstation_access_profile*) profile_data;
+	const playstation_access_profile profile = *(playstation_access_profile*) input;
 
 	titania_char32 unicode[41];
 	titania_unicode_result unicode_result = titania_utf16_to_utf32((const titania_char16*) &profile.msg.name, sizeof(profile.msg.name), unicode, sizeof(unicode));
@@ -187,7 +186,7 @@ titania_error titania_query_access_profile(const titania_handle handle, const ti
 	return result;
 }
 
-void convert_button_out(titania_access_profile_button value, playstation_access_profile_button* button, bool* toggle) {
+void convert_button_out(const titania_access_profile_button value, playstation_access_profile_button* button, bool* toggle) {
 	button->button = value.primary;
 	button->secondary_button = value.secondary;
 	button->unknown = value.unknown & 0xFF;
@@ -195,7 +194,7 @@ void convert_button_out(titania_access_profile_button value, playstation_access_
 	*toggle = value.toggle;
 }
 
-void convert_stick_out(titania_access_profile_stick value, playstation_access_profile_extension* extension) {
+void convert_stick_out(const titania_access_profile_stick value, playstation_access_profile_extension* extension) {
 	extension->stick.orientation = value.orientation;
 	extension->subtype = value.id;
 	extension->stick.deadzone = NORM_CLAMP(value.deadzone, UINT16_MAX);
@@ -206,13 +205,13 @@ void convert_stick_out(titania_access_profile_stick value, playstation_access_pr
 	extension->stick.unknown2 = value.unknown >> 8;
 }
 
-void convert_extension_out(titania_access_profile_extension value, playstation_access_profile_extension* extension, bool* toggle) {
+void convert_extension_out(const titania_access_profile_extension value, playstation_access_profile_extension* extension, bool* toggle) {
 	extension->type = value.type;
 
 	switch (value.type) {
-		case TITANIA_ACCESS_EXTENSION_TYPE_STICK: convert_stick_out(value.stick, extension); return;
-		case TITANIA_ACCESS_EXTENSION_TYPE_BUTTON: convert_button_out(value.button, &extension->button, toggle); return;
-		default: memcpy(extension, value.raw_data, sizeof(playstation_access_profile_extension)); return;
+		case TITANIA_ACCESS_EXTENSION_TYPE_STICK: convert_stick_out(value.stick, extension); break;
+		case TITANIA_ACCESS_EXTENSION_TYPE_BUTTON: convert_button_out(value.button, &extension->button, toggle); break;
+		default: memcpy(extension, value.raw_data, sizeof(playstation_access_profile_extension)); break;
 	}
 }
 

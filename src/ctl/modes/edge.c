@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #include "../titaniactl.h"
 
@@ -17,16 +16,16 @@ void json_object_get_edge_stick(struct json* obj, const char* key, titania_edge_
 	data->disabled = titania_json_object_get_bool(stick_obj, "disabled");
 
 	struct json* deadzone_arr = json_get(stick_obj, "deadzone");
-	data->deadzone.min = titania_json_array_get_float(deadzone_arr, 0, 0.0);
-	data->deadzone.max = titania_json_array_get_float(deadzone_arr, 1, 1.0);
+	data->deadzone.min = (float) titania_json_array_get_float(deadzone_arr, 0, 0.0);
+	data->deadzone.max = (float) titania_json_array_get_float(deadzone_arr, 1, 1.0);
 
 	struct json* curve_arr = json_get(stick_obj, "curve");
-	const float default_curve[3] = { 0.501961f, 0.768627f, 0.882353f };
 
 	for (int i = 0; i < 3; ++i) {
+		constexpr float default_curve[3] = { 0.501961f, 0.768627f, 0.882353f };
 		struct json* curve = json_at(curve_arr, i);
-		data->curve_points[i].min = titania_json_array_get_float(curve, 0, default_curve[i]);
-		data->curve_points[i].max = titania_json_array_get_float(curve, 1, default_curve[i]);
+		data->curve_points[i].min = (float) titania_json_array_get_float(curve, 0, default_curve[i]);
+		data->curve_points[i].max = (float) titania_json_array_get_float(curve, 1, default_curve[i]);
 	}
 
 	data->unknown = titania_json_object_get_uint32(stick_obj, "unknown", 0);
@@ -36,8 +35,8 @@ void json_object_get_edge_trigger(struct json* obj, const char* key, titania_edg
 	struct json* trigger_obj = json_get(obj, key);
 
 	struct json* deadzone_arr = json_get(trigger_obj, "deadzone");
-	data->deadzone.min = titania_json_array_get_float(deadzone_arr, 0, 0.0);
-	data->deadzone.max = titania_json_array_get_float(deadzone_arr, 1, 1.0);
+	data->deadzone.min = (float) titania_json_array_get_float(deadzone_arr, 0, 0.0);
+	data->deadzone.max = (float) titania_json_array_get_float(deadzone_arr, 1, 1.0);
 }
 
 titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, struct json* data, titania_hid handle) {
@@ -82,11 +81,12 @@ titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, struct 
 	uint64_t timestamp = (ts.tv_sec * 1000) + (ts.tv_nsec / 1000);
 
 	if (should_gen_id) {
-		int64_t* id64 = (int64_t*) &profile_data.id;
-		xoroshiro_init(timestamp);
-		xoroshiro_next();
-		id64[0] = xoroshiro_s[0];
-		id64[1] = xoroshiro_s[1];
+		uint64_t* id64 = (uint64_t*) &profile_data.id;
+		uint64_t state[2];
+		xoroshiro_init(state, timestamp);
+		xoroshiro_next(state);
+		id64[0] = state[0];
+		id64[1] = state[1];
 	}
 
 	profile_data.timestamp = timestamp;
@@ -382,7 +382,7 @@ titaniactl_error titaniactl_mode_edge_export(titania_profile_id profile, const c
 	return TITANIACTL_ERROR_OK;
 }
 
-titaniactl_error titaniactl_mode_edge_delete(titania_profile_id profile, titania_hid handle) {
+titaniactl_error titaniactl_mode_edge_delete(const titania_profile_id profile, titania_hid handle) {
 	if (IS_TITANIA_BAD(titania_delete_edge_profile(handle.handle, profile))) {
 		return TITANIACTL_ERROR_HID_FAILURE;
 	}

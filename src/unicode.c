@@ -5,11 +5,11 @@
 #include "unicode.h"
 
 #define TEST_CONTINUATION_CHAR(t, buf, n) \
-	if (++buf >= endp) { \
+	if (++(buf) >= endp) { \
 		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE }; \
 	} \
-	const t n = *buf; \
-	if ((n & 0xC0) != 0x80 || n == 0) { \
+	const t n = *(buf); \
+	if (((n) & 0xC0) != 0x80 || (n) == 0) { \
 		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_EXPECTED_CONTINUATION_CHAR }; \
 	}
 

@@ -9,15 +9,15 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #define _CRT_SECURE_NO_WARNINGS
-#include <windows.h>
 #include <io.h>
+#include <windows.h>
 #endif
 
 #include <titania_config.h>
 
 #include "titaniactl.h"
 
-titaniactl_error titaniactl_mode_stub(titaniactl_context* _unused) { return TITANIACTL_ERROR_NOT_IMPLEMENTED; }
+titaniactl_error titaniactl_mode_stub(titaniactl_context*) { return TITANIACTL_ERROR_NOT_IMPLEMENTED; }
 
 const titaniactl_mode modes[] = { { "report", titaniactl_mode_report, titaniactl_mode_report_json, "print the input report of connected controllers", nullptr },
 	{ "watch", titaniactl_mode_report_loop, titaniactl_mode_report_loop_json, "repeatedly print the input report of connected controllers", nullptr },
@@ -73,18 +73,14 @@ BOOL WINAPI handle_sigint(DWORD signal) {
 	return TRUE;
 }
 
-bool should_output_json() {
-	return _isatty(_fileno(stdout)) == 0;
-}
+bool should_output_json() { return _isatty(_fileno(stdout)) == 0; }
 #else
 #include <signal.h>
 #include <unistd.h>
 
-void handle_sigint(int signal) { shutdown(); }
+void handle_sigint(int) { shutdown(); }
 
-bool should_output_json() {
-	return isatty(1) == 0;
-}
+bool should_output_json() { return isatty(1) == 0; }
 #endif
 
 bool is_json = false;
@@ -138,14 +134,14 @@ int main(const int argc, const char** const argv) {
 	char text[255];
 	if (argc > 1) {
 		for (int i = 1; i < argc; ++i) {
-			const int arglen = strlen(argv[i]);
+			const uint32_t arglen = strlen(argv[i]);
 			if (arglen < 1 || arglen > 254) {
 				continue; // too long; skipped
 			}
 
 			strcpy(text, argv[i]);
 			for (char* p = text; *p; ++p) {
-				*p = tolower(*p);
+				*p = (char) tolower(*p);
 			}
 
 			if (strcmp(text, "-h") == 0 || strcmp(text, "--help") == 0 || strcmp(text, "help") == 0) {
@@ -237,13 +233,13 @@ int main(const int argc, const char** const argv) {
 					continue;
 				}
 
-				const int devlen = strlen(device_ptr);
+				const uint32_t devlen = strlen(device_ptr);
 				if (devlen > 0xff) {
 					continue;
 				}
 
-				for (int j = 0; j < devlen; ++j) {
-					filter[filtered_controllers][j] = device_ptr[j];
+				for (uint32_t j = 0; j < devlen; ++j) {
+					filter[filtered_controllers][j] = (unsigned char) device_ptr[j];
 				}
 
 				filtered_controllers++;

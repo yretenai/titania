@@ -20,11 +20,11 @@ typedef enum profile_mode {
 } profile_mode;
 
 titania_profile_id convert_profile_id(const char* const str) {
-	const int length = strlen(str);
+	const uint32_t length = strlen(str);
 	if (length >= 1) {
 		switch ((char) tolower(str[0])) {
 			case 'a': return TITANIA_PROFILE_ALL; // A-lls
-			case 'd': return TITANIA_PROFILE_DEFAULT; // D-efault
+			case 'd': // D-efault
 			case '0': return TITANIA_PROFILE_DEFAULT;
 			case '1': return TITANIA_PROFILE_1;
 			case '2': return TITANIA_PROFILE_2;
@@ -149,7 +149,7 @@ titaniactl_error titaniactl_mode_profile_dump(titaniactl_context* context, const
 	}
 
 	if (profile == TITANIA_PROFILE_ALL) {
-		const titania_profile_id profiles[3] = { TITANIA_PROFILE_1, TITANIA_PROFILE_2, TITANIA_PROFILE_3 };
+		constexpr titania_profile_id profiles[3] = { TITANIA_PROFILE_1, TITANIA_PROFILE_2, TITANIA_PROFILE_3 };
 		for (size_t i = 0; i < 3; ++i) {
 			const titaniactl_error error = titaniactl_mode_profile_dump_inner(context, profiles[i], simple);
 			if (IS_TITANIACTL_BAD(error)) {
@@ -348,7 +348,7 @@ titaniactl_error titaniactl_mode_profile_export_selector(titaniactl_context* con
 	}
 
 	if (profile == TITANIA_PROFILE_ALL) {
-		const titania_profile_id profiles[3] = { TITANIA_PROFILE_1, TITANIA_PROFILE_2, TITANIA_PROFILE_3 };
+		constexpr titania_profile_id profiles[3] = { TITANIA_PROFILE_1, TITANIA_PROFILE_2, TITANIA_PROFILE_3 };
 		for (size_t i = 0; i < 3; ++i) {
 			const titaniactl_error error = titaniactl_mode_profile_export_inner(context, profiles[i]);
 			if (IS_TITANIACTL_BAD(error)) {

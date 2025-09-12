@@ -41,7 +41,7 @@ static titania_device_info device_infos[] = {
 	handle->firmware.name.minor = firmware.name.firmware.minor; \
 	handle->firmware.name.revision = firmware.name.firmware.revision
 
-#define ARR_LEN(arr) sizeof(arr) / sizeof(*arr)
+#define ARR_LEN(arr) (sizeof(arr) / sizeof(*(arr)))
 
 titania_error titania_init_checked(const size_t size) {
 	if (size != sizeof(titania_hid)) {
@@ -127,9 +127,9 @@ titania_error titania_get_hids(titania_query* hids, const size_t hids_length) {
 	return TITANIA_ERROR_OK;
 }
 
-#define CALIBRATE_ACCEL(slot) DUALSENSE_ACCELEROMETER_RESOLUTION / (DUALSENSE_ACCELEROMETER_RESOLUTION * DUALSENSE_ACCELEROMETER_SENSITIVITY) * (9.80665f)
+#define CALIBRATE_ACCEL(slot) (DUALSENSE_ACCELEROMETER_RESOLUTION / (DUALSENSE_ACCELEROMETER_RESOLUTION * DUALSENSE_ACCELEROMETER_SENSITIVITY) * (9.80665f))
 
-#define CALIBRATE_GYRO(slot) DUALSENSE_GYRO_RESOLUTION / (DUALSENSE_GYRO_RESOLUTION * DUALSENSE_GYRO_SENSITIVITY) * (360.0f / state[i].calibration[slot].speed)
+#define CALIBRATE_GYRO(slot) (DUALSENSE_GYRO_RESOLUTION / (DUALSENSE_GYRO_RESOLUTION * DUALSENSE_GYRO_SENSITIVITY) * (360.0f / state[i].calibration[slot].speed))
 
 titania_error titania_open(const titania_hid_path path, const bool is_bluetooth, titania_hid* handle, const bool use_calibration, const bool blocking) {
 	CHECK_INIT();
@@ -144,7 +144,7 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 			}
 
 			hid_set_nonblocking(state[i].hid, !blocking);
-			struct hid_device_info* info = hid_get_device_info(state[i].hid);
+			const struct hid_device_info* info = hid_get_device_info(state[i].hid);
 			if (info != nullptr) {
 				handle->product_id = info->product_id;
 				handle->vendor_id = info->vendor_id;
@@ -224,13 +224,13 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 				dualsense_calibration_info calibration;
 				calibration.report_id = DUALSENSE_REPORT_CALIBRATION;
 				if (use_calibration && HID_PASS(hid_get_feature_report(state[i].hid, (uint8_t*) &calibration, sizeof(dualsense_calibration_info)))) {
-					state[i].calibration[CALIBRATION_GYRO_X].max = calibration.gyro[CALIBRATION_RAW_X].max / (float) INT16_MAX;
-					state[i].calibration[CALIBRATION_GYRO_Y].max = calibration.gyro[CALIBRATION_RAW_Y].max / (float) INT16_MAX;
-					state[i].calibration[CALIBRATION_GYRO_Z].max = calibration.gyro[CALIBRATION_RAW_Z].max / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_GYRO_X].max = (float) calibration.gyro[CALIBRATION_RAW_X].max / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_GYRO_Y].max = (float) calibration.gyro[CALIBRATION_RAW_Y].max / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_GYRO_Z].max = (float) calibration.gyro[CALIBRATION_RAW_Z].max / (float) INT16_MAX;
 
-					state[i].calibration[CALIBRATION_GYRO_X].min = calibration.gyro[CALIBRATION_RAW_X].min / (float) INT16_MAX;
-					state[i].calibration[CALIBRATION_GYRO_Y].min = calibration.gyro[CALIBRATION_RAW_Y].min / (float) INT16_MAX;
-					state[i].calibration[CALIBRATION_GYRO_Z].min = calibration.gyro[CALIBRATION_RAW_Z].min / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_GYRO_X].min = (float) calibration.gyro[CALIBRATION_RAW_X].min / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_GYRO_Y].min = (float) calibration.gyro[CALIBRATION_RAW_Y].min / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_GYRO_Z].min = (float) calibration.gyro[CALIBRATION_RAW_Z].min / (float) INT16_MAX;
 
 					state[i].calibration[CALIBRATION_GYRO_X].bias = calibration.gyro_bias.x;
 					state[i].calibration[CALIBRATION_GYRO_Y].bias = calibration.gyro_bias.y;
@@ -240,13 +240,13 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 					state[i].calibration[CALIBRATION_GYRO_Y].speed = calibration.gyro_speed.min;
 					state[i].calibration[CALIBRATION_GYRO_Z].speed = calibration.gyro_speed.min;
 
-					state[i].calibration[CALIBRATION_ACCELEROMETER_X].max = calibration.accelerometer[CALIBRATION_RAW_X].max / (float) INT16_MAX;
-					state[i].calibration[CALIBRATION_ACCELEROMETER_Y].max = calibration.accelerometer[CALIBRATION_RAW_Y].max / (float) INT16_MAX;
-					state[i].calibration[CALIBRATION_ACCELEROMETER_Z].max = calibration.accelerometer[CALIBRATION_RAW_Z].max / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_ACCELEROMETER_X].max = (float) calibration.accelerometer[CALIBRATION_RAW_X].max / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Y].max = (float) calibration.accelerometer[CALIBRATION_RAW_Y].max / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Z].max = (float) calibration.accelerometer[CALIBRATION_RAW_Z].max / (float) INT16_MAX;
 
-					state[i].calibration[CALIBRATION_ACCELEROMETER_X].min = calibration.accelerometer[CALIBRATION_RAW_X].min / (float) INT16_MAX;
-					state[i].calibration[CALIBRATION_ACCELEROMETER_Y].min = calibration.accelerometer[CALIBRATION_RAW_Y].min / (float) INT16_MAX;
-					state[i].calibration[CALIBRATION_ACCELEROMETER_Z].min = calibration.accelerometer[CALIBRATION_RAW_Z].min / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_ACCELEROMETER_X].min = (float) calibration.accelerometer[CALIBRATION_RAW_X].min / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Y].min = (float) calibration.accelerometer[CALIBRATION_RAW_Y].min / (float) INT16_MAX;
+					state[i].calibration[CALIBRATION_ACCELEROMETER_Z].min = (float) calibration.accelerometer[CALIBRATION_RAW_Z].min / (float) INT16_MAX;
 
 					state[i].calibration[CALIBRATION_ACCELEROMETER_X].bias = 0;
 					state[i].calibration[CALIBRATION_ACCELEROMETER_Y].bias = 0;
@@ -274,12 +274,12 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 
 			state[i].hid_info = *handle;
 
-			// this is at the end so it's reasonably late<
+			// this is at the end so it's reasonably late
 			{
 				titania_led_update update = { 0 };
-				update.color.x = 1.0;
-				update.color.y = 0.0;
-				update.color.z = 1.0;
+				update.color.x = 1.0f;
+				update.color.y = 0.0f;
+				update.color.z = 1.0f;
 				update.led = TITANIA_LED_PLAYER_1;
 				update.access.enable_profile_led = true;
 				update.access.enable_center_led = true;
@@ -289,9 +289,9 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 				titania_push(&handle->handle, 1);
 			}
 
-		#ifdef TITANIA_HAS_HAPTICS
+#ifdef TITANIA_HAS_HAPTICS
 			titania_haptics_init(handle->handle);
-		#endif
+#endif
 
 			return TITANIA_ERROR_OK;
 		}
@@ -720,7 +720,7 @@ titania_error titania_update_effect(const titania_handle handle, const titania_e
 	return result;
 }
 
-titania_error titania_set_vibration_mode(const titania_handle handle, const bool haptics) {
+titania_error titania_set_vibration_mode(const titania_handle handle, const titania_vibration_mode mode) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
 
@@ -731,16 +731,29 @@ titania_error titania_set_vibration_mode(const titania_handle handle, const bool
 	const titania_hid hid = state[handle].hid_info;
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 
-	hid_state->flags.control2 = true;
-	hid_state->flags.disable_haptics = !haptics;
-	state[handle].haptics.enabled = haptics;
-	if (haptics) {
-		hid_state->control2.advanced_rumble_control = false;
-		hid_state->flags.rumble_emulation = false;
-	} else {
-		hid_state->control2.advanced_rumble_control = hid.firmware.update.major >= 0x224;
-		hid_state->flags.rumble_emulation = !hid_state->control2.advanced_rumble_control;
+	if (mode == TITANIA_VIBRATION_MODE_HAPTICS && state[handle].haptics.mode == mode) {
+		return TITANIA_ERROR_OK;
 	}
+
+	state[handle].haptics.mode = mode;
+
+	if (mode == TITANIA_VIBRATION_MODE_HAPTICS) {
+		hid_state->flags.disable_haptics = false;
+		hid_state->flags.rumble_emulation = false;
+		hid_state->flags.control2 = true;
+		hid_state->control2.advanced_rumble_control = false;
+	} else {
+		hid_state->flags.disable_haptics = true;
+
+		if (hid.is_edge || hid.firmware.update.major >= 0x224) {
+			hid_state->flags.control2 = true;
+			hid_state->control2.advanced_rumble_control = mode == TITANIA_VIBRATION_MODE_LEGACY_RUMBLE;
+			hid_state->flags.rumble_emulation = mode != TITANIA_VIBRATION_MODE_LEGACY_RUMBLE;
+		} else {
+			hid_state->flags.rumble_emulation = true;
+		}
+	}
+
 	return TITANIA_ERROR_OK;
 }
 
@@ -752,13 +765,10 @@ titania_error titania_update_rumble(const titania_handle handle, const float lar
 		return TITANIA_ERROR_NOT_SUPPORTED;
 	}
 
-	const titania_hid hid = state[handle].hid_info;
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
-	if (state[handle].haptics.enabled) {
-		const titania_error result = titania_set_vibration_mode(handle, false);
-		if (IS_TITANIA_BAD(result)) {
-			return result;
-		}
+	const titania_error result = titania_set_vibration_mode(handle, emulate_legacy_behavior ? TITANIA_VIBRATION_MODE_LEGACY_RUMBLE : TITANIA_VIBRATION_MODE_RUMBLE);
+	if (IS_TITANIA_BAD(result)) {
+		return result;
 	}
 
 	hid_state->rumble[DUALSENSE_LARGE_MOTOR] = NORM_CLAMP_UINT8(large_motor);
@@ -783,13 +793,10 @@ TITANIA_EXPORT titania_error titania_update_haptics(const titania_handle handle,
 		return TITANIA_ERROR_NOT_SUPPORTED;
 	}
 
-	const titania_hid hid = state[handle].hid_info;
-	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
-	if (state[handle].haptics.enabled) {
-		const titania_error result = titania_set_vibration_mode(handle, true);
-		if (IS_TITANIA_BAD(result)) {
-			return result;
-		}
+	const titania_error result = titania_set_vibration_mode(handle, TITANIA_VIBRATION_MODE_HAPTICS);
+
+	if (IS_TITANIA_BAD(result)) {
+		return result;
 	}
 
 	if (num_samples < TITANIA_MINIMUM_HAPTICS_SIZE) {
@@ -807,14 +814,14 @@ TITANIA_EXPORT titania_error titania_update_haptics(const titania_handle handle,
 		return TITANIA_ERROR_OUT_OF_SPACE;
 	}
 
-    size_t first_byte = TITANIA_HAPTICS_BUFFER_SIZE - write_rel;
-    if (first_byte > num_samples) {
-        first_byte = num_samples;
-    }
+	size_t first_byte = TITANIA_HAPTICS_BUFFER_SIZE - write_rel;
+	if (first_byte > num_samples) {
+		first_byte = num_samples;
+	}
 
 	memcpy(&state[handle].haptics.buffer[write_rel], samples, first_byte);
 	if (num_samples - first_byte > 0) {
-	    memcpy(&state[handle].haptics.buffer[0], samples + first_byte, num_samples - first_byte);
+		memcpy(&state[handle].haptics.buffer[0], samples + first_byte, num_samples - first_byte);
 	}
 
 	state[handle].haptics.write_offset = (write + num_samples) & SIZE_MAX;
@@ -830,7 +837,7 @@ titania_error titania_bt_pair(const titania_handle handle, const titania_mac mac
 	dualsense_bt_pair_msg msg = { 0 };
 	memcpy(&msg.link_key, link_key, sizeof(titania_link_key));
 	uint32_t pair_mac[6];
-	const int test = sscanf(mac, "%02x:%02x:%02x:%02x:%02x:%02x", &pair_mac[0], &pair_mac[1], &pair_mac[2], &pair_mac[3], &pair_mac[4], &pair_mac[5]);
+	const int test = sscanf(mac, "%02x:%02x:%02x:%02x:%02x:%02x", &pair_mac[0], &pair_mac[1], &pair_mac[2], &pair_mac[3], &pair_mac[4], &pair_mac[5]); // NOLINT(*-err34-c)
 	if (test != 6) {
 		return TITANIA_ERROR_INVALID_ARGUMENT;
 	}
@@ -1084,7 +1091,7 @@ titania_error titania_debug_get_hid_report_ids(const titania_handle handle, tita
 		report[2] == 0x09 && report[3] == 0x05 && // USAGE Game Pad
 		report[4] == 0xA1 && report[5] == 0x01) {
 		int report_id = 0;
-		int last_size = 0;
+		uint32_t last_size = 0;
 		// COLLECTION Application
 		for (int j = 6; j < report_size;) {
 			const uint8_t op = report[j++];

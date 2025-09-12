@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #include "../titaniactl.h"
 
@@ -21,11 +20,11 @@ void json_object_get_access_button(struct json* obj, titania_access_profile_butt
 void json_object_get_access_stick(struct json* obj, titania_access_profile_stick* data) {
 	data->orientation = titania_json_object_get_enum(obj, "orientation", titania_access_orientation_msg, TITANIA_ACCESS_ORIENTATION_RIGHT);
 	data->id = titania_json_object_get_enum(obj, "stick", titania_access_stick_id_msg, TITANIA_ACCESS_STICK_ID_NONE);
-	data->deadzone = titania_json_object_get_float(obj, "deadzone", 0.0);
+	data->deadzone = (float) titania_json_object_get_float(obj, "deadzone", 0.0);
 	struct json* arr = json_get(obj, "curve");
-	data->curve[0] = titania_json_array_get_float(arr, 0, 0.0);
-	data->curve[1] = titania_json_array_get_float(arr, 0, 0.0);
-	data->curve[2] = titania_json_array_get_float(arr, 0, 0.0);
+	data->curve[0] = (float) titania_json_array_get_float(arr, 0, 0.0);
+	data->curve[1] = (float) titania_json_array_get_float(arr, 0, 0.0);
+	data->curve[2] = (float) titania_json_array_get_float(arr, 0, 0.0);
 	data->unknown = titania_json_object_get_uint32(obj, "unknown", 0);
 }
 
@@ -101,11 +100,12 @@ titaniactl_error titaniactl_mode_access_import(titania_profile_id profile, struc
 	uint64_t timestamp = (ts.tv_sec * 1000) + (ts.tv_nsec / 1000);
 
 	if (should_gen_id) {
-		int64_t* id64 = (int64_t*) &profile_data.id;
-		xoroshiro_init(timestamp);
-		xoroshiro_next();
-		id64[0] = xoroshiro_s[0];
-		id64[1] = xoroshiro_s[1];
+		uint64_t* id64 = (uint64_t*) &profile_data.id;
+		uint64_t state[2];
+		xoroshiro_init(state, timestamp);
+		xoroshiro_next(state);
+		id64[0] = state[0];
+		id64[1] = state[1];
 	}
 
 	profile_data.timestamp = timestamp;
@@ -362,7 +362,7 @@ titaniactl_error titaniactl_mode_access_export(titania_profile_id profile, const
 	return TITANIACTL_ERROR_OK;
 }
 
-titaniactl_error titaniactl_mode_access_delete(titania_profile_id profile, titania_hid handle) {
+titaniactl_error titaniactl_mode_access_delete(const titania_profile_id profile, titania_hid handle) {
 	if (IS_TITANIA_BAD(titania_delete_access_profile(handle.handle, profile))) {
 		return TITANIACTL_ERROR_HID_FAILURE;
 	}

@@ -10,7 +10,6 @@
 #include <stdint.h>
 
 #include "common.h"
-#include "enums.h"
 #include <titania_config_internal.h>
 
 #ifdef TITANIA_HAS_PACK
@@ -201,6 +200,7 @@ typedef struct PACKED dualsense_edge_profile_blob {
 			uint32_t version;
 			uint8_t _padding[0x36];
 		};
+
 		uint8_t blob[0x3a];
 	};
 

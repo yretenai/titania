@@ -2,7 +2,7 @@
 //  https://git.sr.ht/~chronovore/titania
 //  SPDX-License-Identifier: MPL-2.0
 
-#define _POSIX_C_SOURCE 200809L
+#define _POSIX_C_SOURCE 200809L // NOLINT(*-reserved-identifier)
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -160,8 +160,8 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 		goto test;
 
 		update.mode = TITANIA_EFFECT_SIMPLE_UNIFORM;
-		update.effect.simple_uniform.position = 0.5;
-		update.effect.simple_uniform.resistance = 1.0;
+		update.effect.simple_uniform.position = 0.5f;
+		update.effect.simple_uniform.resistance = 1.0f;
 		printf("simple uniform\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
@@ -175,9 +175,9 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 		}
 
 		update.mode = TITANIA_EFFECT_SIMPLE_SECTION;
-		update.effect.simple_section.position.x = 0.25;
-		update.effect.simple_section.position.y = 0.75;
-		update.effect.simple_section.resistance = 1.0;
+		update.effect.simple_section.position.x = 0.25f;
+		update.effect.simple_section.position.y = 0.75f;
+		update.effect.simple_section.resistance = 1.0f;
 		printf("simple section\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
 			if (context->hids[i].is_access) {
@@ -213,7 +213,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 			goto reset_trigger;
 		}
 
-		test:
+	test:
 		update.mode = TITANIA_EFFECT_ADVANCED_TRIGGER;
 		update.effect.advanced_trigger.position.x = 0.50f;
 		update.effect.advanced_trigger.position.y = 1.00f;
@@ -231,8 +231,8 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 		}
 
 		update.mode = TITANIA_EFFECT_ADVANCED_SLOPE;
-		update.effect.advanced_slope.position.x = 0.20;
-		update.effect.advanced_slope.position.y = 1.00;
+		update.effect.advanced_slope.position.x = 0.20f;
+		update.effect.advanced_slope.position.y = 1.00f;
 		update.effect.advanced_slope.resistance.x = 0.25f;
 		update.effect.advanced_slope.resistance.y = 1.0f;
 		printf("advanced slope\n");
@@ -248,8 +248,8 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 		}
 
 		update.mode = TITANIA_EFFECT_SIMPLE_VIBRATE;
-		update.effect.simple_vibrate.position = 0.33;
-		update.effect.simple_vibrate.amplitude = 0.75;
+		update.effect.simple_vibrate.position = 0.33f;
+		update.effect.simple_vibrate.amplitude = 0.75f;
 		update.effect.simple_vibrate.frequency = 201;
 		printf("simple vibrate\n");
 		for (int i = 0; i < context->connected_controllers; ++i) {
@@ -264,8 +264,8 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 		}
 
 		update.mode = TITANIA_EFFECT_ADVANCED_VIBRATE_SLOPE;
-		update.effect.advanced_vibrate_slope.position.x = 0.20;
-		update.effect.advanced_vibrate_slope.position.y = 1.00;
+		update.effect.advanced_vibrate_slope.position.x = 0.20f;
+		update.effect.advanced_vibrate_slope.position.y = 1.00f;
 		update.effect.advanced_vibrate_slope.delay.x = 0.25f;
 		update.effect.advanced_vibrate_slope.delay.y = 1.0f;
 		update.effect.advanced_vibrate_slope.frequency = 201;
@@ -307,8 +307,8 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 		}
 
 		update.mode = TITANIA_EFFECT_ADVANCED_VIBRATE_FEEDBACK;
-		update.effect.advanced_vibrate_feedback.position.x = 0.20;
-		update.effect.advanced_vibrate_feedback.position.y = 1.00;
+		update.effect.advanced_vibrate_feedback.position.x = 0.20f;
+		update.effect.advanced_vibrate_feedback.position.y = 1.00f;
 		update.effect.advanced_vibrate_feedback.amplitude.x = 0.25f;
 		update.effect.advanced_vibrate_feedback.amplitude.y = 0.75f;
 		update.effect.advanced_vibrate_feedback.frequency = 201;
@@ -322,6 +322,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 		}
 		titania_push(context->handles, context->connected_controllers);
 		if (report_hid_trigger(context->handles, context->connected_controllers, 5000000, 8000)) {
+			// ReSharper disable once CppRedundantControlFlowJump
 			goto reset_trigger;
 		}
 
@@ -338,18 +339,19 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 			titania_update_effect(context->handles[i], update, update, TITANIA_NO_POWER_REDUCTION);
 		}
 		titania_push(context->handles, context->connected_controllers);
-		struct timespec delayspec = { 0, 1e+8 };
+		struct timespec delayspec = { 0, 100000000 };
 		nanosleep(&delayspec, nullptr);
 	}
 
 	if (!is_only_access && (all_tests || strcmp(selected_test, "rumble") == 0)) {
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing rumble...\n");
-		float rumble;
+		float rumble = 0.0f;
+		int rumble_counter = 0;
 
-		const float ONE_OVER_255 = 1.0f / 255.0f;
+		constexpr float ONE_OVER_255 = 1.0f / 255.0f;
 		printf("large motor...\n");
-		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+		for (rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
 			for (int i = 0; i < context->connected_controllers; ++i) {
 				if (context->hids[i].is_access) {
 					continue;
@@ -363,7 +365,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 		}
 
 		printf("small motor...\n");
-		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+		for (rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
 			for (int i = 0; i < context->connected_controllers; ++i) {
 				if (context->hids[i].is_access) {
 					continue;
@@ -377,7 +379,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 		}
 
 		printf("both motors...\n");
-		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+		for (rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
 			for (int i = 0; i < context->connected_controllers; ++i) {
 				if (context->hids[i].is_access) {
 					continue;
@@ -406,7 +408,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 		}
 
 		printf("large motor (legacy)...\n");
-		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+		for (rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
 			for (int i = 0; i < context->connected_controllers; ++i) {
 				if (context->hids[i].is_access) {
 					continue;
@@ -420,7 +422,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 		}
 
 		printf("small motor (legacy)...\n");
-		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+		for (rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
 			for (int i = 0; i < context->connected_controllers; ++i) {
 				if (context->hids[i].is_access) {
 					continue;
@@ -434,7 +436,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 		}
 
 		printf("both motors (legacy)...\n");
-		for (rumble = 0.0f; rumble <= 1.0f; rumble += ONE_OVER_255) {
+		for (rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
 			for (int i = 0; i < context->connected_controllers; ++i) {
 				if (context->hids[i].is_access) {
 					continue;
@@ -474,7 +476,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 			titania_update_rumble(context->handles[i], 0, 0, TITANIA_NO_POWER_REDUCTION, false);
 		}
 		titania_push(context->handles, context->connected_controllers);
-		struct timespec delayspec = { 0, 1e+8 };
+		struct timespec delayspec = { 0, 100000000 };
 		nanosleep(&delayspec, nullptr);
 	}
 
@@ -482,9 +484,9 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing mic led...\n");
 		titania_audio_update update = { 0 };
-		update.jack_volume = 1.0;
-		update.speaker_volume = 1.0;
-		update.microphone_volume = 1.0;
+		update.jack_volume = 1.0f;
+		update.speaker_volume = 1.0f;
+		update.microphone_volume = 1.0f;
 		update.output_path = TITANIA_AUDIO_OUTPUT_STEREO_JACK;
 		update.input_path = TITANIA_AUDIO_INPUT_CHAT_ASR;
 		update.mic_led = TITANIA_MIC_LED_ON;
@@ -559,9 +561,9 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 		printf("testing touchpad leds...\n");
 
 		titania_led_update update = { 0 };
-		update.color.x = 1.0;
-		update.color.y = 0.0;
-		update.color.z = 1.0;
+		update.color.x = 1.0f;
+		update.color.y = 0.0f;
+		update.color.z = 1.0f;
 		update.led = TITANIA_LED_NO_UPDATE;
 		int i = 0;
 		while (true) {
@@ -583,20 +585,14 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 				const int v = (i - 39) % 8;
 				if (v == 0) {
 					update.led = TITANIA_LED_1;
-				} else if (v == 1) {
+				} else if (v == 1 || v == 7) {
 					update.led = TITANIA_LED_2;
-				} else if (v == 2) {
+				} else if (v == 2 || v == 6) {
 					update.led = TITANIA_LED_3;
-				} else if (v == 3) {
+				} else if (v == 3 || v == 5) {
 					update.led = TITANIA_LED_4;
 				} else if (v == 4) {
 					update.led = TITANIA_LED_5;
-				} else if (v == 5) {
-					update.led = TITANIA_LED_4;
-				} else if (v == 6) {
-					update.led = TITANIA_LED_3;
-				} else if (v == 7) {
-					update.led = TITANIA_LED_2;
 				}
 			}
 
@@ -630,9 +626,9 @@ skip_led:
 		printf("testing access leds...\n");
 
 		titania_led_update update = { 0 };
-		update.color.x = 1.0;
-		update.color.y = 0.0;
-		update.color.z = 1.0;
+		update.color.x = 1.0f;
+		update.color.y = 0.0f;
+		update.color.z = 1.0f;
 		update.led = TITANIA_LED_NO_UPDATE;
 		int i = 0;
 		while (true) {
@@ -685,9 +681,9 @@ reset_led:
 		}
 
 		titania_led_update update;
-		update.color.x = 1.0;
-		update.color.y = 0.0;
-		update.color.z = 1.0;
+		update.color.x = 1.0f;
+		update.color.y = 0.0f;
+		update.color.z = 1.0f;
 		update.access.enable_profile_led = true;
 		update.access.enable_center_led = true;
 		update.access.enable_second_center_led = false;
@@ -699,7 +695,7 @@ reset_led:
 					case 1: update.led = TITANIA_LED_ACCESS_2; break;
 					case 2: update.led = TITANIA_LED_ACCESS_3; break;
 					case 3: update.led = TITANIA_LED_ACCESS_4; break;
-					default: update.led = TITANIA_LED_ACCESS_4; break;
+					default: break;
 				}
 				update.access.profile_led = datum[j].access_device.current_profile_id;
 			} else {

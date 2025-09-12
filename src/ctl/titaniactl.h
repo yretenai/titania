@@ -19,7 +19,7 @@
 #define nullptr ((void*) 0)
 #endif
 
-#define MAKE_TITANIA_ERROR(result) (TITANIACTL_ERROR_TITANIA_ERROR | ((titaniactl_error) result << 16))
+#define MAKE_TITANIA_ERROR(result) (TITANIACTL_ERROR_TITANIA_ERROR | ((titaniactl_error) (result) << 16))
 
 typedef struct titaniactl_context {
 	int connected_controllers;
@@ -49,8 +49,8 @@ typedef enum titaniactl_error {
 	TITANIACTL_ERROR_MAX
 } titaniactl_error;
 
-#define IS_TITANIACTL_OKAY(result) (result == TITANIACTL_ERROR_OK)
-#define IS_TITANIACTL_BAD(result) (result > TITANIACTL_ERROR_OK)
+#define IS_TITANIACTL_OKAY(result) ((result) == TITANIACTL_ERROR_OK)
+#define IS_TITANIACTL_BAD(result) ((result) > TITANIACTL_ERROR_OK)
 
 typedef titaniactl_error (*titaniactl_callback_t)(titaniactl_context* context);
 
@@ -62,7 +62,7 @@ typedef struct titaniactl_mode {
 	const char* const args;
 } titaniactl_mode;
 
-void titania_errorf(const titania_error result, const char* message);
+void titania_errorf(titania_error result, const char* message);
 void titaniactl_errorf(const char* error, const char* message);
 
 titaniactl_error titaniactl_mode_list(titaniactl_context* context);
@@ -81,12 +81,12 @@ titaniactl_error titaniactl_mode_list_json(titaniactl_context* context);
 titaniactl_error titaniactl_mode_report_json(titaniactl_context* context);
 titaniactl_error titaniactl_mode_report_loop_json(titaniactl_context* context);
 
-struct json* titaniactl_mode_edge_convert(const titania_edge_profile profile, const bool include_success);
+struct json* titaniactl_mode_edge_convert(titania_edge_profile profile, bool include_success);
 titaniactl_error titaniactl_mode_edge_import(titania_profile_id profile, struct json* data, titania_hid handle);
 titaniactl_error titaniactl_mode_edge_export(titania_profile_id profile, const char* path, titania_hid handle);
 titaniactl_error titaniactl_mode_edge_delete(titania_profile_id profile, titania_hid handle);
 
-struct json* titaniactl_mode_access_convert(const titania_access_profile profile, const bool include_success);
+struct json* titaniactl_mode_access_convert(titania_access_profile profile, bool include_success);
 titaniactl_error titaniactl_mode_access_import(titania_profile_id profile, struct json* data, titania_hid handle);
 titaniactl_error titaniactl_mode_access_export(titania_profile_id profile, const char* path, titania_hid handle);
 titaniactl_error titaniactl_mode_access_delete(titania_profile_id profile, titania_hid handle);
@@ -114,31 +114,29 @@ static inline uint8_t titania_parse_octet(const char ch) {
 	return value;
 }
 
-static uint64_t xoroshiro_s[2];
-
 // https://prng.di.unimi.it/splitmix64.c
-static inline void xoroshiro_init(uint64_t seed) {
-	uint64_t z = (seed += 0x9e3779b9'7f4a7c15);
+static inline void xoroshiro_init(uint64_t state[2], const uint64_t seed) {
+	uint64_t z = (seed + 0x9e3779b9'7f4a7c15);
 	z = (z ^ (z >> 30)) * 0xbf58476d'1ce4e5b9;
 	z = (z ^ (z >> 27)) * 0x94d049bb'133111eb;
-	xoroshiro_s[0] = z ^ (z >> 31);
-	z = (xoroshiro_s[0] += 0x9e3779b9'7f4a7c15);
+	state[0] = z ^ (z >> 31);
+	z = (state[0] += 0x9e3779b9'7f4a7c15);
 	z = (z ^ (z >> 30)) * 0xbf58476d'1ce4e5b9;
 	z = (z ^ (z >> 27)) * 0x94d049bb'133111eb;
-	xoroshiro_s[1] = z ^ (z >> 31);
+	state[1] = z ^ (z >> 31);
 }
 
 // https://prng.di.unimi.it/xoroshiro128plusplus.c
-static inline uint64_t rotl(const uint64_t x, int k) { return (x << k) | (x >> (64 - k)); }
+static inline uint64_t rotl(const uint64_t x, const int k) { return (x << k) | (x >> (64 - k)); }
 
-static inline uint64_t xoroshiro_next(void) {
-	const uint64_t s0 = xoroshiro_s[0];
-	uint64_t s1 = xoroshiro_s[1];
+static inline uint64_t xoroshiro_next(uint64_t state[2]) {
+	const uint64_t s0 = state[0];
+	uint64_t s1 = state[1];
 	const uint64_t result = rotl(s0 + s1, 17) + s0;
 
 	s1 ^= s0;
-	xoroshiro_s[0] = rotl(s0, 49) ^ s1 ^ (s1 << 21); // a, b
-	xoroshiro_s[1] = rotl(s1, 28); // c
+	state[0] = rotl(s0, 49) ^ s1 ^ (s1 << 21); // a, b
+	state[1] = rotl(s1, 28); // c
 
 	return result;
 }

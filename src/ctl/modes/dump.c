@@ -20,8 +20,7 @@ titaniactl_error titaniactl_mode_dump(titaniactl_context* context) {
 		titania_report_id report_ids[0xFF];
 		hid_device* device;
 		uint8_t buffer[0x4096];
-		if (IS_TITANIA_OKAY(titania_debug_get_hid(context->hids[i].handle, (intptr_t*) &device)) &&
-			IS_TITANIA_OKAY(titania_debug_get_hid_report_ids(context->hids[i].handle, report_ids))) {
+		if (IS_TITANIA_OKAY(titania_debug_get_hid(context->hids[i].handle, (intptr_t*) &device)) && IS_TITANIA_OKAY(titania_debug_get_hid_report_ids(context->hids[i].handle, report_ids))) {
 			for (int j = 0; j < 0xFF; j++) {
 				if (should_stop) {
 					return TITANIACTL_ERROR_INTERRUPTED;
@@ -31,7 +30,7 @@ titaniactl_error titaniactl_mode_dump(titaniactl_context* context) {
 					break;
 				}
 
-				const int32_t hid_report_size = report_ids[j].size + 1;
+				const int32_t hid_report_size = (int32_t) report_ids[j].size + 1;
 				printf("report %d (%x): reported size is %d, type is %s", report_ids[j].id, report_ids[j].id, hid_report_size, REPORT_TYPES[report_ids[j].type % 3]);
 
 				if (report_ids[j].type < 2) {

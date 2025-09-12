@@ -8,10 +8,10 @@
 #include "titania.h"
 #include "unicode.h"
 
-titania_error titania_convert_edge_profile_input(uint8_t profile_data[TITANIA_MERGED_REPORT_EDGE_SIZE], titania_edge_profile* output) {
+titania_error titania_convert_edge_profile_input(const uint8_t input[TITANIA_MERGED_REPORT_EDGE_SIZE], titania_edge_profile* output) {
 	memset(output, 0, sizeof(titania_edge_profile));
 
-	const dualsense_edge_profile profile = *(dualsense_edge_profile*) profile_data;
+	const dualsense_edge_profile profile = *(dualsense_edge_profile*) input;
 
 	titania_char32 unicode[41];
 	titania_unicode_result unicode_result = titania_utf16_to_utf32((const titania_char16*) &profile.msg.name, sizeof(profile.msg.name), unicode, sizeof(unicode));
@@ -27,7 +27,7 @@ titania_error titania_convert_edge_profile_input(uint8_t profile_data[TITANIA_ME
 	output->version = profile.msg.version;
 	memcpy(output->id, profile.msg.uuid, sizeof(profile.msg.uuid));
 
-	const uint8_t left_right[4] = { TITANIA_LEFT, DUALSENSE_LEFT, TITANIA_RIGHT, TITANIA_RIGHT };
+	constexpr uint8_t left_right[4] = { TITANIA_LEFT, DUALSENSE_LEFT, TITANIA_RIGHT, TITANIA_RIGHT };
 
 	for (size_t i = 0; i < sizeof(left_right); i += 2) {
 		const uint8_t titania = left_right[i];
@@ -122,7 +122,7 @@ titania_error titania_convert_edge_profile_output(titania_edge_profile input, du
 		return TITANIA_ERROR_UNICODE_ERROR;
 	}
 
-	const uint8_t left_right[4] = { TITANIA_LEFT, DUALSENSE_LEFT, TITANIA_RIGHT, TITANIA_RIGHT };
+	constexpr uint8_t left_right[4] = { TITANIA_LEFT, DUALSENSE_LEFT, TITANIA_RIGHT, TITANIA_RIGHT };
 
 	for (size_t i = 0; i < sizeof(left_right); i += 2) {
 		const uint8_t titania = left_right[i];
@@ -263,7 +263,7 @@ const titania_edge_template template_vectors[TITANIA_EDGE_STICK_TEMPLATE_MAX] = 
 	}
 };
 
-#define LERP(from, to, factor) ((float) from * (1.0f - factor)) + ((float) to * factor)
+#define LERP(from, to, factor) (((float) (from) * (1.0f - (factor))) + ((float) (to) * (factor)))
 
 titania_error titania_helper_edge_stick_template(titania_edge_stick* stick, const titania_edge_stick_template template_id, int32_t offset) {
 	if (template_id >= TITANIA_EDGE_STICK_TEMPLATE_MAX) {
@@ -279,7 +279,7 @@ titania_error titania_helper_edge_stick_template(titania_edge_stick* stick, cons
 	stick->interpolation_type = stick_template.interpolation_type;
 	stick->template_id = template_id;
 
-	float factor = offset / 5;
+	float factor = (float) offset / 5.0f;
 	if (offset < 0) {
 		factor = -factor;
 	}
