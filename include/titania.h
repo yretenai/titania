@@ -81,6 +81,9 @@ typedef enum titania_error {
 	TITANIA_ERROR_NOT_SUPPORTED,
 	TITANIA_ERROR_OUT_OF_SPACE,
 	TITANIA_ERROR_NOT_ENOUGH_DATA,
+	TITANIA_ERROR_HAPTICS_INVALID_HANDLE,
+	TITANIA_ERROR_HAPTICS_NO_AUDIO,
+	TITANIA_ERROR_HAPTICS_INVALID_AUDIO,
 	TITANIA_ERROR_MAX
 } titania_error;
 
@@ -597,9 +600,11 @@ typedef struct titania_hid {
 	titania_handle handle;
 	uint16_t product_id;
 	uint16_t vendor_id;
+	int32_t interface_id;
 	bool is_bluetooth;
 	bool is_edge;
 	bool is_access;
+	titania_hid_path hid_path;
 	titania_serial_info serial;
 	titania_firmware_info firmware;
 } titania_hid;

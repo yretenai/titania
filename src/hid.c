@@ -109,8 +109,8 @@ titania_error titania_get_hids(titania_query* hids, const size_t hids_length) {
 				hids[index].is_bluetooth = dev->bus_type == HID_API_BUS_BLUETOOTH;
 				hids[index].is_edge = IS_EDGE(hids[index]);
 				hids[index].is_access = IS_ACCESS(hids[index]);
-				wcscpy(hids[index].hid_serial, dev->serial_number);
-				strcpy(hids[index].hid_path, dev->path);
+				wcsncpy(hids[index].hid_serial, dev->serial_number, sizeof(hids[index].hid_serial));
+				strncpy(hids[index].hid_path, dev->path, sizeof(hids[index].hid_path));
 
 				index += 1;
 
@@ -148,6 +148,8 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 			if (info != nullptr) {
 				handle->product_id = info->product_id;
 				handle->vendor_id = info->vendor_id;
+				handle->interface_id = info->interface_number;
+				strncpy(handle->hid_path, info->path, sizeof(handle->hid_path));
 			} else {
 				handle->product_id = 0x0CE6; // DualSense
 				handle->vendor_id = 0x054C; // Sony
@@ -290,7 +292,7 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 			}
 
 #ifdef TITANIA_HAS_HAPTICS
-			titania_error result = titania_haptics_init(handle->handle);
+			const titania_error result = titania_haptics_init(handle->handle);
 			if (!IS_TITANIA_OKAY(result)) {
 				return result;
 			}

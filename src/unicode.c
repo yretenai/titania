@@ -6,25 +6,25 @@
 
 #define TEST_CONTINUATION_CHAR(t, buf, n) \
 	if (++(buf) >= endp) { \
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE }; \
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE }; \
 	} \
 	const t n = *(buf); \
 	if (((n) & 0xC0) != 0x80 || (n) == 0) { \
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_EXPECTED_CONTINUATION_CHAR }; \
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_EXPECTED_CONTINUATION_CHAR }; \
 	}
 
 titania_unicode_result titania_utf8_to_utf32(const titania_char8* utf8, const size_t utf8_size, titania_char32* utf32, const size_t utf32_size) {
 	if (utf8 == nullptr || utf32 == nullptr) {
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_MALFORMED };
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_MALFORMED };
 	}
 
 	if (utf32_size == 0) {
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 	}
 
 	if (utf8_size == 0) {
 		utf32[0] = 0;
-		return (titania_unicode_result) { .size = 0 };
+		return (titania_unicode_result) { .size = 0, .error = TITANIA_UNICODE_OK };
 	}
 
 	size_t size = 0;
@@ -60,30 +60,30 @@ titania_unicode_result titania_utf8_to_utf32(const titania_char8* utf8, const si
 			continue;
 		}
 
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_EXPECTED_REGULAR_CHAR };
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_EXPECTED_REGULAR_CHAR };
 	} while (*utf8++ != 0 && size < utf32_size && utf8 < endp);
 
 	if (size + 1 >= utf32_size) { // + 1 for null byte
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 	}
 
 	utf32[size] = 0;
 
-	return (titania_unicode_result) { .size = size };
+	return (titania_unicode_result) { .size = size, .error = TITANIA_UNICODE_OK };
 }
 
 titania_unicode_result titania_utf16_to_utf32(const titania_char16* utf16, const size_t utf16_size, titania_char32* utf32, const size_t utf32_size) {
 	if (utf16 == nullptr || utf32 == nullptr) {
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_MALFORMED };
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_MALFORMED };
 	}
 
 	if (utf32_size == 0) {
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 	}
 
 	if (utf16_size == 0) {
 		utf32[0] = 0;
-		return (titania_unicode_result) { .size = 0 };
+		return (titania_unicode_result) { .size = 0, .error = TITANIA_UNICODE_OK };
 	}
 
 	size_t size = 0;
@@ -96,42 +96,42 @@ titania_unicode_result titania_utf16_to_utf32(const titania_char16* utf16, const
 		}
 
 		if (char0 > 0xDBFF) {
-			return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_EXPECTED_SURROGATE_HIGH };
+			return (titania_unicode_result) { .error = TITANIA_UNICODE_EXPECTED_SURROGATE_HIGH };
 		}
 
 		if (++utf16 >= endp) {
-			return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+			return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 		}
 
 		const titania_char16 char1 = *++utf16;
 		if (char1 < 0xDC00 || char1 > 0xDFFF) {
-			return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_EXPECTED_SURROGATE_LOW };
+			return (titania_unicode_result) { .error = TITANIA_UNICODE_EXPECTED_SURROGATE_LOW };
 		}
 
 		utf32[size++] = ((char0 & 0x3FF) << 10 | (char1 & 0x3FF)) + 0x10000;
 	} while (*utf16++ != 0 && size < utf32_size && utf16 < endp);
 
 	if (size + 1 >= utf32_size) { // + 1 for null byte
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 	}
 
 	utf32[size] = 0;
 
-	return (titania_unicode_result) { .size = size };
+	return (titania_unicode_result) { .size = size, .error = TITANIA_UNICODE_OK };
 }
 
 titania_unicode_result titania_utf32_to_utf8(const titania_char32* utf32, const size_t utf32_size, titania_char8* utf8, const size_t utf8_size) {
 	if (utf32 == nullptr || utf8 == nullptr) {
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_MALFORMED };
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_MALFORMED };
 	}
 
 	if (utf8_size == 0) {
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 	}
 
 	if (utf32_size == 0) {
 		utf8[0] = 0;
-		return (titania_unicode_result) { .size = 0 };
+		return (titania_unicode_result) { .size = 0, .error = TITANIA_UNICODE_OK };
 	}
 
 	size_t size = 0;
@@ -146,7 +146,7 @@ titania_unicode_result titania_utf32_to_utf8(const titania_char32* utf32, const 
 
 		if (char0 < 0x800) {
 			if (size + 2 >= utf8_size) {
-				return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+				return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 			}
 
 			utf8[size++] = 0xC0 | (char0 >> 6);
@@ -156,7 +156,7 @@ titania_unicode_result titania_utf32_to_utf8(const titania_char32* utf32, const 
 
 		if (char0 < 0x10000) {
 			if (size + 3 >= utf8_size) {
-				return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+				return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 			}
 
 			utf8[size++] = 0xC0 | (char0 >> 12);
@@ -167,7 +167,7 @@ titania_unicode_result titania_utf32_to_utf8(const titania_char32* utf32, const 
 
 		if (char0 < 0x110000) {
 			if (size + 4 >= utf8_size) {
-				return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+				return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 			}
 
 			utf8[size++] = 0xF0 | (char0 >> 18);
@@ -177,30 +177,30 @@ titania_unicode_result titania_utf32_to_utf8(const titania_char32* utf32, const 
 			continue;
 		}
 
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_EXPECTED_REGULAR_CHAR };
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_EXPECTED_REGULAR_CHAR };
 	} while (*utf32++ != 0 && size < utf8_size && utf32 < endp);
 
 	if (size + 1 >= utf8_size) { // + 1 for null byte
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 	}
 
 	utf8[size] = 0;
 
-	return (titania_unicode_result) { .size = size };
+	return (titania_unicode_result) { .size = size, .error = TITANIA_UNICODE_OK };
 }
 
 titania_unicode_result titania_utf32_to_utf16(const titania_char32* utf32, const size_t utf32_size, titania_char16* utf16, const size_t utf16_size) {
 	if (utf32 == nullptr || utf16 == nullptr) {
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_MALFORMED };
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_MALFORMED };
 	}
 
 	if (utf16_size == 0) {
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 	}
 
 	if (utf32_size == 0) {
 		utf16[0] = 0;
-		return (titania_unicode_result) { .size = 0 };
+		return (titania_unicode_result) { .size = 0, .error = TITANIA_UNICODE_OK };
 	}
 
 	size_t size = 0;
@@ -214,7 +214,7 @@ titania_unicode_result titania_utf32_to_utf16(const titania_char32* utf32, const
 
 		if (char0 <= 0xFFFF) { // Non-Surrogate
 			if (char0 >= 0xD800 && char0 <= 0xDFFF) { // Surrogate bytes are not allowed in UTF-32
-				return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_MALFORMED };
+				return (titania_unicode_result) { .error = TITANIA_UNICODE_MALFORMED };
 			}
 
 			utf16[size++] = char0;
@@ -223,7 +223,7 @@ titania_unicode_result titania_utf32_to_utf16(const titania_char32* utf32, const
 
 		if (char0 < 0x110000) { // Unicode limit
 			if (size + 2 >= utf16_size) {
-				return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+				return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 			}
 
 			char0 -= 0x10000;
@@ -232,14 +232,14 @@ titania_unicode_result titania_utf32_to_utf16(const titania_char32* utf32, const
 			continue;
 		}
 
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_EXPECTED_REGULAR_CHAR };
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_EXPECTED_REGULAR_CHAR };
 	} while (*utf32++ != 0 && utf32 < endp);
 
 	if (size >= utf16_size) { // + 1 for null byte
-		return (titania_unicode_result) { .failed = true, .error = TITANIA_UNICODE_OUT_OF_SPACE };
+		return (titania_unicode_result) { .error = TITANIA_UNICODE_OUT_OF_SPACE };
 	}
 
 	utf16[size] = 0;
 
-	return (titania_unicode_result) { .size = size };
+	return (titania_unicode_result) { .size = size, .error = TITANIA_UNICODE_OK };
 }

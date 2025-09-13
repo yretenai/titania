@@ -15,12 +15,12 @@ titania_error titania_convert_edge_profile_input(const uint8_t input[TITANIA_MER
 
 	titania_char32 unicode[41];
 	titania_unicode_result unicode_result = titania_utf16_to_utf32((const titania_char16*) &profile.msg.name, sizeof(profile.msg.name), unicode, sizeof(unicode));
-	if (unicode_result.failed) {
+	if (unicode_result.error != TITANIA_UNICODE_OK) {
 		return TITANIA_ERROR_UNICODE_ERROR;
 	}
 
 	unicode_result = titania_utf32_to_utf8(unicode, sizeof(unicode), (titania_char8*) &output->name, sizeof(output->name));
-	if (unicode_result.failed) {
+	if (unicode_result.error != TITANIA_UNICODE_OK) {
 		return TITANIA_ERROR_UNICODE_ERROR;
 	}
 
@@ -113,12 +113,12 @@ titania_error titania_convert_edge_profile_output(titania_edge_profile input, du
 
 	titania_char32 unicode[41];
 	titania_unicode_result unicode_result = titania_utf8_to_utf32((const titania_char8*) &input.name, sizeof(input.name), unicode, sizeof(unicode));
-	if (unicode_result.failed) {
+	if (unicode_result.error != TITANIA_UNICODE_OK) {
 		return TITANIA_ERROR_UNICODE_ERROR;
 	}
 
 	unicode_result = titania_utf32_to_utf16(unicode, sizeof(unicode), (titania_char16*) &profile.msg.name, sizeof(profile.msg.name));
-	if (unicode_result.failed) {
+	if (unicode_result.error != TITANIA_UNICODE_OK) {
 		return TITANIA_ERROR_UNICODE_ERROR;
 	}
 

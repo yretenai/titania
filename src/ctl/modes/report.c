@@ -20,8 +20,10 @@ titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const
 			const titania_hid hid = context->hids[i];
 			// clang-format off
 			printf("hid {");
+			TITANIAPRINT_STR(data.hid, hid_path); TITANIAPRINT_SEP();
 			TITANIAPRINT_X16(data.hid, product_id); TITANIAPRINT_SEP();
-			TITANIAPRINT_X16(data.hid, vendor_id); TITANIAPRINT_SEP();
+			TITANIAPRINT_X16(data.hid, vendor_id); TITANIAPRINT_SEP();;
+			TITANIAPRINT_I32(data.hid, interface_id); TITANIAPRINT_SEP();
 			TITANIAPRINT_STR(data.hid.serial, mac); TITANIAPRINT_SEP();
 			TITANIAPRINT_STR(data.hid.serial, paired_mac); TITANIAPRINT_SEP();
 			TITANIAPRINT_TEST(data.hid, is_bluetooth); TITANIAPRINT_SEP();
@@ -287,10 +289,13 @@ titaniactl_error titaniactl_mode_report_json_inner(titaniactl_context* context, 
 				json_object_add_bool(hid_obj, "isEdge", hid.is_edge);
 				json_object_add_bool(hid_obj, "isAccess", hid.is_access);
 				json_object_add_bool(hid_obj, "isBluetooth", hid.is_bluetooth);
+				json_object_add_string(hid_obj, "path", hid.hid_path);
 				sprintf(strbuffer, "%x", hid.vendor_id);
 				json_object_add_string(hid_obj, "VID", strbuffer);
 				sprintf(strbuffer, "%x", hid.product_id);
 				json_object_add_string(hid_obj, "PID", strbuffer);
+				sprintf(strbuffer, "%d", hid.interface_id);
+				json_object_add_string(hid_obj, "InterfaceID", strbuffer);
 				json_object_add_string(hid_obj, "MAC", hid.serial.mac);
 				json_object_add_string(hid_obj, "pairedMAC", hid.serial.paired_mac);
 

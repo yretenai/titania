@@ -18,6 +18,7 @@
 #define TITANIAPRINT_FIRMWARE(struc, field) printf(" " #field " = %d.%d.%d", (struc).field.major, (struc).field.minor, (struc).field.revision)
 #define TITANIAPRINT_U8(struc, field) printf(" " #field " = %02u", (struc).field)
 #define TITANIAPRINT_U32(struc, field) printf(" " #field " = %u", (struc).field)
+#define TITANIAPRINT_I32(struc, field) printf(" " #field " = %d", (struc).field)
 #define TITANIAPRINT_U64(struc, field) printf(" " #field " = %lu", (unsigned long) (struc).field)
 #define TITANIAPRINT_X16(struc, field) printf(" " #field " = 0x%04x", (struc).field)
 #define TITANIAPRINT_FLOAT(struc, field) printf(" " #field " = %f", (struc).field)

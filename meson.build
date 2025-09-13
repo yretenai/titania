@@ -109,7 +109,69 @@ has_normal_bitpacking = bitpacking_test_run.compiled() and bitpacking_test_run.r
 
 has_haptics = get_option('titania_haptics').allowed()
 need_haptics = get_option('titania_haptics').enabled()
-# todo: if auto -> look for pipewire (linux), winmm (win32), or coreaudio (apple) and enable if found
+has_haptics_alsa = false
+has_haptics_pulse = false
+has_haptics_wasapi = false
+has_haptics_coreaudio = false
+
+hidapi = dependency('hidapi', version : '>=0.13.0', required : false)
+if not hidapi.found()
+	hidapi = dependency('hidapi')
+endif
+
+titania_source = [
+	'src/access.c',
+	'src/crc.c',
+	'src/enums.c',
+	'src/edge.c',
+	'src/hid.c',
+	'src/trans.c',
+	'src/unicode.c'
+]
+
+titania_deps = [
+	hidapi
+]
+
+if has_haptics
+	ole = compiler.find_library('ole32', required : false)
+	pulse = dependency('libpulse', required : false)
+	alsa = dependency('alsa', required : false)
+	coreaudio = dependency('appleframeworks', modules : ['CoreFoundation', 'IOKit', 'CoreAudio', 'AudioUnit'], required : false)
+
+	if ole.found()
+		message('using wasapi for haptics')
+		titania_source += ['src/haptics_wasapi.c']
+		titania_deps += [ole]
+		has_haptics_wasapi = true
+	elif coreaudio.found()
+		message('using coreaudio for haptics')
+		titania_source += ['src/haptics_coreaudio.c']
+		titania_deps += [coreaudio]
+		has_haptics_coreaudio = true
+	elif pulse.found()
+		message('using pulseaudio for haptics')
+		titania_source += ['src/haptics_pulse.c']
+		titania_deps += [pulse]
+		has_haptics_pulse = true
+	elif alsa.found()
+		message('using alsa for haptics')
+		titania_source += ['src/haptics_alsa.c']
+		titania_deps += [alsa]
+		has_haptics_alsa = true
+	else
+		has_haptics = false
+		if need_haptics
+			error('haptics required but no libraries found')
+		else
+			warning('haptics requested but no libraries found')
+		endif
+	endif
+
+	if has_haptics
+		titania_source += ['src/haptics_bt.c']
+	endif
+endif
 
 configure_file(
 	output : 'titania_config.h',
@@ -129,34 +191,19 @@ configure_file(
 		'TITANIA_HAS_PACK' : has_pack,
 		'TITANIA_HAS_STDC_FLAGS': has_stdc_flags,
 		'TITANIA_HAS_VARIABLE_BITPACKING' : has_normal_bitpacking,
-		'TITANIA_HAS_HAPTICS' : has_haptics
+		'TITANIA_HAS_HAPTICS' : has_haptics,
+		'TITANIA_HAS_HAPTICS_ALSA' : has_haptics_alsa,
+		'TITANIA_HAS_HAPTICS_PULSE' : has_haptics_pulse,
+		'TITANIA_HAS_HAPTICS_COREAUDIO' : has_haptics_coreaudio,
+		'TITANIA_HAS_HAPTICS_WASAPI' : has_haptics_wasapi,
    })
 )
-
-hidapi = dependency('hidapi', version : '>=0.13.0', required : false)
-if not hidapi.found()
-	hidapi = dependency('hidapi')
-endif
-
-titania_source = [
-	'src/access.c',
-	'src/crc.c',
-	'src/enums.c',
-	'src/edge.c',
-	'src/hid.c',
-	'src/trans.c',
-	'src/unicode.c'
-]
-
-if has_haptics
-	titania_source += ['src/haptics.c']
-endif
 
 titania_inc = include_directories('include/')
 
 titania_lib = library(meson.project_name(),
 	titania_source,
-	dependencies : [hidapi],
+	dependencies : titania_deps,
 	gnu_symbol_visibility : 'hidden',
 	c_args : [args, '-DTITANIA_EXPORTING'],
 	install : true,

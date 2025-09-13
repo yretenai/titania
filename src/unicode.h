@@ -15,21 +15,18 @@ typedef uint16_t titania_char16;
 typedef uint8_t titania_char8;
 
 typedef enum titania_unicode_error {
-	TITANIA_UNICODE_EMPTY = 0,
-	TITANIA_UNICODE_EXPECTED_CONTINUATION_CHAR = 1,
-	TITANIA_UNICODE_EXPECTED_REGULAR_CHAR = 2,
-	TITANIA_UNICODE_EXPECTED_SURROGATE_HIGH = 3,
-	TITANIA_UNICODE_EXPECTED_SURROGATE_LOW = 4,
-	TITANIA_UNICODE_MALFORMED = 5,
-	TITANIA_UNICODE_OUT_OF_SPACE = 6
+	TITANIA_UNICODE_OK = 0,
+	TITANIA_UNICODE_EMPTY,
+	TITANIA_UNICODE_EXPECTED_CONTINUATION_CHAR,
+	TITANIA_UNICODE_EXPECTED_REGULAR_CHAR,
+	TITANIA_UNICODE_EXPECTED_SURROGATE_HIGH,
+	TITANIA_UNICODE_EXPECTED_SURROGATE_LOW,
+	TITANIA_UNICODE_MALFORMED,
+	TITANIA_UNICODE_OUT_OF_SPACE
 } titania_unicode_error;
 
-typedef union titania_unicode_result {
-	struct {
-		titania_unicode_error error;
-		bool failed;
-	};
-
+typedef struct titania_unicode_result {
+	titania_unicode_error error;
 	size_t size;
 } titania_unicode_result;
 
