@@ -107,9 +107,9 @@ has_normal_bitpacking = false
 bitpacking_test_run = compiler.run(bitpacking_test, name : 'has variable type bitpacking', args : args + [has_pack ? '-DHAS_PACK' : ''])
 has_normal_bitpacking = bitpacking_test_run.compiled() and bitpacking_test_run.returncode() == 0
 
-has_haptics = get_option('titania_haptics').allowed()
-need_haptics = get_option('titania_haptics').enabled()
-has_haptics_alsa = false
+has_audio_haptics = get_option('titania_haptics_audio').allowed()
+need_audio_haptics = get_option('titania_haptics_audio').enabled()
+has_haptics_bt = get_option('titania_haptics_bt').allowed()
 has_haptics_pulse = false
 has_haptics_wasapi = false
 has_haptics_coreaudio = false
@@ -133,10 +133,16 @@ titania_deps = [
 	hidapi
 ]
 
-if has_haptics
+if has_haptics_bt
+	has_haptics = true
+	titania_source += ['src/haptics_bt.c']
+endif
+
+if has_audio_haptics
+	has_haptics = true
+	has_haptics_bt = false
 	ole = compiler.find_library('ole32', required : false)
 	pulse = dependency('libpulse', required : false)
-	alsa = dependency('alsa', required : false)
 	coreaudio = dependency('appleframeworks', modules : ['CoreFoundation', 'IOKit', 'CoreAudio', 'AudioUnit'], required : false)
 
 	if ole.found()
@@ -153,23 +159,13 @@ if has_haptics
 		message('using pulseaudio for haptics')
 		titania_source += ['src/haptics_pulse.c']
 		titania_deps += [pulse]
-		has_haptics_pulse = true
-	elif alsa.found()
-		message('using alsa for haptics')
-		titania_source += ['src/haptics_alsa.c']
-		titania_deps += [alsa]
-		has_haptics_alsa = true
 	else
-		has_haptics = false
 		if need_haptics
 			error('haptics required but no libraries found')
 		else
 			warning('haptics requested but no libraries found')
+			has_haptics_bt = get_option('titania_haptics_bt').allowed()
 		endif
-	endif
-
-	if has_haptics
-		titania_source += ['src/haptics_bt.c']
 	endif
 endif
 
@@ -192,10 +188,10 @@ configure_file(
 		'TITANIA_HAS_STDC_FLAGS': has_stdc_flags,
 		'TITANIA_HAS_VARIABLE_BITPACKING' : has_normal_bitpacking,
 		'TITANIA_HAS_HAPTICS' : has_haptics,
-		'TITANIA_HAS_HAPTICS_ALSA' : has_haptics_alsa,
 		'TITANIA_HAS_HAPTICS_PULSE' : has_haptics_pulse,
 		'TITANIA_HAS_HAPTICS_COREAUDIO' : has_haptics_coreaudio,
 		'TITANIA_HAS_HAPTICS_WASAPI' : has_haptics_wasapi,
+		'TITANIA_HAS_HAPTICS_FALLBACK' : has_haptics_bt,
    })
 )
 

@@ -29,8 +29,6 @@ typedef struct dualsense_haptics_state {
 #ifdef TITANIA_HAS_HAPTICS_COREAUDIO
 	AudioDeviceID device_id;
 #endif
-#ifdef TITANIA_HAPTICS_ALSA
-#endif
 #ifdef TITANIA_HAPTICS_PULSE
 #endif
 #ifdef TITANIA_HAPTICS_WASAPI
