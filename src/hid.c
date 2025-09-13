@@ -478,7 +478,7 @@ titania_error titania_update_control(const titania_handle handle, const titania_
 	hid_state->control1.mute_mic = data.mute_mic;
 	hid_state->control1.mute_haptics = data.mute_haptics;
 
-	hid_state->control2.enable_beamforming = !data.disable_beamforming;
+	hid_state->control2.enable_beamforming = data.enable_beamforming;
 	hid_state->control2.enable_lowpass_filter = data.enable_lowpass_filter;
 	hid_state->control2.gain = data.gain;
 	hid_state->control2.advanced_rumble_control = !data.disable_rumble_emulation;
@@ -529,7 +529,7 @@ titania_error titania_get_control(const titania_handle handle, titania_control_u
 	control->mute_mic = hid_state->control1.mute_mic;
 	control->mute_haptics = hid_state->control1.mute_haptics;
 
-	control->disable_beamforming = !hid_state->control2.enable_beamforming;
+	control->enable_beamforming = hid_state->control2.enable_beamforming;
 	control->enable_lowpass_filter = hid_state->control2.enable_lowpass_filter;
 	control->gain = hid_state->control2.gain;
 	control->disable_rumble_emulation = !hid_state->control2.advanced_rumble_control;
@@ -787,7 +787,7 @@ titania_error titania_update_rumble(const titania_handle handle, const float lar
 	return TITANIA_ERROR_OK;
 }
 
-TITANIA_EXPORT titania_error titania_update_haptics(const titania_handle handle, const uint8_t* samples, const size_t num_samples) {
+TITANIA_EXPORT titania_error titania_update_haptics(const titania_handle handle, const float* samples, const size_t num_bytes) {
 #ifndef TITANIA_HAS_HAPTICS
 	return TITANIA_ERROR_NOT_IMPLEMENTED;
 #else
@@ -804,7 +804,7 @@ TITANIA_EXPORT titania_error titania_update_haptics(const titania_handle handle,
 		return result;
 	}
 
-	if (num_samples < TITANIA_MINIMUM_HAPTICS_SIZE) {
+	if (num_bytes < TITANIA_MINIMUM_HAPTICS_SIZE) {
 		return TITANIA_ERROR_NOT_ENOUGH_DATA;
 	}
 
@@ -815,21 +815,21 @@ TITANIA_EXPORT titania_error titania_update_haptics(const titania_handle handle,
 	const size_t used = (write - read) % TITANIA_MAXIMUM_HAPTICS_SIZE;
 	const size_t remaining_size = TITANIA_MAXIMUM_HAPTICS_SIZE - used;
 
-	if (num_samples > remaining_size) {
+	if (num_bytes > remaining_size) {
 		return TITANIA_ERROR_OUT_OF_SPACE;
 	}
 
 	size_t first_byte = TITANIA_MAXIMUM_HAPTICS_SIZE - write_rel;
-	if (first_byte > num_samples) {
-		first_byte = num_samples;
+	if (first_byte > num_bytes) {
+		first_byte = num_bytes;
 	}
 
 	memcpy(&state[handle].haptics.buffer[write_rel], samples, first_byte);
-	if (num_samples - first_byte > 0) {
-		memcpy(&state[handle].haptics.buffer[0], samples + first_byte, num_samples - first_byte);
+	if (num_bytes - first_byte > 0) {
+		memcpy(&state[handle].haptics.buffer[0], samples + first_byte, num_bytes - first_byte);
 	}
 
-	state[handle].haptics.write_offset = (write + num_samples) & SIZE_MAX;
+	state[handle].haptics.write_offset = (write + num_bytes) & SIZE_MAX;
 
 	return TITANIA_ERROR_OK;
 #endif

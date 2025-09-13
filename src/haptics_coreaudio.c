@@ -12,7 +12,11 @@
 
 // in theory, we can find by uid "AppleUSBAudioEngine:Sony Interactive Entertainment:DualSense (Edge)? Wireless Controller:{location id}:1"
 titania_error find_audio_from_location(const uint32_t location_id, AudioDeviceID* audio_device) {
-	AudioObjectPropertyAddress address = { kAudioHardwarePropertyDevices, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMain };
+	AudioObjectPropertyAddress address = {
+		kAudioHardwarePropertyDevices,
+		kAudioObjectPropertyScopeGlobal,
+		kAudioObjectPropertyElementMain
+	};
 
 	*audio_device = 0;
 
@@ -38,7 +42,11 @@ titania_error find_audio_from_location(const uint32_t location_id, AudioDeviceID
 
 		uint32_t transport_type = 0;
 		data_size = sizeof(uint32_t);
-		address = (AudioObjectPropertyAddress) { kAudioDevicePropertyTransportType, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMain };
+		address = (AudioObjectPropertyAddress) {
+			kAudioDevicePropertyTransportType,
+			kAudioObjectPropertyScopeGlobal,
+			kAudioObjectPropertyElementMain
+		};
 
 		status = AudioObjectGetPropertyData(current, &address, 0, nullptr, &data_size, &transport_type);
 		if (status != noErr || transport_type != kAudioDeviceTransportTypeUSB) {
@@ -47,7 +55,11 @@ titania_error find_audio_from_location(const uint32_t location_id, AudioDeviceID
 
 		CFStringRef uid = nullptr;
 		data_size = sizeof(CFStringRef);
-		address = (AudioObjectPropertyAddress) { kAudioDevicePropertyDeviceUID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMain };
+		address = (AudioObjectPropertyAddress) {
+			kAudioDevicePropertyDeviceUID,
+			kAudioObjectPropertyScopeGlobal,
+			kAudioObjectPropertyElementMain
+		};
 
 		status = AudioObjectGetPropertyData(current, &address, 0, nullptr, &data_size, &uid);
 		if (status != noErr || uid == nullptr) {
@@ -77,16 +89,21 @@ titania_error find_audio_from_location(const uint32_t location_id, AudioDeviceID
 			continue;
 		}
 
-		address = (AudioObjectPropertyAddress) { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMain };
+		address = (AudioObjectPropertyAddress) {
+			kAudioDevicePropertyStreamFormat,
+			kAudioDevicePropertyScopeOutput,
+			kAudioObjectPropertyElementMain
+		};
 
-		data_size = sizeof(AudioBufferList);
-		AudioBufferList audio_buffer_list = { 0 };
-		status = AudioObjectGetPropertyData(current, &address, 0, nullptr, &data_size, &audio_buffer_list);
-		if (status != noErr) {
-			continue;
-		}
-
-		if (audio_buffer_list.mNumberBuffers != 1 && audio_buffer_list.mBuffers[0].mNumberChannels != 4) {
+		AudioStreamBasicDescription stream_desc = {0};
+		data_size = sizeof(AudioStreamBasicDescription);
+		status = AudioObjectGetPropertyData(current, &address, 0, nullptr, &data_size, &stream_desc);
+		if (status != noErr ||
+			stream_desc.mSampleRate != 48000 ||
+			stream_desc.mChannelsPerFrame != 4 ||
+			stream_desc.mBitsPerChannel != 32 ||
+			stream_desc.mFormatFlags != (kAudioFormatFlagIsFloat | kAudioFormatFlagIsPacked) ||
+			stream_desc.mFormatID != kAudioFormatLinearPCM) {
 			continue;
 		}
 
@@ -95,6 +112,55 @@ titania_error find_audio_from_location(const uint32_t location_id, AudioDeviceID
 	}
 
 	return TITANIA_ERROR_HAPTICS_INVALID_HANDLE;
+}
+
+titania_error feed_coreaudio_inner(titania_handle handle, AudioBufferList *output_data) {
+	if (output_data->mNumberBuffers != 1 || output_data->mBuffers[0].mNumberChannels != 4) {
+		return TITANIA_ERROR_INVALID_DATA;
+	}
+
+	CHECK_INIT();
+	CHECK_HANDLE(handle);
+
+	const size_t write = state[handle].haptics.write_offset;
+	const size_t read = state[handle].haptics.read_offset;
+	if (read > write) {
+		state[handle].haptics.read_offset = write;
+		return TITANIA_ERROR_OK;
+	}
+
+	size_t remain = (TITANIA_MAXIMUM_HAPTICS_SIZE - ((write - read) % TITANIA_MAXIMUM_HAPTICS_SIZE)) >> 1;
+
+	const size_t avail = output_data->mBuffers[0].mDataByteSize >> 2;
+	if (remain > avail) {
+		remain = avail;
+	}
+
+	if (remain < TITANIA_MINIMUM_HAPTICS_SIZE >> 1) {
+		return TITANIA_ERROR_OK;
+	}
+
+	float *output = output_data->mBuffers[0].mData;
+	for (size_t sample_idx = 0; sample_idx < remain; ++sample_idx) {
+		output[(sample_idx << 2) + 2] = state[handle].haptics.buffer[sample_idx << 1];
+		output[(sample_idx << 2) + 3] = state[handle].haptics.buffer[(sample_idx << 1) + 1];
+	}
+
+	state[handle].haptics.read_offset += (remain << 1);
+
+	return TITANIA_ERROR_OK;
+}
+
+OSStatus feed_coreaudio(AudioDeviceID device, const AudioTimeStamp *now,
+	const AudioBufferList *input_data, const AudioTimeStamp *input_time,
+	AudioBufferList *output_data, const AudioTimeStamp *output_time,
+	void* user_data) {
+	titania_handle handle = (titania_handle) (intptr_t) user_data;
+	if (IS_TITANIA_BAD(feed_coreaudio_inner(handle, output_data))) {
+		return kAudioHardwareUnspecifiedError;
+	}
+
+	return noErr;
 }
 
 titania_error titania_haptics_init(const titania_handle handle) {
@@ -118,7 +184,8 @@ titania_error titania_haptics_init(const titania_handle handle) {
 			if (CFNumberGetValue(locationIdRef, kCFNumberSInt32Type, &locationId)) {
 				result = find_audio_from_location(locationId, &state[handle].haptics.device_id);
 				if (result == TITANIA_ERROR_OK) {
-					// todo: setup pull callback
+					AudioDeviceCreateIOProcID(state[handle].haptics.device_id, feed_coreaudio, (void*) (intptr_t) handle, &state[handle].haptics.proc_id);
+					AudioDeviceStart(state[handle].haptics.device_id, state[handle].haptics.proc_id);
 				}
 			}
 		}
@@ -137,7 +204,38 @@ titania_error titania_haptics_close(const titania_handle handle) {
 		return TITANIA_ERROR_OK;
 	}
 
+	if (state[handle].hid_info.is_bluetooth) {
+		return titania_haptics_close_bt(handle);
+	}
+
+	if (state[handle].haptics.device_id == 0 || state[handle].haptics.proc_id == 0) {
+		return TITANIA_ERROR_OK;
+	}
+
+	AudioDeviceStop(state[handle].haptics.device_id, state[handle].haptics.proc_id);
+
 	return TITANIA_ERROR_OK;
 }
 
-titania_error titania_haptics_flush(const titania_handle handle) { return TITANIA_ERROR_OK; }
+titania_error titania_haptics_flush(const titania_handle handle) {
+	CHECK_INIT();
+	CHECK_HANDLE_VALID(handle);
+
+	if (IS_ACCESS(state[handle].hid_info)) {
+		return TITANIA_ERROR_OK;
+	}
+
+	if (state[handle].hid_info.is_bluetooth) {
+		return titania_haptics_close_bt(handle);
+	}
+
+	if (state[handle].haptics.device_id == 0 || state[handle].haptics.proc_id == 0) {
+		return TITANIA_ERROR_OK;
+	}
+
+	AudioDeviceStop(state[handle].haptics.device_id, state[handle].haptics.proc_id);
+	state[handle].haptics.read_offset = 0;
+	AudioDeviceStart(state[handle].haptics.device_id, state[handle].haptics.proc_id);
+
+	return TITANIA_ERROR_OK;
+}

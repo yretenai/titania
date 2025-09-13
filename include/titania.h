@@ -62,6 +62,9 @@ extern "C" {
 #define TITANIA_ACCESS_BUTTON_B8 (8)
 #define TITANIA_ACCESS_BUTTON_STICK (9)
 
+#define TITANIA_MINIMUM_HAPTICS_SIZE 64
+#define TITANIA_MAXIMUM_HAPTICS_SIZE 4096
+
 typedef enum titania_error {
 	TITANIA_ERROR_OK = 0,
 	TITANIA_ERROR_NOT_INITIALIZED,
@@ -816,7 +819,7 @@ typedef struct titania_control_update {
 	bool mute_speaker;
 	bool mute_jack;
 	bool mute_haptics;
-	bool disable_beamforming;
+	bool enable_beamforming;
 	bool enable_lowpass_filter;
 	bool disable_led_brightness_control;
 	bool disable_led_effect_control;
@@ -934,10 +937,10 @@ TITANIA_EXPORT titania_error titania_update_rumble(titania_handle handle, float 
  * @brief update haptics state of a controller
  * @note this will disable rumble emulation
  * @param handle: the controller to update
- * @param samples: the 8-bit signed 2-channel interleaved PCM 3kHz haptics data
- * @param num_samples: number of buffers
+ * @param samples: the 32-bit float 2-channel interleaved linear PCM 48kHz haptics data
+ * @param num_bytes: number of bytes in samples
  */
-TITANIA_EXPORT titania_error titania_update_haptics(titania_handle handle, const uint8_t* samples, size_t num_samples);
+TITANIA_EXPORT titania_error titania_update_haptics(titania_handle handle, const float* samples, size_t num_bytes);
 
 /**
  * @brief reset haptics audio state of a controller

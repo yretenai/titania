@@ -153,6 +153,276 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 	bool all_tests = context->argc == 0;
 	const char* selected_test = context->argc > 0 ? context->argv[0] : "all";
 
+	float rumble = 0.0f;
+	int rumble_counter = 0;
+	constexpr float ONE_OVER_255 = 1.0f / 255.0f;
+
+	if (!is_only_access && (all_tests || strcmp(selected_test, "haptics") == 0)) {
+		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
+		printf("testing haptics...\n");
+
+		float haptics_data[TITANIA_MAXIMUM_HAPTICS_SIZE];
+
+		for (int matrix = 0; matrix <= 0b11; matrix++) {
+			bool lowpass = matrix & 1;
+			bool beamforming = matrix & 2;
+			printf("lowpass = %s, beamforming = %s\n", lowpass ? "true" : "false", beamforming ? "true" : "false");
+
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
+
+				titania_control_update update;
+				titania_get_control(context->handles[i], &update);
+				update.enable_lowpass_filter = lowpass;
+				update.enable_beamforming = beamforming;
+				titania_update_control(context->handles[i], update);
+			}
+
+			titania_push(context->handles, context->connected_controllers);
+			printf("both channels...\n");
+			for (rumble = 0, rumble_counter = 0; rumble_counter < 63; rumble_counter++, rumble += ONE_OVER_255 * 4) {
+				for (size_t i = 0; i < sizeof(haptics_data); i += 2) {
+					haptics_data[i] = rumble * 2.0f - 1.0f;
+					haptics_data[i + 1] = rumble * 2.0f - 1.0f;
+				}
+
+				for (int i = 0; i < context->connected_controllers; ++i) {
+					if (context->hids[i].is_access) {
+						continue;
+					}
+
+					size_t num;
+					if (IS_TITANIA_BAD(titania_haptics_state(context->handles[i], &num))) {
+						continue;
+					}
+
+					titania_update_haptics(context->handles[i], haptics_data, TITANIA_MAXIMUM_HAPTICS_SIZE - num);
+				}
+
+				titania_push(context->handles, context->connected_controllers);
+				if (report_hid_close(context->handles, context->connected_controllers, 50000, 10000)) {
+					goto reset_haptics;
+				}
+			}
+
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
+
+				titania_haptics_reset(context->handles[i]);
+			}
+
+			printf("left channel...\n");
+			for (rumble = 0, rumble_counter = 0; rumble_counter < 63; rumble_counter++, rumble += ONE_OVER_255 * 4) {
+				for (size_t i = 0; i < sizeof(haptics_data); i += 2) {
+					haptics_data[i] = rumble * 2.0f - 1.0f;
+					haptics_data[i + 1] = 0.0f;
+				}
+
+				for (int i = 0; i < context->connected_controllers; ++i) {
+					if (context->hids[i].is_access) {
+						continue;
+					}
+
+					size_t num;
+					if (IS_TITANIA_BAD(titania_haptics_state(context->handles[i], &num))) {
+						continue;
+					}
+
+					titania_update_haptics(context->handles[i], haptics_data, TITANIA_MAXIMUM_HAPTICS_SIZE - num);
+				}
+
+				titania_push(context->handles, context->connected_controllers);
+				if (report_hid_close(context->handles, context->connected_controllers, 50000, 10000)) {
+					goto reset_haptics;
+				}
+			}
+
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
+
+				titania_haptics_reset(context->handles[i]);
+			}
+
+			printf("right channel...\n");
+			for (rumble = 0, rumble_counter = 0; rumble_counter < 63; rumble_counter++, rumble += ONE_OVER_255 * 4) {
+				for (size_t i = 0; i < sizeof(haptics_data); i += 2) {
+					haptics_data[i] = 0.0f;
+					haptics_data[i + 1] = rumble * 2.0f - 1.0f;
+				}
+
+				for (int i = 0; i < context->connected_controllers; ++i) {
+					if (context->hids[i].is_access) {
+						continue;
+					}
+
+					size_t num;
+					if (IS_TITANIA_BAD(titania_haptics_state(context->handles[i], &num))) {
+						continue;
+					}
+
+					titania_update_haptics(context->handles[i], haptics_data, TITANIA_MAXIMUM_HAPTICS_SIZE - num);
+				}
+
+				titania_push(context->handles, context->connected_controllers);
+				if (report_hid_close(context->handles, context->connected_controllers, 50000, 10000)) {
+					goto reset_haptics;
+				}
+			}
+
+			// todo: read and play a haptics audio pcm stream
+		}
+
+	reset_haptics:
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
+
+			titania_haptics_reset(context->handles[i]);
+		}
+	}
+
+	if (!is_only_access && (all_tests || strcmp(selected_test, "rumble") == 0)) {
+		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
+		printf("testing rumble...\n");
+
+		printf("large motor...\n");
+		for (rumble = 0, rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
+				titania_update_rumble(context->handles[i], rumble, 0.0f, TITANIA_NO_POWER_REDUCTION, false);
+			}
+
+			titania_push(context->handles, context->connected_controllers);
+			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
+				goto reset_motor;
+			}
+		}
+
+		printf("small motor...\n");
+		for (rumble = 0, rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
+				titania_update_rumble(context->handles[i], 0, rumble, TITANIA_NO_POWER_REDUCTION, false);
+			}
+			titania_push(context->handles, context->connected_controllers);
+			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
+				goto reset_motor;
+			}
+		}
+
+		printf("both motors...\n");
+		for (rumble = 0, rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
+				titania_update_rumble(context->handles[i], rumble, rumble, TITANIA_NO_POWER_REDUCTION, false);
+			}
+			titania_push(context->handles, context->connected_controllers);
+			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
+				goto reset_motor;
+			}
+		}
+
+		printf("rumble feedback test...\n");
+		for (int rumble_test = 0; rumble_test < 8; rumble_test++) {
+			float level = rumble_test % 2 == 0 ? 1.0f : 0.1f;
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
+				titania_update_rumble(context->handles[i], level, level, TITANIA_NO_POWER_REDUCTION, false);
+			}
+			titania_push(context->handles, context->connected_controllers);
+			if (report_hid_close(context->handles, context->connected_controllers, 250000, 10000)) {
+				goto reset_motor;
+			}
+		}
+
+		printf("large motor (legacy)...\n");
+		for (rumble = 0, rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
+				titania_update_rumble(context->handles[i], rumble, 0.0f, TITANIA_NO_POWER_REDUCTION, true);
+			}
+			titania_push(context->handles, context->connected_controllers);
+			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
+				goto reset_motor;
+			}
+		}
+
+		printf("small motor (legacy)...\n");
+		for (rumble = 0, rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
+				titania_update_rumble(context->handles[i], 0, rumble, TITANIA_NO_POWER_REDUCTION, true);
+			}
+			titania_push(context->handles, context->connected_controllers);
+			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
+				goto reset_motor;
+			}
+		}
+
+		printf("both motors (legacy)...\n");
+		for (rumble = 0, rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
+				titania_update_rumble(context->handles[i], rumble, rumble, TITANIA_NO_POWER_REDUCTION, true);
+			}
+			titania_push(context->handles, context->connected_controllers);
+			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
+				goto reset_motor;
+			}
+		}
+
+		printf("rumble feedback test (legacy)...\n");
+		for (int rumble_test = 0; rumble_test < 8; rumble_test++) {
+			float level = rumble_test % 2 == 0 ? 1.0f : 0.1f;
+			for (int i = 0; i < context->connected_controllers; ++i) {
+				if (context->hids[i].is_access) {
+					continue;
+				}
+				titania_update_rumble(context->handles[i], level, level, TITANIA_NO_POWER_REDUCTION, true);
+			}
+			titania_push(context->handles, context->connected_controllers);
+			if (report_hid_close(context->handles, context->connected_controllers, 250000, 10000)) {
+				goto reset_motor;
+			}
+		}
+
+	reset_motor:
+		if (should_stop) {
+			return TITANIACTL_ERROR_INTERRUPTED;
+		}
+
+		for (int i = 0; i < context->connected_controllers; ++i) {
+			if (context->hids[i].is_access) {
+				continue;
+			}
+			titania_update_rumble(context->handles[i], 0, 0, TITANIA_NO_POWER_REDUCTION, false);
+		}
+		titania_push(context->handles, context->connected_controllers);
+		struct timespec delayspec = { 0, 100000000 };
+		nanosleep(&delayspec, nullptr);
+	}
+
 	if (!is_only_access && (all_tests || strcmp(selected_test, "triggers") == 0)) {
 		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
 		printf("testing adaptive triggers\n");
@@ -337,143 +607,6 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 				continue;
 			}
 			titania_update_effect(context->handles[i], update, update, TITANIA_NO_POWER_REDUCTION);
-		}
-		titania_push(context->handles, context->connected_controllers);
-		struct timespec delayspec = { 0, 100000000 };
-		nanosleep(&delayspec, nullptr);
-	}
-
-	if (!is_only_access && (all_tests || strcmp(selected_test, "rumble") == 0)) {
-		wait_until_options_clear(context->handles, context->connected_controllers, 250000);
-		printf("testing rumble...\n");
-		float rumble = 0.0f;
-		int rumble_counter = 0;
-
-		constexpr float ONE_OVER_255 = 1.0f / 255.0f;
-		printf("large motor...\n");
-		for (rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
-			for (int i = 0; i < context->connected_controllers; ++i) {
-				if (context->hids[i].is_access) {
-					continue;
-				}
-				titania_update_rumble(context->handles[i], rumble, 0.0f, TITANIA_NO_POWER_REDUCTION, false);
-			}
-			titania_push(context->handles, context->connected_controllers);
-			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
-				goto reset_motor;
-			}
-		}
-
-		printf("small motor...\n");
-		for (rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
-			for (int i = 0; i < context->connected_controllers; ++i) {
-				if (context->hids[i].is_access) {
-					continue;
-				}
-				titania_update_rumble(context->handles[i], 0, rumble, TITANIA_NO_POWER_REDUCTION, false);
-			}
-			titania_push(context->handles, context->connected_controllers);
-			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
-				goto reset_motor;
-			}
-		}
-
-		printf("both motors...\n");
-		for (rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
-			for (int i = 0; i < context->connected_controllers; ++i) {
-				if (context->hids[i].is_access) {
-					continue;
-				}
-				titania_update_rumble(context->handles[i], rumble, rumble, TITANIA_NO_POWER_REDUCTION, false);
-			}
-			titania_push(context->handles, context->connected_controllers);
-			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
-				goto reset_motor;
-			}
-		}
-
-		printf("rumble feedback test...\n");
-		for (int rumble_test = 0; rumble_test < 8; rumble_test++) {
-			float level = rumble_test % 2 == 0 ? 1.0f : 0.1f;
-			for (int i = 0; i < context->connected_controllers; ++i) {
-				if (context->hids[i].is_access) {
-					continue;
-				}
-				titania_update_rumble(context->handles[i], level, level, TITANIA_NO_POWER_REDUCTION, false);
-			}
-			titania_push(context->handles, context->connected_controllers);
-			if (report_hid_close(context->handles, context->connected_controllers, 250000, 10000)) {
-				goto reset_motor;
-			}
-		}
-
-		printf("large motor (legacy)...\n");
-		for (rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
-			for (int i = 0; i < context->connected_controllers; ++i) {
-				if (context->hids[i].is_access) {
-					continue;
-				}
-				titania_update_rumble(context->handles[i], rumble, 0.0f, TITANIA_NO_POWER_REDUCTION, true);
-			}
-			titania_push(context->handles, context->connected_controllers);
-			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
-				goto reset_motor;
-			}
-		}
-
-		printf("small motor (legacy)...\n");
-		for (rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
-			for (int i = 0; i < context->connected_controllers; ++i) {
-				if (context->hids[i].is_access) {
-					continue;
-				}
-				titania_update_rumble(context->handles[i], 0, rumble, TITANIA_NO_POWER_REDUCTION, true);
-			}
-			titania_push(context->handles, context->connected_controllers);
-			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
-				goto reset_motor;
-			}
-		}
-
-		printf("both motors (legacy)...\n");
-		for (rumble_counter = 0; rumble_counter < 255; rumble_counter++, rumble += ONE_OVER_255) {
-			for (int i = 0; i < context->connected_controllers; ++i) {
-				if (context->hids[i].is_access) {
-					continue;
-				}
-				titania_update_rumble(context->handles[i], rumble, rumble, TITANIA_NO_POWER_REDUCTION, true);
-			}
-			titania_push(context->handles, context->connected_controllers);
-			if (report_hid_close(context->handles, context->connected_controllers, 10000, 10000)) {
-				goto reset_motor;
-			}
-		}
-
-		printf("rumble feedback test (legacy)...\n");
-		for (int rumble_test = 0; rumble_test < 8; rumble_test++) {
-			float level = rumble_test % 2 == 0 ? 1.0f : 0.1f;
-			for (int i = 0; i < context->connected_controllers; ++i) {
-				if (context->hids[i].is_access) {
-					continue;
-				}
-				titania_update_rumble(context->handles[i], level, level, TITANIA_NO_POWER_REDUCTION, true);
-			}
-			titania_push(context->handles, context->connected_controllers);
-			if (report_hid_close(context->handles, context->connected_controllers, 250000, 10000)) {
-				goto reset_motor;
-			}
-		}
-
-	reset_motor:
-		if (should_stop) {
-			return TITANIACTL_ERROR_INTERRUPTED;
-		}
-
-		for (int i = 0; i < context->connected_controllers; ++i) {
-			if (context->hids[i].is_access) {
-				continue;
-			}
-			titania_update_rumble(context->handles[i], 0, 0, TITANIA_NO_POWER_REDUCTION, false);
 		}
 		titania_push(context->handles, context->connected_controllers);
 		struct timespec delayspec = { 0, 100000000 };

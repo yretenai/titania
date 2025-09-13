@@ -10,24 +10,21 @@
 #include <stdatomic.h>
 #include <stdint.h>
 
+#include "titania.h"
+
 #ifdef TITANIA_HAS_HAPTICS_COREAUDIO
 #include <CoreAudio/AudioHardware.h>
 #endif
-
-// BT expects 3kHz at 48kb/s
-// 64 is approximately 10ms of audio
-// 1024 is about 350ms of audio
-#define TITANIA_MINIMUM_HAPTICS_SIZE 64
-#define TITANIA_MAXIMUM_HAPTICS_SIZE 1024
 
 typedef struct dualsense_haptics_state {
 	titania_vibration_mode mode;
 	// todo: add audio device info here
 	atomic_size_t read_offset;
 	atomic_size_t write_offset;
-	uint8_t buffer[TITANIA_MAXIMUM_HAPTICS_SIZE];
+	float buffer[TITANIA_MAXIMUM_HAPTICS_SIZE];
 #ifdef TITANIA_HAS_HAPTICS_COREAUDIO
 	AudioDeviceID device_id;
+	AudioDeviceIOProcID proc_id;
 #endif
 #ifdef TITANIA_HAPTICS_PULSE
 #endif
