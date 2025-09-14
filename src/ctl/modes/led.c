@@ -9,9 +9,9 @@
 
 titaniactl_error titaniactl_mode_led(titaniactl_context* context) {
 	titania_led_index led = TITANIA_LED_NO_UPDATE;
-	float r = 1.0f;
-	float g = 0.0f;
-	float b = 1.0f;
+	float r = 0.35f;
+	float g = 0.05f;
+	float b = 0.80f;
 
 	if (context->argc > 1) {
 		if (strcmp(context->argv[1], "player1") == 0) {

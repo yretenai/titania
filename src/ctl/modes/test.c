@@ -814,9 +814,9 @@ reset_led:
 		}
 
 		titania_led_update update;
-		update.color.x = 1.0f;
-		update.color.y = 0.0f;
-		update.color.z = 1.0f;
+		update.color.x = 0.35f;
+		update.color.y = 0.05f;
+		update.color.z = 0.80f;
 		update.access.enable_profile_led = true;
 		update.access.enable_center_led = true;
 		update.access.enable_second_center_led = false;

@@ -314,9 +314,9 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 			// this is at the end so it's reasonably late
 			{
 				titania_led_update update = { 0 };
-				update.color.x = 1.0f;
-				update.color.y = 0.0f;
-				update.color.z = 1.0f;
+				update.color.x = 0.35f;
+				update.color.y = 0.05f;
+				update.color.z = 0.80f;
 				update.led = TITANIA_LED_PLAYER_1;
 				update.access.enable_profile_led = true;
 				update.access.enable_center_led = true;
@@ -324,6 +324,16 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 				update.access.update_profile = false;
 				titania_update_led(handle->handle, update);
 				titania_push(&handle->handle, 1);
+			}
+
+			if (handle->is_edge) {
+				titania_data report;
+				if (IS_TITANIA_OKAY(titania_pull(&handle->handle, 1, &report))) {
+					state[i].output.data.msg.data.edge.flags.enable_switching = !report.edge_device.profile_indicator.switching_disabled;
+					state[i].output.data.msg.data.control2.edge_disable_switching = report.edge_device.profile_indicator.switching_disabled;
+					state[i].output.data.msg.data.edge.indicator.enable_vibration = report.edge_device.profile_indicator.vibration;
+					state[i].output.data.msg.data.edge.indicator.enable_led = report.edge_device.profile_indicator.led;
+				}
 			}
 
 #ifdef TITANIA_HAS_HAPTICS
