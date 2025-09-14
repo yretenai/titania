@@ -34,7 +34,11 @@ typedef struct titania_timer {
 	int64_t ticks;
 	pthread_t thread;
 #endif
+#ifdef __APPLE__
+	atomic_bool slop_mutex;
+#endif
 	atomic_bool running;
+	uint8_t frame;
 } titania_timer;
 
 typedef struct dualsense_haptics_state {
