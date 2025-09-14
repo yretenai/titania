@@ -41,7 +41,7 @@ void titania_init_floats(void) {
 
 #define CHECK_DPAD(V, A, B, C) (V).dpad == DUALSENSE_DPAD_##A || (V).dpad == DUALSENSE_DPAD_##B || (V).dpad == DUALSENSE_DPAD_##C
 
-#define CALIBRATE(value, slot) (((value) < 0 ? (value) * calibration[(slot)].min : (value) * calibration[(slot)].max) * calibration[(slot)].cache)
+#define CALIBRATE(value, slot) (((value) < 0 ? (-value) * calibration[(slot)].min : (value) * calibration[(slot)].max) * calibration[(slot)].cache)
 
 #define CALIBRATE_BIAS(value, slot) CALIBRATE((value) - calibration[(slot)].bias, (slot))
 
