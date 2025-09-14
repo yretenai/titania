@@ -18,7 +18,7 @@ size_t resample_48000_to_3000(const titania_handle handle, int8_t samples3khz[DU
 		return 0;
 	}
 
-	for (size_t i = 0; i < num_frames * 4; i += 16) {
+	for (size_t i = 0; i < num_frames * 4; i += 16 * 4) {
 		float l = samples[i * 4 + 2];
 		float r = samples[i * 4 + 3];
 
