@@ -41,6 +41,18 @@ static titania_device_info device_infos[] = {
 	handle->firmware.name.minor = firmware.name.firmware.minor; \
 	handle->firmware.name.revision = firmware.name.firmware.revision
 
+#define SYSRQ_SERIAL(cmd_id, subcmd_id, target) \
+	if (IS_TITANIA_OKAY(titania_send_sysrq(i, cmd_id, subcmd_id, nullptr, 0, sysrq, 0))) { \
+		memcpy(handle->serial.target, sysrq + 4, sizeof(handle->serial.target) - 1); \
+	}
+
+#define SYSRQ_SERIAL_HEX(cmd_id, subcmd_id, target) \
+	if (IS_TITANIA_OKAY(titania_send_sysrq(i, cmd_id, subcmd_id, nullptr, 0, sysrq, 0))) { \
+		for (size_t target_i = 0; target_i < (sizeof(handle->serial.target) - 1) >> 1; ++target_i) { \
+			sprintf(handle->serial.target + (target_i << 1), "%02X", sysrq[4 + target_i]); \
+		} \
+	}
+
 #define ARR_LEN(arr) (sizeof(arr) / sizeof(*(arr)))
 
 titania_error titania_init_checked(const size_t size) {
@@ -184,15 +196,38 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 				handle->firmware.series = firmware.series;
 				COPY_VERSION_HARDWARE(hardware);
 				COPY_VERSION_UPDATE(update);
-				COPY_VERSION_FIRMWARE(firmware);
-				COPY_VERSION_FIRMWARE(firmware2);
-				COPY_VERSION_FIRMWARE(firmware3);
-				COPY_VERSION_FIRMWARE(device);
-				COPY_VERSION_FIRMWARE(device2);
-				COPY_VERSION_FIRMWARE(device3);
-				COPY_VERSION_FIRMWARE(mcu_firmware);
+				COPY_VERSION_FIRMWARE(controller);
+				COPY_VERSION_FIRMWARE(sbl);
+				COPY_VERSION_FIRMWARE(venom);
+				COPY_VERSION_FIRMWARE(spider);
 			} else {
 				handle->firmware.datetime[0] = 0;
+			}
+
+			uint8_t sysrq[64];
+			SYSRQ_SERIAL(TITANIA_SYSRQ_SYSTEM_COMMAND, TITANIA_SYSRQ_SUBCMD_SYSTEM_SERIAL, controller);
+			SYSRQ_SERIAL_HEX(TITANIA_SYSRQ_SYSTEM_COMMAND, TITANIA_SYSRQ_SUBCMD_SYSTEM_MCU_UUID, mcu);
+			SYSRQ_SERIAL(TITANIA_SYSRQ_SYSTEM_COMMAND, TITANIA_SYSRQ_SUBCMD_SYSTEM_PCBAID, pcba);
+			SYSRQ_SERIAL(TITANIA_SYSRQ_SYSTEM_COMMAND, TITANIA_SYSRQ_SUBCMD_SYSTEM_BATTERY_UUID, battery);
+			SYSRQ_SERIAL(TITANIA_SYSRQ_SYSTEM_COMMAND, TITANIA_SYSRQ_SUBCMD_SYSTEM_VCM_LEFT_UUID, vcm_left);
+			SYSRQ_SERIAL(TITANIA_SYSRQ_SYSTEM_COMMAND, TITANIA_SYSRQ_SUBCMD_SYSTEM_VCM_RIGHT_UUID, vcm_right);
+			SYSRQ_SERIAL_HEX(TITANIA_SYSRQ_TOUCHPAD_COMMAND, TITANIA_SYSRQ_SUBCMD_TOUCHPAD_ID, touchpad);
+
+			if (IS_TITANIA_OKAY(titania_send_sysrq(i, TITANIA_SYSRQ_TOUCHPAD_COMMAND, TITANIA_SYSRQ_SUBCMD_TOUCHPAD_FIRMWARE, nullptr, 0, sysrq, 0))) {
+				const dualsense_firmware_version* touchpad = (dualsense_firmware_version*) (sysrq + 4);
+				handle->firmware.touchpad.major = touchpad[0].firmware.major;
+				handle->firmware.touchpad.minor = touchpad[0].firmware.minor;
+				handle->firmware.touchpad.revision = touchpad[0].firmware.revision;
+				handle->firmware.touch.major = touchpad[1].firmware.major;
+				handle->firmware.touch.minor = touchpad[1].firmware.minor;
+				handle->firmware.touch.revision = touchpad[1].firmware.revision;
+			}
+
+			if (handle->is_edge) {
+				if (IS_TITANIA_OKAY(titania_send_sysrq(i, TITANIA_SYSRQ_EDGE_COMMAND, TITANIA_SYSRQ_SUBCMD_EDGE_SERIAL, nullptr, 0, sysrq, 100))) {
+					memcpy(handle->serial.edge_left_stick, sysrq + 40, sizeof(handle->serial.edge_left_stick) - 1);
+					memcpy(handle->serial.edge_right_stick, sysrq + 21, sizeof(handle->serial.edge_right_stick) - 1);
+				}
 			}
 
 			dualsense_serial_info serial;
@@ -435,10 +470,7 @@ titania_error titania_update_led(const titania_handle handle, const titania_led_
 titania_error titania_update_audio(const titania_handle handle, const titania_audio_update data) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
-
-	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_ERROR_NOT_SUPPORTED;
-	}
+	CHECK_NOT_ACCESS(handle);
 
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 
@@ -460,10 +492,7 @@ titania_error titania_update_audio(const titania_handle handle, const titania_au
 titania_error titania_update_control(const titania_handle handle, const titania_control_update data) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
-
-	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_ERROR_NOT_SUPPORTED;
-	}
+	CHECK_NOT_ACCESS(handle);
 
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 
@@ -513,10 +542,7 @@ titania_error titania_update_control(const titania_handle handle, const titania_
 titania_error titania_get_control(const titania_handle handle, titania_control_update* control) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
-
-	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_ERROR_NOT_SUPPORTED;
-	}
+	CHECK_NOT_ACCESS(handle);
 
 	const dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 
@@ -691,10 +717,7 @@ titania_error check_if_trigger_state_bad(const titania_handle handle, const uint
 titania_error titania_update_effect(const titania_handle handle, const titania_effect_update left_trigger, const titania_effect_update right_trigger, const float power_reduction) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
-
-	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_ERROR_NOT_SUPPORTED;
-	}
+	CHECK_NOT_ACCESS(handle);
 
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 	hid_state->flags.left_trigger_motor = left_trigger.mode != TITANIA_EFFECT_NONE;
@@ -728,10 +751,7 @@ titania_error titania_update_effect(const titania_handle handle, const titania_e
 titania_error titania_set_vibration_mode(const titania_handle handle, const titania_vibration_mode mode) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
-
-	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_ERROR_NOT_SUPPORTED;
-	}
+	CHECK_NOT_ACCESS(handle);
 
 	const titania_hid hid = state[handle].hid_info;
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
@@ -765,10 +785,7 @@ titania_error titania_set_vibration_mode(const titania_handle handle, const tita
 titania_error titania_update_rumble(const titania_handle handle, const float large_motor, const float small_motor, const float power_reduction, const bool emulate_legacy_behavior) {
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
-
-	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_ERROR_NOT_SUPPORTED;
-	}
+	CHECK_NOT_ACCESS(handle);
 
 	dualsense_output_msg* hid_state = &state[handle].output.data.msg.data;
 	const titania_error result = titania_set_vibration_mode(handle, emulate_legacy_behavior ? TITANIA_VIBRATION_MODE_LEGACY_RUMBLE : TITANIA_VIBRATION_MODE_RUMBLE);
@@ -793,10 +810,7 @@ TITANIA_EXPORT titania_error titania_update_haptics(const titania_handle handle,
 #else
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
-
-	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_ERROR_NOT_SUPPORTED;
-	}
+	CHECK_NOT_ACCESS(handle);
 
 	const titania_error result = titania_set_vibration_mode(handle, TITANIA_VIBRATION_MODE_HAPTICS);
 
@@ -841,10 +855,7 @@ TITANIA_EXPORT titania_error titania_haptics_reset(const titania_handle handle) 
 #else
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
-
-	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_ERROR_NOT_SUPPORTED;
-	}
+	CHECK_NOT_ACCESS(handle);
 
 	state[handle].haptics.write_offset = 0;
 	return titania_haptics_flush(handle);
@@ -857,10 +868,7 @@ TITANIA_EXPORT titania_error titania_haptics_state(const titania_handle handle, 
 #else
 	CHECK_INIT();
 	CHECK_HANDLE_VALID(handle);
-
-	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_ERROR_NOT_SUPPORTED;
-	}
+	CHECK_NOT_ACCESS(handle);
 
 	const size_t write = state[handle].haptics.write_offset;
 	const size_t read = state[handle].haptics.read_offset;
@@ -1108,6 +1116,45 @@ void titania_exit(void) {
 	hid_exit();
 
 	is_initialized = false;
+}
+
+titania_error titania_send_sysrq(const titania_handle handle, const titania_sysrq_cmd_id cmd_id, const titania_sysrq_subcmd_id subcmd_id, uint8_t* request_data, size_t request_size,
+	uint8_t response_data[64], int64_t wait_time) {
+	CHECK_INIT();
+	CHECK_HANDLE_VALID(handle);
+	CHECK_NOT_ACCESS(handle);
+
+	if (request_size > 61) {
+		return TITANIA_ERROR_NOT_ENOUGH_DATA;
+	}
+
+	uint8_t req[64];
+	req[0] = DUALSENSE_REPORT_SET_SYS;
+	req[1] = cmd_id;
+	req[2] = subcmd_id;
+	if (request_data && request_size) {
+		memcpy(req + 3, request_data, request_size);
+	}
+
+	if (HID_FAIL(hid_send_feature_report(state[handle].hid, req, request_size + 3))) {
+		return TITANIA_ERROR_HIDAPI_FAIL;
+	}
+
+	if (wait_time > 0) {
+		struct timespec delayspec = { 0, wait_time * 1000000 };
+		nanosleep(&delayspec, nullptr);
+	}
+
+	response_data[0] = DUALSENSE_REPORT_GET_SYS;
+	if (HID_FAIL(hid_get_feature_report(state[handle].hid, response_data, 64))) {
+		return TITANIA_ERROR_HIDAPI_FAIL;
+	}
+
+	if (response_data[0] != DUALSENSE_REPORT_GET_SYS || response_data[1] != cmd_id || response_data[2] != subcmd_id) {
+		return TITANIA_ERROR_HIDAPI_FAIL;
+	}
+
+	return TITANIA_ERROR_OK;
 }
 
 titania_error titania_debug_get_hid(const titania_handle handle, intptr_t* hid) {

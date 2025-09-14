@@ -74,7 +74,8 @@ TODO, see src/ctl/ for the source of `titaniactl`
 - [controllers wiki](https://controllers.fandom.com/wiki/Sony_DualSense) for report ids and some of the missing report values
 - [eleccelerator wiki](https://eleccelerator.com/wiki/index.php?title=DualShock_4) for guidance on crc32
 - [dsremap's research](https://dsremap.readthedocs.io/en/latest/reverse.html) for some of the DualShock 4 reports that were reused for the DualSense
-- todo: [SAxense](https://apps.sdore.me/SAxense)([git](https://github.com/egormanga/SAxense/)) for BT haptics
+- [SAxense](https://apps.sdore.me/SAxense)([git](https://github.com/egormanga/SAxense/)) for BT haptics
+- [Dualshock-Tools](https://github.com/dualshock-tools/dualshock-tools.github.io)([web](https://dualshock-tools.github.io)) for info on system feature reports
 
 ## License
 

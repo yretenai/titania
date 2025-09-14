@@ -86,8 +86,9 @@
 #define DUALSENSE_GYRO_BASE (0.270f)
 #define DUALSENSE_ACCELEROMETER_BASE (0.250f)
 
-#define DUALSENSE_FIRMWARE_VERSION_DATE_LEN 0xB
-#define DUALSENSE_FIRMWARE_VERSION_TIME_LEN 0x8
+#define DUALSENSE_FIRMWARE_VERSION_DATE_LEN (0xB)
+#define DUALSENSE_FIRMWARE_VERSION_TIME_LEN (0x8)
+#define DUALSENSE_FIRMWARE_VERSION_DEVICE_LEN (0xC)
 
 #define NORM_CLAMP(value, max) ((value) >= 1.0f ? (max) : (value) <= 0.0f ? 0 : (uint8_t) ((value) * (max)))
 #define NORM_CLAMP_UINT8(value) NORM_CLAMP(value, UINT8_MAX)
@@ -130,6 +131,10 @@ extern float DENORM_CLAMP_UINT16_TAB[UINT16_MAX + 1];
 #define CHECK_ACCESS(h) \
 	if (!IS_ACCESS(state[h].hid_info)) \
 	return TITANIA_ERROR_NOT_ACCESS
+
+#define CHECK_NOT_ACCESS(h) \
+	if (IS_ACCESS(state[h].hid_info)) \
+	return TITANIA_ERROR_NOT_SUPPORTED
 
 typedef struct PACKED dualsense_vector3 {
 	int16_t x;

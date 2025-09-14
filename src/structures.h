@@ -431,14 +431,12 @@ typedef struct PACKED dualsense_firmware_info {
 	uint16_t type;
 	uint16_t series;
 	dualsense_firmware_version hardware;
-	dualsense_firmware_version firmware;
-	dualsense_firmware_version device;
-	dualsense_firmware_version device2;
-	dualsense_firmware_version device3;
+	dualsense_firmware_version controller;
+	char device[DUALSENSE_FIRMWARE_VERSION_DEVICE_LEN];
 	dualsense_firmware_version update;
-	dualsense_firmware_version firmware2;
-	dualsense_firmware_version firmware3;
-	dualsense_firmware_version mcu_firmware;
+	dualsense_firmware_version sbl;
+	dualsense_firmware_version venom;
+	dualsense_firmware_version spider;
 	uint32_t checksum;
 } dualsense_firmware_info;
 

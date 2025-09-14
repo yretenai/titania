@@ -22,6 +22,11 @@ const char* const titania_error_msg[TITANIA_ERROR_MAX + 1] = {
 	"not an edge controller",
 	"not an access controller",
 	"not supported",
+	"out of space",
+	"not enough data",
+	"could not find audio controller",
+	"no haptics audio",
+	"invalid haptics device",
 	nullptr
 };
 

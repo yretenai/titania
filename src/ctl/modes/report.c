@@ -24,8 +24,6 @@ titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const
 			TITANIAPRINT_X16(data.hid, product_id); TITANIAPRINT_SEP();
 			TITANIAPRINT_X16(data.hid, vendor_id); TITANIAPRINT_SEP();;
 			TITANIAPRINT_I32(data.hid, interface_id); TITANIAPRINT_SEP();
-			TITANIAPRINT_STR(data.hid.serial, mac); TITANIAPRINT_SEP();
-			TITANIAPRINT_STR(data.hid.serial, paired_mac); TITANIAPRINT_SEP();
 			TITANIAPRINT_TEST(data.hid, is_bluetooth); TITANIAPRINT_SEP();
 			TITANIAPRINT_TEST(data.hid, is_edge); TITANIAPRINT_SEP();
 			TITANIAPRINT_TEST(data.hid, is_access);
@@ -38,18 +36,34 @@ titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const
 				printf(" }\n");
 			}
 
+			printf("serial {");
+			TITANIAPRINT_STR(data.hid.serial, mac); TITANIAPRINT_SEP();
+			TITANIAPRINT_STR(data.hid.serial, paired_mac); TITANIAPRINT_SEP();
+			TITANIAPRINT_STR(data.hid.serial, controller); TITANIAPRINT_SEP();
+			TITANIAPRINT_STR(data.hid.serial, mcu); TITANIAPRINT_SEP();
+			TITANIAPRINT_STR(data.hid.serial, pcba); TITANIAPRINT_SEP();
+			TITANIAPRINT_STR(data.hid.serial, battery); TITANIAPRINT_SEP();
+			TITANIAPRINT_STR(data.hid.serial, vcm_left); TITANIAPRINT_SEP();
+			TITANIAPRINT_STR(data.hid.serial, vcm_right);
+			if (data.hid.is_edge) {
+				TITANIAPRINT_SEP();
+				TITANIAPRINT_STR(data.hid.serial, edge_left_stick); TITANIAPRINT_SEP();
+				TITANIAPRINT_STR(data.hid.serial, edge_right_stick);
+			}
+			printf(" }\n");
+
 			printf("firmware {");
+			TITANIAPRINT_STR(hid.firmware, datetime); TITANIAPRINT_SEP();
 			TITANIAPRINT_X16(hid.firmware, type); TITANIAPRINT_SEP();
 			TITANIAPRINT_X16(hid.firmware, series); TITANIAPRINT_SEP();
 			TITANIAPRINT_FIRMWARE_HW(hid.firmware, hardware); TITANIAPRINT_SEP();
 			TITANIAPRINT_UPDATE(hid.firmware, update); TITANIAPRINT_SEP();
-			TITANIAPRINT_FIRMWARE(hid.firmware, firmware); TITANIAPRINT_SEP();
-			TITANIAPRINT_FIRMWARE(hid.firmware, firmware2); TITANIAPRINT_SEP();
-			TITANIAPRINT_FIRMWARE(hid.firmware, firmware3); TITANIAPRINT_SEP();
-			TITANIAPRINT_FIRMWARE(hid.firmware, device); TITANIAPRINT_SEP();
-			TITANIAPRINT_FIRMWARE(hid.firmware, device2); TITANIAPRINT_SEP();
-			TITANIAPRINT_FIRMWARE(hid.firmware, device3); TITANIAPRINT_SEP();
-			TITANIAPRINT_FIRMWARE(hid.firmware, mcu_firmware);
+			TITANIAPRINT_FIRMWARE(hid.firmware, controller); TITANIAPRINT_SEP();
+			TITANIAPRINT_FIRMWARE(hid.firmware, sbl); TITANIAPRINT_SEP();
+			TITANIAPRINT_FIRMWARE(hid.firmware, venom); TITANIAPRINT_SEP();
+			TITANIAPRINT_FIRMWARE(hid.firmware, spider); TITANIAPRINT_SEP();
+			TITANIAPRINT_FIRMWARE(hid.firmware, touch); TITANIAPRINT_SEP();
+			TITANIAPRINT_FIRMWARE(hid.firmware, touchpad);
 			printf(" }\n");
 
 			printf("time {");
@@ -296,8 +310,21 @@ titaniactl_error titaniactl_mode_report_json_inner(titaniactl_context* context, 
 				json_object_add_string(hid_obj, "PID", strbuffer);
 				sprintf(strbuffer, "%d", hid.interface_id);
 				json_object_add_string(hid_obj, "InterfaceID", strbuffer);
-				json_object_add_string(hid_obj, "MAC", hid.serial.mac);
-				json_object_add_string(hid_obj, "pairedMAC", hid.serial.paired_mac);
+
+				struct json* serial_obj = json_object_add_object(obj, "serial");
+				json_object_add_string(serial_obj, "mac", hid.serial.mac);
+				json_object_add_string(serial_obj, "pairedMAC", hid.serial.paired_mac);
+				json_object_add_string(serial_obj, "controller", hid.serial.controller);
+				json_object_add_string(serial_obj, "mcu", hid.serial.mcu);
+				json_object_add_string(serial_obj, "pcba", hid.serial.pcba);
+				json_object_add_string(serial_obj, "battery", hid.serial.battery);
+				json_object_add_string(serial_obj, "vcmLeft", hid.serial.vcm_left);
+				json_object_add_string(serial_obj, "vcmRight", hid.serial.vcm_right);
+				json_object_add_string(serial_obj, "touchpad", hid.serial.touchpad);
+				if (data.hid.is_edge) {
+					json_object_add_string(serial_obj, "edgeLeftStick", hid.serial.edge_left_stick);
+					json_object_add_string(serial_obj, "edgeRightStick", hid.serial.edge_right_stick);
+				}
 
 				if (data.hid.is_bluetooth && !data.hid.is_access) {
 					struct json* bt_obj = json_object_add_object(obj, "bt");
@@ -314,20 +341,18 @@ titaniactl_error titaniactl_mode_report_json_inner(titaniactl_context* context, 
 				json_object_add_string(fw_obj, "hardware", strbuffer);
 				sprintf(strbuffer, "%04x.%x.%x", hid.firmware.update.major, hid.firmware.update.minor, hid.firmware.update.revision);
 				json_object_add_string(fw_obj, "update", strbuffer);
-				sprintf(strbuffer, "%d.%d.%d", hid.firmware.firmware.major, hid.firmware.firmware.minor, hid.firmware.firmware.revision);
-				json_object_add_string(fw_obj, "firmware", strbuffer);
-				sprintf(strbuffer, "%d.%d.%d", hid.firmware.firmware2.major, hid.firmware.firmware2.minor, hid.firmware.firmware2.revision);
-				json_object_add_string(fw_obj, "firmware2", strbuffer);
-				sprintf(strbuffer, "%d.%d.%d", hid.firmware.firmware3.major, hid.firmware.firmware3.minor, hid.firmware.firmware3.revision);
-				json_object_add_string(fw_obj, "firmware3", strbuffer);
-				sprintf(strbuffer, "%d.%d.%d", hid.firmware.device.major, hid.firmware.device.minor, hid.firmware.device.revision);
-				json_object_add_string(fw_obj, "device", strbuffer);
-				sprintf(strbuffer, "%d.%d.%d", hid.firmware.device2.major, hid.firmware.device2.minor, hid.firmware.device2.revision);
-				json_object_add_string(fw_obj, "device2", strbuffer);
-				sprintf(strbuffer, "%d.%d.%d", hid.firmware.device3.major, hid.firmware.device3.minor, hid.firmware.device3.revision);
-				json_object_add_string(fw_obj, "device3", strbuffer);
-				sprintf(strbuffer, "%d.%d.%d", hid.firmware.mcu_firmware.major, hid.firmware.mcu_firmware.minor, hid.firmware.mcu_firmware.revision);
-				json_object_add_string(fw_obj, "mcu", strbuffer);
+				sprintf(strbuffer, "%d.%d.%d", hid.firmware.controller.major, hid.firmware.controller.minor, hid.firmware.controller.revision);
+				json_object_add_string(fw_obj, "controller", strbuffer);
+				sprintf(strbuffer, "%d.%d.%d", hid.firmware.sbl.major, hid.firmware.sbl.minor, hid.firmware.sbl.revision);
+				json_object_add_string(fw_obj, "sbl", strbuffer);
+				sprintf(strbuffer, "%d.%d.%d", hid.firmware.venom.major, hid.firmware.venom.minor, hid.firmware.venom.revision);
+				json_object_add_string(fw_obj, "venom", strbuffer);
+				sprintf(strbuffer, "%d.%d.%d", hid.firmware.spider.major, hid.firmware.spider.minor, hid.firmware.spider.revision);
+				json_object_add_string(fw_obj, "spider", strbuffer);
+				sprintf(strbuffer, "%d.%d.%d", hid.firmware.touch.major, hid.firmware.touch.minor, hid.firmware.touch.revision);
+				json_object_add_string(fw_obj, "touch", strbuffer);
+				sprintf(strbuffer, "%d.%d.%d", hid.firmware.touchpad.major, hid.firmware.touchpad.minor, hid.firmware.touchpad.revision);
+				json_object_add_string(fw_obj, "touchpad", strbuffer);
 
 				struct json* time_obj = json_object_add_object(obj, "time");
 				json_object_add_number(time_obj, "system", data.time.system);

@@ -309,6 +309,43 @@ typedef enum titania_access_extension_type_id {
 	TITANIA_ACCESS_EXTENSION_TYPE_MAX
 } titania_access_extension_type_id;
 
+typedef enum titania_sysrq_cmd_id {
+	TITANIA_SYSRQ_SYSTEM_COMMAND = 1,
+	TITANIA_SYSRQ_STATUS_COMMAND = 3,
+	TITANIA_SYSRQ_TOUCHPAD_COMMAND = 5,
+	TITANIA_SYSRQ_BT_COMMAND = 9,
+	TITANIA_SYSRQ_MEMORY_COMMAND = 0xC,
+	TITANIA_SYSRQ_SPIDER_COMMAND = 0x10,
+	TITANIA_SYSRQ_EDGE_COMMAND = 0x15,
+} titania_sysrq_cmd_id;
+
+typedef enum titania_sysrq_subcmd_id {
+	TITANIA_SYSRQ_SUBCMD_SYSTEM_RESET = 1,
+	TITANIA_SYSRQ_SUBCMD_SYSTEM_MCU_UUID = 9,
+	TITANIA_SYSRQ_SUBCMD_SYSTEM_PCBAID = 17,
+	TITANIA_SYSRQ_SUBCMD_SYSTEM_SERIAL = 19,
+	TITANIA_SYSRQ_SUBCMD_SYSTEM_BATTERY_UUID = 24,
+	TITANIA_SYSRQ_SUBCMD_SYSTEM_VCM_LEFT_UUID = 26,
+	TITANIA_SYSRQ_SUBCMD_SYSTEM_VCM_RIGHT_UUID = 28,
+
+	TITANIA_SYSRQ_SUBCMD_STATUS_LOCK = 1,
+	TITANIA_SYSRQ_SUBCMD_STATUS_UNLOCK = 2,
+	TITANIA_SYSRQ_SUBCMD_STATUS_STATUS = 3,
+
+	TITANIA_SYSRQ_SUBCMD_TOUCHPAD_ID = 2,
+	TITANIA_SYSRQ_SUBCMD_TOUCHPAD_FIRMWARE = 4,
+
+	TITANIA_SYSRQ_SUBCMD_BT_ADDR = 2,
+
+	TITANIA_SYSRQ_SUBCMD_MEMORY_GET = 2,
+	TITANIA_SYSRQ_SUBCMD_MEMORY_GET_EDGE = 2,
+
+	TITANIA_SYSRQ_SUBCMD_EDGE_LOCK_MODULE = 4,
+	TITANIA_SYSRQ_SUBCMD_EDGE_MODULE_DATA = 5,
+	TITANIA_SYSRQ_SUBCMD_EDGE_UNLOCK_MODULE = 6,
+	TITANIA_SYSRQ_SUBCMD_EDGE_SERIAL = 0x22,
+} titania_sysrq_subcmd_id;
+
 TITANIA_EXPORT extern const char* const titania_error_msg[TITANIA_ERROR_MAX + 1];
 TITANIA_EXPORT extern const char* const titania_battery_state_msg[TITANIA_BATTERY_MAX + 1];
 TITANIA_EXPORT extern const char* const titania_profile_id_msg[TITANIA_PROFILE_MAX_META + 1];
@@ -470,19 +507,27 @@ typedef struct titania_firmware_info {
 	uint16_t series;
 	titania_firmware_hardware hardware;
 	titania_firmware_version update;
-	titania_firmware_version firmware;
-	titania_firmware_version firmware2;
-	titania_firmware_version firmware3;
-	titania_firmware_version device;
-	titania_firmware_version device2;
-	titania_firmware_version device3;
-	titania_firmware_version mcu_firmware;
+	titania_firmware_version controller;
+	titania_firmware_version sbl;
+	titania_firmware_version venom;
+	titania_firmware_version spider;
+	titania_firmware_version touch;
+	titania_firmware_version touchpad;
 } titania_firmware_info;
 
 typedef struct titania_serial_info {
 	titania_mac mac;
 	titania_mac paired_mac;
 	uint32_t unknown;
+	char controller[0x12];
+	char mcu[0x13];
+	char pcba[0x14];
+	char battery[0x17];
+	char vcm_left[0x11];
+	char vcm_right[0x11];
+	char touchpad[0x11];
+	char edge_left_stick[0x12];
+	char edge_right_stick[0x12];
 } titania_serial_info;
 
 typedef struct titania_edge_stick {
@@ -1039,6 +1084,18 @@ TITANIA_EXPORT void titania_close(titania_handle handle);
  * @brief cleans up library internals for exit
  */
 TITANIA_EXPORT void titania_exit(void);
+
+/**
+ * @brief send a system request
+ * @param handle: the device to query
+ * @param cmd_id: the command id to send
+ * @param subcmd_id: the sub command id to send
+ * @param request_data: the data to send, can be null
+ * @param request_size: size of the request data, max is 61
+ * @param response_data: the received data
+ * @param wait_time: the time to wait in miliseconds between request and response
+ */
+TITANIA_EXPORT titania_error titania_send_sysrq(titania_handle handle, titania_sysrq_cmd_id cmd_id, titania_sysrq_subcmd_id subcmd_id, uint8_t* request_data, size_t request_size, uint8_t response_data[64], int64_t wait_time);
 
 /**
  * @brief (debug) get the underlying hid device
