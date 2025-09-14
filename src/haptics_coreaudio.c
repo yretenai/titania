@@ -7,6 +7,10 @@
 #include <IOKit/hid/IOHIDKeys.h>
 #include <IOKit/hid/IOHIDManager.h>
 
+#ifdef __APPLE__
+#include <hidapi_darwin.h>
+#endif
+
 #include "structures.h"
 #include "titania.h"
 
@@ -138,23 +142,16 @@ titania_error titania_haptics_init(const titania_handle handle) {
 		return titania_haptics_init_bt(handle);
 	}
 
-	const io_service_t service = IOHIDDeviceGetService(*(IOHIDDeviceRef*) state[handle].hid);
-	const CFTypeRef locationIdRef = IORegistryEntrySearchCFProperty(service, kIOServicePlane, CFSTR("LocationID"), kCFAllocatorDefault, 0);
-	titania_error result = TITANIA_ERROR_HAPTICS_INVALID_HANDLE;
-	if (locationIdRef) {
-		if (CFGetTypeID(locationIdRef) == CFNumberGetTypeID()) {
-			uint32_t locationId;
-			if (CFNumberGetValue(locationIdRef, kCFNumberSInt32Type, &locationId)) {
-				result = find_audio_from_location(locationId, &state[handle].haptics.device_id);
-				if (result == TITANIA_ERROR_OK) {
-					AudioDeviceCreateIOProcID(state[handle].haptics.device_id, feed_coreaudio, (void*) (intptr_t) handle, &state[handle].haptics.proc_id);
-					AudioDeviceStart(state[handle].haptics.device_id, state[handle].haptics.proc_id);
-				}
-			}
-		}
+	uint32_t location_id;
+	if (hid_darwin_get_location_id(state[handle].hid, &location_id) != 0) {
+		return TITANIA_ERROR_HIDAPI_FAIL;
 	}
-	CFRelease(locationIdRef);
-	IOObjectRelease(service);
+
+	titania_error result = find_audio_from_location(location_id, &state[handle].haptics.device_id);
+	if (result == TITANIA_ERROR_OK) {
+		AudioDeviceCreateIOProcID(state[handle].haptics.device_id, feed_coreaudio, (void*) (intptr_t) handle, &state[handle].haptics.proc_id);
+		AudioDeviceStart(state[handle].haptics.device_id, state[handle].haptics.proc_id);
+	}
 
 	return result;
 }
