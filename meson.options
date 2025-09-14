@@ -1,5 +1,5 @@
 option('titania_ctl', type: 'boolean', value: true)
 option('titania_haptics_audio', type: 'feature', value: 'auto')
-option('titania_haptics_bt', type: 'feature', value: 'enabled')
+option('titania_haptics_bt', type: 'feature', value: 'auto')
 option('titania_max_controllers', type: 'integer', min: 1, value: 8)
 option('titania_man', type: 'boolean', value: true)

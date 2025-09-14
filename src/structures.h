@@ -334,14 +334,9 @@ typedef struct PACKED dualsense_motor_flags {
 
 static_assert(sizeof(dualsense_motor_flags) == 1, "dualsense_motor_flags is not 1 byte");
 
-typedef union PACKED dualsense_bt_packet {
-	dualsense_bt_report_id report_id : 6;
-	uint8_t flags : 2;
-} dualsense_bt_packet;
-
 typedef struct PACKED dualsense_output_msg {
-	union PACKED {
-		dualsense_bt_packet bt;
+	union {
+		dualsense_bt_report_id bt_report_id;
 		dualsense_report_id report_id;
 	};
 
@@ -358,6 +353,32 @@ typedef struct PACKED dualsense_output_msg {
 } dualsense_output_msg;
 
 static_assert(sizeof(dualsense_output_msg) == 0x40, "dualsense_output_msg is not 64 bytes");
+
+typedef struct PACKED dualsense_bt_cmd_packet {
+	dualsense_bt_report_id packet;
+
+	union {
+		struct {
+			uint8_t length;
+			uint8_t data[0x87];
+		} length_prefixed;
+
+		struct {
+			uint8_t data[0x88];
+		} raw;
+	};
+} dualsense_bt_cmd_packet;
+
+static_assert(sizeof(dualsense_bt_cmd_packet) == 0x89, "dualsense_bt_cmd_packet is not 143 bytes");
+
+typedef struct PACKED dualsense_bt_cmd {
+	dualsense_report_id report_id;
+	dualsense_bt_packet_tag tag;
+	uint8_t data[0x88];
+	uint32_t checksum;
+} dualsense_bt_cmd;
+
+static_assert(sizeof(dualsense_bt_cmd) == 0x8e, "dualsense_bt_cmd is not 142 bytes");
 
 typedef struct PACKED access_output_msg {
 	dualsense_report_id report_id;

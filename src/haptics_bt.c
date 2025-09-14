@@ -5,55 +5,61 @@
 #include "structures.h"
 #include "titania.h"
 
-#ifdef TITANIA_HAS_HAPTICS_FALLBACK
-titania_error titania_haptics_init(const titania_handle handle) {
-	CHECK_INIT();
-	CHECK_HANDLE_VALID(handle);
-
-	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_ERROR_OK;
+size_t resample_48000_to_3000(const titania_handle handle, int8_t samples3khz[DUALSENSE_SAMPLE_SIZE]) {
+	constexpr size_t size = DUALSENSE_NUM_SAMPLES * 4 * 16; // 4 channel float @ 48KHz
+	float samples[size];
+	memset(samples, 0, size);
+	size_t num_frames = DUALSENSE_NUM_SAMPLES; // 32 samples,
+	if (IS_TITANIA_BAD(titania_haptics_copy_samples(handle, samples, &num_frames))) {
+		return 0;
 	}
 
-	if (state[handle].hid_info.is_bluetooth) {
-		return titania_haptics_init_bt(handle);
+	for (size_t i = 0; i < num_frames * 4; i += 16) {
+		float l = samples[i * 4 + 2];
+		float r = samples[i * 4 + 3];
+
+		for (size_t j = 1; j < 16; j++) {
+			l += samples[(i + j) * 4 + 2];
+			r += samples[(i + j) * 4 + 3];
+		}
+
+		samples3khz[i / 4 * 2 + 0] = (int8_t) (l / 16.0f * 127.0f);
+		samples3khz[i / 4 * 2 + 1] = (int8_t) (r / 16.0f * 127.0f);
 	}
 
-	return TITANIA_ERROR_OK;
+	return num_frames;
 }
 
-titania_error titania_haptics_close(const titania_handle handle) {
-	CHECK_INIT();
-	CHECK_HANDLE_VALID(handle);
+void titania_bt_loop_inner(const titania_handle handle) {
+	uint8_t idx = 0;
+	while (1) {
+		if (!atomic_load(&state[handle].haptics.bt_timer.running)) {
+			break;
+		}
 
-	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_ERROR_OK;
+		dualsense_bt_cmd_packet packet_0x11 = { 0 };
+		packet_0x11.packet = DUALSENSE_BT_REPORT_HAPTICS_SETUP;
+		packet_0x11.length_prefixed.length = 7;
+		packet_0x11.length_prefixed.data[0] = 0b11111110;
+		packet_0x11.length_prefixed.data[5] = 0xFF;
+		packet_0x11.length_prefixed.data[6] = idx++;
+
+		dualsense_bt_cmd_packet packet_0x12 = { 0 };
+		packet_0x12.packet = DUALSENSE_BT_REPORT_HAPTICS_GRANULE;
+		packet_0x12.length_prefixed.length = DUALSENSE_SAMPLE_SIZE;
+		if (resample_48000_to_3000(handle, (int8_t*) &packet_0x12.length_prefixed.data[0]) > 0) {
+			dualsense_bt_cmd cmd = { 0 };
+			cmd.report_id = DUALSENSE_REPORT_BLUETOOTH_08C;
+			uint8_t* data_ptr = cmd.data;
+			memcpy(data_ptr, &packet_0x11, packet_0x11.length_prefixed.length + 2);
+			data_ptr += packet_0x11.length_prefixed.length + 2;
+			memcpy(data_ptr, &packet_0x12, packet_0x12.length_prefixed.length + 2);
+			cmd.checksum = titania_calc_checksum(crc_seed_output, (uint8_t*) &cmd, sizeof(cmd) - 4);
+			hid_write(state[handle].hid, (uint8_t*) &cmd, sizeof(cmd)); // this takes 50ms on macOS??
+		}
+
+		titania_timer_next(handle);
 	}
 
-	if (state[handle].hid_info.is_bluetooth) {
-		return titania_haptics_close_bt(handle);
-	}
-
-	return TITANIA_ERROR_OK;
+	atomic_store(&state[handle].haptics.bt_timer.running, false);
 }
-
-titania_error titania_haptics_flush(const titania_handle handle) {
-	CHECK_INIT();
-	CHECK_HANDLE_VALID(handle);
-
-	if (IS_ACCESS(state[handle].hid_info)) {
-		return TITANIA_ERROR_OK;
-	}
-
-	if (state[handle].hid_info.is_bluetooth) {
-		return titania_haptics_flush_bt(handle);
-	}
-
-	return TITANIA_ERROR_OK;
-}
-#endif
-
-titania_error titania_haptics_init_bt(const titania_handle handle) { return TITANIA_ERROR_OK; }
-
-titania_error titania_haptics_close_bt(const titania_handle handle) { return TITANIA_ERROR_OK; }
-
-titania_error titania_haptics_flush_bt(const titania_handle handle) { return TITANIA_ERROR_OK; }

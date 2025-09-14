@@ -338,7 +338,7 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 
 #ifdef TITANIA_HAS_HAPTICS
 			const titania_error result = titania_haptics_init(handle->handle);
-			if (!IS_TITANIA_OKAY(result)) {
+			if (handle->is_access && !IS_TITANIA_OKAY(result)) {
 				return result;
 			}
 #endif
@@ -432,7 +432,7 @@ titania_error titania_push(titania_handle* handle, const size_t handle_count) {
 			hid_state->output.data.report_id = DUALSENSE_REPORT_BLUETOOTH_04C;
 			hid_state->output.data.bt.tag = 0;
 			hid_state->output.data.bt.seq = hid_state->seq;
-			hid_state->output.data.msg.data.bt.report_id = DUALSENSE_BT_REPORT_OUTPUT;
+			hid_state->output.data.msg.data.bt_report_id = DUALSENSE_BT_REPORT_OUTPUT;
 			hid_state->output.data.bt_checksum = titania_calc_checksum(crc_seed_output, buffer, size - 4);
 		}
 

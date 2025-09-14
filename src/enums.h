@@ -70,8 +70,8 @@ typedef enum dualsense_report_id : uint8_t {
 
 typedef enum dualsense_bt_report_id : uint8_t {
 	DUALSENSE_BT_REPORT_OUTPUT = 0x10,
-	DUALSENSE_BT_REPORT_HAPTICS_SETUP = 0x11,
-	DUALSENSE_BT_REPORT_HAPTICS_GRANULE = 0x12,
+	DUALSENSE_BT_REPORT_HAPTICS_SETUP = 0x11 | 1 << 7,
+	DUALSENSE_BT_REPORT_HAPTICS_GRANULE = 0x12 | 1 << 7,
 } dualsense_bt_report_id;
 
 typedef enum playstation_access_page_id : uint8_t {

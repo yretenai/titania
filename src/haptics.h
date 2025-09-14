@@ -16,6 +16,27 @@
 #include <CoreAudio/AudioHardware.h>
 #endif
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
+
+#define DUALSENSE_NUM_SAMPLES (0x20)
+#define DUALSENSE_SAMPLE_SIZE (0x40)
+#define DUALSENSE_SAMPLE_RATE (3000)
+
+typedef struct titania_timer {
+#ifdef _WIN32
+	HANDLE thread;
+#else
+	struct timespec next;
+	int64_t ticks;
+	pthread_t thread;
+#endif
+	atomic_bool running;
+} titania_timer;
+
 typedef struct dualsense_haptics_state {
 	titania_vibration_mode mode;
 	// todo: add audio device info here
@@ -30,7 +51,7 @@ typedef struct dualsense_haptics_state {
 #endif
 #ifdef TITANIA_HAPTICS_WASAPI
 #endif
-	// todo: bluetooth timer
+	titania_timer bt_timer;
 } dualsense_haptics_state;
 
 titania_error titania_haptics_init(titania_handle handle);
@@ -39,5 +60,10 @@ titania_error titania_haptics_flush(titania_handle handle);
 titania_error titania_haptics_init_bt(titania_handle handle);
 titania_error titania_haptics_close_bt(titania_handle handle);
 titania_error titania_haptics_flush_bt(titania_handle handle);
+titania_error titania_haptics_copy_samples(titania_handle handle, float* samples, size_t* num_frames);
+void titania_bt_loop_inner(titania_handle handle);
+bool titania_thread_create(titania_handle handle);
+void titania_thread_join(titania_handle handle);
+void titania_timer_next(titania_handle handle);
 
 #endif

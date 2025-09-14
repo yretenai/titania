@@ -109,7 +109,9 @@ has_normal_bitpacking = bitpacking_test_run.compiled() and bitpacking_test_run.r
 
 has_audio_haptics = get_option('titania_haptics_audio').allowed()
 need_audio_haptics = get_option('titania_haptics_audio').enabled()
+get_option('titania_haptics_bt').disable_auto_if(target_machine.system() == 'darwin')
 has_haptics_bt = get_option('titania_haptics_bt').allowed()
+
 has_haptics_pulse = false
 has_haptics_wasapi = false
 has_haptics_coreaudio = false
@@ -136,6 +138,12 @@ titania_deps = [
 if has_haptics_bt
 	has_haptics = true
 	titania_source += ['src/haptics_bt.c']
+
+	if target_machine.system() == 'windows'
+		titania_source += ['src/haptics_bt_win32.c']
+	else
+		titania_source += ['src/haptics_bt_posix.c']
+	endif
 endif
 
 if has_audio_haptics
@@ -169,6 +177,10 @@ if has_audio_haptics
 	endif
 endif
 
+if has_haptics
+	titania_source += ['src/haptics.c']
+endif
+
 configure_file(
 	output : 'titania_config.h',
 	configuration : configuration_data({
@@ -192,6 +204,7 @@ configure_file(
 		'TITANIA_HAS_HAPTICS_COREAUDIO' : has_haptics_coreaudio,
 		'TITANIA_HAS_HAPTICS_WASAPI' : has_haptics_wasapi,
 		'TITANIA_HAS_HAPTICS_FALLBACK' : has_haptics_bt,
+		'TITANIA_HAS_HAPTICS_DISABLE_BT' : get_option('titania_haptics_bt').disabled(),
    })
 )
 
