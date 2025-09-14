@@ -43,19 +43,6 @@
 - [x] pair bluetooth (`titaniactl pair`)
 - [ ] shell autocomplete profiles
 
-## planned version milestones
-
-- 1.0.0: feature complete reading for DualSense and DualSense Edge
-- 1.0.1: profile utilities
-- 1.0.2: bluetooth pairing
-- 2.0.0: playstation access support
-
-### titaniactl
-
-- 1.1.0: base functionality
-- 1.5.0: profile importing/exporting
-- 2.0.0: playstation access profile importing/exporting
-
 ### under consideration
 
 - DualShock 3 Support - Massively different from the DualShock 4, DualSense, and Access, but is interesting enough to be considered (pressure sensitive buttons! gyro is real!)
