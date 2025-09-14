@@ -235,6 +235,7 @@ titania_error titania_haptics_flush(const titania_handle handle) {
 
 	AudioDeviceStop(state[handle].haptics.device_id, state[handle].haptics.proc_id);
 	state[handle].haptics.read_offset = 0;
+	memset(state[handle].haptics.buffer, 0, sizeof(state[handle].haptics.buffer));
 	AudioDeviceStart(state[handle].haptics.device_id, state[handle].haptics.proc_id);
 
 	return TITANIA_ERROR_OK;

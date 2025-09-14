@@ -177,6 +177,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 				titania_get_control(context->handles[i], &update);
 				update.enable_lowpass_filter = lowpass;
 				update.enable_beamforming = beamforming;
+				update.gain = 0b111;
 				titania_update_control(context->handles[i], update);
 			}
 
