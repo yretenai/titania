@@ -6,13 +6,15 @@
 #include <IOKit/hid/IOHIDManager.h>
 #endif
 
+#include <string.h>
+
 #include "structures.h"
 #include "titania.h"
 
 size_t resample_48000_to_3000(const titania_handle handle, int8_t samples3khz[DUALSENSE_SAMPLE_SIZE]) {
 	constexpr size_t size = DUALSENSE_NUM_SAMPLES * 4 * 16; // 4 channel float @ 48KHz
 	float samples[size];
-	memset(samples, 0, size);
+	memset(samples, 0, size * sizeof(float));
 	size_t num_frames = DUALSENSE_NUM_SAMPLES; // 32 samples,
 	if (IS_TITANIA_BAD(titania_haptics_copy_samples(handle, samples, &num_frames))) {
 		return 0;

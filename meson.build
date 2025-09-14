@@ -167,6 +167,7 @@ if has_audio_haptics
 		message('using pulseaudio for haptics')
 		titania_source += ['src/haptics_pulse.c']
 		titania_deps += [pulse]
+		has_haptics_pulse = true
 	else
 		if need_haptics
 			error('haptics required but no libraries found')

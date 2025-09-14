@@ -2,17 +2,19 @@
 //  https://git.sr.ht/~chronovore/titania
 //  SPDX-License-Identifier: MPL-2.0
 
+#define _POSIX_C_SOURCE 200112L
+
 #include "structures.h"
 #include "titania.h"
 
 #include <time.h>
+#include <string.h>
 
 void titania_timer_next(const titania_handle handle) {
 	titania_timer* t = &state[handle].haptics.bt_timer;
 
 #ifndef __APPLE__
 	clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &t->next, NULL);
-
 #else
 	struct timespec now, rel;
 	clock_gettime(CLOCK_MONOTONIC, &now);
