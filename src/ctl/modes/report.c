@@ -262,7 +262,7 @@ titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const
 				TITANIAPRINT_TEST(data.edge_device.profile_indicator, unknown2);
 				printf(" },");
 				TITANIAPRINT_ENUM(data.edge_device, brightness, titania_level_msg, "brightness"); TITANIAPRINT_SEP();
-				TITANIAPRINT_TEST(data.edge_device, emulating_rumble); TITANIAPRINT_SEP();
+				TITANIAPRINT_TEST(data.edge_device, haptics_power_reduced); TITANIAPRINT_SEP();
 				TITANIAPRINT_U32(data.edge_device, unknown);
 				printf(" }\n");
 			}
@@ -305,15 +305,15 @@ titaniactl_error titaniactl_mode_report_json_inner(titaniactl_context* context, 
 				json_object_add_bool(hid_obj, "isBluetooth", hid.is_bluetooth);
 				json_object_add_string(hid_obj, "path", hid.hid_path);
 				sprintf(strbuffer, "%x", hid.vendor_id);
-				json_object_add_string(hid_obj, "VID", strbuffer);
+				json_object_add_string(hid_obj, "vid", strbuffer);
 				sprintf(strbuffer, "%x", hid.product_id);
-				json_object_add_string(hid_obj, "PID", strbuffer);
+				json_object_add_string(hid_obj, "pid", strbuffer);
 				sprintf(strbuffer, "%d", hid.interface_id);
-				json_object_add_string(hid_obj, "InterfaceID", strbuffer);
+				json_object_add_string(hid_obj, "iid", strbuffer);
 
 				struct json* serial_obj = json_object_add_object(obj, "serial");
 				json_object_add_string(serial_obj, "mac", hid.serial.mac);
-				json_object_add_string(serial_obj, "pairedMAC", hid.serial.paired_mac);
+				json_object_add_string(serial_obj, "pairedMac", hid.serial.paired_mac);
 				json_object_add_string(serial_obj, "controller", hid.serial.controller);
 				json_object_add_string(serial_obj, "mcu", hid.serial.mcu);
 				json_object_add_string(serial_obj, "pcba", hid.serial.pcba);
@@ -592,7 +592,7 @@ titaniactl_error titaniactl_mode_report_json_inner(titaniactl_context* context, 
 					sprintf(strbuffer, "%d", data.edge_device.brightness);
 					json_object_add_string(edge_state_obj, "brightness", strbuffer);
 				}
-				json_object_add_bool(edge_state_obj, "emulatingRumble", data.edge_device.emulating_rumble);
+				json_object_add_bool(edge_state_obj, "hapticsPowerReduced", data.edge_device.haptics_power_reduced);
 				json_object_add_number(edge_state_obj, "unknown", data.edge_device.unknown);
 			}
 		}
@@ -660,6 +660,8 @@ titaniactl_error titaniactl_mode_list_json(titaniactl_context* context) {
 		json_object_add_string(obj, "VID", strbuffer);
 		sprintf(strbuffer, "%x", hid.product_id);
 		json_object_add_string(obj, "PID", strbuffer);
+		sprintf(strbuffer, "%x", hid.interface_id);
+		json_object_add_string(obj, "IID", strbuffer);
 		json_object_add_string(obj, "MAC", hid.serial.mac);
 		sprintf(strbuffer, "%04x", hid.firmware.update.major);
 		json_object_add_string(obj, "version", strbuffer);

@@ -223,7 +223,7 @@ void titania_convert_input(const titania_hid hid_info, const dualsense_input_msg
 		data->edge_device.raw_buttons.cross = input.state.edge.override.cross;
 		data->edge_device.raw_buttons.circle = input.state.edge.override.circle;
 		data->edge_device.raw_buttons.triangle = input.state.edge.override.triangle;
-		data->edge_device.emulating_rumble = input.state.edge.override.emulating_rumble;
+		data->edge_device.haptics_power_reduced = !input.state.edge.override.full_haptics_power;
 		data->edge_device.brightness = input.state.edge.override.brightness_override;
 		data->edge_device.unknown = input.state.edge.override.unknown;
 		data->edge_device.raw_buttons.playstation = input.state.edge.override.playstation;

@@ -690,7 +690,7 @@ typedef struct titania_edge_state {
 	} profile_indicator;
 
 	titania_level brightness;
-	bool emulating_rumble;
+	bool haptics_power_reduced;
 	uint8_t unknown;
 } titania_edge_state;
 

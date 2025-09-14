@@ -51,7 +51,7 @@ typedef struct PACKED dualsense_device_state_edge_override {
 	bool cross : 1;
 	bool circle : 1;
 	bool triangle : 1;
-	bool emulating_rumble : 1; // this is updated with motor power state flag
+	bool full_haptics_power : 1; // this is updated with motor power state flag
 	uint8_t brightness_override : 2; // this is updated* somewhere* -> setting the entire report to 0xFF sets this to 0b11
 	uint8_t unknown : 2;
 	bool playstation : 1;
