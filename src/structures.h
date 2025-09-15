@@ -2,8 +2,6 @@
 //  https://git.sr.ht/~chronovore/titania
 //  SPDX-License-Identifier: MPL-2.0
 
-#pragma once
-
 #ifndef TITANIA_STRUCTURES_H
 #define TITANIA_STRUCTURES_H
 
@@ -354,31 +352,42 @@ typedef struct PACKED dualsense_output_msg {
 
 static_assert(sizeof(dualsense_output_msg) == 0x40, "dualsense_output_msg is not 64 bytes");
 
-typedef struct PACKED dualsense_bt_cmd_packet {
-	dualsense_bt_report_id packet;
+#define MAKE_DUALSENSE_BT_PACKET(size) \
+	typedef struct PACKED dualsense_bt_cmd_packet_ ## size { \
+		dualsense_bt_report_id packet; \
+		union { \
+			struct { \
+				uint8_t length; \
+				uint8_t data[size - 6 - 2]; \
+			} sized; \
+			struct { \
+				uint8_t data[size - 6 - 1]; \
+			} raw; \
+		}; \
+	} dualsense_bt_cmd_packet_ ## size; \
+	static_assert(sizeof(dualsense_bt_cmd_packet_ ## size) == size - 6); \
+	\
+	typedef struct PACKED dualsense_bt_cmd_##size { \
+		dualsense_report_id report_id; \
+		dualsense_bt_packet_tag tag; \
+		union { \
+			dualsense_bt_cmd_packet_ ## size packet; \
+			uint8_t data[size - 6]; \
+		}; \
+		uint32_t checksum; \
+	} dualsense_bt_cmd_ ## size; \
+	static_assert(sizeof(dualsense_bt_cmd_ ## size) == size)
 
-	union {
-		struct {
-			uint8_t length;
-			uint8_t data[0x87];
-		} length_prefixed;
+MAKE_DUALSENSE_BT_PACKET(142);
+MAKE_DUALSENSE_BT_PACKET(206);
+MAKE_DUALSENSE_BT_PACKET(270);
+MAKE_DUALSENSE_BT_PACKET(334);
+MAKE_DUALSENSE_BT_PACKET(398);
+MAKE_DUALSENSE_BT_PACKET(462);
+MAKE_DUALSENSE_BT_PACKET(526);
+MAKE_DUALSENSE_BT_PACKET(547);
 
-		struct {
-			uint8_t data[0x88];
-		} raw;
-	};
-} dualsense_bt_cmd_packet;
-
-static_assert(sizeof(dualsense_bt_cmd_packet) == 0x89, "dualsense_bt_cmd_packet is not 143 bytes");
-
-typedef struct PACKED dualsense_bt_cmd {
-	dualsense_report_id report_id;
-	dualsense_bt_packet_tag tag;
-	uint8_t data[0x88];
-	uint32_t checksum;
-} dualsense_bt_cmd;
-
-static_assert(sizeof(dualsense_bt_cmd) == 0x8e, "dualsense_bt_cmd is not 142 bytes");
+#undef MAKE_DUALSENSE_BT_PACKET
 
 typedef struct PACKED access_output_msg {
 	dualsense_report_id report_id;

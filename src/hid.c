@@ -170,7 +170,7 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 			state[i].hid_info = *handle;
 			handle->is_edge = IS_EDGE(state[i].hid_info);
 			handle->is_access = IS_ACCESS(state[i].hid_info);
-			state[i].output.data.report_id = DUALSENSE_REPORT_BLUETOOTH_04C;
+			state[i].output.data.report_id = DUALSENSE_REPORT_BLUETOOTH;
 			state[i].output.data.msg.data.report_id = DUALSENSE_REPORT_OUTPUT;
 
 			if (state[i].hid_info.is_bluetooth) { // this is needed to reset LEDs from controller firmware
@@ -378,7 +378,7 @@ titania_error titania_pull(titania_handle* handle, const size_t handle_count, ti
 			size = sizeof(dualsense_input_msg);
 		}
 
-		hid_state->input.data.report_id = DUALSENSE_REPORT_BLUETOOTH_04C;
+		hid_state->input.data.report_id = DUALSENSE_REPORT_BLUETOOTH;
 		hid_state->input.data.msg.data.report_id = DUALSENSE_REPORT_INPUT;
 		const int report_size = hid_read(hid_state->hid, buffer, size);
 
@@ -429,7 +429,7 @@ titania_error titania_push(titania_handle* handle, const size_t handle_count) {
 			}
 			hid_state->output.data.msg.data.report_id = DUALSENSE_REPORT_OUTPUT;
 		} else {
-			hid_state->output.data.report_id = DUALSENSE_REPORT_BLUETOOTH_04C;
+			hid_state->output.data.report_id = DUALSENSE_REPORT_BLUETOOTH;
 			hid_state->output.data.bt.tag = 0;
 			hid_state->output.data.bt.seq = hid_state->seq;
 			hid_state->output.data.msg.data.bt_report_id = DUALSENSE_BT_REPORT_OUTPUT;

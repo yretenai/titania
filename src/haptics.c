@@ -29,8 +29,6 @@ titania_error titania_haptics_copy_samples(const titania_handle handle, float* s
 	}
 
 	for (size_t sample_idx = 0; sample_idx < remain; ++sample_idx) {
-		size_t x = (read + (sample_idx << 1)) % TITANIA_MAXIMUM_HAPTICS_SIZE;
-		float y = state[handle].haptics.buffer[x];
 		samples[(sample_idx << 2) + 2] = state[handle].haptics.buffer[(read + (sample_idx << 1)) % TITANIA_MAXIMUM_HAPTICS_SIZE];
 		samples[(sample_idx << 2) + 3] = state[handle].haptics.buffer[(read + (sample_idx << 1) + 1) % TITANIA_MAXIMUM_HAPTICS_SIZE];
 	}

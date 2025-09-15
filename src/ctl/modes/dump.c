@@ -33,11 +33,6 @@ titaniactl_error titaniactl_mode_dump(titaniactl_context* context) {
 				const int32_t hid_report_size = (int32_t) report_ids[j].size + 1;
 				printf("report %d (%x): reported size is %d, type is %s", report_ids[j].id, report_ids[j].id, hid_report_size, REPORT_TYPES[report_ids[j].type % 3]);
 
-				if (report_ids[j].type < 2) {
-					printf("\n");
-					continue;
-				}
-
 				printf(", actual size is ");
 				buffer[0] = report_ids[j].id;
 				const size_t size = hid_get_feature_report(device, buffer, hid_report_size);

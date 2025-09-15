@@ -2,8 +2,6 @@
 //  https://git.sr.ht/~chronovore/titania
 //  SPDX-License-Identifier: MPL-2.0
 
-#pragma once
-
 #ifndef TITANIAPRINT_H
 #define TITANIAPRINT_H
 

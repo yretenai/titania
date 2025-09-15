@@ -2,8 +2,6 @@
 //  https://git.sr.ht/~chronovore/titania
 //  SPDX-License-Identifier: MPL-2.0
 
-#pragma once
-
 #ifndef TITANIA_EDGE_H
 #define TITANIA_EDGE_H
 #include <assert.h>

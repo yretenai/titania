@@ -2,8 +2,6 @@
 //  https://git.sr.ht/~chronovore/titania
 //  SPDX-License-Identifier: MPL-2.0
 
-#pragma once
-
 #ifndef TITANIA_HAPTICS_H
 #define TITANIA_HAPTICS_H
 
@@ -33,9 +31,6 @@ typedef struct titania_timer {
 	struct timespec next;
 	int64_t ticks;
 	pthread_t thread;
-#endif
-#ifdef __APPLE__
-	atomic_bool slop_mutex;
 #endif
 	atomic_bool running;
 	uint8_t frame;
