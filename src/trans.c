@@ -41,9 +41,8 @@ void titania_init_floats(void) {
 
 #define CHECK_DPAD(V, A, B, C) (V).dpad == DUALSENSE_DPAD_##A || (V).dpad == DUALSENSE_DPAD_##B || (V).dpad == DUALSENSE_DPAD_##C
 
-#define CALIBRATE(value, slot) (((value) < 0 ? (-value) * calibration[(slot)].min : (value) * calibration[(slot)].max) * calibration[(slot)].cache)
-
-#define CALIBRATE_BIAS(value, slot) CALIBRATE((value) - calibration[(slot)].bias, (slot))
+#define SENSOR_NORM(value, slot) (((float) ((int32_t) value - calibration[(slot)].offset)) / calibration[(slot)].scale)
+#define SENSOR_NORM_GYRO(value, slot) (fmodf((SENSOR_NORM(value, slot) + 1) * M_PI, (float) M_PI) - (float) M_PI_2)
 
 void titania_convert_input_access(const dualsense_input_msg input, titania_data* data) {
 	data->battery.state = input.access.battery.state + 1;
@@ -186,12 +185,12 @@ void titania_convert_input(const titania_hid hid_info, const dualsense_input_msg
 #endif
 	data->buttons.touchpad = data->touch[TITANIA_PRIMARY].active || data->touch[TITANIA_SECONDARY].active;
 
-	data->sensors.accelerometer.x = CALIBRATE(input.sensors.accelerometer.x, CALIBRATION_ACCELEROMETER_X);
-	data->sensors.accelerometer.y = CALIBRATE(input.sensors.accelerometer.y, CALIBRATION_ACCELEROMETER_Y);
-	data->sensors.accelerometer.z = CALIBRATE(input.sensors.accelerometer.z, CALIBRATION_ACCELEROMETER_Z);
-	data->sensors.gyro.x = CALIBRATE_BIAS(input.sensors.gyro.x, CALIBRATION_GYRO_X);
-	data->sensors.gyro.y = CALIBRATE_BIAS(input.sensors.gyro.y, CALIBRATION_GYRO_Y);
-	data->sensors.gyro.z = CALIBRATE_BIAS(input.sensors.gyro.z, CALIBRATION_GYRO_Z);
+	data->sensors.accelerometer.x = -SENSOR_NORM(input.sensors.accelerometer.x, CALIBRATION_ACCELEROMETER_X) * 8;
+	data->sensors.accelerometer.y = SENSOR_NORM(input.sensors.accelerometer.y, CALIBRATION_ACCELEROMETER_Y) * 8;
+	data->sensors.accelerometer.z = SENSOR_NORM(input.sensors.accelerometer.z, CALIBRATION_ACCELEROMETER_Z) * 8;
+	data->sensors.gyro.x = SENSOR_NORM_GYRO(input.sensors.gyro.x, CALIBRATION_GYRO_X);
+	data->sensors.gyro.y = -SENSOR_NORM_GYRO(input.sensors.gyro.y, CALIBRATION_GYRO_Y);
+	data->sensors.gyro.z = -SENSOR_NORM_GYRO(input.sensors.gyro.z, CALIBRATION_GYRO_Z);
 	data->sensors.temperature = input.sensors.temperature;
 
 	data->device.headphones = input.state.device.headphones;
