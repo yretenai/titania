@@ -35,6 +35,8 @@ if get_option('buildtype') == 'debug'
 	args += compiler.get_supported_arguments('-Werror')
 endif
 
+implicit_libm = compiler.compiles('#include <math.h>\nint main(void) { fmodf(1.0f, 0.33f); return 0; }', name : 'implicit libm', args : args, werror : true)
+
 has_nullptr = compiler.compiles('int main(void) { return nullptr == 0; }\n', name : 'has nullptr', args : args, werror : true)
 
 pack_test = '''
@@ -121,6 +123,14 @@ if not hidapi.found()
 	hidapi = dependency('hidapi')
 endif
 
+titania_deps = [hidapi]
+
+if not implicit_libm
+	libm = compiler.find_library('m', required : true)
+	titania_deps += [libm]
+endif
+
+
 titania_source = [
 	'src/access.c',
 	'src/crc.c',
@@ -129,10 +139,6 @@ titania_source = [
 	'src/hid.c',
 	'src/trans.c',
 	'src/unicode.c'
-]
-
-titania_deps = [
-	hidapi
 ]
 
 if has_haptics_bt
