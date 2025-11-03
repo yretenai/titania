@@ -201,6 +201,8 @@ void titania_convert_input(const titania_hid hid_info, const dualsense_input_msg
 	data->sensors.gyro.x = SENSOR_NORM_GYRO(input.sensors.gyro.x, CALIBRATION_GYRO_X);
 	data->sensors.gyro.y = -SENSOR_NORM_GYRO(input.sensors.gyro.y, CALIBRATION_GYRO_Y);
 	data->sensors.gyro.z = -SENSOR_NORM_GYRO(input.sensors.gyro.z, CALIBRATION_GYRO_Z);
+	data->sensors.accelerometer_raw = (titania_vector3i) { input.sensors.accelerometer.x, input.sensors.accelerometer.y, input.sensors.accelerometer.z };
+	data->sensors.gyro_raw = (titania_vector3i) { input.sensors.gyro.x, input.sensors.gyro.y, input.sensors.gyro.z };
 	data->sensors.temperature = input.sensors.temperature;
 
 	data->device.headphones = input.state.device.headphones;

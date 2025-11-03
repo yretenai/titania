@@ -256,10 +256,18 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 				handle->serial.paired_mac[0] = 0;
 			}
 
-			if (!state[i].hid_info.is_access) {
+			if (!handle->is_access) {
 				dualsense_calibration_info calibration;
 				calibration.report_id = DUALSENSE_REPORT_CALIBRATION;
 				if (use_calibration && HID_PASS(hid_get_feature_report(state[i].hid, (uint8_t*) &calibration, sizeof(dualsense_calibration_info)))) {
+					handle->calibration.is_valid = true;
+					handle->calibration.gyro_bias = (titania_vector3i) { calibration.gyro_bias.x, calibration.gyro_bias.y, calibration.gyro_bias.z };
+					handle->calibration.gyro_speed = (titania_vector2i) { calibration.gyro_speed.min, calibration.gyro_speed.max };
+					handle->calibration.gyro_min = (titania_vector3i) { calibration.gyro[CALIBRATION_RAW_X].min, calibration.gyro[CALIBRATION_RAW_Y].min, calibration.gyro[CALIBRATION_RAW_Z].min };
+					handle->calibration.gyro_max = (titania_vector3i) { calibration.gyro[CALIBRATION_RAW_X].max, calibration.gyro[CALIBRATION_RAW_Y].max, calibration.gyro[CALIBRATION_RAW_Z].max };
+					handle->calibration.accel_min = (titania_vector3i) { calibration.accelerometer[CALIBRATION_RAW_X].min, calibration.accelerometer[CALIBRATION_RAW_Y].min, calibration.accelerometer[CALIBRATION_RAW_Z].min };
+					handle->calibration.accel_max = (titania_vector3i) { calibration.accelerometer[CALIBRATION_RAW_X].max, calibration.accelerometer[CALIBRATION_RAW_Y].max, calibration.accelerometer[CALIBRATION_RAW_Z].max };
+
 					state[i].calibration[CALIBRATION_GYRO_X].offset = SENSOR_OFFSET(gyro, CALIBRATION_RAW_X);
 					state[i].calibration[CALIBRATION_GYRO_Y].offset = SENSOR_OFFSET(gyro, CALIBRATION_RAW_Y);
 					state[i].calibration[CALIBRATION_GYRO_Z].offset = SENSOR_OFFSET(gyro, CALIBRATION_RAW_Z);

@@ -387,8 +387,8 @@ typedef struct titania_vector2 {
 } titania_vector2;
 
 typedef struct titania_vector2i {
-	int x;
-	int y;
+	int32_t x;
+	int32_t y;
 } titania_vector2i;
 
 typedef struct titania_vector3 {
@@ -407,6 +407,12 @@ typedef struct titania_vector3 {
 		float b;
 	};
 } titania_vector3;
+
+typedef struct titania_vector3i {
+	int32_t x;
+	int32_t y;
+	int32_t z;
+} titania_vector3i;
 
 typedef struct titania_buttons {
 	bool dpad_up;
@@ -463,6 +469,8 @@ typedef struct titania_time {
 typedef struct titania_sensors {
 	titania_vector3 accelerometer;
 	titania_vector3 gyro;
+	titania_vector3i accelerometer_raw;
+	titania_vector3i gyro_raw;
 	int32_t temperature;
 } titania_sensors;
 
@@ -642,6 +650,16 @@ typedef struct titania_query {
 	titania_hid_path hid_path;
 } titania_query;
 
+typedef struct titania_calibration_info {
+	bool is_valid;
+	titania_vector3i gyro_bias;
+	titania_vector2i gyro_speed;
+	titania_vector3i gyro_min;
+	titania_vector3i gyro_max;
+	titania_vector3i accel_min;
+	titania_vector3i accel_max;
+} titania_calibration_info;
+
 typedef struct titania_hid {
 	titania_handle handle;
 	uint16_t product_id;
@@ -653,6 +671,7 @@ typedef struct titania_hid {
 	titania_hid_path hid_path;
 	titania_serial_info serial;
 	titania_firmware_info firmware;
+	titania_calibration_info calibration;
 } titania_hid;
 
 typedef struct titania_report_id {

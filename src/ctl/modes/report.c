@@ -66,6 +66,38 @@ titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const
 			TITANIAPRINT_FIRMWARE(hid.firmware, touchpad);
 			printf(" }\n");
 
+
+			if (!hid.is_access) {
+				printf("calibration {");
+				TITANIAPRINT_TEST(hid.calibration, is_valid);
+				if (hid.calibration.is_valid) {
+					printf(", gyro speed {");
+					TITANIAPRINT_I32(hid.calibration.gyro_speed, x); TITANIAPRINT_SEP();
+					TITANIAPRINT_I32(hid.calibration.gyro_speed, y);
+					printf(" }, gyro bias {");
+					TITANIAPRINT_I32(hid.calibration.gyro_bias, x); TITANIAPRINT_SEP();
+					TITANIAPRINT_I32(hid.calibration.gyro_bias, y); TITANIAPRINT_SEP();
+					TITANIAPRINT_I32(hid.calibration.gyro_bias, z);
+					printf(" }, gyro min {");
+					TITANIAPRINT_I32(hid.calibration.gyro_min, x); TITANIAPRINT_SEP();
+					TITANIAPRINT_I32(hid.calibration.gyro_min, y); TITANIAPRINT_SEP();
+					TITANIAPRINT_I32(hid.calibration.gyro_min, z);
+					printf(" }, gyro max {");
+					TITANIAPRINT_I32(hid.calibration.gyro_max, x); TITANIAPRINT_SEP();
+					TITANIAPRINT_I32(hid.calibration.gyro_max, y); TITANIAPRINT_SEP();
+					TITANIAPRINT_I32(hid.calibration.gyro_max, z);
+					printf(" }, accel min {");
+					TITANIAPRINT_I32(hid.calibration.accel_min, x); TITANIAPRINT_SEP();
+					TITANIAPRINT_I32(hid.calibration.accel_min, y); TITANIAPRINT_SEP();
+					TITANIAPRINT_I32(hid.calibration.accel_min, z);
+					printf(" }, accel max {");
+					TITANIAPRINT_I32(hid.calibration.accel_max, x); TITANIAPRINT_SEP();
+					TITANIAPRINT_I32(hid.calibration.accel_max, y); TITANIAPRINT_SEP();
+					TITANIAPRINT_I32(hid.calibration.accel_max, z);
+				}
+				printf(" }\n");
+			}
+
 			printf("time {");
 			TITANIAPRINT_U32(data.time, system); TITANIAPRINT_SEP();
 			TITANIAPRINT_U32(data.time, sensor); TITANIAPRINT_SEP();
@@ -145,7 +177,6 @@ titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const
 				TITANIAPRINT_U32(data.touch[TITANIA_SECONDARY].pos, y);
 				printf(" } } }\n");
 
-
 				printf("sensors {");
 				TITANIAPRINT_U8(data.sensors, temperature); TITANIAPRINT_SEP();
 				printf(" accelerometer = {");
@@ -156,6 +187,15 @@ titaniactl_error titaniactl_mode_report_inner(titaniactl_context* context, const
 				TITANIAPRINT_FLOAT(data.sensors.gyro, x); TITANIAPRINT_SEP();
 				TITANIAPRINT_FLOAT(data.sensors.gyro, y); TITANIAPRINT_SEP();
 				TITANIAPRINT_FLOAT(data.sensors.gyro, z);
+				printf(" }, \n");
+				printf(" raw accelerometer = {");
+				TITANIAPRINT_I32(data.sensors.accelerometer_raw, x); TITANIAPRINT_SEP();
+				TITANIAPRINT_I32(data.sensors.accelerometer_raw, y); TITANIAPRINT_SEP();
+				TITANIAPRINT_I32(data.sensors.accelerometer_raw, z);
+				printf(" }, raw gyro = {");
+				TITANIAPRINT_I32(data.sensors.gyro_raw, x); TITANIAPRINT_SEP();
+				TITANIAPRINT_I32(data.sensors.gyro_raw, y); TITANIAPRINT_SEP();
+				TITANIAPRINT_I32(data.sensors.gyro_raw, z);
 				printf(" } }\n");
 
 				printf("state {");
@@ -354,6 +394,44 @@ titaniactl_error titaniactl_mode_report_json_inner(titaniactl_context* context, 
 				sprintf(strbuffer, "%d.%d.%d", hid.firmware.touchpad.major, hid.firmware.touchpad.minor, hid.firmware.touchpad.revision);
 				json_object_add_string(fw_obj, "touchpad", strbuffer);
 
+				if (!hid.is_access) {
+					struct json* calibration_obj = json_object_add_object(obj, "calibration");
+					json_object_add_bool(hid_obj, "isValid", data.hid.calibration.is_valid);
+
+					if (data.hid.calibration.is_valid) {
+						struct json* gyro_obj = json_object_add_object(calibration_obj, "gyro");
+						struct json* gyro_bias_arr = json_object_add_array(gyro_obj, "bias");
+						json_array_add_number(gyro_bias_arr, data.hid.calibration.gyro_bias.x);
+						json_array_add_number(gyro_bias_arr, data.hid.calibration.gyro_bias.y);
+						json_array_add_number(gyro_bias_arr, data.hid.calibration.gyro_bias.z);
+
+						struct json* gyro_speed_arr = json_object_add_array(gyro_obj, "speed");
+						json_array_add_number(gyro_speed_arr, data.hid.calibration.gyro_speed.x);
+						json_array_add_number(gyro_speed_arr, data.hid.calibration.gyro_speed.y);
+
+						struct json* gyro_min_arr = json_object_add_array(gyro_obj, "min");
+						json_array_add_number(gyro_min_arr, data.hid.calibration.gyro_min.x);
+						json_array_add_number(gyro_min_arr, data.hid.calibration.gyro_min.y);
+						json_array_add_number(gyro_min_arr, data.hid.calibration.gyro_min.z);
+
+						struct json* gyro_max_arr = json_object_add_array(gyro_obj, "max");
+						json_array_add_number(gyro_max_arr, data.hid.calibration.gyro_max.x);
+						json_array_add_number(gyro_max_arr, data.hid.calibration.gyro_max.y);
+						json_array_add_number(gyro_max_arr, data.hid.calibration.gyro_max.z);
+
+						struct json* accel_obj = json_object_add_object(calibration_obj, "accelerometer");
+						struct json* accel_min_arr = json_object_add_array(accel_obj, "min");
+						json_array_add_number(accel_min_arr, data.hid.calibration.accel_min.x);
+						json_array_add_number(accel_min_arr, data.hid.calibration.accel_min.y);
+						json_array_add_number(accel_min_arr, data.hid.calibration.accel_min.z);
+
+						struct json* accel_max_arr = json_object_add_array(accel_obj, "max");
+						json_array_add_number(accel_max_arr, data.hid.calibration.accel_max.x);
+						json_array_add_number(accel_max_arr, data.hid.calibration.accel_max.y);
+						json_array_add_number(accel_max_arr, data.hid.calibration.accel_max.z);
+					}
+				}
+
 				struct json* time_obj = json_object_add_object(obj, "time");
 				json_object_add_number(time_obj, "system", data.time.system);
 				json_object_add_number(time_obj, "sensor", data.time.sensor);
@@ -458,6 +536,14 @@ titaniactl_error titaniactl_mode_report_json_inner(titaniactl_context* context, 
 				json_array_add_number(gyroscope_obj, data.sensors.gyro.x);
 				json_array_add_number(gyroscope_obj, data.sensors.gyro.y);
 				json_array_add_number(gyroscope_obj, data.sensors.gyro.z);
+				struct json* raw_accelerometer_obj = json_object_add_array(sensors_obj, "rawAccelerometer");
+				json_array_add_number(raw_accelerometer_obj, data.sensors.accelerometer_raw.x);
+				json_array_add_number(raw_accelerometer_obj, data.sensors.accelerometer_raw.y);
+				json_array_add_number(raw_accelerometer_obj, data.sensors.accelerometer_raw.z);
+				struct json* raw_gyroscope_obj = json_object_add_array(sensors_obj, "rawGyroscope");
+				json_array_add_number(raw_gyroscope_obj, data.sensors.gyro_raw.x);
+				json_array_add_number(raw_gyroscope_obj, data.sensors.gyro_raw.y);
+				json_array_add_number(raw_gyroscope_obj, data.sensors.gyro_raw.z);
 
 				struct json* device_obj = json_object_add_object(obj, "deviceState");
 				json_object_add_bool(device_obj, "headphones", data.device.headphones);
