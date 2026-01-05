@@ -4,10 +4,6 @@
 
 #include "../../nanosleep.h"
 
-#ifndef _WIN32
-#include <unistd.h>
-#endif
-
 #include "../titaniactl.h"
 
 #include <stdio.h>

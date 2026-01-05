@@ -41,22 +41,6 @@ While the library is built on c2x, the `titania.h` header is c17 (maybe c11) com
 
 ## Building
 
-### Windows
-
-```powershell
-mkdir build
-cd build
-meson setup .. -buildtype=release --backend ninja --Dc_std=c17
-meson compile
-```
-
-#### Caveats
-
-Windows builds are still c17, as the Windows Compiler does not support c23 yet.
-This will change when the Windows C Compiler supports c23.
-
-### Linux/macOS
-
 ```shell
 mkdir build
 cd build

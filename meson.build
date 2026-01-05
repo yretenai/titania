@@ -171,6 +171,7 @@ if has_haptics_bt
 	has_haptics = true
 	titania_source += ['src/haptics_bt.c']
 
+	# todo: check if mingw-pthreads
 	if target_machine.system() == 'windows'
 		titania_source += ['src/haptics_bt_win32.c']
 	else
