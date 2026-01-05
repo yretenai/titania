@@ -2,8 +2,11 @@
 //  https://git.sr.ht/~chronovore/titania
 //  SPDX-License-Identifier: MPL-2.0
 
+#include "nanosleep.h"
+
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "structures.h"
 
@@ -124,8 +127,8 @@ titania_error titania_get_hids(titania_query* hids, const size_t hids_length) {
 				hids[index].is_bluetooth = dev->bus_type == HID_API_BUS_BLUETOOTH;
 				hids[index].is_edge = IS_EDGE(hids[index]);
 				hids[index].is_access = IS_ACCESS(hids[index]);
-				wcsncpy(hids[index].hid_serial, dev->serial_number, sizeof(hids[index].hid_serial));
-				strncpy(hids[index].hid_path, dev->path, sizeof(hids[index].hid_path));
+				wcsncpy(hids[index].hid_serial, dev->serial_number, TITANIA_SERIAL_LENGTH);
+				strncpy(hids[index].hid_path, dev->path, TITANIA_PATH_LENGTH);
 
 				index += 1;
 
@@ -160,7 +163,7 @@ titania_error titania_open(const titania_hid_path path, const bool is_bluetooth,
 				handle->product_id = info->product_id;
 				handle->vendor_id = info->vendor_id;
 				handle->interface_id = info->interface_number;
-				strncpy(handle->hid_path, info->path, sizeof(handle->hid_path));
+				strncpy(handle->hid_path, info->path, TITANIA_PATH_LENGTH);
 			} else {
 				handle->product_id = 0x0CE6; // DualSense
 				handle->vendor_id = 0x054C; // Sony

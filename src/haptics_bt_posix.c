@@ -2,8 +2,7 @@
 //  https://git.sr.ht/~chronovore/titania
 //  SPDX-License-Identifier: MPL-2.0
 
-#define _POSIX_C_SOURCE 200112L
-
+#include "nanosleep.h"
 #include "structures.h"
 #include "titania.h"
 

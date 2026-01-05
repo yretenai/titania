@@ -145,10 +145,4 @@ extern bool should_stop;
 extern bool is_json;
 extern bool preserve_data;
 
-#ifdef _WIN32
-#include <time.h>
-void nanosleep(const struct timespec* tspec, void* nullvoid);
-typedef uint64_t useconds_t;
-#endif
-
 #endif

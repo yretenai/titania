@@ -39,6 +39,30 @@ implicit_libm = compiler.compiles('#include <math.h>\nint main(void) { fmodf(1.0
 
 has_nullptr = compiler.compiles('int main(void) { return nullptr == 0; }\n', name : 'has nullptr', args : args, werror : true)
 
+nanosleep_test = '''
+#define _POSIX_C_SOURCE 200809L
+#include <time.h>
+
+int main(void) {
+	struct timespec delayspec = { 0, 0 };
+	nanosleep(&delayspec, nullptr);
+	return 0;
+}
+'''
+
+has_nanosleep = compiler.compiles(nanosleep_test, name : 'has nanosleep', args : args, werror : true)
+
+useconds_test = '''
+#define _POSIX_C_SOURCE 200809L
+#include <unistd.h>
+
+int main(void) {
+	return (int) ((useconds_t) 0);
+}
+'''
+
+has_useconds = compiler.compiles(useconds_test, name : 'has useconds_t', args : args, werror : false)
+
 pack_test = '''
 #pragma pack(push, 1)
 
@@ -118,7 +142,7 @@ has_haptics_pulse = false
 has_haptics_wasapi = false
 has_haptics_coreaudio = false
 
-hidapi = dependency('hidapi', version : '>=0.13.0', required : false)
+hidapi = dependency('hidapi-hidraw', 'hidapi', version : '>=0.13.0', required : false)
 if not hidapi.found()
 	hidapi = dependency('hidapi')
 endif
@@ -141,6 +165,8 @@ titania_source = [
 	'src/unicode.c'
 ]
 
+has_single_haptics = has_haptics_bt
+
 if has_haptics_bt
 	has_haptics = true
 	titania_source += ['src/haptics_bt.c']
@@ -154,7 +180,7 @@ endif
 
 if has_audio_haptics
 	has_haptics = true
-	has_haptics_bt = false
+	has_single_haptics = false
 	ole = compiler.find_library('ole32', required : false)
 	pulse = dependency('libpulse', required : false)
 	coreaudio = dependency('appleframeworks', modules : ['CoreFoundation', 'IOKit', 'CoreAudio', 'AudioUnit'], required : false)
@@ -175,11 +201,12 @@ if has_audio_haptics
 		titania_deps += [pulse]
 		has_haptics_pulse = true
 	else
-		if need_haptics
+		if need_audio_haptics
 			error('haptics required but no libraries found')
 		else
 			warning('haptics requested but no libraries found')
-			has_haptics_bt = get_option('titania_haptics_bt').allowed()
+			has_haptics = has_haptics_bt
+			has_single_haptics = has_haptics_bt
 		endif
 	endif
 endif
@@ -206,11 +233,13 @@ configure_file(
 		'TITANIA_HAS_PACK' : has_pack,
 		'TITANIA_HAS_STDC_FLAGS': has_stdc_flags,
 		'TITANIA_HAS_VARIABLE_BITPACKING' : has_normal_bitpacking,
+		'TITANIA_HAS_NANOSLEEP' : has_nanosleep,
+		'TITANIA_HAS_UNISTD_USECONDS': has_useconds,
 		'TITANIA_HAS_HAPTICS' : has_haptics,
 		'TITANIA_HAS_HAPTICS_PULSE' : has_haptics_pulse,
 		'TITANIA_HAS_HAPTICS_COREAUDIO' : has_haptics_coreaudio,
 		'TITANIA_HAS_HAPTICS_WASAPI' : has_haptics_wasapi,
-		'TITANIA_HAS_HAPTICS_FALLBACK' : has_haptics_bt,
+		'TITANIA_HAS_HAPTICS_FALLBACK' : has_single_haptics,
 		'TITANIA_HAS_HAPTICS_DISABLE_BT' : get_option('titania_haptics_bt').disabled(),
    })
 )

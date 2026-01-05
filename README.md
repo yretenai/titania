@@ -1,4 +1,4 @@
-# titania
+# titania [![Build Status](https://github.com/neptuwunium/titania/actions/workflows/build.yml/badge.svg)](https://github.com/neptuwunium/titania/actions/workflows/build.yml)
 
 Cross-platform unofficial userland library for the Sony PlayStation DualSense Controller, and the PlayStation Access Controller.
 

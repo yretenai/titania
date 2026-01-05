@@ -1,0 +1,37 @@
+name: Build Titania
+on: [ push ]
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, windows-11-arm, macos-latest, macos-15-intel]
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-15-intel]
+        buildtype: [debug, release]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install Meson and Ninja
+        run: python3 -m pip install meson ninja
+      - name: Install System Dependencies (Linux)
+        if: runner.os == 'Linux'
+        # ideally i'd also skip the update so it doesn't update half of the system due to systemd
+        # but ubuntu purges old packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libhidapi-dev libudev-dev pulseaudio
+      - name: Install System Dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install hidapi
+      - name: Configure
+        run: meson setup build --buildtype=${{ matrix.buildtype }} --prefix=${{ github.workspace }}/titania-${{ runner.os }}-${{ runner.arch }}
+      - name: Build
+        run: meson install -C build
+      - name: Upload Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: titania-${{ runner.os }}-${{ runner.arch }}-${{ matrix.buildtype }}
+          path: titania-${{ runner.os }}-${{ runner.arch }}

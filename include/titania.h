@@ -60,8 +60,8 @@ extern "C" {
 #define TITANIA_ACCESS_BUTTON_B8 (8)
 #define TITANIA_ACCESS_BUTTON_STICK (9)
 
-#define TITANIA_MINIMUM_HAPTICS_SIZE 64
-#define TITANIA_MAXIMUM_HAPTICS_SIZE 4096
+#define TITANIA_MINIMUM_HAPTICS_SIZE (64)
+#define TITANIA_MAXIMUM_HAPTICS_SIZE (4096)
 
 typedef enum titania_error {
 	TITANIA_ERROR_OK = 0,
@@ -366,8 +366,10 @@ TITANIA_EXPORT extern const int titania_max_controllers;
 typedef uint16_t titania_wchar;
 
 typedef signed int titania_handle;
-typedef wchar_t titania_serial[0x100]; // Max HID Parameter length is 256 on USB, 512 on BT. HID serials are wide-chars, which are 2 bytes.
-typedef char titania_hid_path[0x200];
+#define TITANIA_SERIAL_LENGTH (0x100) // Max HID Parameter length is 256 on USB, 512 on BT. HID serials are wide-chars, which are 2 bytes.
+typedef wchar_t titania_serial[TITANIA_SERIAL_LENGTH + 1];
+#define TITANIA_PATH_LENGTH (0x200)
+typedef char titania_hid_path[TITANIA_PATH_LENGTH + 1];
 
 typedef char titania_mac[0x12];
 typedef char titania_link_key[0x10];

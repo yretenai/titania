@@ -37,7 +37,7 @@ titaniactl_error titaniactl_mode_dump(titaniactl_context* context) {
 				buffer[0] = report_ids[j].id;
 				const size_t size = hid_get_feature_report(device, buffer, hid_report_size);
 				if (size > 1 && size <= 0x4096) {
-					printf("%ld\n", size);
+					printf("%zu\n", size);
 					char report_name[0x30] = { 0 };
 					sprintf(report_name, name, report_ids[j].id);
 					FILE* file = fopen(report_name, "w+b");

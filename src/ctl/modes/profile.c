@@ -124,7 +124,7 @@ titaniactl_error titaniactl_mode_profile_dump_inner(titaniactl_context* context,
 #ifdef _WIN32
 			if (report_name[i] == '\\' || report_name[i] == '<' || report_name[i] == '>' || report_name[i] == ':' || report_name[i] == '"' || report_name[i] == '|' || report_name[i] == '?' ||
 				report_name[i] == '*' || report_name[i] < 0x1F) {
-				report_name[i] == '_';
+				report_name[i] = '_';
 			}
 #endif
 

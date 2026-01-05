@@ -7,7 +7,7 @@
 
 #include <windows.h>
 
-void titania_timer_next(titania_timer* t) {
+void titania_timer_next(const titania_handle handle) {
 	// todo
 }
 

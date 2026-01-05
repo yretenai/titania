@@ -354,7 +354,7 @@ titaniactl_error titaniactl_mode_edge_export(titania_profile_id profile, const c
 #ifdef _WIN32
 		if (output_path[i] == '\\' || output_path[i] == '<' || output_path[i] == '>' || output_path[i] == ':' || output_path[i] == '"' || output_path[i] == '|' || output_path[i] == '?' ||
 			output_path[i] == '*' || output_path[i] < 0x1F) {
-			output_path[i] == '_';
+			output_path[i] = '_';
 		}
 #endif
 

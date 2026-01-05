@@ -2,7 +2,7 @@
 //  https://git.sr.ht/~chronovore/titania
 //  SPDX-License-Identifier: MPL-2.0
 
-#define _POSIX_C_SOURCE 200809L // NOLINT(*-reserved-identifier)
+#include "../../nanosleep.h"
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -184,7 +184,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 			titania_push(context->handles, context->connected_controllers);
 			printf("both channels...\n");
 			for (rumble = 0, rumble_counter = 0; rumble_counter < 63; rumble_counter++, rumble += ONE_OVER_255 * 4) {
-				for (size_t i = 0; i < sizeof(haptics_data); i += 2) {
+				for (size_t i = 0; i <= TITANIA_MAXIMUM_HAPTICS_SIZE - 2; i += 2) {
 					haptics_data[i] = rumble * 2.0f - 1.0f;
 					haptics_data[i + 1] = rumble * 2.0f - 1.0f;
 				}
@@ -218,7 +218,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 
 			printf("left channel...\n");
 			for (rumble = 0, rumble_counter = 0; rumble_counter < 63; rumble_counter++, rumble += ONE_OVER_255 * 4) {
-				for (size_t i = 0; i < sizeof(haptics_data); i += 2) {
+				for (size_t i = 0; i <= TITANIA_MAXIMUM_HAPTICS_SIZE - 2; i += 2) {
 					haptics_data[i] = rumble * 2.0f - 1.0f;
 					haptics_data[i + 1] = 0.0f;
 				}
@@ -252,7 +252,7 @@ titaniactl_error titaniactl_mode_test(titaniactl_context* context) {
 
 			printf("right channel...\n");
 			for (rumble = 0, rumble_counter = 0; rumble_counter < 63; rumble_counter++, rumble += ONE_OVER_255 * 4) {
-				for (size_t i = 0; i < sizeof(haptics_data); i += 2) {
+				for (size_t i = 0; i <= TITANIA_MAXIMUM_HAPTICS_SIZE - 2; i += 2) {
 					haptics_data[i] = 0.0f;
 					haptics_data[i + 1] = rumble * 2.0f - 1.0f;
 				}
